@@ -74,7 +74,7 @@ Rekomendacja: **Python**. Domena to głównie normalizacja i agregacja danych, p
 **Kontekst.** Polityka wobec `robots.txt: Disallow: /api/` (U1) jest otwarta.
 **Decyzja użytkownika.** Dopóki U1 nie jest rozstrzygnięte, każda seria żywych zapytań (weryfikacja hipotez, skan driftu) wymaga jawnej zgody użytkownika w bieżącej rozmowie. User-Agent to jedna stała. Jej wartość wybiera użytkownik przy rozstrzyganiu U1; do tego czasu zostaje obecna wartość ze skanera, oznaczona `TODO(U1)`.
 
-**Doprecyzowanie (2026-10-09, decyzja użytkownika):** stała `USER_AGENT` mieszka w module pakietu `deweloperuch_mcp` (tylko stdlib), bo zainstalowany pakiet nie widzi katalogu `recon/`. `recon/config.py` ją reeksportuje. Przeniesienie to osobne, małe zadanie przed vertical slice. Do tego czasu stała jest w `recon/config.py`.
+**Doprecyzowanie (2026-10-09, decyzja użytkownika):** stała `USER_AGENT` mieszka w module pakietu `deweloperuch_mcp` (tylko stdlib), bo zainstalowany pakiet nie widzi katalogu `recon/`. `recon/config.py` ją reeksportuje. Wykonane 2026-10-09: `BASE_URL` i `USER_AGENT` są zdefiniowane w `src/deweloperuch_mcp/identity.py`. Test w `tests/test_identity.py` pilnuje jednej definicji User-Agenta.
 
 ## D10. Poziom wymuszania zasad przez Claude Code (przyjęta 2026-10-09)
 

@@ -42,6 +42,6 @@ Konfiguracja, limiter zapytań i plik zamka: [docs/configuration.md](docs/config
 
 Skrypty wymagają Pythona >= 3.11 (systemowy `python3` z macOS to 3.9; alternatywa: `uv run python recon/<skrypt>.py`).
 
-- `recon/config.py`: wspólna konfiguracja skryptów (`BASE_URL`, `USER_AGENT` z `TODO(U1)`, wspólny limiter zapytań ze stanem w `~/.cache/deweloperuch-mcp/throttle.lock`, zob. [docs/configuration.md](docs/configuration.md))
+- `recon/config.py`: wspólna konfiguracja skryptów (reeksport `BASE_URL` i `USER_AGENT` z `deweloperuch_mcp.identity`, `TODO(U1)`; wspólny limiter zapytań ze stanem w `~/.cache/deweloperuch-mcp/throttle.lock`, zob. [docs/configuration.md](docs/configuration.md))
 - `python3 recon/scan_bundles.py`: lista aktualnych `/api/*` i server actions z bundli JS (wykrywanie zmian po deployu serwisu)
 - `recon/flight.py`: dekoder payloadu RSC (`flight(html_path)`, `find_json_after(text, prop)`)

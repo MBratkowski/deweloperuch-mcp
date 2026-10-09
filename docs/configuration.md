@@ -38,6 +38,6 @@ Zachowanie z punktu widzenia użytkownika:
 
 Skrypty `recon/` uruchamiane jako `python3 recon/<skrypt>.py` wymagają Pythona 3.11 lub nowszego. Systemowy `python3` z macOS to 3.9 i kończy się komunikatem o wymaganej wersji. Alternatywa: `uv run python recon/<skrypt>.py`.
 
-`recon/config.py` udostępnia skryptom `BASE_URL`, `USER_AGENT` (tymczasowy, `TODO(U1)`, do rozstrzygnięcia w U1/D9) i ten sam limiter co pakiet.
+`BASE_URL` i `USER_AGENT` (tymczasowy, `TODO(U1)`, do rozstrzygnięcia w U1/D9) są zdefiniowane w jednym miejscu: `src/deweloperuch_mcp/identity.py`. `recon/config.py` je reeksportuje i udostępnia skryptom razem z tym samym limiterem co pakiet.
 
-_Źródło: `src/deweloperuch_mcp/throttle.py`, `recon/config.py`_
+_Źródło: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `recon/config.py`_
