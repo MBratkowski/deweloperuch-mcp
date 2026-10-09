@@ -1,0 +1,55 @@
+{
+  "_request": "GET /ceny-transakcyjne/warszawa/domy/ulica-kozieradki-35-warszawa",
+  "_captured": "2026-10-09",
+  "props": {
+    "investment": {
+      "invest_id": 461877,
+      "latitude": 52.17451396,
+      "longitude": 21.16201614,
+      "name": "Ulica Kozieradki 35",
+      "slug": "ulica-kozieradki-35-warszawa",
+      "city": "Warszawa",
+      "city_slug": "warszawa",
+      "street": "Ulica Kozieradki 35",
+      "avg_amount": 1690000,
+      "avg_size": 141.67,
+      "avg_price_sqm": 11929,
+      "active_offers": 1,
+      "developer": null
+    },
+    "sales": [
+      {
+        "sale_id": 509110,
+        "name": "146514_8.1413.257_BUD",
+        "amount": 1690000,
+        "size_usable": 141.67,
+        "size_building": 92.67,
+        "size_plot": 266,
+        "rooms": "",
+        "rooms_number": 0,
+        "floor": "",
+        "type": "mieszkalny",
+        "last_event_date": "2026-05-12",
+        "is_flipped": false,
+        "start_amount_difference": 0,
+        "start_amount_difference_percent": 0,
+        "events": [
+          {
+            "sale_event_rcn_id": 634140,
+            "amount": "1690000",
+            "amount_sqm": "0",
+            "currency": "PLN",
+            "buyerType": "osobaFizyczna",
+            "classification": "transakcja",
+            "sellerType": "osobaPrawna",
+            "transactionType": "wolnyRynek",
+            "marketType": "pierwotny",
+            "participation": "1/1",
+            "creation_date": "2026-05-12",
+            "additionalData": "$8:props:children:3:props:children:props:children:0:props:children:0:props:events:0:additionalData"
+          }
+        ]
+      }
+    ]
+  }
+}

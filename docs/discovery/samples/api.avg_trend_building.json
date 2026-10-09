@@ -1,0 +1,25 @@
+{
+  "_request": "GET /api/avg-price-trend/building/583284",
+  "_captured": "2026-10-09",
+  "response": {
+    "data": [
+      {
+        "period": "2006-Q2",
+        "avgPriceSqm": 5706,
+        "count": 25
+      },
+      {
+        "period": "2006-Q3",
+        "avgPriceSqm": 6188,
+        "count": 38
+      },
+      {
+        "period": "2006-Q4",
+        "avgPriceSqm": 6668,
+        "count": 38
+      },
+      "... (79 more, 82 total)"
+    ],
+    "radiusKm": 1
+  }
+}

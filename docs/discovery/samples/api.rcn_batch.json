@@ -1,0 +1,12 @@
+{
+  "_request": "GET /api/sale-events-rcn/batch?ids=10825",
+  "_captured": "2026-10-09",
+  "response": {
+    "10825": [
+      {
+        "amount": "1559471.42",
+        "creation_date": "2024-10-29T00:00:00.000Z"
+      }
+    ]
+  }
+}

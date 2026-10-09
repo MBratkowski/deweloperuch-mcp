@@ -1,0 +1,42 @@
+{
+  "_request": "GET /api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa",
+  "_captured": "2026-10-09",
+  "response": {
+    "scope": {
+      "label": "city"
+    },
+    "data": [
+      {
+        "month": "2021-01",
+        "transaction_count": 963,
+        "med_price_sqm": 10651,
+        "avg_price_sqm": 10876,
+        "med_size": 49.4,
+        "avg_size": 54.6,
+        "med_amount": 502000,
+        "avg_amount": 596261
+      },
+      {
+        "month": "2021-02",
+        "transaction_count": 1165,
+        "med_price_sqm": 10575,
+        "avg_price_sqm": 10854,
+        "med_size": 48.8,
+        "avg_size": 55.1,
+        "med_amount": 495000,
+        "avg_amount": 602154
+      },
+      {
+        "month": "2021-03",
+        "transaction_count": 1327,
+        "med_price_sqm": 10858,
+        "avg_price_sqm": 10981,
+        "med_size": 48.5,
+        "avg_size": 53.7,
+        "med_amount": 510000,
+        "avg_amount": 584959
+      },
+      "... (64 more, 67 total)"
+    ]
+  }
+}

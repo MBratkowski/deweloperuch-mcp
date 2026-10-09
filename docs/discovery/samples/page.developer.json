@@ -1,0 +1,183 @@
+{
+  "_request": "GET /ceny-ofertowe/warszawa/deweloperzy/atal",
+  "_captured": "2026-10-09",
+  "props": {
+    "data": {
+      "developer": {
+        "developer_id": 43,
+        "name": "ATAL S.A.",
+        "description": "",
+        "sum_start_amount_difference_minus": -129265980,
+        "sum_start_amount_difference_plus": 70962650,
+        "website": "",
+        "slug": "atal"
+      },
+      "investments": [
+        {
+          "invest_id": 54,
+          "name": "Nowy Targówek VI",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "street": "Targówek",
+          "slug": "nowy-targowek-vi",
+          "year_construction": 0,
+          "active_offers": 27,
+          "total_offers": 75,
+          "avg_amount": 1098252.67,
+          "avg_size": 62.36,
+          "avg_price_sqm": 17610,
+          "avg_amount_total": 1115404.52,
+          "avg_size_total": 63.45,
+          "avg_price_sqm_total": 17578,
+          "sum_start_amount_difference_minus": -2901678,
+          "sum_start_amount_difference_plus": 982674,
+          "latitude": 52.2815704,
+          "longitude": 21.04711656,
+          "currency": "PLN",
+          "status": "active"
+        },
+        {
+          "invest_id": 466,
+          "name": "Osiedle Poematu II",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "street": "Wawer",
+          "slug": "osiedle-poematu-ii",
+          "year_construction": 0,
+          "active_offers": 8,
+          "total_offers": 49,
+          "avg_amount": 932634.63,
+          "avg_size": 72.27,
+          "avg_price_sqm": 12905,
+          "avg_amount_total": 936389.2,
+          "avg_size_total": 71.02,
+          "avg_price_sqm_total": 13184,
+          "sum_start_amount_difference_minus": -1507502,
+          "sum_start_amount_difference_plus": 1670573,
+          "latitude": 52.15734418,
+          "longitude": 21.1996573,
+          "currency": "PLN",
+          "status": "active"
+        },
+        {
+          "invest_id": 878,
+          "name": "Warszawska 58A",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "street": "Ursus",
+          "slug": "warszawska-58a",
+          "year_construction": 0,
+          "active_offers": 38,
+          "total_offers": 71,
+          "avg_amount": 967090.39,
+          "avg_size": 60.27,
+          "avg_price_sqm": 16047,
+          "avg_amount_total": 932442.11,
+          "avg_size_total": 59.53,
+          "avg_price_sqm_total": 15663,
+          "sum_start_amount_difference_minus": -2100770,
+          "sum_start_amount_difference_plus": 464160,
+          "latitude": 52.19616576,
+          "longitude": 20.86367692,
+          "currency": "PLN",
+          "status": "active"
+        },
+        "... (1 more, 4 total)"
+      ],
+      "filteredStats": {
+        "totalProjects": 4,
+        "totalSales": 75,
+        "totalCities": 1,
+        "priceIncreaseSum": 4657241,
+        "priceDecreaseSum": -7047867,
+        "priceIncreaseCount": 0,
+        "priceDecreaseCount": 0,
+        "averagePrice": 1007914,
+        "averageSize": 63.11,
+        "avgAmountPerM2": 16101
+      },
+      "allCities": [
+        "Chorzów",
+        "Gdańsk",
+        "Gdynia",
+        "... (14 more, 17 total)"
+      ],
+      "allCitiesWithSlugs": "$f:1:props:children:0:props:allowedCities",
+      "citiesStats": [
+        {
+          "city": "Poznań",
+          "citySlug": "poznan",
+          "investmentCount": 4,
+          "activeOffersCount": 768,
+          "avgPricePerM2": 11773,
+          "avgPrice": 707897
+        },
+        {
+          "city": "Kraków",
+          "citySlug": "krakow",
+          "investmentCount": 7,
+          "activeOffersCount": 768,
+          "avgPricePerM2": 13930,
+          "avgPrice": 779684
+        },
+        {
+          "city": "Łódź",
+          "citySlug": "lodz",
+          "investmentCount": 5,
+          "activeOffersCount": 730,
+          "avgPricePerM2": 10056,
+          "avgPrice": 557411
+        },
+        "... (11 more, 14 total)"
+      ],
+      "allInvestmentNames": [
+        "ATAL Apollina",
+        "ATAL Apollina II",
+        "ATAL Aura",
+        "... (81 more, 84 total)"
+      ]
+    },
+    "sale": [
+      {
+        "sale_id": 4397,
+        "invest_id": 54,
+        "name": "D1.1.1.4",
+        "investmentName": "Nowy Targówek VI",
+        "investmentSlug": "nowy-targowek-vi",
+        "amount": "994012",
+        "size": "55.25",
+        "status": "active",
+        "start_amount_difference": "-5988",
+        "start_amount_difference_percent": "-0.6",
+        "last_event_date": "2026-10-03"
+      },
+      {
+        "sale_id": 4406,
+        "invest_id": 54,
+        "name": "D1.2.0.1",
+        "investmentName": "Nowy Targówek VI",
+        "investmentSlug": "nowy-targowek-vi",
+        "amount": "659315",
+        "size": "36.49",
+        "status": "active",
+        "start_amount_difference": "-30685",
+        "start_amount_difference_percent": "-4.45",
+        "last_event_date": "2026-10-03"
+      },
+      {
+        "sale_id": 4407,
+        "invest_id": 54,
+        "name": "D1.2.0.2",
+        "investmentName": "Nowy Targówek VI",
+        "investmentSlug": "nowy-targowek-vi",
+        "amount": "888626",
+        "size": "51.35",
+        "status": "active",
+        "start_amount_difference": "-51374",
+        "start_amount_difference_percent": "-5.47",
+        "last_event_date": "2026-10-03"
+      },
+      "... (222 more, 225 total)"
+    ]
+  }
+}

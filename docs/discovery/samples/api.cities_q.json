@@ -1,0 +1,33 @@
+{
+  "_request": "GET /api/cities?q=krak&limit=8",
+  "_captured": "2026-10-09",
+  "response": {
+    "cities": [
+      "Kraków",
+      "Krakowiany",
+      "Krakulice",
+      "... (1 more, 4 total)"
+    ],
+    "cityMappings": [
+      {
+        "city": "Kraków",
+        "city_slug": "krakow",
+        "offerCount": 8082
+      },
+      {
+        "city": "Krakowiany",
+        "city_slug": "krakowiany",
+        "offerCount": 0
+      },
+      {
+        "city": "Krakulice",
+        "city_slug": "krakulice",
+        "offerCount": 0
+      },
+      "... (1 more, 4 total)"
+    ],
+    "hasMore": false,
+    "total": 4,
+    "page": 1
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "_request": "GET /api/popular-search-items?variant=transactions&propertyType=flat",
+  "_captured": "2026-10-09",
+  "response": {
+    "cities": [
+      {
+        "name": "Warszawa",
+        "slug": "warszawa",
+        "woj": "MAZOWIECKIE",
+        "offerCount": 357835
+      },
+      {
+        "name": "Kraków",
+        "slug": "krakow",
+        "woj": "MAŁOPOLSKIE",
+        "offerCount": 244998
+      },
+      {
+        "name": "Wrocław",
+        "slug": "wroclaw",
+        "woj": "DOLNOŚLĄSKIE",
+        "offerCount": 206179
+      },
+      "... (10 more, 13 total)"
+    ],
+    "developers": [],
+    "investments": []
+  }
+}

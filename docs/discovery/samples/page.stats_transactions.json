@@ -1,0 +1,279 @@
+{
+  "_request": "GET /statystyki/ceny-transakcyjne/mieszkania/warszawa",
+  "_captured": "2026-10-09",
+  "props": {
+    "rawTransactions": [
+      {
+        "m": "2018-10",
+        "s": 47.1,
+        "a": 88000,
+        "ps": 1868.37,
+        "c": "anomalia_down",
+        "rn": 4,
+        "fn": 1
+      },
+      {
+        "m": "2018-10",
+        "s": 47.1,
+        "a": 88000,
+        "ps": 1868.37,
+        "c": "udzial",
+        "rn": 4,
+        "fn": 1
+      },
+      {
+        "m": "2017-02",
+        "s": 43.73,
+        "a": 320000,
+        "ps": 7317.63,
+        "c": "transakcja",
+        "rn": 4,
+        "fn": 1
+      },
+      "... (128909 more, 128912 total)"
+    ],
+    "latestSummary": {
+      "month": "2026-03",
+      "transaction_count": 1036,
+      "secondary_count": 1036,
+      "unknown_count": 0,
+      "med_price_sqm": 16366,
+      "avg_price_sqm": 16879,
+      "med_size": 47.7,
+      "avg_size": 53.3,
+      "med_amount": 760000,
+      "avg_amount": 903564
+    },
+    "slices": {
+      "quarterlyAnchor": "2026-Q1",
+      "yoyView": {
+        "kind": "yoy",
+        "period": "2026-Q1",
+        "periodLabel": "I kw. 2026",
+        "prevPeriod": "2025-Q1",
+        "prevPeriodLabel": "I kw. 2025",
+        "deltaLabel": "r/r",
+        "groups": [
+          {
+            "category": "size",
+            "label": "Według metrażu",
+            "slices": [
+              {
+                "id": "size-lt35",
+                "name": "do 35 m²",
+                "count": 472,
+                "medPriceSqm": 17258,
+                "avgPriceSqm": 17781,
+                "medAmount": 501000,
+                "avgAmount": 524933,
+                "medSize": 30.4,
+                "avgSize": 29.7,
+                "prevMedPriceSqm": 17568,
+                "prevAvgPriceSqm": 17755,
+                "deltaPct": -1.8,
+                "avgDeltaPct": 0.1
+              },
+              {
+                "id": "size-35-60",
+                "name": "35–60 m²",
+                "count": 1865,
+                "medPriceSqm": 16012,
+                "avgPriceSqm": 16504,
+                "medAmount": 739000,
+                "avgAmount": 765761,
+                "medSize": 46.4,
+                "avgSize": 46.5,
+                "prevMedPriceSqm": 15968,
+                "prevAvgPriceSqm": 16410,
+                "deltaPct": 0.3,
+                "avgDeltaPct": 0.6
+              },
+              {
+                "id": "size-60-90",
+                "name": "60–90 m²",
+                "count": 686,
+                "medPriceSqm": 16606,
+                "avgPriceSqm": 17128,
+                "medAmount": 1170000,
+                "avgAmount": 1220265,
+                "medSize": 69.5,
+                "avgSize": 71.1,
+                "prevMedPriceSqm": 16472,
+                "prevAvgPriceSqm": 17150,
+                "deltaPct": 0.8,
+                "avgDeltaPct": -0.1
+              },
+              "... (1 more, 4 total)"
+            ]
+          },
+          {
+            "category": "rooms",
+            "label": "Według liczby izb",
+            "slices": [
+              {
+                "id": "rooms-1",
+                "name": "1 izba",
+                "count": 190,
+                "medPriceSqm": 17950,
+                "avgPriceSqm": 18652,
+                "medAmount": 527500,
+                "avgAmount": 610257,
+                "medSize": 29,
+                "avgSize": 32.1,
+                "prevMedPriceSqm": 18558,
+                "prevAvgPriceSqm": 19230,
+                "deltaPct": -3.3,
+                "avgDeltaPct": -3
+              },
+              {
+                "id": "rooms-2",
+                "name": "2 izby",
+                "count": 999,
+                "medPriceSqm": 17144,
+                "avgPriceSqm": 17646,
+                "medAmount": 670000,
+                "avgAmount": 714477,
+                "medSize": 39.1,
+                "avgSize": 40.4,
+                "prevMedPriceSqm": 17454,
+                "prevAvgPriceSqm": 17615,
+                "deltaPct": -1.8,
+                "avgDeltaPct": 0.2
+              },
+              {
+                "id": "rooms-3",
+                "name": "3 izby",
+                "count": 1219,
+                "medPriceSqm": 16021,
+                "avgPriceSqm": 16579,
+                "medAmount": 800000,
+                "avgAmount": 881303,
+                "medSize": 50.8,
+                "avgSize": 52.6,
+                "prevMedPriceSqm": 15907,
+                "prevAvgPriceSqm": 16424,
+                "deltaPct": 0.7,
+                "avgDeltaPct": 0.9
+              },
+              "... (1 more, 4 total)"
+            ]
+          }
+        ]
+      },
+      "qoqView": {
+        "kind": "qoq",
+        "period": "2026-Q1",
+        "periodLabel": "I kw. 2026",
+        "prevPeriod": "2025-Q4",
+        "prevPeriodLabel": "IV kw. 2025",
+        "deltaLabel": "kw/kw",
+        "groups": [
+          {
+            "category": "size",
+            "label": "Według metrażu",
+            "slices": [
+              {
+                "id": "size-lt35",
+                "name": "do 35 m²",
+                "count": 472,
+                "medPriceSqm": 17258,
+                "avgPriceSqm": 17781,
+                "medAmount": 501000,
+                "avgAmount": 524933,
+                "medSize": 30.4,
+                "avgSize": 29.7,
+                "prevMedPriceSqm": 17357,
+                "prevAvgPriceSqm": 17757,
+                "deltaPct": -0.6,
+                "avgDeltaPct": 0.1
+              },
+              {
+                "id": "size-35-60",
+                "name": "35–60 m²",
+                "count": 1865,
+                "medPriceSqm": 16012,
+                "avgPriceSqm": 16504,
+                "medAmount": 739000,
+                "avgAmount": 765761,
+                "medSize": 46.4,
+                "avgSize": 46.5,
+                "prevMedPriceSqm": 15932,
+                "prevAvgPriceSqm": 16289,
+                "deltaPct": 0.5,
+                "avgDeltaPct": 1.3
+              },
+              {
+                "id": "size-60-90",
+                "name": "60–90 m²",
+                "count": 686,
+                "medPriceSqm": 16606,
+                "avgPriceSqm": 17128,
+                "medAmount": 1170000,
+                "avgAmount": 1220265,
+                "medSize": 69.5,
+                "avgSize": 71.1,
+                "prevMedPriceSqm": 16667,
+                "prevAvgPriceSqm": 17307,
+                "deltaPct": -0.4,
+                "avgDeltaPct": -1
+              },
+              "... (1 more, 4 total)"
+            ]
+          },
+          {
+            "category": "rooms",
+            "label": "Według liczby izb",
+            "slices": [
+              {
+                "id": "rooms-1",
+                "name": "1 izba",
+                "count": 190,
+                "medPriceSqm": 17950,
+                "avgPriceSqm": 18652,
+                "medAmount": 527500,
+                "avgAmount": 610257,
+                "medSize": 29,
+                "avgSize": 32.1,
+                "prevMedPriceSqm": 17848,
+                "prevAvgPriceSqm": 18563,
+                "deltaPct": 0.6,
+                "avgDeltaPct": 0.5
+              },
+              {
+                "id": "rooms-2",
+                "name": "2 izby",
+                "count": 999,
+                "medPriceSqm": 17144,
+                "avgPriceSqm": 17646,
+                "medAmount": 670000,
+                "avgAmount": 714477,
+                "medSize": 39.1,
+                "avgSize": 40.4,
+                "prevMedPriceSqm": 17162,
+                "prevAvgPriceSqm": 17469,
+                "deltaPct": -0.1,
+                "avgDeltaPct": 1
+              },
+              {
+                "id": "rooms-3",
+                "name": "3 izby",
+                "count": 1219,
+                "medPriceSqm": 16021,
+                "avgPriceSqm": 16579,
+                "medAmount": 800000,
+                "avgAmount": 881303,
+                "medSize": 50.8,
+                "avgSize": 52.6,
+                "prevMedPriceSqm": 15994,
+                "prevAvgPriceSqm": 16432,
+                "deltaPct": 0.2,
+                "avgDeltaPct": 0.9
+              },
+              "... (1 more, 4 total)"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "_request": "GET /api/investment-streets?q=pu&limit=10&citySlug=warszawa",
+  "_captured": "2026-10-09",
+  "response": {
+    "results": [
+      {
+        "name": "Kacpury 11",
+        "fullName": "Kacpury 11",
+        "citySym": "",
+        "cityName": "Warszawa",
+        "citySlug": "warszawa",
+        "investmentCount": 69
+      },
+      {
+        "name": "Łopuszańska ",
+        "fullName": "Łopuszańska ",
+        "citySym": "",
+        "cityName": "Warszawa",
+        "citySlug": "warszawa",
+        "investmentCount": 64
+      },
+      {
+        "name": "Popularna 35",
+        "fullName": "Popularna 35",
+        "citySym": "",
+        "cityName": "Warszawa",
+        "citySlug": "warszawa",
+        "investmentCount": 52
+      }
+    ],
+    "cityCenter": {
+      "lat": 52.23187205981177,
+      "lng": 21.032563903683858
+    }
+  }
+}

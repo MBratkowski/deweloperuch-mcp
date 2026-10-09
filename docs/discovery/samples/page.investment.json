@@ -1,0 +1,113 @@
+{
+  "_request": "GET /ceny-ofertowe/warszawa/deweloperzy/atal/nowy-targowek-vi",
+  "_captured": "2026-10-09",
+  "props": {
+    "investments": [
+      {
+        "invest_id": 54,
+        "latitude": 52.2815704,
+        "longitude": 21.04711656,
+        "name": "Nowy Targówek VI",
+        "slug": "nowy-targowek-vi",
+        "city": "Warszawa",
+        "city_slug": "warszawa",
+        "street": "Targówek",
+        "avg_amount": 1098252.67,
+        "avg_size": 62.36,
+        "avg_price_sqm": 17611,
+        "active_offers": 27,
+        "total_offers": 75,
+        "status": "active",
+        "developer": {
+          "name": "ATAL S.A.",
+          "slug": "atal",
+          "developer_id": 0
+        }
+      }
+    ],
+    "sales": [
+      {
+        "sale_id": 4415,
+        "invest_id": 54,
+        "name": "D1.2.2.4",
+        "type": "",
+        "status": "active",
+        "amount": "1457280",
+        "currency": "PLN",
+        "size": "86.03",
+        "start_amount_difference": "-72720",
+        "start_amount_difference_percent": "-4.75",
+        "last_event_date": "2026-08-17",
+        "last_change_event_date": "2026-07-26",
+        "creation_date": "2025-05-01"
+      },
+      {
+        "sale_id": 4398,
+        "invest_id": 54,
+        "name": "D1.1.2.1",
+        "type": "",
+        "status": "active",
+        "amount": "1330500",
+        "currency": "PLN",
+        "size": "74.58",
+        "start_amount_difference": "-9500",
+        "start_amount_difference_percent": "-0.71",
+        "last_event_date": "2026-09-18",
+        "last_change_event_date": "2026-09-03",
+        "creation_date": "2025-05-01"
+      },
+      {
+        "sale_id": 4436,
+        "invest_id": 54,
+        "name": "D1.3.3.2",
+        "type": "",
+        "status": "active",
+        "amount": "1285419",
+        "currency": "PLN",
+        "size": "71.62",
+        "start_amount_difference": "-4581",
+        "start_amount_difference_percent": "-0.36",
+        "last_event_date": "2026-09-24",
+        "last_change_event_date": "2026-09-03",
+        "creation_date": "2025-05-01"
+      },
+      "... (72 more, 75 total)"
+    ],
+    "data": [
+      {
+        "date": "2025-02-22",
+        "discountCount": 0,
+        "increaseCount": 0,
+        "discountValue": 0,
+        "increaseValue": 0,
+        "cumulativeDiscountCount": 0,
+        "cumulativeIncreaseCount": 0,
+        "cumulativeDiscountValue": 0,
+        "cumulativeIncreaseValue": 0
+      },
+      {
+        "date": "2025-02-23",
+        "discountCount": 0,
+        "increaseCount": 0,
+        "discountValue": 0,
+        "increaseValue": 0,
+        "cumulativeDiscountCount": 0,
+        "cumulativeIncreaseCount": 0,
+        "cumulativeDiscountValue": 0,
+        "cumulativeIncreaseValue": 0
+      },
+      {
+        "date": "2025-02-24",
+        "discountCount": 0,
+        "increaseCount": 0,
+        "discountValue": 0,
+        "increaseValue": 0,
+        "cumulativeDiscountCount": 0,
+        "cumulativeIncreaseCount": 0,
+        "cumulativeDiscountValue": 0,
+        "cumulativeIncreaseValue": 0
+      },
+      "... (35 more, 38 total)"
+    ]
+  }
+}

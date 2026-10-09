@@ -1,0 +1,201 @@
+{
+  "_request": "GET /statystyki/statystyki-rzadowe/warszawa",
+  "_captured": "2026-10-09",
+  "props": {
+    "tocItems": [
+      {
+        "id": "gus-mieszkania",
+        "label": "Mieszkania"
+      },
+      {
+        "id": "gus-formy-budownictwa",
+        "label": "Formy budownictwa"
+      },
+      {
+        "id": "gus-srednia-powierzchnia",
+        "label": "Średnia powierzchnia"
+      },
+      "... (7 more, 10 total)"
+    ],
+    "sortedLocations": [
+      {
+        "slug": "7-miast",
+        "displayName": "Top 7 miast Polski",
+        "isAggregate": true,
+        "nbp": {
+          "dbName": "7 miast",
+          "slug": "7-miast",
+          "displayName": "Top 7 miast Polski",
+          "isAggregate": true,
+          "sortOrder": 100
+        },
+        "gus": {
+          "teryt": "AGG_7M",
+          "dbName": "7M",
+          "slug": "7-miast",
+          "displayName": "Top 7 miast Polski",
+          "sortOrder": 1001,
+          "isAggregate": true
+        },
+        "sortOrder": 100
+      },
+      {
+        "slug": "10-miast",
+        "displayName": "Top 10 miast Polski",
+        "isAggregate": true,
+        "nbp": {
+          "dbName": "10 miast",
+          "slug": "10-miast",
+          "displayName": "Top 10 miast Polski",
+          "isAggregate": true,
+          "sortOrder": 101
+        },
+        "gus": {
+          "teryt": "AGG_10M",
+          "dbName": "10M",
+          "slug": "10-miast",
+          "displayName": "Top 10 miast Polski",
+          "sortOrder": 1002,
+          "isAggregate": true
+        },
+        "sortOrder": 101
+      },
+      {
+        "slug": "6-miast-bez-warszawy",
+        "displayName": "Top 6 miast Polski bez Warszawy",
+        "isAggregate": true,
+        "nbp": {
+          "dbName": "6 miast bez Warszawy",
+          "slug": "6-miast-bez-warszawy",
+          "displayName": "Top 6 miast Polski bez Warszawy",
+          "isAggregate": true,
+          "sortOrder": 102
+        },
+        "gus": {
+          "teryt": "AGG_6M",
+          "dbName": "6M",
+          "slug": "6-miast-bez-warszawy",
+          "displayName": "Top 6 miast Polski bez Warszawy",
+          "sortOrder": 1000,
+          "isAggregate": true
+        },
+        "sortOrder": 102
+      },
+      "... (66 more, 69 total)"
+    ],
+    "data": [
+      {
+        "quarter": "2005-Q1",
+        "oddane": 2755,
+        "oddaneDeweloperskie": 1840,
+        "oddaneIndywidualne": 307,
+        "oddaneSpoldzielcze": 608,
+        "oddaneKomunalne": 0,
+        "oddaneSpoleczne": 0,
+        "oddaneZakladowe": 0,
+        "rozpoczete": 3245,
+        "rozpoczeteDeweloperskie": 2827,
+        "rozpoczeteIndywidualne": 94,
+        "rozpoczeteSpoldzielcze": 178,
+        "rozpoczeteKomunalne": 0,
+        "rozpoczeteSpoleczne": 146,
+        "rozpoczeteZakladowe": 0,
+        "rozpoczeteNaWynajem": null
+      },
+      {
+        "quarter": "2005-Q2",
+        "oddane": 2865,
+        "oddaneDeweloperskie": 2292,
+        "oddaneIndywidualne": 235,
+        "oddaneSpoldzielcze": 336,
+        "oddaneKomunalne": 2,
+        "oddaneSpoleczne": 0,
+        "oddaneZakladowe": 0,
+        "rozpoczete": 5059,
+        "rozpoczeteDeweloperskie": 4269,
+        "rozpoczeteIndywidualne": 304,
+        "rozpoczeteSpoldzielcze": 370,
+        "rozpoczeteKomunalne": 0,
+        "rozpoczeteSpoleczne": 116,
+        "rozpoczeteZakladowe": 0,
+        "rozpoczeteNaWynajem": null
+      },
+      {
+        "quarter": "2005-Q3",
+        "oddane": 4127,
+        "oddaneDeweloperskie": 3438,
+        "oddaneIndywidualne": 218,
+        "oddaneSpoldzielcze": 76,
+        "oddaneKomunalne": 0,
+        "oddaneSpoleczne": 395,
+        "oddaneZakladowe": 0,
+        "rozpoczete": 4200,
+        "rozpoczeteDeweloperskie": 3108,
+        "rozpoczeteIndywidualne": 378,
+        "rozpoczeteSpoldzielcze": 541,
+        "rozpoczeteKomunalne": 43,
+        "rozpoczeteSpoleczne": 130,
+        "rozpoczeteZakladowe": 0,
+        "rozpoczeteNaWynajem": null
+      },
+      "... (84 more, 87 total)"
+    ],
+    "monthlyData": [
+      {
+        "month": "2005-01",
+        "oddane": 1386,
+        "oddaneDeweloperskie": 1176,
+        "oddaneIndywidualne": 177,
+        "oddaneSpoldzielcze": 33,
+        "oddaneKomunalne": 0,
+        "oddaneSpoleczne": 0,
+        "oddaneZakladowe": 0,
+        "rozpoczete": 388,
+        "rozpoczeteDeweloperskie": 237,
+        "rozpoczeteIndywidualne": 33,
+        "rozpoczeteSpoldzielcze": 118,
+        "rozpoczeteKomunalne": 0,
+        "rozpoczeteSpoleczne": 0,
+        "rozpoczeteZakladowe": 0,
+        "rozpoczeteNaWynajem": null
+      },
+      {
+        "month": "2005-02",
+        "oddane": 860,
+        "oddaneDeweloperskie": 373,
+        "oddaneIndywidualne": 67,
+        "oddaneSpoldzielcze": 420,
+        "oddaneKomunalne": 0,
+        "oddaneSpoleczne": 0,
+        "oddaneZakladowe": 0,
+        "rozpoczete": 2326,
+        "rozpoczeteDeweloperskie": 2307,
+        "rozpoczeteIndywidualne": 16,
+        "rozpoczeteSpoldzielcze": 3,
+        "rozpoczeteKomunalne": 0,
+        "rozpoczeteSpoleczne": 0,
+        "rozpoczeteZakladowe": 0,
+        "rozpoczeteNaWynajem": null
+      },
+      {
+        "month": "2005-03",
+        "oddane": 509,
+        "oddaneDeweloperskie": 291,
+        "oddaneIndywidualne": 63,
+        "oddaneSpoldzielcze": 155,
+        "oddaneKomunalne": 0,
+        "oddaneSpoleczne": 0,
+        "oddaneZakladowe": 0,
+        "rozpoczete": 531,
+        "rozpoczeteDeweloperskie": 283,
+        "rozpoczeteIndywidualne": 45,
+        "rozpoczeteSpoldzielcze": 57,
+        "rozpoczeteKomunalne": 0,
+        "rozpoczeteSpoleczne": 146,
+        "rozpoczeteZakladowe": 0,
+        "rozpoczeteNaWynajem": null
+      },
+      "... (257 more, 260 total)"
+    ]
+  }
+}

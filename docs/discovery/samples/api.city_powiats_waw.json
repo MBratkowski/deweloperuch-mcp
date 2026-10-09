@@ -1,0 +1,10 @@
+{
+  "_request": "GET /api/map/city-powiats/warszawa",
+  "_captured": "2026-10-09",
+  "response": {
+    "powiatIds": [
+      302
+    ],
+    "primaryPowiatId": 302
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "_request": "GET /api/location-search?q=mokot&limit=6",
+  "_captured": "2026-10-09",
+  "response": {
+    "suggestions": [
+      {
+        "kind": "district",
+        "city": "Warszawa",
+        "citySlug": "warszawa",
+        "district": "Mokotów",
+        "count": 1562,
+        "lat": 52.189818153819054,
+        "lng": 21.05171136865118
+      },
+      {
+        "kind": "street",
+        "city": "Warszawa",
+        "citySlug": "warszawa",
+        "street": "Mokotów",
+        "district": "Mokotów",
+        "count": 191,
+        "lat": 52.192957042570164,
+        "lng": 21.042743849065836
+      }
+    ]
+  }
+}

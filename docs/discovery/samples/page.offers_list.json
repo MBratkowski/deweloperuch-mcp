@@ -1,0 +1,103 @@
+{
+  "_request": "GET /ceny-ofertowe/warszawa/mieszkania?perPage=100 (RSC)",
+  "_prop": "initialData",
+  "_captured": "2026-10-09",
+  "value": {
+    "data": [
+      {
+        "sale_id": 4397,
+        "name": "D1.1.1.4",
+        "amount": "994012",
+        "start_amount_difference": "-5988",
+        "start_amount_difference_percent": "-0.6",
+        "last_amount_difference": "55250",
+        "last_amount_difference_percent": "5.89",
+        "last_event_type": "PRICE_INCREASE",
+        "total_events": 12,
+        "currency": "PLN",
+        "size": "55.25",
+        "status": "active",
+        "last_event_date": "2026-10-03",
+        "last_change_event_date": "2026-10-03",
+        "creation_date": "2025-05-01",
+        "invest": {
+          "invest_id": 54,
+          "name": "Nowy Targówek VI",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "slug": "nowy-targowek-vi",
+          "developer": {
+            "developer_id": 43,
+            "name": "ATAL S.A.",
+            "slug": "atal"
+          }
+        }
+      },
+      {
+        "sale_id": 4406,
+        "name": "D1.2.0.1",
+        "amount": "659315",
+        "start_amount_difference": "-30685",
+        "start_amount_difference_percent": "-4.45",
+        "last_amount_difference": "-21894",
+        "last_amount_difference_percent": "-3.21",
+        "last_event_type": "PRICE_DECREASE",
+        "total_events": 10,
+        "currency": "PLN",
+        "size": "36.49",
+        "status": "active",
+        "last_event_date": "2026-10-03",
+        "last_change_event_date": "2026-10-03",
+        "creation_date": "2025-05-01",
+        "invest": {
+          "invest_id": 54,
+          "name": "Nowy Targówek VI",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "slug": "nowy-targowek-vi",
+          "developer": {
+            "developer_id": 43,
+            "name": "ATAL S.A.",
+            "slug": "atal"
+          }
+        }
+      },
+      {
+        "sale_id": 4412,
+        "name": "D1.2.2.1",
+        "amount": "1191364",
+        "start_amount_difference": "-8636",
+        "start_amount_difference_percent": "-0.72",
+        "last_amount_difference": "66580",
+        "last_amount_difference_percent": "5.92",
+        "last_event_type": "PRICE_INCREASE",
+        "total_events": 13,
+        "currency": "PLN",
+        "size": "66.58",
+        "status": "active",
+        "last_event_date": "2026-10-03",
+        "last_change_event_date": "2026-10-03",
+        "creation_date": "2025-05-01",
+        "invest": {
+          "invest_id": 54,
+          "name": "Nowy Targówek VI",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "slug": "nowy-targowek-vi",
+          "developer": {
+            "developer_id": 43,
+            "name": "ATAL S.A.",
+            "slug": "atal"
+          }
+        }
+      },
+      "... (97 more, 100 total)"
+    ],
+    "pagination": {
+      "page": 1,
+      "perPage": 100,
+      "total": 13324,
+      "totalPages": 20
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "_request": "GET /api/announcement-stats?region=warszawa&propertyType=mieszkania",
+  "_captured": "2026-10-09",
+  "response": {
+    "blueRent": [
+      {
+        "date": "1588204800000",
+        "value": 8110
+      },
+      {
+        "date": "1588291200000",
+        "value": 8115
+      },
+      {
+        "date": "1588377600000",
+        "value": 8129
+      },
+      "... (2334 more, 2337 total)"
+    ],
+    "blueSell": [
+      {
+        "date": "1588204800000",
+        "value": 2882
+      },
+      {
+        "date": "1588291200000",
+        "value": 2870
+      },
+      {
+        "date": "1588377600000",
+        "value": 2839
+      },
+      "... (2334 more, 2337 total)"
+    ],
+    "greenRent": [
+      {
+        "date": "1588204800000",
+        "value": 8833
+      },
+      {
+        "date": "1588291200000",
+        "value": 8833
+      },
+      {
+        "date": "1588377600000",
+        "value": 8833
+      },
+      "... (2349 more, 2352 total)"
+    ],
+    "greenSell": [
+      {
+        "date": "1588204800000",
+        "value": 17208
+      },
+      {
+        "date": "1588291200000",
+        "value": 17208
+      },
+      {
+        "date": "1588377600000",
+        "value": 17208
+      },
+      "... (2349 more, 2352 total)"
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "_request": "GET /api/map/investments?citySlug=sopot",
+  "_captured": "2026-10-09",
+  "response": [
+    {
+      "invest_id": 33,
+      "latitude": 54.42735985,
+      "longitude": 18.55839032,
+      "name": "Smolna",
+      "slug": "smolna",
+      "city": "Sopot",
+      "city_slug": "sopot",
+      "street": "Świemirowo",
+      "district": "",
+      "status": "active",
+      "avg_amount": 1566392,
+      "avg_size": 63.966667,
+      "avg_price_sqm": 24522.212214,
+      "avg_amount_archived": 0,
+      "avg_size_archived": 0,
+      "avg_price_sqm_archived": 0,
+      "avg_amount_total": 1566392,
+      "avg_size_total": 63.966667,
+      "avg_price_sqm_total": 24522.212214,
+      "active_offers": 3,
+      "total_offers": 16,
+      "developer": {
+        "developer_id": 32,
+        "name": "Invest Komfort Spółka Akcyjna Sp.K.",
+        "slug": "invest-komfort-spolka-akcyjna"
+      }
+    },
+    {
+      "invest_id": 1276,
+      "latitude": 54.46388413,
+      "longitude": 18.55138082,
+      "name": "Nowe Kolibki etap 4",
+      "slug": "nowe-kolibki-etap-4",
+      "city": "Sopot",
+      "city_slug": "sopot",
+      "street": "",
+      "district": "",
+      "status": "active",
+      "avg_amount": 1615878,
+      "avg_size": 65.55,
+      "avg_price_sqm": 24756.4891646667,
+      "avg_amount_archived": 0,
+      "avg_size_archived": 0,
+      "avg_price_sqm_archived": 0,
+      "avg_amount_total": 1615878,
+      "avg_size_total": 65.55,
+      "avg_price_sqm_total": 24756.4891646667,
+      "active_offers": 3,
+      "total_offers": 27,
+      "developer": {
+        "developer_id": 32,
+        "name": "Invest Komfort Spółka Akcyjna Sp.K.",
+        "slug": "invest-komfort-spolka-akcyjna"
+      }
+    }
+  ]
+}

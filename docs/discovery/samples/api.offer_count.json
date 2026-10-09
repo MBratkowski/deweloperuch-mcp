@@ -1,0 +1,7 @@
+{
+  "_request": "GET /api/offer-count?city=warszawa",
+  "_captured": "2026-10-09",
+  "response": {
+    "count": 13324
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "_request": "GET /api/city-districts?citySlug=warszawa",
+  "_captured": "2026-10-09",
+  "response": {
+    "districts": [
+      {
+        "name": "Białołęka",
+        "count": 2934
+      },
+      {
+        "name": "Mokotów",
+        "count": 1562
+      },
+      {
+        "name": "Targówek",
+        "count": 1158
+      },
+      "... (15 more, 18 total)"
+    ]
+  }
+}

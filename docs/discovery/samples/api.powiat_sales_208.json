@@ -1,0 +1,86 @@
+{
+  "_request": "GET /api/map/powiat-sales/208",
+  "_captured": "2026-10-09",
+  "response": {
+    "powiatId": 208,
+    "powiatName": "powiat Sopot",
+    "investments": [
+      {
+        "id": 1354,
+        "lat": 54.44705851,
+        "lng": 18.54342128,
+        "name": "23 Marca 79C",
+        "slug": "23-marca-79c-sopot",
+        "city": "Sopot",
+        "citySlug": "sopot",
+        "street": "23 Marca 79C",
+        "district": ""
+      },
+      {
+        "id": 113633,
+        "lat": 54.43385288,
+        "lng": 18.57134175,
+        "name": "Władysława Łokietka 19A",
+        "slug": "wladyslawa-lokietka-19a-sopot",
+        "city": "Sopot",
+        "citySlug": "sopot",
+        "street": "Władysława Łokietka 19A",
+        "district": ""
+      },
+      {
+        "id": 113716,
+        "lat": 54.45075703,
+        "lng": 18.55596869,
+        "name": "Aleja Niepodległości 875b",
+        "slug": "aleja-niepodleglosci-875b-sopot",
+        "city": "Sopot",
+        "citySlug": "sopot",
+        "street": "Aleja Niepodległości 875b",
+        "district": ""
+      },
+      "... (1488 more, 1491 total)"
+    ],
+    "sales": [
+      {
+        "id": 10825,
+        "investId": 1349,
+        "priceSqm": 21243.31,
+        "amount": 1559471.42,
+        "size": 73.41,
+        "rooms": 3,
+        "floor": 2,
+        "type": "mieszkalna",
+        "lastEventDate": "2024-10-29",
+        "isFlipped": false,
+        "classification": "transakcja"
+      },
+      {
+        "id": 10826,
+        "investId": 1350,
+        "priceSqm": 20725.39,
+        "amount": 1000000,
+        "size": 48.25,
+        "rooms": 3,
+        "floor": 2,
+        "type": "mieszkalna",
+        "lastEventDate": "2024-12-11",
+        "isFlipped": false,
+        "classification": "transakcja"
+      },
+      {
+        "id": 10827,
+        "investId": 1351,
+        "priceSqm": 26182.36,
+        "amount": 1674885.6,
+        "size": 63.97,
+        "rooms": 3,
+        "floor": 4,
+        "type": "mieszkalna",
+        "lastEventDate": "2024-08-30",
+        "isFlipped": false,
+        "classification": "transakcja"
+      },
+      "... (6633 more, 6636 total)"
+    ]
+  }
+}

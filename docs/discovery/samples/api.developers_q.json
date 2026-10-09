@@ -1,0 +1,16 @@
+{
+  "_request": "GET /api/developers?q=atal&limit=5",
+  "_captured": "2026-10-09",
+  "response": {
+    "developers": [
+      {
+        "name": "ATAL S.A.",
+        "slug": "atal",
+        "offerCount": 4265
+      }
+    ],
+    "hasMore": false,
+    "total": 1,
+    "page": 1
+  }
+}

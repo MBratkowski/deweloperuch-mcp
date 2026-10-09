@@ -1,0 +1,26 @@
+{
+  "_request": "same as page.transactions_list",
+  "_prop": "initialApiParams",
+  "_captured": "2026-10-09",
+  "value": {
+    "page": 1,
+    "perPage": 50,
+    "sortBy": "amount",
+    "sortOrder": "asc",
+    "filterStreet": "",
+    "filterDistrict": "Mokotów",
+    "filterCitySlug": "warszawa",
+    "filterPowiatRcnId": "$undefined",
+    "filterPowiatRcnIds": "$undefined",
+    "filterPrice": "500000-800000",
+    "filterPricePerM2": "",
+    "filterSize": "",
+    "filterRooms": "2",
+    "filterFloor": "",
+    "filterType": "",
+    "filterPolygon": "$undefined",
+    "filterFlipped": "$undefined",
+    "filterClassification": "$undefined",
+    "filterLastTransactionDate": "$undefined"
+  }
+}

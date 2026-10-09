@@ -1,0 +1,31 @@
+{
+  "_request": "GET /api/map/powiat-stats",
+  "_captured": "2026-10-09",
+  "response": [
+    {
+      "powiat_rcn_id": 302,
+      "nazwa": "powiat Warszawa",
+      "transaction_count": 351314,
+      "avg_price_sqm": 16367,
+      "avg_size": 48.6,
+      "avg_amount": 780000
+    },
+    {
+      "powiat_rcn_id": 14,
+      "nazwa": "powiat Kraków",
+      "transaction_count": 225694,
+      "avg_price_sqm": 14899,
+      "avg_size": 47.7,
+      "avg_amount": 695000
+    },
+    {
+      "powiat_rcn_id": 33,
+      "nazwa": "powiat Wrocław",
+      "transaction_count": 166308,
+      "avg_price_sqm": 12547,
+      "avg_size": 50.1,
+      "avg_amount": 607000
+    },
+    "... (366 more, 369 total)"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "_request": "GET /api/size-distribution?city=warszawa",
+  "_captured": "2026-10-09",
+  "response": {
+    "buckets": 27,
+    "min": 24.11,
+    "max": 267.85,
+    "distribution": [
+      3,
+      473,
+      693,
+      "... (24 more, 27 total)"
+    ],
+    "total": 13351,
+    "aligned": true
+  }
+}
