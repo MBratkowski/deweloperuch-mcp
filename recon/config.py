@@ -2,8 +2,11 @@
 
 Recon scripts run as ``python3 recon/<script>.py`` without installing the package.
 Importing this module puts the repo's ``src/`` first on ``sys.path`` and re-exports
-the single limiter implementation (``deweloperuch_mcp.throttle``), which the
-package's HTTP client uses too, so recon and the client share one lock::
+what the package's HTTP client uses too, so recon and the client share it:
+
+- ``BASE_URL`` and ``USER_AGENT``, defined once in ``deweloperuch_mcp.identity`` (D9);
+- the single limiter implementation (``deweloperuch_mcp.throttle``), so they share
+  one lock::
 
     from config import BASE_URL, USER_AGENT, RequestLimiter
 
@@ -30,22 +33,15 @@ _SRC = str(Path(__file__).resolve().parent.parent / "src")
 if _SRC not in sys.path:
     sys.path.insert(0, _SRC)
 
-from deweloperuch_mcp.throttle import (  # noqa: E402 - needs the sys.path entry above
+# Both imports need the sys.path entry above. BASE_URL and USER_AGENT (TODO(U1)) are
+# defined only in deweloperuch_mcp.identity; do not redefine them here.
+from deweloperuch_mcp.identity import BASE_URL, USER_AGENT  # noqa: E402
+from deweloperuch_mcp.throttle import (  # noqa: E402
     DEFAULT_MIN_INTERVAL,
     RequestLimiter,
     Slot,
     WaitTooLongError,
     default_lock_dir,
-)
-
-BASE_URL = "https://deweloperuch.pl"
-
-# TODO(U1): the user picks the final User-Agent when deciding U1 (D9). Until then this
-# is the value recon/scan_bundles.py has been sending (that script switches to this
-# constant in A#3). Do not define a User-Agent anywhere else.
-USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/130.0 Safari/537.36"
 )
 
 __all__ = [

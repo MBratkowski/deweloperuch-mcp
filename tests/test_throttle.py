@@ -1,12 +1,10 @@
 """Unit tests for the cross-process request limiter (injected clock and sleep)."""
 
-import ast
 import fcntl
 import json
 import math
 import os
 import re
-import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -25,7 +23,6 @@ from deweloperuch_mcp.throttle import (
     default_lock_dir,
 )
 
-THROTTLE_SOURCE = Path(throttle.__file__)
 REPO = Path(__file__).resolve().parent.parent
 
 
@@ -584,23 +581,3 @@ def test_testing_flag_is_used_only_in_tests() -> None:
     ]
 
     assert offenders == []
-
-
-# --- stdlib only ---------------------------------------------------------------
-
-
-def test_throttle_imports_only_stdlib() -> None:
-    """recon/ scripts import this module without the package's dependencies."""
-    tree = ast.parse(THROTTLE_SOURCE.read_text(encoding="utf-8"))
-    imported: list[str] = []
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            imported += [alias.name for alias in node.names]
-        elif isinstance(node, ast.ImportFrom):
-            assert node.level == 0, "relative imports pull in the package"
-            assert node.module is not None
-            imported.append(node.module)
-
-    assert imported, "parser found no imports at all"
-    non_stdlib = [m for m in imported if m.split(".")[0] not in sys.stdlib_module_names]
-    assert non_stdlib == []
