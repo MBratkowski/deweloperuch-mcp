@@ -55,6 +55,10 @@ CLI i MCP wołają te same funkcje serwisów. CLI służy też jako narzędzie d
 
 **Decyzja użytkownika:** Python: FastMCP, pydantic, httpx, typer; pytest + pytest-socket + respx, ruff, mypy, uv. Tabela poniżej zostaje jako uzasadnienie.
 
+**Doprecyzowanie (2026-10-09, decyzja użytkownika):**
+- Serwer MCP budujemy na oficjalnym SDK `mcp>=2.3`. W linii 2.x FastMCP przemianowano na `MCPServer` (`from mcp.server.mcpserver import MCPServer`), a `mcp.server.fastmcp` jest tylko shimem z błędem migracji. Odrzucono przypięcie `mcp<2`.
+- `mcp` 2.x ciągnie też pakiet `httpx2`. Klient projektu jawnie używa `httpx`, bo respx mockuje tylko `httpx`.
+
 | | Python | TypeScript |
 |---|---|---|
 | MCP | oficjalny SDK z FastMCP (dekoratory, schemat z type hints) | oficjalny `@modelcontextprotocol/sdk` (najdojrzalszy) |
@@ -68,7 +72,9 @@ Rekomendacja: **Python**. Domena to głównie normalizacja i agregacja danych, p
 ## D9. Żywe zapytania do czasu rozstrzygnięcia U1 (przyjęta 2026-10-09, tymczasowa)
 
 **Kontekst.** Polityka wobec `robots.txt: Disallow: /api/` (U1) jest otwarta.
-**Decyzja użytkownika.** Dopóki U1 nie jest rozstrzygnięte, każda seria żywych zapytań (weryfikacja hipotez, skan driftu) wymaga jawnej zgody użytkownika w bieżącej rozmowie. User-Agent to jedna stała w `recon/config.py`. Jej wartość wybiera użytkownik przy rozstrzyganiu U1; do tego czasu zostaje obecna wartość ze skanera, oznaczona `TODO(U1)`.
+**Decyzja użytkownika.** Dopóki U1 nie jest rozstrzygnięte, każda seria żywych zapytań (weryfikacja hipotez, skan driftu) wymaga jawnej zgody użytkownika w bieżącej rozmowie. User-Agent to jedna stała. Jej wartość wybiera użytkownik przy rozstrzyganiu U1; do tego czasu zostaje obecna wartość ze skanera, oznaczona `TODO(U1)`.
+
+**Doprecyzowanie (2026-10-09, decyzja użytkownika):** stała `USER_AGENT` mieszka w module pakietu `deweloperuch_mcp` (tylko stdlib), bo zainstalowany pakiet nie widzi katalogu `recon/`. `recon/config.py` ją reeksportuje. Przeniesienie to osobne, małe zadanie przed vertical slice. Do tego czasu stała jest w `recon/config.py`.
 
 ## D10. Poziom wymuszania zasad przez Claude Code (przyjęta 2026-10-09)
 
