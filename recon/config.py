@@ -5,6 +5,7 @@ Importing this module puts the repo's ``src/`` first on ``sys.path`` and re-expo
 what the package's HTTP client uses too, so recon and the client share it:
 
 - ``BASE_URL`` and ``USER_AGENT``, defined once in ``deweloperuch_mcp.identity`` (D9);
+- ``parse_retry_after`` (``deweloperuch_mcp.retry_after``), the one ``Retry-After`` parser;
 - the single limiter implementation (``deweloperuch_mcp.throttle``), so they share
   one lock::
 
@@ -33,10 +34,12 @@ _SRC = str(Path(__file__).resolve().parent.parent / "src")
 if _SRC not in sys.path:
     sys.path.insert(0, _SRC)
 
-# Both imports need the sys.path entry above. BASE_URL and USER_AGENT (TODO(U1)) are
+# These imports need the sys.path entry above. BASE_URL and USER_AGENT (TODO(U1)) are
 # defined only in deweloperuch_mcp.identity; do not redefine them here.
 from deweloperuch_mcp.identity import BASE_URL, USER_AGENT  # noqa: E402
+from deweloperuch_mcp.retry_after import parse_retry_after  # noqa: E402
 from deweloperuch_mcp.throttle import (  # noqa: E402
+    DEFAULT_MAX_WAIT,
     DEFAULT_MIN_INTERVAL,
     RequestLimiter,
     Slot,
@@ -46,10 +49,12 @@ from deweloperuch_mcp.throttle import (  # noqa: E402
 
 __all__ = [
     "BASE_URL",
+    "DEFAULT_MAX_WAIT",
     "DEFAULT_MIN_INTERVAL",
     "USER_AGENT",
     "RequestLimiter",
     "Slot",
     "WaitTooLongError",
     "default_lock_dir",
+    "parse_retry_after",
 ]

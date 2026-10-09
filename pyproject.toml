@@ -17,12 +17,17 @@ build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# recon/ scripts are not part of the package; tests import them as top-level modules
+# (probe, flight, allowlist, config), the way `python3 recon/<script>.py` does.
+pythonpath = ["recon"]
 # pytest-socket: no test may open a network socket (CLAUDE.md, D10).
 addopts = "--disable-socket"
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# recon/ modules (config, flight, allowlist, probe) are first-party for import sorting.
+src = [".", "src", "recon"]
 extend-exclude = [
     # Markdown (ruff formats its code blocks by default) belongs to the documentation
     # owners; its snippets are illustrative, not project code.
@@ -31,7 +36,6 @@ extend-exclude = [
     ".claude/",
     # Pre-existing recon scripts kept byte-for-byte until their own tasks.
     # Remove each entry when its task reworks the file.
-    "recon/flight.py",  # A#2: probe.py builds on it
     "recon/scan_bundles.py",  # A#3: throttling, cache, baseline
 ]
 
@@ -41,6 +45,8 @@ select = ["E", "W", "F", "I", "B", "UP", "SIM"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
+# Resolves the recon modules tests import, so `mypy tests` type-checks them too.
+mypy_path = "recon"
 
 [dependency-groups]
 dev = [
