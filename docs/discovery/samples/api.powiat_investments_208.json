@@ -1,0 +1,59 @@
+{
+  "_request": "GET /api/map/powiat-investments/208",
+  "_captured": "2026-10-09",
+  "response": {
+    "powiatId": 208,
+    "powiatName": "powiat Sopot",
+    "investments": [
+      {
+        "id": 1354,
+        "lat": 54.44705851,
+        "lng": 18.54342128,
+        "name": "23 Marca 79C",
+        "slug": "23-marca-79c-sopot",
+        "city": "Sopot",
+        "citySlug": "sopot",
+        "street": "23 Marca 79C",
+        "district": "",
+        "avgAmount": 1324114.66,
+        "avgSize": 61.6,
+        "avgPriceSqm": 21494.72,
+        "transactions": 86,
+        "lastEventDate": "2025-11-17"
+      },
+      {
+        "id": 113633,
+        "lat": 54.43385288,
+        "lng": 18.57134175,
+        "name": "Władysława Łokietka 19A",
+        "slug": "wladyslawa-lokietka-19a-sopot",
+        "city": "Sopot",
+        "citySlug": "sopot",
+        "street": "Władysława Łokietka 19A",
+        "district": "",
+        "avgAmount": 643949.66,
+        "avgSize": 54.25,
+        "avgPriceSqm": 11870.22,
+        "transactions": 61,
+        "lastEventDate": "2025-12-03"
+      },
+      {
+        "id": 113716,
+        "lat": 54.45075703,
+        "lng": 18.55596869,
+        "name": "Aleja Niepodległości 875b",
+        "slug": "aleja-niepodleglosci-875b-sopot",
+        "city": "Sopot",
+        "citySlug": "sopot",
+        "street": "Aleja Niepodległości 875b",
+        "district": "",
+        "avgAmount": 769936.83,
+        "avgSize": 54.56,
+        "avgPriceSqm": 14110.61,
+        "transactions": 59,
+        "lastEventDate": "2025-04-17"
+      },
+      "... (1401 more, 1404 total)"
+    ]
+  }
+}

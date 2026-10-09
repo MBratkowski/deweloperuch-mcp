@@ -1,0 +1,40 @@
+{
+  "_request": "GET /api/sale-events?saleId=2377",
+  "_captured": "2026-10-09",
+  "response": {
+    "success": true,
+    "saleData": {
+      "name": "C224",
+      "amount": "1620175",
+      "size": "69.5",
+      "currency": "PLN"
+    },
+    "events": [
+      {
+        "sale_event_id": 145581,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1620000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      },
+      {
+        "sale_event_id": 510028,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1620000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      },
+      {
+        "sale_event_id": 841366,
+        "event_type": "RESTORED_EVENT",
+        "event_data": "",
+        "amount": "1620175",
+        "event_date": "2026-10-03T00:00:00.000Z",
+        "source": "ANNOUCMENT_PR"
+      },
+      "... (1 more, 4 total)"
+    ]
+  }
+}

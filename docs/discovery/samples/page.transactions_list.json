@@ -1,0 +1,134 @@
+{
+  "_request": "GET /ceny-transakcyjne/warszawa/mieszkania?filterRooms=2&filterPrice=500000-800000&filterDistrict=Mokotów&sortBy=amount&sortOrder=asc&perPage=50 (RSC)",
+  "_prop": "initialData",
+  "_captured": "2026-10-09",
+  "value": {
+    "data": [
+      {
+        "sale_rcn_id": 53203,
+        "name": "146505_8.0123.32_BUD.24_LOK",
+        "amount": "500000",
+        "amount_sqm": "18076.64",
+        "floor": "1",
+        "floor_number": 1,
+        "rooms": "2",
+        "rooms_number": 2,
+        "type": "mieszkalna",
+        "currency": "PLN",
+        "size": "27.66",
+        "size_building_area": 0,
+        "size_plot_area": 0,
+        "creation_date": "2018-09-18",
+        "start_amount_difference": "300000",
+        "start_amount_difference_percent": "150",
+        "last_amount_difference": "150000",
+        "last_amount_difference_percent": "42.86",
+        "last_event_date": "2022-08-23",
+        "total_events": 3,
+        "is_flipped": true,
+        "last_transaction_classification": "transakcja",
+        "invest": {
+          "invest_rcn_id": 6075,
+          "name": "Ulica Artura Grottgera 1",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "slug": "ulica-artura-grottgera-1-warszawa",
+          "source_rcn": {
+            "source_rcn_id": 9,
+            "name": "Warszawa"
+          }
+        }
+      },
+      {
+        "sale_rcn_id": 53230,
+        "name": "146505_8.0813.1069_BUD.1_LOK",
+        "amount": "500000",
+        "amount_sqm": "8418.93",
+        "floor": "2",
+        "floor_number": 2,
+        "rooms": "2",
+        "rooms_number": 2,
+        "type": "mieszkalna",
+        "currency": "PLN",
+        "size": "59.39",
+        "size_building_area": 0,
+        "size_plot_area": 0,
+        "creation_date": "2018-08-29",
+        "start_amount_difference": "0",
+        "start_amount_difference_percent": "0",
+        "last_amount_difference": "0",
+        "last_amount_difference_percent": "0",
+        "last_event_date": "2018-08-29",
+        "total_events": 1,
+        "is_flipped": false,
+        "last_transaction_classification": "transakcja",
+        "invest": {
+          "invest_rcn_id": 6101,
+          "name": "Ulica Obrzeżna 3",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "slug": "ulica-obrzezna-3-warszawa",
+          "source_rcn": {
+            "source_rcn_id": 9,
+            "name": "Warszawa"
+          }
+        }
+      },
+      {
+        "sale_rcn_id": 54858,
+        "name": "146505_8.0238.1015_BUD.36_LOK",
+        "amount": "500000",
+        "amount_sqm": "8925.38",
+        "floor": "5",
+        "floor_number": 5,
+        "rooms": "2",
+        "rooms_number": 2,
+        "type": "mieszkalna",
+        "currency": "PLN",
+        "size": "56.02",
+        "size_building_area": 0,
+        "size_plot_area": 0,
+        "creation_date": "2019-01-15",
+        "start_amount_difference": "0",
+        "start_amount_difference_percent": "0",
+        "last_amount_difference": "0",
+        "last_amount_difference_percent": "0",
+        "last_event_date": "2019-01-15",
+        "total_events": 1,
+        "is_flipped": false,
+        "last_transaction_classification": "transakcja",
+        "invest": {
+          "invest_rcn_id": 5569,
+          "name": "Ulica Faworytki 2",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "slug": "ulica-faworytki-2-warszawa",
+          "source_rcn": {
+            "source_rcn_id": 9,
+            "name": "Warszawa"
+          }
+        }
+      },
+      "... (47 more, 50 total)"
+    ],
+    "pagination": {
+      "page": 1,
+      "perPage": 50,
+      "total": 3824,
+      "totalPages": 20
+    },
+    "stats": {
+      "averagePrice": 631417,
+      "averageSize": 45.06,
+      "avgAmountPerM2": 14663,
+      "minPricePerSqm": 5943.12,
+      "maxPricePerSqm": 28008.85,
+      "pricePerSqmRange": "5.9k - 28.0k /m²",
+      "totalTransactions": 3824,
+      "minPrice": 500000,
+      "maxPrice": 800000,
+      "minSize": 22.1,
+      "maxSize": 111.2
+    }
+  }
+}

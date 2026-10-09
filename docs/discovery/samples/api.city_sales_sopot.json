@@ -1,0 +1,48 @@
+{
+  "_request": "GET /api/offers/city-sales/sopot",
+  "_captured": "2026-10-09",
+  "response": {
+    "citySlug": "sopot",
+    "investments": [
+      {
+        "id": 33,
+        "slug": "smolna",
+        "developerSlug": "invest-komfort-spolka-akcyjna",
+        "status": "active"
+      },
+      {
+        "id": 1276,
+        "slug": "nowe-kolibki-etap-4",
+        "developerSlug": "invest-komfort-spolka-akcyjna",
+        "status": "active"
+      }
+    ],
+    "sales": [
+      {
+        "id": 2377,
+        "investId": 33,
+        "amount": 1620175,
+        "size": 69.5,
+        "priceSqm": 23311.87,
+        "status": "active"
+      },
+      {
+        "id": 2386,
+        "investId": 33,
+        "amount": 1399205,
+        "size": 56.5,
+        "priceSqm": 24764.69,
+        "status": "active"
+      },
+      {
+        "id": 206087,
+        "investId": 33,
+        "amount": 1679796,
+        "size": 65.9,
+        "priceSqm": 25490.08,
+        "status": "active"
+      },
+      "... (3 more, 6 total)"
+    ]
+  }
+}

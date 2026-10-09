@@ -1,0 +1,43 @@
+{
+  "_request": "GET /api/city-transaction-stats",
+  "_captured": "2026-10-09",
+  "response": [
+    {
+      "city": "Warszawa",
+      "city_slug": "warszawa",
+      "transaction_count": 3606,
+      "avg_price_sqm": 16413,
+      "avg_size": 48.8,
+      "avg_amount": 780000,
+      "transaction_count_change": 13.8,
+      "price_sqm_change": -2.9,
+      "avg_size_change": 0.2,
+      "amount_change": -2.5
+    },
+    {
+      "city": "Kraków",
+      "city_slug": "krakow",
+      "transaction_count": 1492,
+      "avg_price_sqm": 14606,
+      "avg_size": 47.4,
+      "avg_amount": 675000,
+      "transaction_count_change": 7.9,
+      "price_sqm_change": -1.9,
+      "avg_size_change": 0,
+      "amount_change": -2.2
+    },
+    {
+      "city": "Wrocław",
+      "city_slug": "wroclaw",
+      "transaction_count": 1443,
+      "avg_price_sqm": 12437,
+      "avg_size": 50.3,
+      "avg_amount": 617000,
+      "transaction_count_change": 22.4,
+      "price_sqm_change": -0.7,
+      "avg_size_change": 0.6,
+      "amount_change": -1.3
+    },
+    "... (2445 more, 2448 total)"
+  ]
+}

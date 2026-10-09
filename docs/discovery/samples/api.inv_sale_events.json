@@ -1,0 +1,304 @@
+{
+  "_request": "GET /api/investments/33/sale-events",
+  "_captured": "2026-10-09",
+  "response": {
+    "2373": [
+      {
+        "sale_event_id": 510024,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1650000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      },
+      {
+        "sale_event_id": 145577,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1650000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      }
+    ],
+    "2374": [
+      {
+        "sale_event_id": 145578,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1210000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      },
+      {
+        "sale_event_id": 510025,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1210000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      }
+    ],
+    "2375": [
+      {
+        "sale_event_id": 145579,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1870000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      },
+      {
+        "sale_event_id": 510026,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1870000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      }
+    ],
+    "2376": [
+      {
+        "sale_event_id": 145580,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1920000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      },
+      {
+        "sale_event_id": 510027,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1920000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      }
+    ],
+    "2377": [
+      {
+        "sale_event_id": 145581,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1620000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      },
+      {
+        "sale_event_id": 510028,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1620000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      },
+      {
+        "sale_event_id": 841366,
+        "event_type": "RESTORED_EVENT",
+        "event_data": "",
+        "amount": "1620175",
+        "event_date": "2026-10-03T00:00:00.000Z",
+        "source": "ANNOUCMENT_PR"
+      },
+      "... (1 more, 4 total)"
+    ],
+    "2378": [
+      {
+        "sale_event_id": 145582,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1110000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      },
+      {
+        "sale_event_id": 510029,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1110000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      }
+    ],
+    "2379": [
+      {
+        "sale_event_id": 510030,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1630000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      },
+      {
+        "sale_event_id": 145583,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1630000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      }
+    ],
+    "2380": [
+      {
+        "sale_event_id": 510031,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1420000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      },
+      {
+        "sale_event_id": 145584,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1420000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      }
+    ],
+    "2381": [
+      {
+        "sale_event_id": 510032,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "2030000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      },
+      {
+        "sale_event_id": 145585,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "2030000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      }
+    ],
+    "2382": [
+      {
+        "sale_event_id": 510033,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "2600000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      },
+      {
+        "sale_event_id": 145586,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "2600000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      }
+    ],
+    "2383": [
+      {
+        "sale_event_id": 510034,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1660000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      },
+      {
+        "sale_event_id": 145587,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1660000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      }
+    ],
+    "2384": [
+      {
+        "sale_event_id": 510035,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1460000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      },
+      {
+        "sale_event_id": 145588,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1460000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      }
+    ],
+    "2385": [
+      {
+        "sale_event_id": 510036,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1460000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      },
+      {
+        "sale_event_id": 145589,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1460000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      }
+    ],
+    "2386": [
+      {
+        "sale_event_id": 510037,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1410000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      },
+      {
+        "sale_event_id": 145590,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1410000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      },
+      {
+        "sale_event_id": 841364,
+        "event_type": "RESTORED_EVENT",
+        "event_data": "",
+        "amount": "1399205",
+        "event_date": "2026-10-03T00:00:00.000Z",
+        "source": "ANNOUCMENT_PR"
+      },
+      "... (1 more, 4 total)"
+    ],
+    "2387": [
+      {
+        "sale_event_id": 510038,
+        "event_type": "ARCHIVED_EVENT",
+        "event_data": "",
+        "amount": "1560000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": ""
+      },
+      {
+        "sale_event_id": 145591,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1560000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      }
+    ],
+    "206087": [
+      {
+        "sale_event_id": 841368,
+        "event_type": "OFFER_EVENT",
+        "event_data": "{\"source\":\"scraper_pr\"}",
+        "amount": "1679796",
+        "event_date": "2026-10-03T00:00:00.000Z",
+        "source": "ANNOUCMENT_PR"
+      }
+    ]
+  }
+}

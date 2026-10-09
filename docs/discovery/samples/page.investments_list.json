@@ -1,0 +1,90 @@
+{
+  "_request": "GET /ceny-ofertowe/warszawa/inwestycje?sortBy=avg_price_sqm&sortOrder=asc&perPage=50 (RSC)",
+  "_captured": "2026-10-09",
+  "props": {
+    "investments": [
+      {
+        "invest_id": 2049,
+        "name": "Jeziorki Residence",
+        "sum_start_amount_difference_plus": 1380000,
+        "sum_start_amount_difference_minus": 0,
+        "slug": "jeziorki-residence",
+        "city": "Warszawa",
+        "city_slug": "warszawa",
+        "street": "Ursynów",
+        "status": "active",
+        "avg_amount": "2157143",
+        "avg_size": 258.12,
+        "active_offers": 14,
+        "avg_price_sqm": 8357,
+        "avg_amount_archived": 1910000,
+        "avg_size_archived": 254.24,
+        "avg_price_sqm_archived": 7513,
+        "developer": {
+          "name": "WAN S.A.",
+          "slug": "wan",
+          "developer_id": 235
+        },
+        "total_offers": 15,
+        "_count": {
+          "sale": 15
+        }
+      },
+      {
+        "invest_id": 3709,
+        "name": "Osiedle Nova Przylaszczkova",
+        "sum_start_amount_difference_plus": 290000,
+        "sum_start_amount_difference_minus": 0,
+        "slug": "osiedle-nova-przylaszczkova",
+        "city": "Warszawa",
+        "city_slug": "warszawa",
+        "street": "Przylaszczkowa 54",
+        "status": "active",
+        "avg_amount": "1167778",
+        "avg_size": 138.84,
+        "active_offers": 9,
+        "avg_price_sqm": 8411,
+        "avg_amount_archived": 1150000,
+        "avg_size_archived": 138.84,
+        "avg_price_sqm_archived": 8283,
+        "developer": {
+          "name": "Varsovia Development sp. z o.o.",
+          "slug": "varsovia-development-sp-z-oo",
+          "developer_id": 1481
+        },
+        "total_offers": 15,
+        "_count": {
+          "sale": 15
+        }
+      },
+      {
+        "invest_id": 3750,
+        "name": "Leśne Wzgórza etap I-II",
+        "sum_start_amount_difference_plus": 115976,
+        "sum_start_amount_difference_minus": 0,
+        "slug": "lesne-wzgorza-etap-i-ii",
+        "city": "Warszawa",
+        "city_slug": "warszawa",
+        "street": "Szamocin ",
+        "status": "active",
+        "avg_amount": "1271229",
+        "avg_size": 140.27,
+        "active_offers": 13,
+        "avg_price_sqm": 9063,
+        "avg_amount_archived": 1321400,
+        "avg_size_archived": 133.57,
+        "avg_price_sqm_archived": 9893,
+        "developer": {
+          "name": "Moris Inwestycje",
+          "slug": "moris-inwestycje",
+          "developer_id": 1514
+        },
+        "total_offers": 18,
+        "_count": {
+          "sale": 18
+        }
+      },
+      "... (47 more, 50 total)"
+    ]
+  }
+}

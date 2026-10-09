@@ -1,0 +1,17 @@
+{
+  "_request": "GET /api/transaction-size-distribution?city=warszawa",
+  "_captured": "2026-10-09",
+  "response": {
+    "buckets": 27,
+    "min": 20,
+    "max": 3868.3,
+    "distribution": [
+      5856,
+      16783,
+      26599,
+      "... (24 more, 27 total)"
+    ],
+    "total": 351314,
+    "aligned": true
+  }
+}

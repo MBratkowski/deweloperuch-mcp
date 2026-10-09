@@ -1,0 +1,103 @@
+{
+  "_request": "GET /ceny-ofertowe/warszawa/mieszkania?filterPrice=500000-700000&filterSize=40-60&sortBy=amount&sortOrder=asc&page=2&perPage=50 (RSC)",
+  "_prop": "initialData",
+  "_captured": "2026-10-09",
+  "value": {
+    "data": [
+      {
+        "sale_id": 120306,
+        "name": "B29",
+        "amount": "530559",
+        "start_amount_difference": "1843",
+        "start_amount_difference_percent": "0.35",
+        "last_amount_difference": "1843",
+        "last_amount_difference_percent": "0.35",
+        "last_event_type": "PRICE_INCREASE",
+        "total_events": 2,
+        "currency": "PLN",
+        "size": "43.02",
+        "status": "active",
+        "last_event_date": "2026-10-03",
+        "last_change_event_date": "2026-09-03",
+        "creation_date": "2025-09-15",
+        "invest": {
+          "invest_id": 3563,
+          "name": "Werandowa",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "slug": "werandowa",
+          "developer": {
+            "developer_id": 624,
+            "name": "Żerański Development",
+            "slug": "zeranski-development"
+          }
+        }
+      },
+      {
+        "sale_id": 120307,
+        "name": "B19",
+        "amount": "530559",
+        "start_amount_difference": "1843",
+        "start_amount_difference_percent": "0.35",
+        "last_amount_difference": "1843",
+        "last_amount_difference_percent": "0.35",
+        "last_event_type": "PRICE_INCREASE",
+        "total_events": 2,
+        "currency": "PLN",
+        "size": "43.02",
+        "status": "active",
+        "last_event_date": "2026-10-03",
+        "last_change_event_date": "2026-09-03",
+        "creation_date": "2025-09-15",
+        "invest": {
+          "invest_id": 3563,
+          "name": "Werandowa",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "slug": "werandowa",
+          "developer": {
+            "developer_id": 624,
+            "name": "Żerański Development",
+            "slug": "zeranski-development"
+          }
+        }
+      },
+      {
+        "sale_id": 120300,
+        "name": "B10",
+        "amount": "530938",
+        "start_amount_difference": "119",
+        "start_amount_difference_percent": "0.02",
+        "last_amount_difference": "119",
+        "last_amount_difference_percent": "0.02",
+        "last_event_type": "PRICE_INCREASE",
+        "total_events": 2,
+        "currency": "PLN",
+        "size": "44.42",
+        "status": "active",
+        "last_event_date": "2026-10-03",
+        "last_change_event_date": "2026-09-03",
+        "creation_date": "2025-09-15",
+        "invest": {
+          "invest_id": 3563,
+          "name": "Werandowa",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "slug": "werandowa",
+          "developer": {
+            "developer_id": 624,
+            "name": "Żerański Development",
+            "slug": "zeranski-development"
+          }
+        }
+      },
+      "... (47 more, 50 total)"
+    ],
+    "pagination": {
+      "page": 2,
+      "perPage": 50,
+      "total": 1192,
+      "totalPages": 20
+    }
+  }
+}

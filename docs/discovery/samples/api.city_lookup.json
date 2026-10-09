@@ -1,0 +1,8 @@
+{
+  "_request": "GET /api/city-lookup?city=warszawa",
+  "_captured": "2026-10-09",
+  "response": {
+    "city": "Warszawa",
+    "city_slug": "warszawa"
+  }
+}

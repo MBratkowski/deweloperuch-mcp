@@ -1,0 +1,26 @@
+{
+  "_request": "GET /api/avg-price-trend/city/warszawa",
+  "_captured": "2026-10-09",
+  "response": {
+    "data": [
+      {
+        "period": "2017-Q1",
+        "avgPriceSqm": 7595,
+        "count": 2922
+      },
+      {
+        "period": "2017-Q2",
+        "avgPriceSqm": 7695,
+        "count": 2854
+      },
+      {
+        "period": "2017-Q3",
+        "avgPriceSqm": 7844,
+        "count": 2893
+      },
+      "... (36 more, 39 total)"
+    ],
+    "scope": "city",
+    "scopeName": null
+  }
+}

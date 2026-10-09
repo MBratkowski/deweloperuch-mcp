@@ -1,0 +1,28 @@
+{
+  "_request": "GET /api/statystyki/powiat-price-trend?powiatId=208",
+  "_captured": "2026-10-09",
+  "response": [
+    {
+      "quarter": "2021-Q1",
+      "med_price_sqm": 13586,
+      "trimmed_avg_price_sqm": 14671,
+      "avg_35_60_price_sqm": 14958,
+      "transaction_count": 126
+    },
+    {
+      "quarter": "2021-Q2",
+      "med_price_sqm": 13414,
+      "trimmed_avg_price_sqm": 13617,
+      "avg_35_60_price_sqm": 13281,
+      "transaction_count": 127
+    },
+    {
+      "quarter": "2021-Q3",
+      "med_price_sqm": 13037,
+      "trimmed_avg_price_sqm": 13585,
+      "avg_35_60_price_sqm": 12530,
+      "transaction_count": 102
+    },
+    "... (17 more, 20 total)"
+  ]
+}

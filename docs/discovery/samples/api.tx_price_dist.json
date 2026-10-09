@@ -1,0 +1,18 @@
+{
+  "_request": "GET /api/transaction-price-distribution?city=warszawa&mode=amount",
+  "_captured": "2026-10-09",
+  "response": {
+    "buckets": 36,
+    "min": 40000,
+    "max": 31750000,
+    "distribution": [
+      59546,
+      35651,
+      35357,
+      "... (33 more, 36 total)"
+    ],
+    "total": 351314,
+    "mode": "amount",
+    "aligned": true
+  }
+}

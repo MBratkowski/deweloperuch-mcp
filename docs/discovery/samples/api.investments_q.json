@@ -1,0 +1,21 @@
+{
+  "_request": "GET /api/investments?q=nowy%20targ&limit=5",
+  "_captured": "2026-10-09",
+  "response": {
+    "investments": [
+      {
+        "name": "Nowy Targówek VI",
+        "slug": "nowy-targowek-vi",
+        "offerCount": 27
+      },
+      {
+        "name": "Apartamenty Nowy Targ",
+        "slug": "apartamenty-nowy-targ",
+        "offerCount": 0
+      }
+    ],
+    "hasMore": false,
+    "total": 2,
+    "page": 1
+  }
+}

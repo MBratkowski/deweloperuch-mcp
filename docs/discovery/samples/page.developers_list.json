@@ -1,0 +1,54 @@
+{
+  "_request": "GET /ceny-ofertowe/polska/deweloperzy?sortBy=projectCount&sortOrder=desc&perPage=50 (RSC)",
+  "_captured": "2026-10-09",
+  "props": {
+    "developers": [
+      {
+        "developer_id": 50,
+        "name": "Platforma Mieszkaniowa",
+        "slug": "platforma-mieszkaniowa",
+        "projectCount": 99,
+        "totalSales": 2234,
+        "totalOffersCount": 3669,
+        "cities": "Bąkowo, Błonie, Bojano, Brzezina, Cesarzowice, Chorzów, Czarnochowice, Czeladź, Gdańsk, Gdynia, Gliwice, Iwiny, Jelenia Góra, Juszkowo, Kamieniec Wrocławski, Katowice, Kąty Wrocławskie, Kiełpino, Kraków, Łódź, Marcinkowice, Miękinia, Młoszowa, Nowosiedlice, Owińska, Poznań, Ruda Śląska, Rumia, Siechnice, Siedlisko, Sobótka, Sosnowiec, Stegna, Szamotuły, Szczytniki, Tychy, Warszawa, Wiślinka, Wróblowice, Wrocław, Wysoka, Zacharzyce",
+        "cityCount": 42,
+        "avgSize": 58.91,
+        "avgPrice": 699479,
+        "avgPricePerM2": 11873,
+        "sum_start_amount_difference_plus": 19416971,
+        "sum_start_amount_difference_minus": -69192052
+      },
+      {
+        "developer_id": 44,
+        "name": "Dom Development S.A.",
+        "slug": "dom-development",
+        "projectCount": 60,
+        "totalSales": 3518,
+        "totalOffersCount": 6427,
+        "cities": "Kraków, Warszawa, Wrocław",
+        "cityCount": 3,
+        "avgSize": 51.2,
+        "avgPrice": 869231,
+        "avgPricePerM2": 16978,
+        "sum_start_amount_difference_plus": 37739076,
+        "sum_start_amount_difference_minus": -10446450
+      },
+      {
+        "developer_id": 43,
+        "name": "ATAL S.A.",
+        "slug": "atal",
+        "projectCount": 42,
+        "totalSales": 4265,
+        "totalOffersCount": 6570,
+        "cities": "Gdańsk, Gdynia, Gliwice, Katowice, Kowale, Kraków, Łódź, Piastów, Poznań, Reda, Swarzędz, Szczecin, Warszawa, Wrocław",
+        "cityCount": 14,
+        "avgSize": 58.41,
+        "avgPrice": 713728,
+        "avgPricePerM2": 12219,
+        "sum_start_amount_difference_plus": 70956710,
+        "sum_start_amount_difference_minus": -128934259
+      },
+      "... (47 more, 50 total)"
+    ]
+  }
+}

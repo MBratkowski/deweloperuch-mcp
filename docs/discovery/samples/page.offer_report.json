@@ -1,0 +1,404 @@
+{
+  "_request": "GET /ceny-ofertowe/warszawa/deweloperzy/atal/nowy-targowek-vi/raport-mieszkania-d1114",
+  "_captured": "2026-10-09",
+  "props": {
+    "property": {
+      "name": "D1.1.1.4",
+      "investmentName": "Nowy Targówek VI",
+      "developer": "ATAL S.A.",
+      "address": "Warszawa, Targówek",
+      "area": 55.25,
+      "offerPrice": 994012,
+      "offerPricePerSqm": 17991,
+      "latitude": 52.2815704,
+      "longitude": 21.04711656
+    },
+    "priceHistory": [
+      {
+        "amount": "1000000",
+        "creation_date": "2025-02-25"
+      },
+      {
+        "amount": "994006",
+        "creation_date": "2025-09-14"
+      },
+      {
+        "amount": "927706",
+        "creation_date": "2025-12-10"
+      },
+      "... (9 more, 12 total)"
+    ],
+    "competitors": [
+      {
+        "investmentName": "Moja Oszmiańska",
+        "developer": "Grupo Lar Polska & Hanner",
+        "address": "Warszawa, Oszmiańska ",
+        "distance": 1500,
+        "latitude": 52.2681058,
+        "longitude": 21.04292999,
+        "investSlug": "moja-oszmianska-warszawa",
+        "developerSlug": "grupo-lar-polska-hanner",
+        "citySlug": "warszawa",
+        "sales": [
+          {
+            "saleId": 166586,
+            "saleName": "4",
+            "area": 44.24,
+            "price": 738348,
+            "pricePerSqm": 16690,
+            "sizeMatch": true
+          }
+        ]
+      },
+      {
+        "investmentName": "Warszawski Świt XIII",
+        "developer": "Home Invest Sp. z o.o.",
+        "address": "Warszawa, Warszawski Świt ",
+        "distance": 2050,
+        "latitude": 52.28703955,
+        "longitude": 21.01818441,
+        "investSlug": "warszawski-swit-xiii-warszawa",
+        "developerSlug": "home-invest",
+        "citySlug": "warszawa",
+        "sales": [
+          {
+            "saleId": 196793,
+            "saleName": "F1-A002",
+            "area": 45.05,
+            "price": 656829,
+            "pricePerSqm": 14580,
+            "sizeMatch": true
+          },
+          {
+            "saleId": 196808,
+            "saleName": "F1-A012",
+            "area": 45.2,
+            "price": 663898,
+            "pricePerSqm": 14688,
+            "sizeMatch": true
+          },
+          {
+            "saleId": 196803,
+            "saleName": "F1-A023",
+            "area": 45.2,
+            "price": 668779,
+            "pricePerSqm": 14796,
+            "sizeMatch": true
+          },
+          "... (4 more, 7 total)"
+        ]
+      },
+      {
+        "investmentName": "Warszawski Świt etap XII",
+        "developer": "Home Invest Sp. z o.o.",
+        "address": "Warszawa, Warszawski Świt ",
+        "distance": 2050,
+        "latitude": 52.28710903,
+        "longitude": 21.01839667,
+        "investSlug": "warszawski-swit-etap-xii-warszawa",
+        "developerSlug": "home-invest",
+        "citySlug": "warszawa",
+        "sales": [
+          {
+            "saleId": 141247,
+            "saleName": "WS-L-A009",
+            "area": 47.47,
+            "price": 691600,
+            "pricePerSqm": 14569,
+            "sizeMatch": true
+          }
+        ]
+      },
+      "... (28 more, 31 total)"
+    ],
+    "investmentSales": [
+      {
+        "saleId": 4395,
+        "name": "D1.1.1.1",
+        "price": 1639932,
+        "size": 74.58,
+        "status": "archived"
+      },
+      {
+        "saleId": 4396,
+        "name": "D1.1.1.2",
+        "price": 649974,
+        "size": 39.77,
+        "status": "archived"
+      },
+      {
+        "saleId": 4394,
+        "name": "D1.1.1.3",
+        "price": 599979,
+        "size": 38.91,
+        "status": "archived"
+      },
+      "... (72 more, 75 total)"
+    ],
+    "data": {
+      "transactions": [
+        {
+          "address": "Ulica Płosa 4",
+          "unitNumber": "146511_8.0930.55_BUD.128_LOK",
+          "area": 57.14,
+          "pricePerSqm": 15576,
+          "totalPrice": 890013,
+          "date": "2024-10-15",
+          "floor": "5",
+          "distance": 50,
+          "latitude": 52.281556,
+          "longitude": 21.047732,
+          "marketType": "wtorny",
+          "isSamePrimaryInvestment": false,
+          "saleRcnId": 185510,
+          "investRcnSlug": "ulica-plosa-4-warszawa",
+          "investRcnCitySlug": "warszawa",
+          "excluded": false
+        },
+        {
+          "address": "Ulica Płosa 2",
+          "unitNumber": "146511_8.0930.54_BUD.72_LOK",
+          "area": 42.28,
+          "pricePerSqm": 17810,
+          "totalPrice": 753007,
+          "date": "2024-12-10",
+          "floor": "3",
+          "distance": 100,
+          "latitude": 52.28083,
+          "longitude": 21.047767,
+          "marketType": "wtorny",
+          "isSamePrimaryInvestment": false,
+          "saleRcnId": 223211,
+          "investRcnSlug": "ulica-plosa-2-warszawa",
+          "investRcnCitySlug": "warszawa",
+          "excluded": false
+        },
+        {
+          "address": "Ulica Miedza 3B",
+          "unitNumber": "146511_8.0930.58_BUD.4_LOK",
+          "area": 41.8,
+          "pricePerSqm": 19856,
+          "totalPrice": 829981,
+          "date": "2024-12-12",
+          "floor": "1",
+          "distance": 100,
+          "latitude": 52.281315,
+          "longitude": 21.048827,
+          "marketType": "wtorny",
+          "isSamePrimaryInvestment": false,
+          "saleRcnId": 234840,
+          "investRcnSlug": "ulica-miedza-3b-warszawa",
+          "investRcnCitySlug": "warszawa",
+          "excluded": false
+        },
+        "... (23 more, 26 total)"
+      ],
+      "stats": {
+        "averagePricePerSqm": 18180,
+        "medianPricePerSqm": 18354,
+        "minPricePerSqm": 13794,
+        "maxPricePerSqm": 21158,
+        "count": 26
+      },
+      "estimatedValue": 1003230,
+      "estimatedPricePerSqm": 18158,
+      "latitude": 52.2815704,
+      "longitude": 21.04711656,
+      "area": 55.25,
+      "generatedAt": "2026-10-09",
+      "radiusKm": 0.2,
+      "periodMonths": 24,
+      "buildingTransactionCount": 0,
+      "radiusLevel": "sasiedztwo",
+      "areaElasticity": -0.154,
+      "trendMonthlyPct": 0.69,
+      "buildings": [
+        {
+          "investRcnSlug": "ulica-plosa-4-warszawa",
+          "investRcnCitySlug": "warszawa",
+          "address": "Ulica Płosa 4",
+          "transactionCount": 5,
+          "avgPricePerSqm": 17038,
+          "minDistance": 50,
+          "latitude": 52.281556,
+          "longitude": 21.047732,
+          "inValuation": true,
+          "weightShare": 0.277
+        },
+        {
+          "investRcnSlug": "ulica-plosa-2-warszawa",
+          "investRcnCitySlug": "warszawa",
+          "address": "Ulica Płosa 2",
+          "transactionCount": 9,
+          "avgPricePerSqm": 19261,
+          "minDistance": 100,
+          "latitude": 52.28083,
+          "longitude": 21.047767,
+          "inValuation": true,
+          "weightShare": 0.392
+        },
+        {
+          "investRcnSlug": "ulica-miedza-3b-warszawa",
+          "investRcnCitySlug": "warszawa",
+          "address": "Ulica Miedza 3B",
+          "transactionCount": 2,
+          "avgPricePerSqm": 18594,
+          "minDistance": 100,
+          "latitude": 52.281315,
+          "longitude": 21.048827,
+          "inValuation": true,
+          "weightShare": 0.051
+        },
+        "... (4 more, 7 total)"
+      ],
+      "estimationContext": {
+        "pool": [
+          {
+            "pricePerSqm": 15576,
+            "monthsAgo": 23.79240806025515,
+            "rawDistance": 42,
+            "isBuilding": false,
+            "originalArea": 57.14,
+            "buildingKey": "ulica-plosa-4-warszawa",
+            "investRcnSlug": "ulica-plosa-4-warszawa",
+            "saleRcnId": 185510,
+            "marketType": "wtorny",
+            "isSamePrimaryInvestment": false
+          },
+          {
+            "pricePerSqm": 18331,
+            "monthsAgo": 22.116980990609942,
+            "rawDistance": 42,
+            "isBuilding": false,
+            "originalArea": 65.41,
+            "buildingKey": "ulica-plosa-4-warszawa",
+            "investRcnSlug": "ulica-plosa-4-warszawa",
+            "saleRcnId": 234841,
+            "marketType": "wtorny",
+            "isSamePrimaryInvestment": false
+          },
+          {
+            "pricePerSqm": 17482,
+            "monthsAgo": 12.787151818468024,
+            "rawDistance": 42,
+            "isBuilding": false,
+            "originalArea": 42.33,
+            "buildingKey": "ulica-plosa-4-warszawa",
+            "investRcnSlug": "ulica-plosa-4-warszawa",
+            "saleRcnId": 236483,
+            "marketType": "wtorny",
+            "isSamePrimaryInvestment": false
+          },
+          "... (23 more, 26 total)"
+        ],
+        "learnedParams": {
+          "monthlyLogReturn": 0.00688079070707543,
+          "r2": 0.6577529952393413,
+          "isReliable": true,
+          "buildingTrends": [
+            [
+              "ulica-plosa-4-warszawa",
+              0.005634498664786871
+            ],
+            [
+              "ulica-plosa-6-warszawa",
+              0.014827484544101146
+            ],
+            [
+              "ulica-plosa-2-warszawa",
+              0.009621786414095864
+            ],
+            "... (275 more, 278 total)"
+          ],
+          "quarterlyLevels": [
+            {
+              "monthsAgo": 4.5,
+              "logLevel": 0.058537276856407416
+            },
+            {
+              "monthsAgo": 7.5,
+              "logLevel": 0.061806223732486565
+            },
+            {
+              "monthsAgo": 10.5,
+              "logLevel": 0.0541304255426566
+            },
+            "... (17 more, 20 total)"
+          ]
+        },
+        "targetArea": 55.25,
+        "recentPeriodMonths": 24
+      },
+      "radiusPool": [
+        {
+          "pricePerSqm": 15576,
+          "monthsAgo": 23.79240806025515,
+          "rawDistance": 42,
+          "isBuilding": false,
+          "originalArea": 57.14,
+          "buildingKey": "ulica-plosa-4-warszawa",
+          "investRcnSlug": "ulica-plosa-4-warszawa",
+          "saleRcnId": 185510,
+          "marketType": "wtorny",
+          "isSamePrimaryInvestment": false,
+          "address": "Ulica Płosa 4",
+          "unitNumber": "146511_8.0930.55_BUD.128_LOK",
+          "area": 57.14,
+          "totalPrice": 890013,
+          "date": "2024-10-15",
+          "floor": "5",
+          "distance": 50,
+          "latitude": 52.281556,
+          "longitude": 21.047732,
+          "investRcnCitySlug": "warszawa"
+        },
+        {
+          "pricePerSqm": 18331,
+          "monthsAgo": 22.116980990609942,
+          "rawDistance": 42,
+          "isBuilding": false,
+          "originalArea": 65.41,
+          "buildingKey": "ulica-plosa-4-warszawa",
+          "investRcnSlug": "ulica-plosa-4-warszawa",
+          "saleRcnId": 234841,
+          "marketType": "wtorny",
+          "isSamePrimaryInvestment": false,
+          "address": "Ulica Płosa 4",
+          "unitNumber": "146511_8.0930.55_BUD.105_LOK",
+          "area": 65.41,
+          "totalPrice": 1199031,
+          "date": "2024-12-05",
+          "floor": "1",
+          "distance": 50,
+          "latitude": 52.281556,
+          "longitude": 21.047732,
+          "investRcnCitySlug": "warszawa"
+        },
+        {
+          "pricePerSqm": 17482,
+          "monthsAgo": 12.787151818468024,
+          "rawDistance": 42,
+          "isBuilding": false,
+          "originalArea": 42.33,
+          "buildingKey": "ulica-plosa-4-warszawa",
+          "investRcnSlug": "ulica-plosa-4-warszawa",
+          "saleRcnId": 236483,
+          "marketType": "wtorny",
+          "isSamePrimaryInvestment": false,
+          "address": "Ulica Płosa 4",
+          "unitNumber": "146511_8.0930.55_BUD.63_LOK",
+          "area": 42.33,
+          "totalPrice": 740013,
+          "date": "2025-09-15",
+          "floor": "1",
+          "distance": 50,
+          "latitude": 52.281556,
+          "longitude": 21.047732,
+          "investRcnCitySlug": "warszawa"
+        },
+        "... (115 more, 118 total)"
+      ],
+      "radiusCeilingM": 1000
+    }
+  }
+}

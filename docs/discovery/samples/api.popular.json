@@ -1,0 +1,63 @@
+{
+  "_request": "GET /api/popular-search-items",
+  "_captured": "2026-10-09",
+  "response": {
+    "cities": [
+      {
+        "name": "Warszawa",
+        "slug": "warszawa",
+        "woj": "MAZOWIECKIE",
+        "offerCount": 13351
+      },
+      {
+        "name": "Kraków",
+        "slug": "krakow",
+        "woj": "MAŁOPOLSKIE",
+        "offerCount": 8082
+      },
+      {
+        "name": "Wrocław",
+        "slug": "wroclaw",
+        "woj": "DOLNOŚLĄSKIE",
+        "offerCount": 6760
+      },
+      "... (10 more, 13 total)"
+    ],
+    "developers": [
+      {
+        "name": "Platforma Mieszkaniowa",
+        "slug": "platforma-mieszkaniowa",
+        "offerCount": 2234
+      },
+      {
+        "name": "Dom Development S.A.",
+        "slug": "dom-development",
+        "offerCount": 3518
+      },
+      {
+        "name": "ATAL S.A.",
+        "slug": "atal",
+        "offerCount": 4265
+      },
+      "... (1 more, 4 total)"
+    ],
+    "investments": [
+      {
+        "name": "Mokotów Sportowy 1.3",
+        "slug": "mokotow-sportowy-13-warszawa",
+        "offerCount": 476
+      },
+      {
+        "name": "Lokum Soho",
+        "slug": "lokum-soho-wroclaw",
+        "offerCount": 455
+      },
+      {
+        "name": "Jasielska 8C etap II",
+        "slug": "jasielska-8c-etap-ii",
+        "offerCount": 448
+      },
+      "... (1 more, 4 total)"
+    ]
+  }
+}

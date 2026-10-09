@@ -1,0 +1,269 @@
+{
+  "_request": "GET /api/standalone-valuation?area=50&lat=52.2297&lng=21.0122&address=Marsza%C5%82kowska%20100%2C%20Warszawa",
+  "_captured": "2026-10-09",
+  "response": {
+    "transactions": [
+      {
+        "address": "Ulica Nowogrodzka 38",
+        "unitNumber": "146510_8.0501.20_BUD.19_LOK",
+        "area": 43.57,
+        "pricePerSqm": 17558,
+        "totalPrice": 765002,
+        "date": "2025-04-17",
+        "floor": "6",
+        "distance": 150,
+        "latitude": 52.228606,
+        "longitude": 21.010909,
+        "marketType": "wtorny",
+        "isSamePrimaryInvestment": false,
+        "saleRcnId": 237171,
+        "investRcnSlug": "ulica-nowogrodzka-38-warszawa",
+        "investRcnCitySlug": "warszawa",
+        "excluded": false
+      },
+      {
+        "address": "Ulica Widok 24",
+        "unitNumber": "146510_8.0310.7_BUD.17_LOK",
+        "area": 41.02,
+        "pricePerSqm": 23830,
+        "totalPrice": 977507,
+        "date": "2025-05-27",
+        "floor": "6",
+        "distance": 150,
+        "latitude": 52.231035,
+        "longitude": 21.012679,
+        "marketType": "wtorny",
+        "isSamePrimaryInvestment": false,
+        "saleRcnId": 243165,
+        "investRcnSlug": "ulica-widok-24-warszawa",
+        "investRcnCitySlug": "warszawa",
+        "excluded": false
+      },
+      {
+        "address": "Ulica Widok 22",
+        "unitNumber": "146510_8.0310.87_BUD.21_LOK",
+        "area": 66.76,
+        "pricePerSqm": 31456,
+        "totalPrice": 2100003,
+        "date": "2025-01-13",
+        "floor": "3",
+        "distance": 150,
+        "latitude": 52.231096,
+        "longitude": 21.013023,
+        "marketType": "wtorny",
+        "isSamePrimaryInvestment": false,
+        "saleRcnId": 212721,
+        "investRcnSlug": "ulica-widok-22-warszawa",
+        "investRcnCitySlug": "warszawa",
+        "excluded": false
+      },
+      "... (6 more, 9 total)"
+    ],
+    "stats": {
+      "averagePricePerSqm": 22195,
+      "medianPricePerSqm": 23830,
+      "minPricePerSqm": 13187,
+      "maxPricePerSqm": 31492,
+      "count": 9
+    },
+    "estimatedValue": 1063300,
+    "estimatedPricePerSqm": 21266,
+    "latitude": 52.2297,
+    "longitude": 21.0122,
+    "area": 50,
+    "generatedAt": "2026-10-09",
+    "radiusKm": 0.2,
+    "periodMonths": 24,
+    "buildingTransactionCount": 0,
+    "radiusLevel": "sasiedztwo",
+    "areaElasticity": 0.152,
+    "trendMonthlyPct": 0.53,
+    "buildings": [
+      {
+        "investRcnSlug": "ulica-nowogrodzka-38-warszawa",
+        "investRcnCitySlug": "warszawa",
+        "address": "Ulica Nowogrodzka 38",
+        "transactionCount": 1,
+        "avgPricePerSqm": 17558,
+        "minDistance": 150,
+        "latitude": 52.228606,
+        "longitude": 21.010909,
+        "inValuation": true,
+        "weightShare": 0.125
+      },
+      {
+        "investRcnSlug": "ulica-widok-24-warszawa",
+        "investRcnCitySlug": "warszawa",
+        "address": "Ulica Widok 24",
+        "transactionCount": 2,
+        "avgPricePerSqm": 20131,
+        "minDistance": 150,
+        "latitude": 52.231035,
+        "longitude": 21.012679,
+        "inValuation": true,
+        "weightShare": 0.257
+      },
+      {
+        "investRcnSlug": "ulica-widok-22-warszawa",
+        "investRcnCitySlug": "warszawa",
+        "address": "Ulica Widok 22",
+        "transactionCount": 2,
+        "avgPricePerSqm": 28006,
+        "minDistance": 150,
+        "latitude": 52.231096,
+        "longitude": 21.013023,
+        "inValuation": true,
+        "weightShare": 0.191
+      },
+      "... (4 more, 7 total)"
+    ],
+    "estimationContext": {
+      "pool": [
+        {
+          "pricePerSqm": 17558,
+          "monthsAgo": 17.759079194575243,
+          "rawDistance": 150,
+          "isBuilding": false,
+          "originalArea": 43.57,
+          "buildingKey": "ulica-nowogrodzka-38-warszawa",
+          "investRcnSlug": "ulica-nowogrodzka-38-warszawa",
+          "saleRcnId": 237171,
+          "marketType": "wtorny",
+          "isSamePrimaryInvestment": false
+        },
+        {
+          "pricePerSqm": 23830,
+          "monthsAgo": 16.44501874779469,
+          "rawDistance": 152,
+          "isBuilding": false,
+          "originalArea": 41.02,
+          "buildingKey": "ulica-widok-24-warszawa",
+          "investRcnSlug": "ulica-widok-24-warszawa",
+          "saleRcnId": 243165,
+          "marketType": "wtorny",
+          "isSamePrimaryInvestment": false
+        },
+        {
+          "pricePerSqm": 16432,
+          "monthsAgo": 12.207173806927411,
+          "rawDistance": 152,
+          "isBuilding": false,
+          "originalArea": 42.6,
+          "buildingKey": "ulica-widok-24-warszawa",
+          "investRcnSlug": "ulica-widok-24-warszawa",
+          "saleRcnId": 257490,
+          "marketType": "wtorny",
+          "isSamePrimaryInvestment": false
+        },
+        "... (6 more, 9 total)"
+      ],
+      "learnedParams": {
+        "monthlyLogReturn": 0.005309127438015572,
+        "r2": 0.7461945338100692,
+        "isReliable": true,
+        "buildingTrends": [
+          [
+            "ulica-marszalkowska-8492-warszawa",
+            0.05
+          ],
+          [
+            "ulica-widok-24-warszawa",
+            0.001950227511210072
+          ],
+          [
+            "aleje-jerozolimskie-29-warszawa",
+            0.05
+          ],
+          "... (595 more, 598 total)"
+        ],
+        "quarterlyLevels": [
+          {
+            "monthsAgo": 4.5,
+            "logLevel": 0.018937918217581284
+          },
+          {
+            "monthsAgo": 7.5,
+            "logLevel": 0.027374485589062303
+          },
+          {
+            "monthsAgo": 10.5,
+            "logLevel": 0.0361977606356092
+          },
+          "... (17 more, 20 total)"
+        ]
+      },
+      "targetArea": 50,
+      "recentPeriodMonths": 24
+    },
+    "radiusPool": [
+      {
+        "pricePerSqm": 17558,
+        "monthsAgo": 17.759079194575243,
+        "rawDistance": 150,
+        "isBuilding": false,
+        "originalArea": 43.57,
+        "buildingKey": "ulica-nowogrodzka-38-warszawa",
+        "investRcnSlug": "ulica-nowogrodzka-38-warszawa",
+        "saleRcnId": 237171,
+        "marketType": "wtorny",
+        "isSamePrimaryInvestment": false,
+        "address": "Ulica Nowogrodzka 38",
+        "unitNumber": "146510_8.0501.20_BUD.19_LOK",
+        "area": 43.57,
+        "totalPrice": 765002,
+        "date": "2025-04-17",
+        "floor": "6",
+        "distance": 150,
+        "latitude": 52.228606,
+        "longitude": 21.010909,
+        "investRcnCitySlug": "warszawa"
+      },
+      {
+        "pricePerSqm": 23830,
+        "monthsAgo": 16.44501874779469,
+        "rawDistance": 152,
+        "isBuilding": false,
+        "originalArea": 41.02,
+        "buildingKey": "ulica-widok-24-warszawa",
+        "investRcnSlug": "ulica-widok-24-warszawa",
+        "saleRcnId": 243165,
+        "marketType": "wtorny",
+        "isSamePrimaryInvestment": false,
+        "address": "Ulica Widok 24",
+        "unitNumber": "146510_8.0310.7_BUD.17_LOK",
+        "area": 41.02,
+        "totalPrice": 977507,
+        "date": "2025-05-27",
+        "floor": "6",
+        "distance": 150,
+        "latitude": 52.231035,
+        "longitude": 21.012679,
+        "investRcnCitySlug": "warszawa"
+      },
+      {
+        "pricePerSqm": 16432,
+        "monthsAgo": 12.207173806927411,
+        "rawDistance": 152,
+        "isBuilding": false,
+        "originalArea": 42.6,
+        "buildingKey": "ulica-widok-24-warszawa",
+        "investRcnSlug": "ulica-widok-24-warszawa",
+        "saleRcnId": 257490,
+        "marketType": "wtorny",
+        "isSamePrimaryInvestment": false,
+        "address": "Ulica Widok 24",
+        "unitNumber": "146510_8.0310.7_BUD.11_LOK",
+        "area": 42.6,
+        "totalPrice": 700003,
+        "date": "2025-10-03",
+        "floor": "5",
+        "distance": 150,
+        "latitude": 52.231035,
+        "longitude": 21.012679,
+        "investRcnCitySlug": "warszawa"
+      },
+      "... (276 more, 279 total)"
+    ],
+    "radiusCeilingM": 1000
+  }
+}
