@@ -40,4 +40,21 @@ Skrypty `recon/` uruchamiane jako `python3 recon/<skrypt>.py` wymagają Pythona 
 
 `BASE_URL` i `USER_AGENT` (tymczasowy, `TODO(U1)`, do rozstrzygnięcia w U1/D9) są zdefiniowane w jednym miejscu: `src/deweloperuch_mcp/identity.py`. `recon/config.py` je reeksportuje i udostępnia skryptom razem z tym samym limiterem co pakiet.
 
-_Źródło: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `recon/config.py`_
+`recon/flight.py` uruchamiany jako CLI również wymaga Pythona 3.11+ (wcześniej działał na 3.9).
+
+### `recon/probe.py`
+
+Pojedyncze żądanie GET na uruchomienie (bez przekierowań i ponowień), w slocie tego samego zamka `throttle.lock` i z tym samym User-Agentem co reszta. Szczegóły flag i kodów wyjścia: `python3 recon/probe.py --help` oraz [README.md](../README.md).
+
+| Parametr | Wartość | Opis |
+|---|---|---|
+| `--max-wait` | 60 s (domyślnie) | Skończona liczba sekund. Dłuższa wymagana przerwa kończy się kodem 5, bez wysłania zapytania. |
+| Pauza po 429 | co najmniej 60 s | `max(Retry-After, 60)`. |
+| Pauza po 502/503/504 | `Retry-After` albo 30 s | `Retry-After` > 3600 s jest przycinane do 3600 s. |
+| Limit odpowiedzi | 32 MiB | Większa odpowiedź kończy się kodem 4 (D5: probe nie służy do zrzutów). |
+| Limit czytania odpowiedzi | ok. 120 s | Najgorszy przypadek ok. 120 s + 2 × 30 s. Odpowiedź krótsza niż `Content-Length` to kod 4, bez zapisu próbki. |
+| `--save` | `docs/discovery/samples/` | Jedyny katalog zapisu; istniejący plik nie jest nadpisywany. |
+
+Probe nie czyta własnych zmiennych środowiskowych. Parser `Retry-After` (sekundy albo data HTTP) jest wspólny z pakietem.
+
+_Źródło: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `src/deweloperuch_mcp/retry_after.py`, `recon/config.py`, `recon/probe.py`, `recon/allowlist.py`, `recon/flight.py`_

@@ -44,4 +44,10 @@ Skrypty wymagają Pythona >= 3.11 (systemowy `python3` z macOS to 3.9; alternaty
 
 - `recon/config.py`: wspólna konfiguracja skryptów (reeksport `BASE_URL` i `USER_AGENT` z `deweloperuch_mcp.identity`, `TODO(U1)`; wspólny limiter zapytań ze stanem w `~/.cache/deweloperuch-mcp/throttle.lock`, zob. [docs/configuration.md](docs/configuration.md))
 - `python3 recon/scan_bundles.py`: lista aktualnych `/api/*` i server actions z bundli JS (wykrywanie zmian po deployu serwisu)
-- `recon/flight.py`: dekoder payloadu RSC (`flight(html_path)`, `find_json_after(text, prop)`)
+- `recon/flight.py`: dekoder payloadu RSC (`flight(html_path)`, `flight_from_html(html)`, `find_json_after(text, prop)`, `component_props(text)`); jako CLI wymaga Pythona >= 3.11
+- `recon/allowlist.py`: allowlista ścieżek `/api/*` i tras stron (zgodna z `endpoints.md` i `pages-rsc.md`; bez `/api/valuation-pdf` i server actions)
+- `python3 recon/probe.py`: jedyna dozwolona droga żywych zapytań weryfikacyjnych (pojedynczy GET, przez wspólny limiter). Przyjmuje tylko ścieżki z allowlisty, nigdy pełne URL-e. Jedno uruchomienie to jedno żądanie, bez przekierowań i ponowień.
+  - `api ŚCIEŻKA`: `GET /api/*`, wynik JSON. `page ŚCIEŻKA [--prop NAZWA]`: strona jako RSC (`RSC: 1`, deterministyczny `_rsc`); bez `--prop` wypisuje propsy z danymi (nazwa, typ, rozmiar).
+  - Opcje: `--save NAZWA[.WARIANT]` (zapis do `docs/discovery/samples/<api|page>.NAZWA[.WARIANT].json`, nigdy nie nadpisuje; tablice przycięte do 3 elementów, duże mapy o kluczach numerycznych do 2 kluczy, dane osobowe zastąpione `"[usunięte]"`), `--max-wait SEKUNDY` (domyślnie 60), `--trim N` (domyślnie 3), `--full`.
+  - Kody wyjścia: 0 sukces; 2 błąd użycia lub allowlisty (zapytanie niewysłane); 3 STOP (401/403/429/challenge Cloudflare: przerwij serię i zgłoś); 4 inny błąd HTTP, sieci, odpowiedź za duża (32 MiB), ucięta lub czytana za długo; 5 limiter wymaga dłuższego czekania niż `--max-wait`; 6 odpowiedź 2xx bez oczekiwanych danych.
+  - Przykład: `python3 recon/probe.py api "/api/cities?q=krak"`. Żywe serie wymagają zgody użytkownika (D9), zob. [CLAUDE.md](CLAUDE.md).
