@@ -6,8 +6,8 @@ Priorytet: **P1** blokuje vertical slice, **P2** potrzebne przed pełnym v1, **P
 
 | # | Pytanie | Dlaczego ważne |
 |---|---|---|
-| U1 | **Polityka wobec `robots.txt: Disallow: /api/`.** Nasz klient woła te same endpointy co przeglądarka, ale robots wyklucza `/api/` dla automatów. Czy kontaktujemy się z autorami (aktywni na GitHub `deweloperuch`, X, TikTok), żeby uzyskać zgodę lub oficjalny dostęp? | Ryzyko blokady i etyka; wpływa na sposób identyfikacji klienta (UA) |
-| U2 | **Stos technologiczny**: Python (FastMCP + pydantic + httpx + typer) czy TypeScript (oficjalny SDK MCP + zod + undici + commander)? | Fundament repo |
+| U1 | (Do czasu rozstrzygnięcia obowiązuje tymczasowa reguła D9: żywe zapytania tylko za zgodą użytkownika.) **Polityka wobec `robots.txt: Disallow: /api/`.** Nasz klient woła te same endpointy co przeglądarka, ale robots wyklucza `/api/` dla automatów. Czy kontaktujemy się z autorami (aktywni na GitHub `deweloperuch`, X, TikTok), żeby uzyskać zgodę lub oficjalny dostęp? | Ryzyko blokady i etyka; wpływa na sposób identyfikacji klienta (UA) |
+| U2 | ~~Stos technologiczny~~: **rozstrzygnięte 2026-10-09: Python** (decisions.md D8) | Fundament repo |
 | U3 | **Tryb pracy MCP**: tylko lokalny stdio (Claude Desktop/Code) czy też zdalny (HTTP)? | Wpływa na cache i rate limiting (współdzielony vs per-użytkownik) |
 
 ## Techniczne

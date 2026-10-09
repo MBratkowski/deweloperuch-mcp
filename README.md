@@ -8,7 +8,7 @@ deweloperuch.pl → client (JSON API + RSC) → domain/services → CLI + MCP �
 
 ## Status
 
-**Etap 1–2 (discovery + capability matrix): ukończone 2026-10-09.** Implementacja jeszcze się nie zaczęła.
+**Etap 1–2 (discovery + capability matrix): ukończone 2026-10-09.** Implementacja jeszcze się nie zaczęła. Stos wybrany (D8): Python, FastMCP, pydantic, httpx, typer; pytest, pytest-socket, respx, ruff, mypy, uv. Zespół agentów skonfigurowany (zasady i przepływy w [CLAUDE.md](CLAUDE.md)).
 
 ## Dokumentacja
 
@@ -22,6 +22,9 @@ deweloperuch.pl → client (JSON API + RSC) → domain/services → CLI + MCP �
 | [docs/capability-matrix.md](docs/capability-matrix.md) | Capabilities → requesty → CLI / MCP tool → status |
 | [docs/open-questions.md](docs/open-questions.md) | Luki, hipotezy, pytania do decyzji |
 | [docs/decisions.md](docs/decisions.md) | Decyzje architektoniczne i propozycja pierwszego vertical slice |
+| [CLAUDE.md](CLAUDE.md) | Wspólne zasady pracy z serwisem, własność plików i przepływy A/B/C zespołu agentów |
+| [handoffs/INDEX.md](handoffs/INDEX.md) | Indeks handoffów między sesjami |
+| [prompts/agent-team-setup.md](prompts/agent-team-setup.md) | Meta-prompt, z którego zainstalowano zespół agentów |
 
 ## Narzędzia recon
 

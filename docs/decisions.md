@@ -51,7 +51,9 @@ CLI i MCP wołają te same funkcje serwisów. CLI służy też jako narzędzie d
 
 `recon/scan_bundles.py` listuje ścieżki `/api/*` i server actions z aktualnych bundli. Testy kontraktowe na `docs/discovery/samples/` plus okresowe (ręczne) uruchomienie skanera pokażą zmiany po deployach serwisu. Bez automatycznego crawla w CI.
 
-## D8. Stos technologiczny (otwarta, U2)
+## D8. Stos technologiczny (przyjęta 2026-10-09: Python)
+
+**Decyzja użytkownika:** Python: FastMCP, pydantic, httpx, typer; pytest + pytest-socket + respx, ruff, mypy, uv. Tabela poniżej zostaje jako uzasadnienie.
 
 | | Python | TypeScript |
 |---|---|---|
@@ -62,6 +64,24 @@ CLI i MCP wołają te same funkcje serwisów. CLI służy też jako narzędzie d
 | Fit do projektu | narzędzia recon już w Pythonie; praca z danymi i agregatami | ekosystem MCP i Next.js w JS; jeden język z serwisem (bez praktycznego zysku) |
 
 Rekomendacja: **Python**. Domena to głównie normalizacja i agregacja danych, pydantic dobrze obsługuje niespójne typy z backendu, a FastMCP daje mało boilerplate'u. TypeScript też jest w pełni uzasadniony, jeśli zespół woli JS.
+
+## D9. Żywe zapytania do czasu rozstrzygnięcia U1 (przyjęta 2026-10-09, tymczasowa)
+
+**Kontekst.** Polityka wobec `robots.txt: Disallow: /api/` (U1) jest otwarta.
+**Decyzja użytkownika.** Dopóki U1 nie jest rozstrzygnięte, każda seria żywych zapytań (weryfikacja hipotez, skan driftu) wymaga jawnej zgody użytkownika w bieżącej rozmowie. User-Agent to jedna stała w `recon/config.py`. Jej wartość wybiera użytkownik przy rozstrzyganiu U1; do tego czasu zostaje obecna wartość ze skanera, oznaczona `TODO(U1)`.
+
+## D10. Poziom wymuszania zasad przez Claude Code (przyjęta 2026-10-09)
+
+**Decyzja użytkownika.**
+- Hooki są siatką na pomyłki, nie granicą bezpieczeństwa:
+  - własność plików per agent dla Edit/Write/NotebookEdit;
+  - blokada URL-i serwisu w Bash;
+  - przypomnienie o handoffie.
+- Testy blokują sieć przez `pytest-socket`.
+- Narzędzia przeglądarki (`mcp__claude-in-chrome`) wymagają potwierdzenia przy każdym użyciu.
+- Bez sandboxa Claude Code.
+
+Konfiguracja: `.claude/settings.json`, `.claude/hooks/`, zasady w `CLAUDE.md`.
 
 ---
 
