@@ -17,3 +17,7 @@ node_modules/
 .DS_Store
 .idea/
 .vscode/
+
+# Claude Code (local only)
+.claude/settings.local.json
+.claude/agent-memory-local/
