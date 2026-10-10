@@ -27,9 +27,9 @@ addopts = "--disable-socket"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-# recon/ modules (config, http_common, flight, allowlist, probe, scan_bundles) are
-# first-party for import sorting.
-src = [".", "src", "recon"]
+# recon/ modules (config, http_common, flight, allowlist, probe, scan_bundles) and test
+# helpers in tests/ (discovery_samples) are first-party for import sorting.
+src = [".", "src", "recon", "tests"]
 extend-exclude = [
     # Markdown (ruff formats its code blocks by default) belongs to the documentation
     # owners; its snippets are illustrative, not project code.

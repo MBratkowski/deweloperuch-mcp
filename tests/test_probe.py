@@ -1459,6 +1459,22 @@ def test_too_deeply_nested_json_fails_cleanly(
     assert list(env.samples_dir.iterdir()) == []
 
 
+@pytest.mark.parametrize(
+    ("mode", "path", "prop"),
+    [
+        ("api", "/api/map/powiat-sales/208", None),
+        ("page", "/statystyki/ceny-transakcyjne/mieszkania/warszawa", "rawTransactions"),
+    ],
+)
+def test_probe_may_still_read_what_the_package_client_treats_as_a_dump(
+    tmp_path: Path, mode: str, path: str, prop: str | None
+) -> None:
+    """DUMP_PATHS bind the package's client only; probe keeps its allowlist (D5 via body limit)."""
+    plan = probe.make_plan(mode, path, prop, None, tmp_path)
+
+    assert plan.url.startswith(identity.BASE_URL + path)
+
+
 def test_default_samples_dir_is_the_repo_one() -> None:
     assert probe.SAMPLES_DIR == SAMPLES
 
