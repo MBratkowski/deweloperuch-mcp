@@ -68,6 +68,16 @@ uv run ruff check .
 uv run mypy src
 ```
 
+Testy offline korzystają z prawdziwych surowych payloadów RSC w `tests/fixtures/rsc/` (nie z atrap budowanych z założeń).
+
+Zestaw e2e `tests/e2e/` (60 testów: MCP 48, CLI 10, recon 2) działa na żywym serwisie, więc jest poza zwykłym `uv run pytest` i wymaga jawnej zgody użytkownika (D9). Nie uruchamiaj go równolegle z recon-verifierem ani drift-checkerem; STOP kończy przebieg kodem 3. Plan to ok. 46 żywych zapytań, twardy limit 60 na przebieg:
+
+```
+DEWELOPERUCH_LIVE=1 uv run pytest -m live tests/e2e -rs --maxfail=3
+```
+
+Scenariusze i budżet: [tests/e2e/README.md](tests/e2e/README.md).
+
 Konfiguracja, limiter zapytań i plik zamka: [docs/configuration.md](docs/configuration.md).
 
 ## Dokumentacja

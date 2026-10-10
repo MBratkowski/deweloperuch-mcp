@@ -106,6 +106,14 @@ Konfiguracja: `.claude/settings.json`, `.claude/hooks/`, zasady w `CLAUDE.md`.
 - Testy uruchamiające podprocesy wstawiają w nich guard pytest-socket (`NO_NETWORK` w `tests/test_mcp_server.py`, guard w `tests/throttle_worker.py`) i nie wołają ścieżek, które mogłyby dojść do usług.
 - Hook Bash blokuje też agentom zdejmowanie STOP (D2): `deweloperuch … stop clear` oraz zmiany i usuwanie plików limitera.
 
+**Doprecyzowanie (2026-10-10, polecenie użytkownika: „pisz e2e testy”, „zrób jak najwięcej testów e2e”): wyjątek dla zestawu e2e.**
+- Opcjonalny zestaw `tests/e2e/` łączy się z żywym serwisem, ale wyłącznie przez podprocesy: serwer MCP przez stdio, CLI i `probe`. Sam proces testów nadal ma blokadę sieci (dopuszcza tylko AF_UNIX).
+- Uruchamia się tylko przy obu włącznikach naraz: `DEWELOPERUCH_LIVE=1` i `-m live`. Domyślny `uv run pytest` go pomija i nie łączy się z siecią.
+- Uruchomienie to seria żywych zapytań w rozumieniu D9: wymaga zgody użytkownika i nie może iść równolegle z recon-verifierem ani drift-checkerem.
+- Budżet zapytań na przebieg jest twardy i pilnuje go asercja w zestawie.
+- Zestaw korzysta ze wspólnego limitera i zapisu STOP (D2). STOP kończy przebieg bez ponowień.
+- Testy offline korzystają z prawdziwych odpowiedzi serwisu: próbek `docs/discovery/samples/` i surowych payloadów `tests/fixtures/`. Payloadów nie buduje się z założeń, chyba że test sprawdza sam kształt.
+
 ## D11. Interfejs MCP i CLI v1 (przyjęta 2026-10-10, decyzja użytkownika)
 
 **Kontekst.** S1b dało pierwszy publiczny interfejs; rozmiar wyniku dla modelu to główne ograniczenie MCP.

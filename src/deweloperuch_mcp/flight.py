@@ -10,7 +10,12 @@ The one implementation, shared by the package's RSC adapter and the ``recon/`` s
     flight(path)                 -> the same for a saved HTML page
     find_json_after(text, prop)  -> every JSON value that follows ``"prop":`` in flight text
                                     (works on raw RSC responses too)
-    component_props(text)        -> (name, value) of every client component prop
+    rows(payload)                -> the rows of a flight stream (``Row``: id, tag, data)
+    component_props(payload)     -> (name, value) of every client component prop
+    error_digests(payload)       -> ``digest`` of every error row (e.g. Next.js 404)
+
+``payload`` is a raw RSC response (bytes, as received) or flight text (``str``, e.g.
+from ``flight_from_html``); lengths in the stream count UTF-8 bytes either way.
 
 Keep this module free of imports outside the standard library: ``recon/`` scripts load
 it without installing the package or its dependencies.
@@ -21,12 +26,24 @@ import json
 import os
 import re
 from collections.abc import Iterator
+from dataclasses import dataclass
 from typing import Any
 
 _PUSH = re.compile(r'self\.__next_f\.push\(\[1,"(.*?)"\]\)</script>', re.S)
-# A row of the RSC wire format whose payload is JSON: `<hex id>:[...]` or `<hex id>:{...}`.
-# Other rows (`I[...]` imports, `HL[...]` hints, `T<len>,<text>` text) are skipped.
-_JSON_ROW = re.compile(r"^[0-9a-f]+:(?=[\[{])", re.M)
+
+# The wire format as the site's React reads it ([P z kodu] ReactFlightClient in chunk
+# 1517-4dca600cb4fa56f9.js, read 2026-10-10; tests/fixtures/rsc/ holds real payloads):
+#
+# - a row starts with `<hex id>:` (hints are sent with an empty id) and a tag;
+# - `T` (text) and the binary rows (typed arrays) then give `<hex length>,` and exactly
+#   that many BYTES of data, with no newline after them: the next row starts right there;
+# - every other row ends at `\n`. Its tag is an uppercase letter, `#`, `r` or `x`
+#   (`I` import, `H` hint, `E` error, ...); any other character starts the data of a
+#   model row (JSON: elements and their props), which has no tag.
+_LENGTH_TAGS = frozenset(b"TAOoUSsLlGgMmV")
+_LINE_TAGS = frozenset(b"ABCDEFGHIJKLMNOPQRSTUVWXYZ#rx") - _LENGTH_TAGS
+_ROW_ID = re.compile(rb"([0-9a-fA-F]*):")
+_LENGTH = re.compile(rb"([0-9a-fA-F]+),")
 
 
 def rsc_token(target: str) -> str:
@@ -69,17 +86,80 @@ def find_json_after(text: str, key: str) -> list[Any]:
     return out
 
 
-def component_props(text: str) -> Iterator[tuple[str, Any]]:
+@dataclass(frozen=True)
+class Row:
+    """One row of a flight stream: ``<id>:<tag><data>``.
+
+    ``tag`` is ``""`` for a model row (JSON) or one character (``I``, ``H``, ``E``,
+    ``T``...). ``data`` is everything after the tag (after ``<length>,`` for a text or
+    binary row), without the newline that ends a row.
+    """
+
+    id: str
+    tag: str
+    data: bytes
+
+    @property
+    def text(self) -> str:
+        """``data`` decoded as UTF-8 (invalid bytes replaced)."""
+        return self.data.decode("utf-8", "replace")
+
+
+def rows(payload: str | bytes) -> Iterator[Row]:
+    """The rows of a flight stream, in order.
+
+    A line that does not start like a row (blank, a stray ``\\r``, garbage) is skipped.
+    A text or binary row whose length runs past the end, or cannot be read, ends the
+    stream: everything after its header would be part of its data. The last row may
+    lack its newline. References (``"$..."``) are not resolved.
+    """
+    data = payload.encode("utf-8", "surrogatepass") if isinstance(payload, str) else payload
+    end = len(data)
+    pos = 0
+    while pos < end:
+        head = _ROW_ID.match(data, pos)
+        if head is None:
+            newline = data.find(b"\n", pos)
+            if newline < 0:
+                return
+            pos = newline + 1
+            continue
+        row_id = head[1].decode("ascii")
+        pos = head.end()
+        tag = data[pos] if pos < end else -1
+        if tag in _LENGTH_TAGS:
+            length = _LENGTH.match(data, pos + 1)
+            if length is None:
+                return
+            start = length.end()
+            stop = start + int(length[1], 16)
+            if stop > end:
+                return
+            yield Row(row_id, chr(tag), data[start:stop])
+            pos = stop
+            continue
+        name = ""
+        if tag in _LINE_TAGS:
+            name, pos = chr(tag), pos + 1
+        newline = data.find(b"\n", pos)
+        stop = end if newline < 0 else newline
+        yield Row(row_id, name, data[pos:stop])
+        pos = stop + 1
+
+
+def component_props(payload: str | bytes) -> Iterator[tuple[str, Any]]:
     """``(name, value)`` of each prop of each client component, in document order.
 
-    Client components are elements ``["$", "$L<id>", key, {props}]``; their props carry
-    the page data (``initialData``, ``serverPaginationData``, ...). ``children`` is
-    skipped. Values that are references (``"$2:props:..."``) are yielded as they are.
+    Client components are elements ``["$", "$L<id>", key, {props}]`` in model rows;
+    their props carry the page data (``initialData``, ``serverPaginationData``, ...).
+    ``children`` is skipped. Values that are references (``"$2:props:..."``) are
+    yielded as they are.
     """
-    decoder = json.JSONDecoder()
-    for row in _JSON_ROW.finditer(text):
+    for row in rows(payload):
+        if row.tag:
+            continue
         try:
-            tree, _ = decoder.raw_decode(text, row.end())
+            tree = json.loads(row.text)
         except (ValueError, RecursionError):
             continue
         stack: list[Any] = [tree]
@@ -91,6 +171,25 @@ def component_props(text: str) -> Iterator[tuple[str, Any]]:
                 if _is_client_element(node):
                     yield from ((k, v) for k, v in node[3].items() if k != "children")
                 stack.extend(reversed(node))
+
+
+def error_digests(payload: str | bytes) -> list[str]:
+    """``digest`` of each error row (``<id>:E{"digest": ...}``), in order.
+
+    Next.js reports ``notFound()`` of a page this way, in a 200 response
+    (``NEXT_HTTP_ERROR_FALLBACK;404``); error rows without a digest are skipped.
+    """
+    found: list[str] = []
+    for row in rows(payload):
+        if row.tag != "E":
+            continue
+        try:
+            value = json.loads(row.text)
+        except (ValueError, RecursionError):
+            continue
+        if isinstance(value, dict) and isinstance(value.get("digest"), str):
+            found.append(value["digest"])
+    return found
 
 
 def _is_client_element(node: list[Any]) -> bool:

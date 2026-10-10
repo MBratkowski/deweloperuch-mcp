@@ -23,7 +23,7 @@ deweloperuch offers search [OPTIONS] CITY
 Zakresy filtrów to 0–99 999 999 PLN i 0–9 999 m² (wartownicy [P z kodu]); `--price-min` większe niż `--price-max` to błąd (kod 2).
 
 ## Kody wyjścia
-Zob. [tabela kodów](../README.md#kody-wyjścia). Najczęstsze: 0, 2 (zły filtr, `--sort` lub `--per-page` spoza listy), 3 STOP, 4 błąd serwisu, 7 nieznane miasto (tylko przy HTTP 404; strona bez danych daje dziś kod 6, bo serwis zwraca 200).
+Zob. [tabela kodów](../README.md#kody-wyjścia). Najczęstsze: 0, 2 (zły filtr, `--sort` lub `--per-page` spoza listy), 3 STOP, 4 błąd serwisu, 7 nieznane miasto (linia `Błąd:` „Serwis nie zna miasta '<slug>'…” i `Szczegóły:` z digestem odpowiedzi). `CITY` niebędące slugiem (nazwa, wielkie litery, pusty tekst) to błąd walidacji z komunikatem „city: oczekiwano slug miasta…”, zanim wyślemy zapytanie.
 
 ## Przykłady
 ```

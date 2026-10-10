@@ -1,0 +1,3 @@
+# Raw RSC payloads: text rows (`<id>:T<hex length>,`) count bytes, so git must never
+# touch line endings or encodings here.
+*.rsc -text

@@ -71,7 +71,7 @@ Listy (mieszkania, inwestycje, deweloperzy, transakcje, adresy) i strony szczeg�
 
 - Request: `GET <ścieżka strony>?<filtry>&_rsc=<dowolny>` z nagłówkiem `RSC: 1` → `content-type: text/x-component`, ~10× mniej danych niż HTML.
 - Parametr `_rsc` jest potrzebny, bo Cloudflare ignoruje `Vary: RSC`: bez niego dostajemy zcache'owany HTML [P].
-- Format: linie `<id>:<json>`; propsy są w elementach `["$","$L<id>",null,{...props}]`. Parser referencyjny: [`src/deweloperuch_mcp/flight.py`](../../src/deweloperuch_mcp/flight.py) (`recon/flight.py` go reeksportuje).
+- Format: wiersze `<id>:<json>` (do `\n`) oraz `<id>:T<hexlen>,<tekst>` (długość w bajtach, bez `\n`; tak samo tagi binarne); propsy są w elementach `["$","$L<id>",null,{...props}]`. Nieznane miasto: HTTP 200 + wiersz `E` z digestem `NEXT_HTTP_ERROR_FALLBACK;404` [P 2026-10-10]. Szczegóły: [pages-rsc.md](pages-rsc.md). Parser referencyjny: [`src/deweloperuch_mcp/flight.py`](../../src/deweloperuch_mcp/flight.py) (`rows`, `component_props`, `error_digests`; `recon/flight.py` go reeksportuje).
 - Paginacja ma twardy limit **20 stron** (`page=21` → zwraca stronę 20) [P]. `perPage` ∈ {10, 25, 50, 100} przyjęte (20 i 500 → 10) [P].
 - Szczegóły per strona: [pages-rsc.md](pages-rsc.md).
 

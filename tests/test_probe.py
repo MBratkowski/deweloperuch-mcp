@@ -40,6 +40,7 @@ from deweloperuch_mcp.throttle import (
     Slot,
     StopRecord,
 )
+from rsc_fixtures import OFFERS_UNKNOWN_CITY, OFFERS_WARSZAWA, raw
 
 REPO = Path(__file__).resolve().parent.parent
 PROBE = REPO / "recon" / "probe.py"
@@ -1222,6 +1223,50 @@ def test_page_without_prop_lists_data_props(env: Env, capsys: pytest.CaptureFixt
         {"name": "investments", "type": "array", "size": 50},
         {"name": "serverPaginationData", "type": "object", "size": 2},
     ]
+
+
+def test_page_without_prop_lists_the_data_of_the_real_offers_page(
+    env: Env, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The real page: the data row follows text rows without a newline; the list still
+    shows it (before 2026-10-10 it stopped at the layout's props)."""
+    service = FakeService([response(200, raw(OFFERS_WARSZAWA), "text/x-component")])
+
+    code = env.run(["page", "/ceny-ofertowe/warszawa/mieszkania?perPage=10"], service)
+
+    assert code == 0
+    listed = json.loads(capsys.readouterr().out)
+    assert {"name": "initialData", "type": "object", "size": 2} in listed
+    assert {"name": "initialApiParams", "type": "object", "size": 17} in listed
+
+
+def test_page_prop_of_the_real_offers_page(env: Env, capsys: pytest.CaptureFixture[str]) -> None:
+    service = FakeService([response(200, raw(OFFERS_WARSZAWA), "text/x-component")])
+
+    code = env.run(
+        ["page", "/ceny-ofertowe/warszawa/mieszkania?perPage=10", "--prop", "initialData"],
+        service,
+    )
+
+    assert code == 0
+    value = json.loads(capsys.readouterr().out)
+    assert value["pagination"] == {"page": 1, "perPage": 10, "total": 13324, "totalPages": 20}
+
+
+def test_page_prop_missing_on_the_real_unknown_city_page(
+    env: Env, capsys: pytest.CaptureFixture[str]
+) -> None:
+    service = FakeService([response(200, raw(OFFERS_UNKNOWN_CITY), "text/x-component")])
+
+    code = env.run(
+        ["page", "/ceny-ofertowe/nieistniejace-miasto/mieszkania", "--prop", "initialData"],
+        service,
+    )
+
+    assert code == NO_DATA
+    err = capsys.readouterr().err
+    assert "Nie znaleziono propsa 'initialData'" in err
+    assert "segmentPath" in err
 
 
 def test_page_served_as_html_is_decoded_with_a_warning(

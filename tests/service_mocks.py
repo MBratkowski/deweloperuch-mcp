@@ -3,6 +3,10 @@
 Shared by the adapter tests (CLI, MCP): they go through the real services and the real
 client, so only the network is mocked. Paths and queries come from the samples'
 ``_request`` (``discovery_samples.request_target``).
+
+The offers list answers with a real RSC response (tests/fixtures/rsc/): by default the
+Warsaw page byte for byte; a test that needs other offers gets them spliced into that
+same frame (``rsc_fixtures.offers_payload``), never a payload built from assumptions.
 """
 
 import copy
@@ -11,7 +15,8 @@ from typing import Any
 import respx
 
 from deweloperuch_mcp import identity
-from discovery_samples import body, request_target, rsc_payload
+from discovery_samples import body, request_target
+from rsc_fixtures import OFFERS_UNKNOWN_CITY, UNKNOWN_CITY, offers_payload, raw
 
 BASE = identity.BASE_URL
 INVESTMENT = BASE + request_target("api.map_inv_visible")
@@ -34,12 +39,22 @@ def offers_page(sample: str = "page.offers_list", *, count: int | None = None) -
     return page
 
 
+RSC_HEADERS = {"Content-Type": "text/x-component"}
+
+
 def offers_route(router: respx.MockRouter, page: Any = None) -> respx.Route:
-    """Every offers list page answers with ``page`` (default: the sample)."""
+    """Every offers list page answers with the real Warsaw page (10 offers, total 13 324)
+    or, with ``page``, with that ``initialData`` in the same real frame."""
     return router.route(method="GET", path__startswith="/ceny-ofertowe/").respond(
-        200,
-        content=rsc_payload({"initialData": offers_page() if page is None else page}),
-        headers={"Content-Type": "text/x-component"},
+        200, content=offers_payload(page), headers=RSC_HEADERS
+    )
+
+
+def unknown_city_route(router: respx.MockRouter) -> respx.Route:
+    """The offers list of ``rsc_fixtures.UNKNOWN_CITY``: the real 200 without data, with
+    Next.js's 404 marker. Add it before ``offers_route`` (the first match answers)."""
+    return router.route(method="GET", path=f"/ceny-ofertowe/{UNKNOWN_CITY}/mieszkania").respond(
+        200, content=raw(OFFERS_UNKNOWN_CITY), headers=RSC_HEADERS
     )
 
 

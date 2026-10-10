@@ -32,6 +32,10 @@ Priorytet: **P1** blokuje vertical slice, **P2** potrzebne przed pełnym v1, **P
 | T31 | P3 | `success: false` w `/api/sale-events`: kiedy występuje (nieznany ID daje `success: true, saleData: null`; złe/puste `saleId`?) | [H] | 1–2 zapytania z błędnym `saleId` |
 | T32 | P3 | `count` w `location-search` dla `street` i `city` (czy = liczba aktywnych ofert; w trybie transakcji = transakcje) | [H] | Porównać z `total` listy `filterStreet=` / `/api/cities offerCount` |
 | T33 | P3 | Niesprawdzone wartości filtrów listy ofert: `filterPriceChange=increase,no_change` i csv, `filterStatus=active`, sentinel `filterPricePerM2=…-999999`, `filterDeveloper`, `filterProject`, `filterStreet`, `filterAnomalies`, `showArchivedInvestments` | [W] | Zapytania kontrolne z porównaniem `total` |
+| T34 | P2 | Odpowiedź dla `page` > `totalPages` przy znanym mieście (np. Kraków, `filterPrice=0-300000`, strona M+1): pusta strona, przycięcie do ostatniej strony (jak `page>20` → 20) czy `notFound()` (digest 404; MCP powie wtedy „nie zna miasta”)? Test: `tests/e2e/test_live_mcp.py::test_offers_page_past_the_last_one` | [H] | 1 zapytanie, sprawdzić `initialData` i wiersze `E` |
+| T35 | P2 | Czy slug dzielnicy (np. `mokotow`) jako `{city}` daje digest 404. Test: `test_offers_district_slug_as_city_is_an_unknown_city` | [H] | 1 zapytanie |
+| T36 | P2 | Czy digest `NEXT_HTTP_ERROR_FALLBACK;404` pojawia się także na innych stronach RSC (inwestycje, deweloperzy, szczegóły); potwierdzony tylko na liście ofert | [H] | Po 1 zapytaniu z nieznanym slugiem na stronę |
+| T37 | P3 | Czy surowe payloady RSC mają być osobnym typem próbki w `docs/discovery/samples/` (dziś: `tests/fixtures/rsc/`, a próbki to przycięty JSON z kopertą) | [H] | Decyzja po przeglądzie konwencji próbek (bez zapytań) |
 
 ## Rozstrzygnięte
 
