@@ -5,16 +5,30 @@
         [--area-max N] [--sort price_asc|price_desc] [--page N] [--per-page 10|50|100] [--json]
     deweloperuch offers get OFFER_ID --investment SLUG [--json]
     deweloperuch investments get SLUG [--history] [--limit N] [--json]
+    deweloperuch stop status [--json]
+    deweloperuch stop clear
 
 A thin layer: typer checks types and enums, the services check everything else (their
 messages say what to fix). Each run opens one ``services.Session`` and closes it. Text
 for people by default (Polish); ``--json`` prints the domain model. Errors of the package
 go to stderr without a traceback and end the run with the codes of ``ExitCode``.
 
+``stop status`` and ``stop clear`` work offline on the STOP record of the shared limiter
+(every process stops after a 401, 403, 429 or challenge) and open no session. ``status``
+answers at once, without the limiter's lock: it exits with 3 while the record holds
+requests back (also one that will end, and an unreadable one), else 0. ``clear`` waits
+for the lock (a note on stderr after ``STOP_LOCK_NOTICE`` s), removes the record (for
+people, after checking the cause) and exits with 0, also when there was nothing to
+remove; with 1 when the lock does not come within ``STOP_LOCK_WAIT`` s or the record
+cannot be removed (nothing removed). The texts may show times, sources and how to lift
+the STOP: they are for people; what a model reads elsewhere never says that.
+
 Imports only ``services``, ``errors`` and ``domain.models`` from the package, never the
 client (D6; tests/test_layering.py).
 """
 
+import json
+import math
 from collections.abc import Callable
 from enum import IntEnum
 from typing import Annotated, TypeVar
@@ -40,6 +54,7 @@ from deweloperuch_mcp.errors import (
     ServiceBlockedError,
     ServiceError,
     UnexpectedResponseError,
+    printable,
 )
 
 
@@ -70,10 +85,11 @@ _EXIT_CODES: tuple[tuple[type[DeweloperuchError], ExitCode], ...] = (
 )
 
 
-# The STOP latch lasts only as long as the process: a shell loop would go on sending.
+# The STOP is recorded for every process (CLI, MCP server, recon), so a shell loop stops
+# too; the advice still says it, and never how to remove the record (that is for people).
 STOP_ADVICE = (
-    "Nie uruchamiaj kolejnych poleceń deweloperuch ani pętli: przerwij i zgłoś to. "
-    "Przy 429 odczekaj co najmniej czas podany wyżej."
+    "Nie uruchamiaj kolejnych poleceń deweloperuch ani pętli: przerwij i zgłoś to "
+    "użytkownikowi. Blokada obejmuje też inne procesy."
 )
 
 
@@ -96,9 +112,17 @@ app = typer.Typer(
 locations_app = typer.Typer(help="Lokalizacje: miasta, dzielnice, ulice.", no_args_is_help=True)
 offers_app = typer.Typer(help="Oferty mieszkań od deweloperów.", no_args_is_help=True)
 investments_app = typer.Typer(help="Inwestycje deweloperskie.", no_args_is_help=True)
+stop_app = typer.Typer(
+    help=(
+        "Blokada STOP: po 401, 403, 429 albo challenge Cloudflare żaden proces (CLI, serwer "
+        "MCP, recon) nie wysyła zapytań. Działa offline."
+    ),
+    no_args_is_help=True,
+)
 app.add_typer(locations_app, name="locations")
 app.add_typer(offers_app, name="offers")
 app.add_typer(investments_app, name="investments")
+app.add_typer(stop_app, name="stop")
 
 
 def main() -> None:
@@ -252,6 +276,49 @@ def investments_get(
     _print(result, as_json, format_investment)
 
 
+STOP_LOCK_WAIT = 300.0
+"""Longest wait of ``stop clear`` for the limiter's lock; then exit 1, nothing removed."""
+
+STOP_LOCK_NOTICE = 2.0
+"""Wait of ``stop clear`` for the lock after which it says on stderr that it waits."""
+
+STOP_LOCK_WAITING = (
+    "Czekam na zamek limitera: inny proces wysyła zapytanie albo czeka na swoją kolej."
+)
+
+
+@stop_app.command("status")
+def stop_status(
+    as_json: Annotated[bool, typer.Option("--json", help="Wypisz stan blokady jako JSON.")] = False,
+) -> None:
+    """Pokaż blokadę STOP; kod 3, gdy wstrzymuje zapytania (także wygasająca), 0, gdy nie."""
+    state = services.stop_status()  # never waits; an unreadable record is a STOP (3)
+    if as_json:
+        typer.echo(json.dumps(state.to_json(), ensure_ascii=False, indent=2))
+    else:
+        typer.echo(format_stop_status(state))
+    if state.active:
+        raise typer.Exit(ExitCode.STOP)
+
+
+@stop_app.command("clear")
+def stop_clear() -> None:
+    """Zdejmij blokadę STOP. Tylko człowiek, po sprawdzeniu przyczyny (`stop status`)."""
+    try:
+        before = services.clear_stop(
+            wait_limit=STOP_LOCK_WAIT,
+            notice_after=STOP_LOCK_NOTICE,
+            on_wait=lambda: typer.echo(STOP_LOCK_WAITING, err=True),
+        )
+    except services.LockWaitTimeout as err:
+        typer.echo(f"Błąd: {err}", err=True)
+        raise typer.Exit(ExitCode.UNEXPECTED) from None
+    except OSError as err:
+        typer.echo(f"Błąd: nie udało się zdjąć zapisu STOP: {printable(str(err))}", err=True)
+        raise typer.Exit(ExitCode.UNEXPECTED) from None
+    typer.echo(format_stop_clear(before))
+
+
 # --- text output ---------------------------------------------------------------------------
 
 _KINDS = {"city": "miasto", "district": "dzielnica", "street": "ulica"}
@@ -362,6 +429,60 @@ def format_investment(investment: Investment) -> str:
         if offer.price_history is not None:
             lines += [_event_line(event, unit) for event in offer.price_history]
     return "\n".join(lines)
+
+
+def format_stop_status(state: services.StopStatus) -> str:
+    stop = state.stop
+    if stop is None:
+        lines = ["Brak STOP: zapytania do deweloperuch.pl nie są wstrzymane."]
+    elif isinstance(stop, services.UnreadableStop):
+        lines = [
+            "STOP aktywny bezterminowo: zapis jest nieczytelny.",
+            f"Problem: {printable(stop.problem)}",
+        ]
+    elif state.active:
+        lines = [f"STOP aktywny: {stop.label}.", _stop_origin(stop)]
+        if stop.until is None:
+            lines.append("Wygasa: nie, trwa do zdjęcia.")
+        else:
+            left = max(1, math.ceil(state.seconds_left or 0))
+            lines.append(f"Wygasa: {services.format_time(stop.until)} (za {left} s).")
+    else:
+        until = "" if stop.until is None else f" {services.format_time(stop.until)}"
+        lines = [
+            f"STOP wygasł{until}: {stop.label}.",
+            _stop_origin(stop),
+            "Zapytania do deweloperuch.pl nie są wstrzymane.",
+        ]
+    if state.active:
+        lines.append(
+            "Blokadę zdejmuje użytkownik po sprawdzeniu przyczyny: deweloperuch stop clear"
+        )
+    lines.append(f"Plik: {printable(str(state.path))}")
+    return "\n".join(lines)
+
+
+def format_stop_clear(before: services.StopStatus) -> str:
+    stop = before.stop
+    if stop is None:
+        return "Brak STOP: nie było czego zdejmować."
+    if isinstance(stop, services.UnreadableStop):
+        lines = [f"Zdjęto nieczytelny zapis STOP ({printable(stop.problem)})."]
+    else:
+        expired = "" if before.active else " (już wygasł)"
+        lines = [f"Zdjęto STOP{expired}: {stop.summary()}."]
+        if before.active and stop.until is not None:
+            lines.append("Pauza po 429 zapisana w limiterze nadal obowiązuje.")
+    lines.append(
+        "Działający serwer MCP, który trafił na STOP, wyśle zapytania dopiero po ponownym "
+        "uruchomieniu."
+    )
+    return "\n".join(lines)
+
+
+def _stop_origin(stop: services.StopRecord) -> str:
+    pid = "" if stop.pid is None else f" (PID {stop.pid})"
+    return f"Od: {services.format_time(stop.since)} · źródło: {stop.source}{pid}"
 
 
 def _offer_line(offer: OfferBase) -> str:

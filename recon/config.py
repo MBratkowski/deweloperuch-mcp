@@ -13,7 +13,7 @@ what the package's HTTP client uses too, so recon and the client share it:
 - the read allowlist (``deweloperuch_mcp.allowlist``), which ``recon/allowlist.py``
   re-exports;
 - the single limiter implementation (``deweloperuch_mcp.throttle``), so they share
-  one lock::
+  one lock and one STOP record (``StoppedError``)::
 
     from config import BASE_URL, USER_AGENT, RequestLimiter
 
@@ -69,6 +69,7 @@ from deweloperuch_mcp.http_policy import (  # noqa: E402
     content_type,
     is_html,
     pause_seconds,
+    stop_cause,
     stop_reason,
 )
 from deweloperuch_mcp.identity import BASE_URL, USER_AGENT  # noqa: E402
@@ -78,8 +79,11 @@ from deweloperuch_mcp.throttle import (  # noqa: E402
     DEFAULT_MIN_INTERVAL,
     RequestLimiter,
     Slot,
+    StoppedError,
+    StopRecord,
     WaitTooLongError,
     default_lock_dir,
+    format_time,
 )
 
 __all__ = [
@@ -96,6 +100,8 @@ __all__ = [
     "USER_AGENT",
     "RequestLimiter",
     "Slot",
+    "StopRecord",
+    "StoppedError",
     "WaitTooLongError",
     "body_length",
     "compile_template",
@@ -105,6 +111,7 @@ __all__ = [
     "find_json_after",
     "flight",
     "flight_from_html",
+    "format_time",
     "is_html",
     "match_api",
     "match_dump",
@@ -113,6 +120,7 @@ __all__ = [
     "parse_retry_after",
     "pause_seconds",
     "rsc_token",
+    "stop_cause",
     "stop_reason",
     "with_rsc_token",
 ]

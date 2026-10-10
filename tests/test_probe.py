@@ -32,7 +32,14 @@ import pytest
 import http_common
 import probe
 from deweloperuch_mcp import identity
-from deweloperuch_mcp.throttle import LOCK_FILENAME, MAX_DEFER, RequestLimiter
+from deweloperuch_mcp.throttle import (
+    LOCK_FILENAME,
+    MAX_DEFER,
+    STOP_FILENAME,
+    RequestLimiter,
+    Slot,
+    StopRecord,
+)
 
 REPO = Path(__file__).resolve().parent.parent
 PROBE = REPO / "recon" / "probe.py"
@@ -904,7 +911,13 @@ def test_cloudflare_challenge_stops_api(
 
     assert code == STOP
     assert len(service.requests) == 1
-    assert "Przerwij serię" in capsys.readouterr().err
+    err = capsys.readouterr().err
+    assert "Przerwij serię" in err
+    # The STOP names a status only when it is a STOP status itself (http_policy): a
+    # "HTTP 200" there reads like success; the status line above still shows it.
+    stop_line = next(line for line in err.splitlines() if line.startswith("STOP: "))
+    expected = "HTTP 403 (odmowa dostępu), " if reply.status == 403 else ""
+    assert stop_line.startswith(f"STOP: {expected}challenge Cloudflare (captcha/WAF). ")
 
 
 def test_challenge_on_503_stops_and_records_retry_after(env: Env) -> None:
@@ -969,6 +982,115 @@ def test_turnstile_mention_inside_rsc_is_not_a_challenge(
 
     assert code == 0
     assert json.loads(capsys.readouterr().out) == {"a": 1}
+
+
+# --- the STOP record (every process) ---------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("reply", "status", "reason"),
+    [
+        (json_response({"error": "x"}, 401), 401, "brak autoryzacji"),
+        (json_response({"error": "x"}, 403), 403, "odmowa dostępu"),
+        (response(429, retry_after="90"), 429, "limit zapytań"),
+        (
+            response(200, CHALLENGE_HTML, "text/html"),
+            "challenge",
+            "challenge Cloudflare (captcha/WAF)",
+        ),
+    ],
+    ids=["401", "403", "429", "challenge"],
+)
+def test_a_stop_is_recorded_and_ends_the_next_run_before_it_sends(
+    env: Env,
+    capsys: pytest.CaptureFixture[str],
+    reply: probe.Response,
+    status: int | str,
+    reason: str,
+) -> None:
+    service = FakeService([reply, json_response({})])
+
+    assert env.run(["api", "/api/cities?q=krak"], service) == STOP
+    state = env.limiter.stop_status()
+    assert isinstance(state.stop, StopRecord)
+    assert (state.stop.status, state.stop.reason, state.stop.source) == (status, reason, "probe")
+    assert (state.stop.until is not None) is (status == 429)
+    first = capsys.readouterr().err
+    # recon-verifier is a model too: nothing about when it ends or how to lift it.
+    assert "Zapisano STOP: inne procesy też zostały wstrzymane.\n" in first
+    assert "/api/" not in (env.lock_dir / STOP_FILENAME).read_text(encoding="utf-8")
+
+    assert env.run(["api", "/api/popular-search-items", "--max-wait", "5"], service) == STOP
+
+    assert len(service.requests) == 1
+    second = capsys.readouterr().err
+    assert second.startswith("STOP: seria zapytań do deweloperuch.pl jest wstrzymana")
+    assert reason.split(" (")[0] in second and "probe" not in second
+    assert second.endswith("zgłoś to użytkownikowi.\n")
+
+
+@pytest.mark.parametrize("source", ["pakiet", "scan_bundles"])
+def test_a_stop_recorded_by_another_program_ends_the_run(
+    env: Env, capsys: pytest.CaptureFixture[str], source: str
+) -> None:
+    with env.limiter.slot() as slot:
+        slot.stop(403, "odmowa dostępu", source=source)
+    service = FakeService([json_response({})])
+
+    code = env.run(["api", "/api/cities?q=krak"], service)
+
+    assert code == STOP
+    assert service.requests == []
+    err = capsys.readouterr().err
+    assert "wcześniejszym STOP" in err and "odmowa dostępu" in err
+    assert source not in err  # the program is a detail for people (stop status)
+
+
+def test_an_unreadable_record_ends_the_run(env: Env, capsys: pytest.CaptureFixture[str]) -> None:
+    env.lock_dir.mkdir()
+    (env.lock_dir / STOP_FILENAME).write_text("{", encoding="utf-8")
+    service = FakeService([json_response({})])
+
+    assert env.run(["api", "/api/cities?q=krak"], service) == STOP
+    assert service.requests == []
+    assert "nieczytelny" in capsys.readouterr().err
+
+
+def test_usage_errors_come_before_the_stop(env: Env) -> None:
+    with env.limiter.slot() as slot:
+        slot.stop(403, "odmowa dostępu", source="pakiet")
+
+    assert env.run(["api", "/api/not-documented"], FakeService([])) == USAGE
+
+
+def test_the_stop_is_recorded_before_the_lock_is_released(
+    env: Env, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen_at_unlock: list[bool] = []
+    real_flock = fcntl.flock
+
+    def flock(fd: int, operation: int) -> None:
+        if operation == fcntl.LOCK_UN:
+            seen_at_unlock.append((env.lock_dir / STOP_FILENAME).exists())
+        real_flock(fd, operation)
+
+    monkeypatch.setattr(fcntl, "flock", flock)
+
+    assert env.run(["api", "/api/cities?q=krak"], FakeService([response(403)])) == STOP
+    assert seen_at_unlock == [True]
+
+
+def test_a_stop_that_cannot_be_recorded_is_still_a_stop(
+    env: Env, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def disk_full(*args: object, **kwargs: object) -> None:
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr(Slot, "stop", disk_full)
+
+    assert env.run(["api", "/api/cities?q=krak"], FakeService([response(403)])) == STOP
+    assert "Uwaga: STOP nie został zapisany dla innych procesów" in capsys.readouterr().err
+    assert not (env.lock_dir / STOP_FILENAME).exists()
 
 
 # --- other HTTP outcomes ---------------------------------------------------------------

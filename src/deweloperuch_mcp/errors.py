@@ -6,7 +6,8 @@ handle errors without importing the client (D6)::
     DeweloperuchError
     ├── InvalidInputError        wrong argument; the message says how to fix it
     ├── NotFoundError            no such investment, offer, page
-    ├── ServiceBlockedError      STOP: 401, 403, Cloudflare challenge; end the series
+    ├── ServiceBlockedError      STOP: 401, 403, Cloudflare challenge, or a STOP that
+    │   │                        any process recorded earlier; end the series
     │   └── RateLimitedError     STOP: 429; ``pause_seconds`` recorded in the limiter
     ├── ServiceError             5xx, network, redirect, other 4xx, body too big or too slow
     │   └── UnexpectedResponseError   a 2xx whose data does not match the contract
@@ -72,11 +73,18 @@ class NotFoundError(DeweloperuchError):
 
 
 class ServiceBlockedError(DeweloperuchError):
-    """401, 403 or a Cloudflare challenge: stop the series, do not retry, tell the user."""
+    """401, 403 or a Cloudflare challenge: stop the series, do not retry, tell the user.
+
+    Also raised, without sending anything, while the shared limiter holds a STOP that any
+    process (this package or ``recon/``) recorded earlier.
+    """
 
 
 class RateLimitedError(ServiceBlockedError):
-    """429: stop the series; the shared limiter waits ``pause_seconds`` before the next one."""
+    """429: stop the series; the shared limiter waits ``pause_seconds`` before the next one.
+
+    After a 429 recorded earlier, ``pause_seconds`` is what is left of its pause.
+    """
 
     def __init__(self, message: str, pause_seconds: float, *, detail: str | None = None) -> None:
         super().__init__(message, detail=detail)

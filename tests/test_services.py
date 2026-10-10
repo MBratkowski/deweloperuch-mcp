@@ -544,9 +544,9 @@ def test_a_stop_in_one_service_stops_every_service_of_the_session(
 
     with pytest.raises(ServiceBlockedError):
         services.search_offers(session, "warszawa")
-    with pytest.raises(ServiceBlockedError, match="restartu procesu"):
+    with pytest.raises(ServiceBlockedError, match="jest już przerwana"):
         services.get_investment(session, "smolna")
-    with pytest.raises(ServiceBlockedError, match="restartu procesu"):
+    with pytest.raises(ServiceBlockedError, match="jest już przerwana"):
         services.search_locations(session, "krak")
 
     assert blocked.call_count == 1
@@ -567,17 +567,23 @@ def test_a_429_keeps_its_pause_in_the_repeated_error(
     assert service.calls.call_count == 1
 
 
-def test_a_new_session_waits_for_the_pause_of_the_old_one(
+def test_a_new_session_stops_during_the_pause_of_the_old_one(
     session: services.Session, limiter: RequestLimiter, service: respx.MockRouter
 ) -> None:
-    """The pause after a 429 is in the shared limiter, so a new process waits for it."""
+    """The 429 is recorded for every process, so a new one stops while the pause lasts;
+    the pause is in the shared limiter too, so it waits even without the record."""
     service.get(INVESTMENT).respond(429, headers={"Retry-After": "300"})
     with pytest.raises(RateLimitedError):
         services.get_investment(session, "smolna")
     transport.testing_only_reset_stop()  # what a new process starts with
 
-    with services.Session(limiter=limiter) as fresh, pytest.raises(LimiterWaitError):
-        services.get_investment(fresh, "smolna")
+    with services.Session(limiter=limiter) as fresh:
+        with pytest.raises(RateLimitedError, match="wcześniejszym STOP"):
+            services.get_investment(fresh, "smolna")
+        transport.testing_only_reset_stop()
+        services.clear_stop(limiter)
+        with pytest.raises(LimiterWaitError):
+            services.get_investment(fresh, "smolna")
 
     assert service.calls.call_count == 1
 
@@ -585,7 +591,7 @@ def test_a_new_session_waits_for_the_pause_of_the_old_one(
 def test_a_stop_in_one_session_stops_every_session_of_the_process(
     session: services.Session, limiter: RequestLimiter, service: respx.MockRouter
 ) -> None:
-    """The latch is per process: "przerwana do restartu procesu" holds for a new session."""
+    """The latch is per process: "jest już przerwana" holds for a new session."""
     service.get(INVESTMENT).respond(403)
     cities, suggestions = location_routes(service)
     with pytest.raises(ServiceBlockedError):
@@ -593,7 +599,7 @@ def test_a_stop_in_one_session_stops_every_session_of_the_process(
 
     with (
         services.Session(limiter=limiter) as second,
-        pytest.raises(ServiceBlockedError, match="restartu procesu"),
+        pytest.raises(ServiceBlockedError, match="jest już przerwana"),
     ):
         services.search_locations(second, "krak")
 

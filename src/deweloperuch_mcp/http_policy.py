@@ -4,7 +4,8 @@ One policy (CLAUDE.md, D2) for the ``recon/`` scripts, which get it through
 ``recon/config.py``, and for the package's HTTP client:
 
 - ``stop_reason``: 401, 403, 429 and Cloudflare challenges (captcha, WAF) stop the
-  whole series of requests; nothing is retried;
+  whole series of requests; nothing is retried. ``stop_cause`` is what the STOP record of
+  the shared limiter keeps of such an answer (``Slot.stop``);
 - ``pause_seconds``: how long the shared limiter pauses after a 429 or a 502/503/504;
 - ``body_length`` and ``MAX_BODY_BYTES``: whether a declared body length applies and
   how big a body may be (bigger ones are dumps, D5).
@@ -35,6 +36,11 @@ STOP_STATUSES: Mapping[int, str] = {
     429: "limit zapytań",
 }
 """Statuses that stop the series of requests, with the reason shown to the user."""
+
+CHALLENGE = "challenge"
+"""``status`` of the STOP record after a Cloudflare challenge, whatever the HTTP status."""
+
+CHALLENGE_REASON = "challenge Cloudflare (captcha/WAF)"
 
 PAUSE_5XX_STATUSES = frozenset({502, 503, 504})
 """Gateway errors that pause the limiter (``Retry-After`` or ``PAUSE_AFTER_5XX``)."""
@@ -94,16 +100,32 @@ def stop_reason(status: int, headers: Mapping[str, str], body: bytes) -> str | N
     """Why this response stops the series of requests (``"HTTP 429 (limit zapytań)"``).
 
     ``None`` when it does not. A challenge stops whatever the status, also on a 200.
+    The status is named only when it is a STOP status itself (``"HTTP 403 (odmowa
+    dostępu), challenge Cloudflare (captcha/WAF)"``); a challenge on another status is
+    just ``CHALLENGE_REASON``: "HTTP 200" next to a STOP reads like a success. Callers
+    keep the status in their details.
     """
     challenge = is_challenge(headers, body)
-    if status not in STOP_STATUSES and not challenge:
-        return None
-    why = f"HTTP {status}"
-    if status in STOP_STATUSES:
-        why += f" ({STOP_STATUSES[status]})"
+    parts = [f"HTTP {status} ({STOP_STATUSES[status]})"] if status in STOP_STATUSES else []
     if challenge:
-        why += ", challenge Cloudflare (captcha/WAF)"
-    return why
+        parts.append(CHALLENGE_REASON)
+    return ", ".join(parts) or None
+
+
+def stop_cause(
+    status: int, headers: Mapping[str, str], body: bytes
+) -> tuple[int | str, str] | None:
+    """What the STOP record keeps of this answer: ``(status, reason)``; ``None`` for no STOP.
+
+    A challenge is ``(CHALLENGE, CHALLENGE_REASON)`` whatever the status, so it never
+    ends on its own (``Slot.stop``); otherwise the status and its ``STOP_STATUSES`` text.
+    Stops exactly when ``stop_reason`` does. Never the target, the headers or the body.
+    """
+    if is_challenge(headers, body):
+        return CHALLENGE, CHALLENGE_REASON
+    if status in STOP_STATUSES:
+        return status, STOP_STATUSES[status]
+    return None
 
 
 def pause_seconds(status: int, retry_after: float | None) -> float | None:

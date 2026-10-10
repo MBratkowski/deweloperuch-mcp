@@ -22,7 +22,7 @@ import pytest
 import http_common
 import scan_bundles
 from deweloperuch_mcp import identity
-from deweloperuch_mcp.throttle import LOCK_FILENAME, RequestLimiter
+from deweloperuch_mcp.throttle import LOCK_FILENAME, STOP_FILENAME, RequestLimiter, StopRecord
 from http_common import Response
 
 REPO = Path(__file__).resolve().parent.parent
@@ -584,6 +584,50 @@ def test_pages_without_chunks_are_an_error(env: Env, capsys: pytest.CaptureFixtu
 
     assert site.paths == scan_bundles.PAGES
     assert capsys.readouterr().out == ""
+
+
+def test_a_stop_is_recorded_for_other_processes(env: Env) -> None:
+    site = env.site(overrides={scan_bundles.PAGES[2]: response(403, b"forbidden")})
+
+    assert env.run(["--json"], site) == STOP
+
+    state = env.limiter.stop_status()
+    assert isinstance(state.stop, StopRecord)
+    assert (state.stop.status, state.stop.source, state.stop.until) == (403, "scan_bundles", None)
+
+
+@pytest.mark.parametrize(
+    "stored",
+    [
+        json.dumps(
+            {
+                "format": 1,
+                "since": "2026-10-10T10:00:00+00:00",
+                "status": 403,
+                "reason": "odmowa dostępu",
+                "until": None,
+                "source": "probe",
+                "pid": 1,
+            }
+        ),
+        "garbage",
+    ],
+    ids=["record", "unreadable"],
+)
+def test_an_earlier_stop_ends_the_scan_before_any_request(
+    env: Env, capsys: pytest.CaptureFixture[str], stored: str
+) -> None:
+    env.lock_dir.mkdir()
+    (env.lock_dir / STOP_FILENAME).write_text(stored, encoding="utf-8")
+    site = env.site()
+
+    assert env.run(["--json"], site) == STOP
+
+    assert site.requests == []
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err.startswith("STOP: seria zapytań do deweloperuch.pl jest wstrzymana")
+    assert f"Skan przerwany przed GET {scan_bundles.PAGES[0]}." in captured.err
 
 
 # --- allowlist --------------------------------------------------------------------------

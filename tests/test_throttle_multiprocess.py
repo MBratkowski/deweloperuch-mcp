@@ -85,3 +85,24 @@ def test_process_killed_mid_request_still_keeps_min_interval(tmp_path: Path, sig
 
     assert asked < died_at, "second process was not queued behind the dying one"
     assert start - died_at >= MIN_INTERVAL - TOLERANCE
+
+
+def test_a_stop_recorded_by_one_process_keeps_the_next_one_out(tmp_path: Path) -> None:
+    """Process B queues behind A; A records a 403 STOP before releasing the lock, so B
+    sees it as soon as it holds the lock and never enters its slot."""
+    go_at = time.time() + STARTUP_S
+    first = spawn(tmp_path, go_at, 1, "--work", "0.3", "--stop", "403")
+    second = spawn(tmp_path, go_at + 0.1, 1)
+    [(_, _, first_end)] = collect(first)
+    out, err = second.communicate(timeout=60)
+
+    assert second.returncode == 3, err
+    refused = json.loads(out)
+    assert refused["stopped"] < first_end, "second process was not queued behind the first"
+    assert "(HTTP 403, odmowa dostępu)" in refused["message"]
+    assert "źródło" not in refused["message"]
+    # B left the timing state as A wrote it: no in-flight marker, A's end and spacing.
+    state = json.loads((tmp_path / "throttle.lock").read_text())
+    assert set(state) == {"last_end", "next_start"}
+    assert state["next_start"] - state["last_end"] == pytest.approx(MIN_INTERVAL)
+    assert state["last_end"] >= first_end

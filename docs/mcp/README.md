@@ -17,7 +17,7 @@ Wszystkie cztery mają adnotacje `readOnlyHint=true` i `openWorldHint=true`. Typ
 
 ## Instrukcje serwera (`instructions`)
 
-> Dane z deweloperuch.pl: ceny ofertowe mieszkań od deweloperów (rynek pierwotny) w Polsce, z historią zmian cen. Typowa kolejność: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przerwij pracę z tymi narzędziami i powiedz o tym użytkownikowi: do restartu serwera nie wyśle on już żadnego zapytania do serwisu. Błędy walidacji argumentów bywają po angielsku: popraw wskazane pole zgodnie ze schematem i ponów.
+> Dane z deweloperuch.pl: ceny ofertowe mieszkań od deweloperów (rynek pierwotny) w Polsce, z historią zmian cen. Typowa kolejność: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Błędy walidacji argumentów bywają po angielsku: popraw wskazane pole zgodnie ze schematem i ponów.
 
 ## Konfiguracja klienta MCP
 
@@ -46,7 +46,7 @@ Albo bez `uv` w czasie uruchomienia, pełną ścieżką:
 }
 ```
 
-Serwer nie czyta żadnych własnych zmiennych środowiskowych. Cache limitera: `XDG_CACHE_HOME` ([konfiguracja](../configuration.md)).
+Serwer nie czyta żadnych własnych zmiennych środowiskowych. Zamek limitera i zapis STOP: `XDG_CACHE_HOME` ([konfiguracja](../configuration.md)).
 
 ## Reguły argumentów
 
@@ -59,11 +59,26 @@ Serwer nie czyta żadnych własnych zmiennych środowiskowych. Cache limitera: `
 ## Błędy
 
 - **Błąd domenowy:** wynik narzędzia z `isError=true` i jednym polskim komunikatem, który mówi, co zmienić albo że seria się zatrzymała. Komunikat nie zawiera ścieżek, nazw propsów ani treści odpowiedzi serwisu. Szczegóły techniczne (cel, status, fragment ciała, z escapowanymi znakami niedrukowalnymi) trafiają tylko do logu serwera na stderr.
-- **STOP** (401, 403, 429, challenge Cloudflare): komunikat zaczyna się od `STOP:`. STOP jest **lepki do restartu serwera**: serwer nie wyśle już żadnego zapytania (z cache nadal może odpowiadać). Należy przerwać pracę z narzędziami i zgłosić to użytkownikowi. Pozostałe błędy serwisu mówią „Nic nie ponawiam; spróbuj później.”.
+- **STOP** (401, 403, 429, challenge Cloudflare): komunikat zaczyna się od `STOP:`, jest bez przedrostka domenowego i kończy się wezwaniem do przerwania i zgłoszenia użytkownikowi. Teksty (dla modelu; bez czasów, źródła, ścieżek i informacji, jak zdjąć blokadę):
+  - **pierwszy STOP w procesie:** `STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.` Analogicznie `HTTP 401 (brak autoryzacji)` i `HTTP 429 (limit zapytań)`. Challenge Cloudflare: `STOP: challenge Cloudflare (captcha/WAF). …` (przy statusie będącym STOP-em z etykietą statusu, np. `STOP: HTTP 403 (odmowa dostępu), challenge Cloudflare (captcha/WAF). …`);
+  - **powtórne wywołanie w tym procesie:** `STOP: seria zapytań do deweloperuch.pl jest już przerwana; zapytanie nie zostało wysłane. Powód: HTTP 403 (odmowa dostępu). Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.`;
+  - **z zapisu innego procesu (CLI, recon, inny serwer), 401/403/challenge:** `STOP: seria zapytań do deweloperuch.pl jest wstrzymana po wcześniejszym STOP (HTTP 403, odmowa dostępu). Zapytanie nie zostało wysłane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.` (dla challenge: `(challenge Cloudflare, captcha/WAF)`);
+  - **z zapisu, 429:** `STOP: seria zapytań do deweloperuch.pl jest wstrzymana po wcześniejszym STOP (HTTP 429, limit zapytań); wstrzymanie trwa jeszcze ok. N s. Zapytanie nie zostało wysłane. Nie ponawiaj w tej sesji; przerwij i zgłoś to użytkownikowi.`;
+  - **nieczytelny zapis:** `STOP: seria zapytań do deweloperuch.pl jest wstrzymana bezterminowo, bo zapis o wcześniejszym STOP jest nieczytelny. Zapytanie nie zostało wysłane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.`
+
+  Szczegóły (źródło, PID, czasy, pauza limitera) trafiają tylko do logu serwera na stderr. Pozostałe błędy serwisu (5xx, sieć i inne) też są bez szczegółów i mówią „Nic nie ponawiam; spróbuj później.”.
 - **Nieoczekiwany wyjątek:** `Nieoczekiwany błąd serwera MCP deweloperuch (szczegóły są w jego logu). Nie ponawiaj tego wywołania; zgłoś problem użytkownikowi.`
 - **Błąd walidacji schematu** (zły typ, brak pola, wartość spoza `enum`/zakresu): generuje SDK, po angielsku, z prefiksem `Error executing tool …`. Popraw wskazane pole zgodnie z `inputSchema` i ponów.
 
 Błędy usług (`Wyszukiwanie ofert w 'warszawa': …`, `Inwestycja 'smolna': …`) dostają kontekst domenowy; zob. [konfiguracja, błędy pakietu](../configuration.md#błędy-pakietu).
+
+### STOP: informacje dla człowieka konfigurującego serwer
+
+Tej części model nie dostaje. Po STOP żadne narzędzie nie wysyła zapytań (odpowiedzi jeszcze świeże w cache serwer nadal może zwracać):
+
+- STOP zapisany przez dowolny proces (CLI, recon, inny serwer MCP) wstrzymuje ten serwer, dopóki zapis jest aktywny; 429 wygasa po pauzie, 401, 403 i challenge są bezterminowe ([konfiguracja](../configuration.md#stop-blokada-między-procesami)).
+- Serwer, który raz zwrócił STOP (własny albo z zapisu innego procesu), jest **zatrzaśnięty do restartu**: pozostaje wstrzymany także po zdjęciu zapisu i po wygaśnięciu 429. Po wyjaśnieniu przyczyny uruchom go ponownie.
+- Zapis sprawdzisz i zdejmiesz wyłącznie w CLI: [`deweloperuch stop status`](../cli/commands/stop-status.md), [`deweloperuch stop clear`](../cli/commands/stop-clear.md). Narzędzia MCP do zdejmowania blokady nie ma, a agentom w Claude Code blokuje tę komendę hook Bash.
 
 ## Rozmiary wyników
 
