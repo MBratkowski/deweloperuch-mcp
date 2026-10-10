@@ -1,0 +1,40 @@
+{
+  "_request": "GET /api/sale-events?saleId=4397",
+  "_captured": "2026-10-10",
+  "response": {
+    "success": true,
+    "saleData": {
+      "name": "D1.1.1.4",
+      "amount": "994012",
+      "size": "55.25",
+      "currency": "PLN"
+    },
+    "events": [
+      {
+        "sale_event_id": 148943,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1000000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      },
+      {
+        "sale_event_id": 319259,
+        "event_type": "OFFER_EVENT",
+        "event_data": "{\"source\":\"scraper_pr\"}",
+        "amount": "994006",
+        "event_date": "2025-09-11T00:00:00.000Z",
+        "source": "ANNOUCMENT_PR"
+      },
+      {
+        "sale_event_id": 465826,
+        "event_type": "OFFER_EVENT",
+        "event_data": "{\"source\":\"scraper_pr\"}",
+        "amount": "927706",
+        "event_date": "2025-12-09T00:00:00.000Z",
+        "source": "ANNOUCMENT_PR"
+      },
+      "... (9 more, 12 total)"
+    ]
+  }
+}

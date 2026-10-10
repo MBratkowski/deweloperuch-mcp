@@ -31,7 +31,7 @@ Rozmiary (kompaktowy JSON): `limit` 0 ok. 460 znaków, 20 (domyślnie) ok. 6 200
 ## Ograniczenia danych
 - `limit` max 200 (MCP); CLI `investments get` bez `--limit` pokazuje wszystkie oferty.
 - `include_history=true` to dodatkowe zapytanie do serwisu (wolniejsze, gdy nie ma go w cache).
-- Znaczenie `kind: offer` w historii ceny jest [H]; zob. [entities.md](../../discovery/entities.md), [open-questions.md](../../open-questions.md).
+- `kind: offer` to każdy wpis ceny ofertowej w historii (pierwsza cena i każda zmiana) [P 2026-10-10]; zob. [entities.md](../../discovery/entities.md), [open-questions.md](../../open-questions.md).
 - Ceny ofertowe, nie transakcyjne.
 
 ## Błędy

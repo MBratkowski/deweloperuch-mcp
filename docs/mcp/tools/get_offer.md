@@ -20,7 +20,7 @@ Zdarzenie historii (`price_history[]`): `kind` (`offer` – cena w ofercie, `arc
 
 ## Ograniczenia danych
 - Serwis nie ma potwierdzonej drogi od samego `offer_id` do inwestycji, dlatego `investment_slug` jest wymagany (T1 w kodzie usługi).
-- Znaczenie `kind: offer` w historii ceny jest [H] (czy zmiana ceny to osobny typ zdarzenia, nie jest potwierdzone), stąd opis „cena w ofercie”, a nie „pierwsza cena”. Zob. [entities.md](../../discovery/entities.md) i [open-questions.md](../../open-questions.md).
+- `kind: offer` to każdy wpis ceny ofertowej w historii: pierwsza cena i każda jej zmiana [P 2026-10-10]; nie jest to tylko pierwsza cena. Zob. [entities.md](../../discovery/entities.md) i [open-questions.md](../../open-questions.md).
 - Ceny ofertowe, nie transakcyjne.
 
 ## Błędy

@@ -13,16 +13,17 @@ RSC: 1
 - Bez `_rsc` Cloudflare zwraca zcache'owany HTML, bo ignoruje `Vary: RSC` [P].
 - Alternatywa: pełny HTML i dekodowanie `self.__next_f.push([1,"…"])`. Daje te same dane, ale jest ~10× większy (942 KB vs 98 KB) [P].
 - Propsy leżą w elementach `["$","$L<id>",null,{…}]`. Referencje `"$f:props:…"` / `"$8:props:…"` wskazują na wcześniej zdefiniowane fragmenty, ale propsy z danymi list są inline [P].
-- Parser referencyjny: [`recon/flight.py`](../../recon/flight.py) (`flight()` dla HTML, `find_json_after(text, "initialData")`).
+- Parser referencyjny: [`src/deweloperuch_mcp/flight.py`](../../src/deweloperuch_mcp/flight.py) (`flight()` dla HTML, `find_json_after(text, "initialData")`); `recon/flight.py` tylko go reeksportuje.
+- Cache-Control stron RSC: `private, max-age=28800, must-revalidate` (bez `s-maxage`; `cf-cache-status` MISS lub HIT z `age`) [P 2026-10-10, próbki z serii B; nagłówki w stderr probe'a, bez osobnej próbki].
 - **Ryzyko**: nazwy propsów (`initialData`, `serverPaginationData`, …) są detalem implementacyjnym UI i mogą się zmienić bez ostrzeżenia [W]. Adapter RSC musi być izolowany i mieć testy kontraktowe na próbkach.
 
 ## Wspólne reguły list [P]
 
 - `page`: od 1. **Maksimum 20 stron**: `page>20` zwraca stronę 20 (`pagination.page: 20`) [P].
-- `perPage` ∈ {10, 50, 100} [P]. `20` i `500` dają domyślne 10 [P]. Inne wartości [H].
+- `perPage`: `10`, `25`, `50`, `100` zaakceptowane [P 2026-10-10: `perPage=25` → `pagination.perPage: 25`, 25 wierszy; obalono: hipoteza, że dozwolone są tylko {10, 50, 100}]. `20` i `500` dają domyślne 10 [P]. Pełna lista dozwolonych wartości nie jest znana: zaobserwowano 10, 25, 50, 100 (przyjęte) oraz 20, 500 (→ 10) [P]; inne [H] (T2 rozstrzygnięte częściowo; pełna lista: T29).
 - Pułap: **2 000 rekordów na zapytanie**. `pagination.total` podaje pełną liczbę (np. 13 324), ale `totalPages` jest obcięte do 20 [P].
 - `sortOrder` ∈ {`asc`, `desc`}.
-- Zakresy: `min-max` (np. `filterPrice=500000-700000`). Brak dolnej granicy → `0-…`; brak górnej → wartości-wartownicy UI: cena `99999999`, cena/m² `999999`, metraż `9999` [P z kodu].
+- Zakresy: `min-max` (np. `filterPrice=500000-700000`). Brak dolnej granicy → `0-…`; brak górnej → wartości-wartownicy UI: cena `99999999`, cena/m² `999999`, metraż `9999` [P z kodu]. Serwer traktuje `filterPrice=0-99999999&filterSize=0-9999` jak brak filtra: `pagination.total` = 13324 = wynik bez filtrów (Warszawa) [P 2026-10-10]; wartownik cena/m² (`999999`) nie był testowany osobno [W].
 - Listy: wartości po przecinku (`filterRooms=2,3`).
 - `{city}` = slug miasta albo `polska` (cały kraj) [P].
 
@@ -33,16 +34,21 @@ RSC: 1
 ### `/ceny-ofertowe/{city}/mieszkania`: lista ofert [P]
 | Parametr | Wartości | Status |
 |---|---|---|
-| `sortBy` | `amount`, `price_per_sqm`, `size`, `name`, `investment`, `last_event_date`, `last_amount_difference`, `last_amount_difference_percent`, `start_amount_difference`, `start_amount_difference_percent` | `amount` [P], reszta [W z kodu] |
+| `sortBy` | `amount`, `price_per_sqm`, `size`, `name`, `start_amount_difference_percent` | [P 2026-10-10] `amount` (asc i desc, próbka `page.offers_list.sort_desc`), `price_per_sqm`, `size`, `name`, `start_amount_difference_percent`: kolejność zgodna z wartością |
+| `sortBy` (cd.) | `last_event_date` | [P 2026-10-10] przyjęty, ale pierwsze wiersze `asc` nie są uporządkowane po `last_event_date` widocznym w liście (np. 2026-10-03 przed 2026-09-03); faktyczny klucz nieznany [H] |
+| `sortBy` (cd.) | `investment`, `last_amount_difference`, `last_amount_difference_percent`, `start_amount_difference` | [W z kodu], nie testowano |
+| `sortBy` domyślny / nieznany | brak lub dowolny tekst (`bogus`) | [P 2026-10-10] identyczny wynik: rosnąco po `sale_id` (kolejność w bazie); nieznana wartość jest cicho ignorowana, bez błędu. Obalono: domyślne `sortBy` nie jest `amount` |
 | `filterPrice`, `filterPricePerM2`, `filterSize` | zakres `min-max` | [P] (`filterPrice`, `filterSize`) |
 | `filterDeveloper` | slug dewelopera | [W] |
 | `filterProject` | slug inwestycji | [W] |
-| `filterDistrict`, `filterStreet` | nazwa (np. `Mokotów`) | [W] |
-| `filterPriceChange` | csv z `decrease`, `increase`, `no_change` | [W] |
-| `filterRooms`, `filterFloors` | csv | [W] |
-| `filterStatus` | ? | [H] |
+| `filterDistrict` | nazwa (np. `Mokotów`, URL-encoded) | [P 2026-10-10] total 1562 = `count` dzielnicy z `location-search` |
+| `filterStreet` | nazwa | [W] |
+| `filterPriceChange` | csv z `decrease`, `increase`, `no_change` | [P 2026-10-10] `decrease`: total 13324 → 2416. Dotyczy zmiany względem ceny początkowej (`start_amount_difference*`), nie ostatniego zdarzenia: wiersze z `last_event_type: PRICE_INCREASE` i ujemnym `start_amount_difference_percent` przechodzą. `increase`/`no_change`, wartości csv: [W] |
+| `filterRooms`, `filterFloors` | csv | [P 2026-10-10] **bez efektu na liście ofert**: `filterRooms=2` i `filterFloors=1` zwracają total 13324 jak bez filtra (obalono: [W], że zawężają listę ofert; oferty nie mają pól rooms/floor). Filtry działają tylko w transakcjach |
+| `filterStatus` | `archived` | [P 2026-10-10] `archived` → total 11415, same `status: archived`. `active` i inne wartości nie testowano [H] |
 | `filterAnomalies` | `false` = pokaż też anomalie | [W] |
-| `includeArchived`, `showArchivedInvestments` | `true` | [W] |
+| `includeArchived` | `true` | [P 2026-10-10] total 13324 → 24739 (= 13324 aktywnych + 11415 archiwalnych) |
+| `showArchivedInvestments` | `true` | [W] |
 
 Props `initialData`:
 ```json
@@ -53,7 +59,9 @@ Props `initialData`:
                          "developer": { "developer_id", "name", "slug" } } }],
   "pagination": { "page", "perPage", "total", "totalPages" } }
 ```
-Sample: `page.offers_list.json`, `page.offers_list.filtered.json`
+Nieznane miasto (`/ceny-ofertowe/nieistniejace-miasto/mieszkania`): HTTP **200** `text/x-component` (26 KB) bez propsa `initialData`; w payloadzie jest segment `notFound` [P 2026-10-10, obserwacja bez próbki]. Klient musi rozpoznać brak `initialData`, nie status HTTP.
+Sample: `page.offers_list.json`, `page.offers_list.filtered.json`, `page.offers_list.sort_desc.json`
+`last_event_type` przyjmuje też `NEW_OFFER` (oferta bez zmian ceny, `total_events: 1`) [P 2026-10-10, `page.offers_list.sort_desc`].
 
 ### `/ceny-ofertowe/{city}/inwestycje`: lista inwestycji [P]
 - `sortBy`: `name`, `active_offers`, `avg_amount`, `avg_size`, `avg_price_sqm` [P], `sum_changes`

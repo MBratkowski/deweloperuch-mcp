@@ -31,7 +31,7 @@ Typowa kolejność: `locations search` → `offers search` → `investments get`
 
 ## Format wyjścia
 
-- **Tekst** (domyślnie, stdout): po polsku, liczby z grupowaniem cyfr i przecinkiem dziesiętnym (`1 620 175 PLN`), bez form liczby mnogiej. Dla dzielnic i ulic liczba ofert to `ofert: ok. N` (przybliżona, [W]).
+- **Tekst** (domyślnie, stdout): po polsku, liczby z grupowaniem cyfr i przecinkiem dziesiętnym (`1 620 175 PLN`), bez form liczby mnogiej. Dla dzielnic i ulic liczba ofert to `ofert: ok. N` (dla dzielnic to liczba aktywnych ofert [P], dla ulic nadal [W]).
 - **`--json`** (stdout): pełny model domenowy, `model_dump_json(indent=2)`, wszystkie pola łącznie z `null`. Jest to inna, bogatsza reprezentacja niż w MCP (tam pozycje są skrócone i bez `null`).
 - **Błędy** (stderr, bez tracebacka):
   - `Błąd: <komunikat>`

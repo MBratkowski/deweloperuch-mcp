@@ -74,7 +74,7 @@ Klient (`deweloperuch_mcp.client.transport`) jest synchroniczny (`httpx`), z Use
 | Pauza po 429 | co najmniej 60 s | `max(Retry-After, 60)`. |
 | Pauza po 502/503/504 | `Retry-After` albo 30 s | |
 | STOP (401/403/429/challenge) | blokada procesu do restartu i zapis dla innych procesów | Dotyczy wszystkich sesji w procesie (`ServiceBlockedError`, przy 429 `RateLimitedError`) i jest zapisany w `stop.json` ([STOP](#stop-blokada-między-procesami)); zapis innego procesu też blokuje zapytania. Odpowiedzi z cache nadal są zwracane. |
-| Cache | w pamięci procesu | Nie jest zapisywany na dysk. TTL = `s-maxage` minus `Age` (domyślnie 300 s, maks. 24 h). LRU: 256 wpisów i 64 MiB. |
+| Cache | w pamięci procesu | Nie jest zapisywany na dysk. TTL = `s-maxage` minus `Age`; bez `s-maxage` domyślnie 300 s (maks. 24 h). Serwis podaje `s-maxage` tylko dla `city-sales` (300 s) [P 2026-10-10]; strony RSC, `/api/cities`, `sale-events`, `map/investments/visible` i `location-search` go nie mają, więc dostają domyślne 300 s. LRU: 256 wpisów i 64 MiB. |
 | Sesja zamknięta | `SessionClosedError` | Użycie po wyjściu z `Session`. |
 
 Cel żądania jest sprawdzany przed wysłaniem według allowlisty (`allowlist.py`) i reguły D5: ścieżki z `DUMP_PATHS` (`/api/map/powiat-sales/{id}`, strona `/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}` bez `/mapa`) nigdy nie są wywoływane. `valuation-pdf` i server actions są wykluczone. Naruszenie to `InvalidInputError` z prefiksem „Błąd programu”.

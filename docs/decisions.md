@@ -20,6 +20,13 @@ Format: krótkie ADR. Status: **przyjęta** (wynika wprost z discovery), **propo
 - Timeouty i czytelne błędy dla 4xx/429/5xx; respektowanie `Retry-After`.
 - User-Agent: do ustalenia (U1/T11). Preferowany uczciwy identyfikator klienta, o ile nie jest blokowany.
 
+**Doprecyzowanie (2026-10-10, decyzja użytkownika): trwały STOP między procesami.**
+- Po 401, 403, 429 albo challenge Cloudflare proces zapisuje STOP w `stop.json` obok zamka limitera (`${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/`). Dopóki zapis jest aktywny, żaden proces (CLI, serwer MCP, `recon/probe.py`, `recon/scan_bundles.py`) nie wysyła zapytań.
+- STOP po 429 wygasa po pauzie; 401, 403 i challenge trwają do zdjęcia. Nieczytelny zapis oznacza STOP bezterminowy (fail-closed).
+- Zdejmuje go wyłącznie użytkownik przez `deweloperuch stop clear`, bez dodatkowego potwierdzenia w terminalu. Agentów blokują hook Bash i reguła w `CLAUDE.md`; narzędzia MCP do zdejmowania nie ma.
+- Proces, który zwrócił STOP, pozostaje zatrzaśnięty do restartu. Dotyczy to też serwera MCP, nawet po zdjęciu zapisu albo wygaśnięciu 429.
+- Szczegóły: [configuration.md](configuration.md#stop-blokada-między-procesami), handoff `2026-10-10-0740-trwaly-stop-miedzy-procesami`.
+
 ## D3. Nazewnictwo domenowe niezależne od backendu (przyjęta)
 
 **Kontekst.** Backend nazywa budynek RCN „invest”, lokal „sale”, a pola mają niespójne typy ([entities.md](discovery/entities.md)).
@@ -46,6 +53,11 @@ domain / services  (capabilities z capability-matrix, model domenowy, mapowanie 
     CLI       MCP     (parsowanie argumentów / schematy tooli, formatowanie outputu)
 ```
 CLI i MCP wołają te same funkcje serwisów. CLI służy też jako narzędzie developerskie (`--json`, `--raw` dla DTO).
+
+**Doprecyzowanie (2026-10-10, decyzja użytkownika):**
+- W v1 nie ma `--raw`; surowe dane daje `recon/probe.py`.
+- `services.Session` jest jedynym punktem wejścia.
+- CLI i MCP importują z pakietu tylko `services`, `errors` i `domain.models`; MCP dodatkowo własną reprezentację `mcp_results`. Pilnuje tego `tests/test_layering.py`.
 
 ## D7. Wykrywanie dryfu serwisu (proponowana)
 
@@ -89,6 +101,40 @@ Rekomendacja: **Python**. Domena to głównie normalizacja i agregacja danych, p
 
 Konfiguracja: `.claude/settings.json`, `.claude/hooks/`, zasady w `CLAUDE.md`.
 
+**Doprecyzowanie (2026-10-10, decyzja użytkownika):**
+- Testy serwera MCP dopuszczają gniazda AF_UNIX (potrzebne pętli asyncio); AF_INET, AF_INET6 i DNS są dalej zablokowane.
+- Testy uruchamiające podprocesy wstawiają w nich guard pytest-socket (`NO_NETWORK` w `tests/test_mcp_server.py`, guard w `tests/throttle_worker.py`) i nie wołają ścieżek, które mogłyby dojść do usług.
+- Hook Bash blokuje też agentom zdejmowanie STOP (D2): `deweloperuch … stop clear` oraz zmiany i usuwanie plików limitera.
+
+## D11. Interfejs MCP i CLI v1 (przyjęta 2026-10-10, decyzja użytkownika)
+
+**Kontekst.** S1b dało pierwszy publiczny interfejs; rozmiar wyniku dla modelu to główne ograniczenie MCP.
+**Decyzja.**
+- **Transport MCP: tylko stdio** (rozstrzyga U3).
+  - Narzędzia mają adnotacje `readOnlyHint` i `openWorldHint`, bez `idempotentHint`.
+  - Błędy wracają jako wynik `isError` z polskim komunikatem, nie jako `ToolError`.
+- **Reprezentacja MCP** (`mcp_results.py`) jest osobna od modelu domenowego.
+  - Pozycje są skrócone, a pola `null` pomijane, z wyjątkiem `total` (D4), które jest zawsze obecne.
+  - `search_offers.per_page` ∈ {10, 50}, domyślnie 10.
+  - `get_investment.limit`: domyślnie 20, najwyżej 200.
+- **CLI:**
+  - `--json` daje pełny model domenowy, `offers search --per-page` przyjmuje 10/50/100, a `investments get` domyślnie pokazuje wszystkie oferty.
+  - Kody wyjścia: 0 OK, 1 inny błąd, 2 błędne wejście, 3 STOP, 4 błąd serwisu, 5 limiter, 6 nieoczekiwana odpowiedź, 7 brak zasobu.
+- **Wejście MCP:**
+  - liczby całkowite przyjmowane także jako tekst z samych cyfr; `true`/`false` w polach liczbowych odrzucane;
+  - `""` i `null` oznaczają brak wartości albo wartość domyślną; `sort` jest przycinany.
+- **Parametry:** usługi i schematy wystawiają tylko parametry `[P]`. Rozszerzenia przychodzą po weryfikacji (przepływ B).
+
+**Konsekwencje.** Większe strony (100) i pełne modele są dostępne w CLI, nie w MCP. Zmiana tych limitów zmienia snapshot `tests/snapshots/mcp_tools.json`.
+
+## D12. Komunikaty błędów: dla modelu bez szczegółów backendu (przyjęta 2026-10-10, decyzja użytkownika)
+
+**Kontekst.** Ścieżki, nazwy propsów i treść odpowiedzi serwisu w komunikacie dla modelu to kanał prompt injection i szum. Sekwencje terminala w treści odpowiedzi to ryzyko dla CLI.
+**Decyzja.**
+- `str(err)` jest domenowy (co się stało z ofertą, inwestycją, wyszukiwaniem i co zrobić). Nie zawiera ścieżek, propsów, treści odpowiedzi, rozmiarów ani etykiet decyzji.
+- Szczegóły techniczne idą do `err.detail`, zawsze escapowane (`errors.printable`). MCP zapisuje je tylko w logu na stderr, CLI pokazuje w linii `Szczegóły:`.
+- Komunikaty STOP mówią tylko, co zatrzymało serię, i każą przerwać i zgłosić to użytkownikowi. Nie podają czasów, źródła ani sposobu zdjęcia blokady, a tekst z pliku STOP nigdy nie trafia do modelu.
+
 ---
 
 ## Proponowany pierwszy vertical slice
@@ -102,5 +148,7 @@ Konfiguracja: `.claude/settings.json`, `.claude/hooks/`, zasady w `CLAUDE.md`.
 | `get_offer` (z historią ceny) + `get_investment` | A | stabilny JSON; pokazuje mapowanie DTO→domena (typy string/number, daty, zdarzenia) |
 
 Zakres techniczny slice'a: klient HTTP z limiterem i cache (D2), adaptery JSON i RSC, DTO + domena dla Offer/Investment/Developer/PriceEvent/Location, 4 komendy CLI, 4 narzędzia MCP, testy kontraktowe na próbkach i jeden ręczny smoke test na żywo.
+
+**Stan (2026-10-10):** slice zrobiony bez smoke testu na żywo (S1a `23cd5be`, S1b `a954994`). Smoke test czeka na zgodę na serię żywych zapytań (D9).
 
 Poza slice'em (kolejne iteracje): transakcje RCN i budynki → wycena → statystyki → GUS/NBP.

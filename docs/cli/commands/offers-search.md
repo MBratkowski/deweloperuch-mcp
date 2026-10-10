@@ -14,7 +14,7 @@ deweloperuch offers search [OPTIONS] CITY
 | `--price-max` | int | brak | Najwyższa cena w PLN. |
 | `--area-min` | int | brak | Najmniejszy metraż w m². |
 | `--area-max` | int | brak | Największy metraż w m². |
-| `--sort` | `price_asc` \| `price_desc` | brak (kolejność serwisu) | Kolejność po cenie. `price_desc` to otwarte pytanie (f) z handoffu S1a. |
+| `--sort` | `price_asc` \| `price_desc` | brak (kolejność serwisu) | Kolejność po cenie. Sortowanie po cenie rosnąco i malejąco potwierdzone [P 2026-10-10]. |
 | `--page` | int | `1` | Numer strony, 1–20. |
 | `--per-page` | `10` \| `50` \| `100` | `10` | Liczba ofert na stronie. |
 | `--json` | flaga | wyłączona | Wypisz wynik jako JSON (model domenowy). |
@@ -23,7 +23,7 @@ deweloperuch offers search [OPTIONS] CITY
 Zakresy filtrów to 0–99 999 999 PLN i 0–9 999 m² (wartownicy [P z kodu]); `--price-min` większe niż `--price-max` to błąd (kod 2).
 
 ## Kody wyjścia
-Zob. [tabela kodów](../README.md#kody-wyjścia). Najczęstsze: 0, 2 (zły filtr, `--sort` lub `--per-page` spoza listy), 3 STOP, 4 błąd serwisu, 7 nieznane miasto.
+Zob. [tabela kodów](../README.md#kody-wyjścia). Najczęstsze: 0, 2 (zły filtr, `--sort` lub `--per-page` spoza listy), 3 STOP, 4 błąd serwisu, 7 nieznane miasto (tylko przy HTTP 404; strona bez danych daje dziś kod 6, bo serwis zwraca 200).
 
 ## Przykłady
 ```
