@@ -15,7 +15,12 @@ Format: krótkie ADR. Status: **przyjęta** (wynika wprost z discovery), **propo
 **Kontekst.** `robots.txt`: `Disallow: /api/`, `Crawl-delay: 1`. Serwis jest projektem społecznym za Cloudflare. Brak auth.
 **Decyzja.**
 - Globalny limiter: domyślnie ≤1 request/s, 1 request jednocześnie (konfigurowalne w dół, nie w górę bez świadomej decyzji).
-- Cache odpowiedzi z TTL ≈ `s-maxage` endpointu (5 min dla ofert, 1–24 h dla statystyk).
+- Cache odpowiedzi w pamięci procesu. **Doprecyzowanie (2026-10-10, polecenie użytkownika „popraw” po przebiegu e2e):**
+  - TTL = świeżość odpowiedzi minus `Age`, najwyżej 300 s; świeżość to `s-maxage`, a bez niego `max-age`, a bez obu 300 s.
+  - TTL ≤ 0 oznacza brak cache; błędy nie trafiają do cache.
+  - Odpowiedź z dyrektywą `no-store` albo `no-cache` w `Cache-Control` (dowolna wielkość liter, także z wartością) nie trafia do cache. `private` i `must-revalidate` nie zmieniają TTL, bo cache jest prywatny dla procesu.
+  - Dane lokalne nie są więc starsze niż 5 min, a powtórzenia w tym oknie nie idą do serwisu.
+  - Pierwotna reguła „TTL ≈ `s-maxage`” dawała TTL ≤ 0 dla stron i `/api/*` z `max-age=28800` przy dużym `Age` z Cloudflare, więc każde powtórzenie szło do sieci (wykrył to zestaw e2e).
 - Brak funkcji masowego crawlowania (np. „pobierz wszystkie transakcje w Polsce”).
 - Timeouty i czytelne błędy dla 4xx/429/5xx; respektowanie `Retry-After`.
 - User-Agent: do ustalenia (U1/T11). Preferowany uczciwy identyfikator klienta, o ile nie jest blokowany.

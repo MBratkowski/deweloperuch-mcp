@@ -89,11 +89,6 @@ TEXT_LEAKS = re.compile(
 # developers are called e.g. "Invest Komfort" (tests/test_e2e_gate.py).
 KEY_LEAKS = re.compile(r"sale|invest(?!ment)|rcn|amount|rsc", re.IGNORECASE)
 
-# The MCP SDK's own message for arguments off the input schema; it links to pydantic's
-# docs. A known problem, reported by the tests of those errors (``sdk_validation_leak``).
-SDK_VALIDATION = "validation error for"
-PYDANTIC_DOCS = re.compile(r"pydantic\.dev", re.IGNORECASE)
-
 STOP_ADVICE = (
     "Zestaw e2e przerwany bez dalszych zapytań. Niczego nie ponawiaj i zgłoś to "
     "użytkownikowi: STOP zdejmuje tylko on, po sprawdzeniu przyczyny."
@@ -277,11 +272,8 @@ class Call:
 
 
 def assert_no_leaks(call: Call) -> None:
-    """D3, D12 for one result. The SDK's link to pydantic's docs in its own validation
-    errors is left to ``sdk_validation_leak`` (a known problem, reported there)."""
+    """D3, D12 for one result, errors of the SDK's argument validation included."""
     found = leaks(call.text, call.result.structured_content)
-    if call.error and SDK_VALIDATION in call.text:
-        found = [item for item in found if not PYDANTIC_DOCS.fullmatch(item)]
     assert not found, f"{call.tool} {call.arguments}: szczegóły backendu w wyniku: {found}"
 
 
@@ -289,16 +281,6 @@ def assert_listing_clean(tools: list[dict[str, Any]]) -> None:
     """D3 for ``tools/list``: descriptions and schemas, field names included."""
     found = leaks("", tools)
     assert not found, f"tools/list: szczegóły backendu: {found}"
-
-
-def sdk_validation_leak(call: Call) -> None:
-    """Report the known problem: the SDK's validation error links to pydantic's docs."""
-    if PYDANTIC_DOCS.search(call.text):
-        pytest.xfail(
-            "Znany problem: błąd walidacji argumentów z SDK MCP zawiera odnośnik do "
-            "dokumentacji pydantic (errors.pydantic.dev), czyli szczegół biblioteki w "
-            "tekście dla modelu. Do decyzji: przycinać te komunikaty w serwerze."
-        )
 
 
 class McpLive:

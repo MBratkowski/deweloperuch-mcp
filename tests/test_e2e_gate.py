@@ -285,10 +285,8 @@ def test_real_results_pass_the_leak_check(tmp_path: Path, unix_sockets: None) ->
         True,
     ]
     assert "Invest Komfort" in calls[6].text
-    # The SDK's own validation error links to pydantic's docs: reported as a known problem.
-    with pytest.raises(pytest.xfail.Exception, match="errors.pydantic.dev"):
-        live.sdk_validation_leak(calls[5])
-    live.sdk_validation_leak(calls[4])  # the services' own message: nothing to report
+    # The SDK's validation error: the field and the rule, no link to pydantic's docs.
+    assert "per_page" in calls[5].text and "Input should be 10 or 50" in calls[5].text
 
 
 @pytest.mark.parametrize(
@@ -348,8 +346,11 @@ def test_the_harness_counts_paces_and_ends_the_session(fake_server: Path, tmp_pa
             ("search_offers", {"city": "warszawa", "page": 2}),
             ("search_offers", {"city": "polska"}),
         )
-        with pytest.raises(pytest.exit.Exception) as unavailable:
-            mcp.call("search_offers", city="awaria")
+        with pytest.raises(pytest.exit.Exception) as unavailable:  # checked in parallel too
+            mcp.parallel(
+                ("search_offers", {"city": "awaria"}),
+                ("search_offers", {"city": "warszawa", "page": 3}),
+            )
         with pytest.raises(pytest.exit.Exception) as stopped:
             mcp.call("search_locations", query="krak")
 
@@ -360,7 +361,7 @@ def test_the_harness_counts_paces_and_ends_the_session(fake_server: Path, tmp_pa
     assert unavailable.value.returncode == live.EXIT_UNAVAILABLE == 4
     assert stopped.value.returncode == live.EXIT_STOP == 3
     assert "STOP: MCP search_locations" in str(stopped.value)
-    assert budget.total == 5  # 1 + 2 + the 500 + the 403
+    assert budget.total == 6  # 1 + 2 + the 500 with page 3 + the 403
 
 
 # --- the safeguards of the CLI, probe and scripts --------------------------------------------
