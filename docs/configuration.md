@@ -98,6 +98,8 @@ Mapowanie na kody wyjścia CLI: [docs/cli/README.md](cli/README.md#kody-wyjścia
 
 `DEWELOPERUCH_UPDATE_SNAPSHOTS=1 uv run pytest tests/test_mcp_server.py` odświeża zrzut `tests/snapshots/mcp_tools.json` (pełny `tools/list`, `instructions`, `serverInfo.name`). To narzędzie testów, nie konfiguracja produktu; zwykły `uv run pytest` porównuje wynik ze zrzutem.
 
+`DEWELOPERUCH_LIVE=1` (z markerem pytest `live`) włącza żywe testy e2e z `tests/e2e/`: `DEWELOPERUCH_LIVE=1 uv run pytest -m live tests/e2e -rs --maxfail=3`. Bez niej testy e2e są pomijane. To przełącznik tylko dla testów, nie konfiguracja produktu; serwer i CLI go nie czytają. Przebieg wymaga zgody (D9), więcej: [tests/e2e/README.md](../tests/e2e/README.md).
+
 ## Skrypty recon
 
 Skrypty `recon/` uruchamiane jako `python3 recon/<skrypt>.py` wymagają Pythona 3.11 lub nowszego. Systemowy `python3` z macOS to 3.9 i kończy się komunikatem o wymaganej wersji. Alternatywa: `uv run python recon/<skrypt>.py`.

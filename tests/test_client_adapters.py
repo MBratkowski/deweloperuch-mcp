@@ -18,10 +18,16 @@ from deweloperuch_mcp import identity
 from deweloperuch_mcp.allowlist import match_api, match_dump, match_page
 from deweloperuch_mcp.client import dto, json_api, rsc
 from deweloperuch_mcp.client.transport import HttpClient, path_segment
-from deweloperuch_mcp.errors import InvalidInputError, UnexpectedResponseError
+from deweloperuch_mcp.errors import (
+    SERVICE_CHANGED,
+    InvalidInputError,
+    NotFoundError,
+    UnexpectedResponseError,
+)
 from deweloperuch_mcp.flight import rsc_token
 from deweloperuch_mcp.throttle import RequestLimiter
 from discovery_samples import body, request_target, rsc_payload
+from rsc_fixtures import OFFERS_UNKNOWN_CITY, OFFERS_WARSZAWA, UNKNOWN_CITY, offers_payload, raw
 
 
 @pytest.fixture
@@ -38,7 +44,8 @@ def service() -> Iterator[respx.MockRouter]:
 
 
 def html_page(rsc_text: str) -> bytes:
-    push = json.dumps(rsc_text)
+    """``rsc_text`` inlined the way Next.js does it: raw UTF-8, not ``\\u`` escapes."""
+    push = json.dumps(rsc_text, ensure_ascii=False)
     return (
         f"<!DOCTYPE html><html><body><script>self.__next_f.push([1,{push}])</script></body></html>"
     ).encode()
@@ -153,7 +160,7 @@ def test_offers_list_requests_the_page_as_rsc_with_a_deterministic_token(
     url = f"{identity.BASE_URL}{target}&_rsc={rsc_token(target)}"
     route = service.get(url).respond(
         200,
-        content=rsc_payload({"initialData": body("page.offers_list.filtered")}),
+        content=offers_payload(body("page.offers_list.filtered")),
         headers={"Content-Type": "text/x-component"},
     )
 
@@ -167,9 +174,7 @@ def test_offers_list_requests_the_page_as_rsc_with_a_deterministic_token(
 
 
 def test_rsc_token_changes_with_the_query(http: HttpClient, service: respx.MockRouter) -> None:
-    route = service.route(method="GET").respond(
-        200, content=rsc_payload({"initialData": body("page.offers_list")})
-    )
+    route = service.route(method="GET").respond(200, content=offers_payload())
 
     rsc.offers_list(http, "warszawa", [("perPage", "100")])
     rsc.offers_list(http, "warszawa", [("perPage", "50")])
@@ -186,7 +191,7 @@ def test_rsc_token_changes_with_the_query(http: HttpClient, service: respx.MockR
 def test_html_instead_of_rsc_is_decoded_from_the_page_scripts(
     http: HttpClient, service: respx.MockRouter
 ) -> None:
-    text = rsc_payload({"initialData": body("page.offers_list")}).decode()
+    text = offers_payload(body("page.offers_list")).decode()
     service.route(method="GET").respond(
         200, content=html_page(text), headers={"Content-Type": "text/html; charset=utf-8"}
     )
@@ -194,6 +199,96 @@ def test_html_instead_of_rsc_is_decoded_from_the_page_scripts(
     parsed = rsc.offers_list(http, "warszawa", [("perPage", "100")])
 
     assert parsed.pagination.total == 13324
+
+
+# --- RSC: real payloads (tests/fixtures/rsc/) -------------------------------------------
+
+RSC = {"Content-Type": "text/x-component"}
+NOT_FOUND_ROW = b'f:E{"digest":"NEXT_HTTP_ERROR_FALLBACK;404"}\n'
+
+
+def test_offers_list_parses_the_real_page(http: HttpClient, service: respx.MockRouter) -> None:
+    """The data row follows JSON-LD text rows without a newline (the bug of 2026-10-10)."""
+    service.route(method="GET").respond(200, content=raw(OFFERS_WARSZAWA), headers=RSC)
+
+    parsed = rsc.offers_list(http, "warszawa", [("perPage", 10)])
+
+    assert len(parsed.data) == 10
+    assert (parsed.pagination.page, parsed.pagination.perPage) == (1, 10)
+    assert (parsed.pagination.total, parsed.pagination.totalPages) == (13324, 20)
+    assert parsed.data[0].sale_id == 4397
+    assert all(offer.invest.city_slug == "warszawa" for offer in parsed.data)
+
+
+def test_the_real_page_served_as_html_is_parsed_too(
+    http: HttpClient, service: respx.MockRouter
+) -> None:
+    service.route(method="GET").respond(
+        200,
+        content=html_page(raw(OFFERS_WARSZAWA).decode()),
+        headers={"Content-Type": "text/html; charset=utf-8"},
+    )
+
+    assert len(rsc.offers_list(http, "warszawa", []).data) == 10
+
+
+def test_the_page_of_an_unknown_city_is_not_found(
+    http: HttpClient, service: respx.MockRouter
+) -> None:
+    """HTTP 200 without the data, with Next.js's 404 marker: no such page, not a change."""
+    service.route(method="GET").respond(200, content=raw(OFFERS_UNKNOWN_CITY), headers=RSC)
+
+    with pytest.raises(NotFoundError) as caught:
+        rsc.offers_list(http, UNKNOWN_CITY, [("perPage", 10)])
+
+    assert str(caught.value) == "Serwis nie zna żądanych danych (strona nie istnieje)."
+    assert caught.value.detail == (
+        f"/ceny-ofertowe/{UNKNOWN_CITY}/mieszkania: brak propsa 'initialData', strona "
+        "zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
+    )
+
+
+def test_the_page_of_an_unknown_city_served_as_html_is_not_found_too(
+    http: HttpClient, service: respx.MockRouter
+) -> None:
+    service.route(method="GET").respond(
+        200,
+        content=html_page(raw(OFFERS_UNKNOWN_CITY).decode()),
+        headers={"Content-Type": "text/html; charset=utf-8"},
+    )
+
+    with pytest.raises(NotFoundError):
+        rsc.offers_list(http, UNKNOWN_CITY, [])
+
+
+@pytest.mark.parametrize(
+    "marker",
+    [
+        b"",  # no error row at all
+        b'f:E{"digest":"NEXT_HTTP_ERROR_FALLBACK;403"}\n',
+        b'f:E{"digest":"2417303245"}\n',  # a server error
+        b'f:{"digest":"NEXT_HTTP_ERROR_FALLBACK;404"}\n',  # not an error row
+    ],
+)
+def test_a_page_without_the_data_nor_the_404_marker_is_unexpected(
+    http: HttpClient, service: respx.MockRouter, marker: bytes
+) -> None:
+    payload = raw(OFFERS_UNKNOWN_CITY)
+    assert payload.count(NOT_FOUND_ROW) == 1
+    service.route(method="GET").respond(
+        200, content=payload.replace(NOT_FOUND_ROW, marker), headers=RSC
+    )
+
+    with pytest.raises(UnexpectedResponseError) as caught:
+        rsc.offers_list(http, UNKNOWN_CITY, [])
+
+    assert SERVICE_CHANGED in str(caught.value)
+
+
+def test_the_data_wins_over_a_404_marker(http: HttpClient, service: respx.MockRouter) -> None:
+    service.route(method="GET").respond(200, content=offers_payload() + NOT_FOUND_ROW)
+
+    assert len(rsc.offers_list(http, "warszawa", []).data) == 10
 
 
 @pytest.mark.parametrize(
@@ -234,9 +329,7 @@ def test_reference_before_the_data_is_skipped(http: HttpClient, service: respx.M
 
 
 def test_prop_with_another_shape_is_unexpected(http: HttpClient, service: respx.MockRouter) -> None:
-    service.route(method="GET").respond(
-        200, content=rsc_payload({"initialData": {"data": [], "paging": {}}})
-    )
+    service.route(method="GET").respond(200, content=offers_payload({"data": [], "paging": {}}))
 
     with pytest.raises(UnexpectedResponseError, match="kontrakt"):
         rsc.offers_list(http, "warszawa", [])
@@ -280,9 +373,7 @@ def test_every_adapter_requests_a_documented_read_channel(
         lambda: json_api.sale_events(http, 2377),
         lambda: rsc.offers_list(http, "warszawa", [("page", 2)]),
     ]
-    service.route(path__startswith="/ceny-ofertowe/").respond(
-        200, content=rsc_payload({"initialData": {}})
-    )
+    service.route(path__startswith="/ceny-ofertowe/").respond(200, content=offers_payload({}))
 
     for call in calls:
         with contextlib.suppress(UnexpectedResponseError):  # bodies are empty: paths matter
@@ -300,9 +391,7 @@ def test_every_adapter_request_carries_only_the_shared_user_agent(
 ) -> None:
     """Behaviour check behind the static guard in tests/test_identity.py."""
     service.route(path__startswith="/api/cities").respond(200, json=body("api.cities_q"))
-    service.route(path__startswith="/ceny-ofertowe/").respond(
-        200, content=rsc_payload({"initialData": body("page.offers_list")})
-    )
+    service.route(path__startswith="/ceny-ofertowe/").respond(200, content=offers_payload())
 
     json_api.cities(http, "krak", 8)
     rsc.offers_list(http, "warszawa", [])

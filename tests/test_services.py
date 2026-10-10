@@ -15,6 +15,7 @@ import respx
 from deweloperuch_mcp import identity, services
 from deweloperuch_mcp.client import transport
 from deweloperuch_mcp.errors import (
+    SERVICE_CHANGED,
     InvalidInputError,
     LimiterWaitError,
     NotFoundError,
@@ -26,7 +27,8 @@ from deweloperuch_mcp.errors import (
 )
 from deweloperuch_mcp.flight import rsc_token
 from deweloperuch_mcp.throttle import LOCK_FILENAME, RequestLimiter
-from discovery_samples import body, request_target, rsc_payload
+from discovery_samples import body, request_target
+from rsc_fixtures import OFFERS_UNKNOWN_CITY, UNKNOWN_CITY, offers_payload, raw
 
 BASE = identity.BASE_URL
 OFFERS_PAGE = "/ceny-ofertowe/warszawa/mieszkania"
@@ -52,7 +54,7 @@ def service() -> Iterator[respx.MockRouter]:
 def offers_route(service: respx.MockRouter, sample: str = "page.offers_list") -> respx.Route:
     return service.route(method="GET", path__startswith="/ceny-ofertowe/").respond(
         200,
-        content=rsc_payload({"initialData": body(sample)}),
+        content=offers_payload(body(sample)),
         headers={"Content-Type": "text/x-component"},
     )
 
@@ -240,6 +242,17 @@ def test_search_offers_accepts_the_page_sizes_of_the_service(
     assert sent_query(route) == f"page=20&perPage={per_page}"
 
 
+def test_search_offers_trims_the_city_slug(
+    session: services.Session, service: respx.MockRouter
+) -> None:
+    """Spaces around a slug are trimmed, nothing else is guessed (capitals, names)."""
+    route = offers_route(service)
+
+    services.search_offers(session, " warszawa ")
+
+    assert route.calls.last.request.url.path == OFFERS_PAGE
+
+
 def test_search_offers_accepts_the_whole_country(
     session: services.Session, service: respx.MockRouter
 ) -> None:
@@ -270,6 +283,8 @@ def test_search_offers_accepts_the_whole_country(
         ({"sort": "amount"}, "sort"),
         ({"sort": ["price_asc"]}, "sort"),
         ({"city": "Kraków"}, "city"),
+        ({"city": "Warszawa"}, "city"),
+        ({"city": "KRAKOW"}, "city"),
         ({"city": ""}, "city"),
         ({"city": "warszawa/../x"}, "city"),
         ({"city": None}, "city"),
@@ -293,6 +308,44 @@ def test_search_offers_unknown_city_points_to_search_locations(
 
     with pytest.raises(NotFoundError, match="search_locations"):
         services.search_offers(session, "atlantyda")
+
+
+UNKNOWN_CITY_MESSAGE = (
+    f"Serwis nie zna miasta {UNKNOWN_CITY!r}. Podaj city_slug z search_locations albo polska "
+    "(cały kraj)."
+)
+
+
+def test_search_offers_of_an_unknown_city_says_so(
+    session: services.Session, service: respx.MockRouter
+) -> None:
+    """What the service really answers (HTTP 200, the 404 marker), not a 404."""
+    service.route(method="GET").respond(
+        200, content=raw(OFFERS_UNKNOWN_CITY), headers={"Content-Type": "text/x-component"}
+    )
+
+    with pytest.raises(NotFoundError) as caught:
+        services.search_offers(session, UNKNOWN_CITY)
+
+    assert str(caught.value) == UNKNOWN_CITY_MESSAGE
+    assert SERVICE_CHANGED not in str(caught.value)
+    assert caught.value.detail is not None
+    assert "NEXT_HTTP_ERROR_FALLBACK;404" in caught.value.detail
+
+
+def test_search_offers_on_the_real_page(
+    session: services.Session, service: respx.MockRouter
+) -> None:
+    service.route(method="GET").respond(
+        200, content=offers_payload(), headers={"Content-Type": "text/x-component"}
+    )
+
+    result = services.search_offers(session, "warszawa")
+
+    assert (result.total, result.returned, result.page, result.per_page) == (13324, 10, 1, 10)
+    assert (result.truncated, result.pages_available) == (True, 20)
+    assert all(item.offer_id > 0 and item.investment_slug for item in result.items)
+    assert len({item.offer_id for item in result.items}) == 10
 
 
 # --- get_investment ----------------------------------------------------------------------

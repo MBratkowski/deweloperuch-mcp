@@ -2,8 +2,9 @@
 
 The samples are trimmed (CLAUDE.md, "Próbki"): a list ends with the string
 ``"... (N more, M total)"`` and a big id-keyed map has the key ``"..."``. DTOs do not
-tolerate these markers, so tests remove them before validating. ``rsc_payload`` wraps a
-page sample's prop into a raw RSC response, as the service sends it.
+tolerate these markers, so tests remove them before validating. ``rsc_payload`` builds a
+synthetic RSC response around props, for tests that need a particular shape; payloads
+as the service sends them are in tests/fixtures/rsc/ (``rsc_fixtures``).
 """
 
 import json
@@ -52,10 +53,13 @@ def request_target(name: str) -> str:
 
 
 def rsc_payload(props: dict[str, Any]) -> bytes:
-    """A raw RSC response (``text/x-component``) whose client component ``$L1f`` has ``props``.
+    """A synthetic RSC response (``text/x-component``) whose client component ``$L1f`` has
+    ``props``: compact JSON, an import row, the data element nested in a server element,
+    and a second element with a reference to the prop.
 
-    Built the way the service sends it: compact JSON, an import row, the data element
-    nested in a server element, and a second element with a reference to the prop.
+    Only for tests that need such a shape (a missing prop, a reference first, injected
+    text). It lacks what the real pages have (text rows without a newline right before
+    the data row), so data tests use ``rsc_fixtures.offers_payload`` instead.
     """
     encoded = json.dumps(props, ensure_ascii=False, separators=(",", ":"))
     return (

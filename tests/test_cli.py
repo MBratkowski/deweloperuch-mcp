@@ -42,6 +42,7 @@ from deweloperuch_mcp.throttle import (
     default_lock_dir,
 )
 from discovery_samples import request_target
+from rsc_fixtures import UNKNOWN_CITY
 from service_mocks import (
     BASE,
     INVESTMENT,
@@ -49,6 +50,7 @@ from service_mocks import (
     location_routes,
     offers_page,
     offers_route,
+    unknown_city_route,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -144,13 +146,13 @@ def test_locations_search_without_matches_shows_the_hint(
 def test_offers_search_prints_the_page_with_the_limits_of_d4(
     run: Cli, service: respx.MockRouter
 ) -> None:
-    offers_route(service)
+    offers_route(service)  # the real Warsaw page: 10 offers
 
     out = ok(run("offers", "search", "warszawa"))
 
     lines = out.splitlines()
     assert lines[0] == (
-        "Pasujące oferty: 13 324 · strona 1 z 20 (po 100) · pokazano 3 · obcięte: "
+        "Pasujące oferty: 13 324 · strona 1 z 20 (po 10) · pokazano 10 · obcięte: "
         "serwis pozwala przejrzeć najwyżej 20 stron."
     )
     assert lines[1].startswith("Wskazówka: Pasujących ofert jest 13324")
@@ -201,8 +203,8 @@ def test_offers_search_json_is_the_domain_model(run: Cli, service: respx.MockRou
 
     data = json.loads(ok(run("offers", "search", "warszawa", "--json")))
 
-    assert (data["total"], data["returned"], data["truncated"]) == (13324, 3, True)
-    assert (data["page"], data["per_page"], data["pages_available"]) == (1, 100, 20)
+    assert (data["total"], data["returned"], data["truncated"]) == (13324, 10, True)
+    assert (data["page"], data["per_page"], data["pages_available"]) == (1, 10, 20)
     assert data["items"][0]["offer_id"] == 4397
     assert data["items"][0]["investment_slug"] == "nowy-targowek-vi"
     assert data["items"][0]["last_price_change_kind"] == "increase"
@@ -219,6 +221,25 @@ def test_offers_search_with_an_empty_page(run: Cli, service: respx.MockRouter) -
     assert out.splitlines()[0] == "Pasujące oferty: 0 · pokazano 0."
     assert "Wskazówka: Brak ofert spełniających kryteria." in out
     assert "offers get" not in out
+
+
+def test_offers_search_of_an_unknown_city_ends_with_not_found(
+    run: Cli, service: respx.MockRouter
+) -> None:
+    """The real answer for an unknown city (HTTP 200 with Next.js's 404 marker): code 7,
+    the domain message, the details on their own line; nothing on stdout."""
+    unknown_city_route(service)
+
+    result = run("offers", "search", UNKNOWN_CITY)
+
+    assert result.exit_code == 7  # cli.ExitCode.NOT_FOUND, public API
+    assert result.stdout == ""
+    assert result.stderr.splitlines() == [
+        f"Błąd: Serwis nie zna miasta {UNKNOWN_CITY!r}. Podaj city_slug z search_locations "
+        "albo polska (cały kraj).",
+        f"Szczegóły: /ceny-ofertowe/{UNKNOWN_CITY}/mieszkania: brak propsa 'initialData', "
+        "strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404",
+    ]
 
 
 # --- offers get --------------------------------------------------------------------------

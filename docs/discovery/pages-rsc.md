@@ -13,7 +13,12 @@ RSC: 1
 - Bez `_rsc` Cloudflare zwraca zcache'owany HTML, bo ignoruje `Vary: RSC` [P].
 - Alternatywa: pełny HTML i dekodowanie `self.__next_f.push([1,"…"])`. Daje te same dane, ale jest ~10× większy (942 KB vs 98 KB) [P].
 - Propsy leżą w elementach `["$","$L<id>",null,{…}]`. Referencje `"$f:props:…"` / `"$8:props:…"` wskazują na wcześniej zdefiniowane fragmenty, ale propsy z danymi list są inline [P].
-- Parser referencyjny: [`src/deweloperuch_mcp/flight.py`](../../src/deweloperuch_mcp/flight.py) (`flight()` dla HTML, `find_json_after(text, "initialData")`); `recon/flight.py` tylko go reeksportuje.
+- Format flight (wiersze `<id>:<tag><dane>`) [P z kodu, chunk `1517-…js` ReactFlightClient z cache skanera]:
+  - wiersze z długością w BAJTACH, **bez `\n` po wierszu**: `<id>:T<hexlen>,<tekst>`; tagi binarne `A O o U S s L l G g M m V` (z `T`) działają tak samo. Wiersz po nich zaczyna się bezpośrednio za danymi, więc szukanie wierszy tylko na początku linii je gubi;
+  - wiersze kończone `\n`: tagi `A`–`Z` (m.in. `E` błąd), `#`, `r`, `x` oraz wiersz modelu bez tagu (`<id>:<json>`);
+  - hinty `:HL…` mają pusty id.
+  - Na liście ofert wiersz z `initialData` idzie zaraz za dwoma wierszami `T` z JSON-LD (`16:T5ed,…` WebPage, `19:T1a27,…` ItemList) [P 2026-10-10, fiks `tests/fixtures/rsc/warszawa_perPage10.rsc`]. Obalono: stary parser (`_JSON_ROW`, wiersze tylko na początku linii) widział tam brak `initialData`, przez co `search_offers` nie działał na żywym serwisie.
+- Parser referencyjny: [`src/deweloperuch_mcp/flight.py`](../../src/deweloperuch_mcp/flight.py): `rows()`, `component_props()`, `error_digests()` (RSC) oraz `flight()` dla HTML. `find_json_after(text, "initialData")` zostaje dla `probe --prop`; `recon/flight.py` tylko reeksportuje.
 - Cache-Control stron RSC: `private, max-age=28800, must-revalidate` (bez `s-maxage`; `cf-cache-status` MISS lub HIT z `age`) [P 2026-10-10, próbki z serii B; nagłówki w stderr probe'a, bez osobnej próbki].
 - **Ryzyko**: nazwy propsów (`initialData`, `serverPaginationData`, …) są detalem implementacyjnym UI i mogą się zmienić bez ostrzeżenia [W]. Adapter RSC musi być izolowany i mieć testy kontraktowe na próbkach.
 
@@ -59,7 +64,7 @@ Props `initialData`:
                          "developer": { "developer_id", "name", "slug" } } }],
   "pagination": { "page", "perPage", "total", "totalPages" } }
 ```
-Nieznane miasto (`/ceny-ofertowe/nieistniejace-miasto/mieszkania`): HTTP **200** `text/x-component` (26 KB) bez propsa `initialData`; w payloadzie jest segment `notFound` [P 2026-10-10, obserwacja bez próbki]. Klient musi rozpoznać brak `initialData`, nie status HTTP.
+Nieznane miasto (`/ceny-ofertowe/nieistniejace-miasto/mieszkania`): HTTP **200** `text/x-component` bez propsa `initialData`; wskaźnikiem jest wiersz `E` z digestem `NEXT_HTTP_ERROR_FALLBACK;404` (`{"digest":"NEXT_HTTP_ERROR_FALLBACK;404"}`) [P 2026-10-10, fiks `tests/fixtures/rsc/unknown_city_perPage10.rsc`]. Obalono: segment `notFound` jako wskaźnik (`notFound` jest propem layoutu na każdej stronie). Klient musi rozpoznać digest (`error_digests()`), nie status HTTP ani sam brak `initialData`.
 Sample: `page.offers_list.json`, `page.offers_list.filtered.json`, `page.offers_list.sort_desc.json`
 `last_event_type` przyjmuje też `NEW_OFFER` (oferta bez zmian ceny, `total_events: 1`) [P 2026-10-10, `page.offers_list.sort_desc`].
 

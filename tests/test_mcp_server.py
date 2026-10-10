@@ -1,6 +1,7 @@
 """The MCP server over a mocked service (respx, bodies from samples), through the SDK's
-in-memory client: no stdio, no network. One test starts the real entry point in a
-subprocess, without any tool call that would reach the service.
+in-memory client: no stdio, no network. Two tests start the real entry point in a
+subprocess behind a network guard: one without any tool call that would reach the
+service, one with the network mocked inside the child by the real RSC responses.
 
 The tools go through the real services and client (D6); only the network is mocked and
 the session gets a limiter without the 1 s pause. The SDK's client checks every
@@ -27,7 +28,7 @@ import httpx
 import pytest
 import pytest_socket
 import respx
-from mcp import Client
+from mcp import Client, ClientSession, StdioServerParameters, stdio_client
 from mcp.server.mcpserver import MCPServer
 from mcp.types import CallToolResult, TextContent
 from mcp.types.version import LATEST_HANDSHAKE_VERSION
@@ -46,6 +47,7 @@ from deweloperuch_mcp.domain.models import (
 )
 from deweloperuch_mcp.throttle import RequestLimiter
 from discovery_samples import body, rsc_payload
+from rsc_fixtures import UNKNOWN_CITY, offers_payload
 from service_mocks import (
     INVESTMENT,
     SALE_EVENTS,
@@ -54,6 +56,7 @@ from service_mocks import (
     location_routes,
     offers_page,
     offers_route,
+    unknown_city_route,
 )
 
 T = TypeVar("T")
@@ -452,13 +455,13 @@ def test_search_locations_without_a_total_has_total_null(
 def test_search_offers_with_defaults_lists_compact_offers(
     server: MCPServer[services.Session], service: respx.MockRouter
 ) -> None:
-    route = offers_route(service)
+    route = offers_route(service)  # the real Warsaw page: 10 offers
 
     result = data(call(server, "search_offers", city="warszawa"))
 
     params = route.calls.last.request.url.params
     assert (params["perPage"], params["page"], "sortBy" in params) == ("10", "1", False)
-    assert (result["total"], result["returned"], result["truncated"]) == (13324, 3, True)
+    assert (result["total"], result["returned"], result["truncated"]) == (13324, 10, True)
     assert result["items"][0] == {
         "offer_id": 4397,
         "investment_slug": "nowy-targowek-vi",
@@ -533,6 +536,51 @@ def test_truncated_hint_says_to_narrow_the_filters(
         f"Pasujących ofert jest 13324, a można przejrzeć najwyżej 20 stron po {per_page} "
         f"({shown}). Zawęź filtry (cena, metraż)."
     )
+
+
+UNKNOWN_CITY_MESSAGE = (
+    f"Serwis nie zna miasta {UNKNOWN_CITY!r}. Podaj city_slug z search_locations albo polska "
+    "(cały kraj)."
+)
+
+
+@pytest.mark.parametrize("city", ["Kraków", "Warszawa", "KRAKOW", ""])
+def test_search_offers_city_that_is_not_a_slug_points_to_search_locations(
+    server: MCPServer[services.Session], service: respx.MockRouter, city: str
+) -> None:
+    """Mistakes a model makes with `city`: a name, capitals, nothing. No request."""
+    result = call(server, "search_offers", city=city)
+
+    assert result.is_error is True
+    assert text(result) == (
+        "city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje "
+        f"search_locations; podano {city!r}."
+    )
+    assert service.calls.call_count == 0
+
+
+def test_search_offers_trims_spaces_around_the_city(
+    server: MCPServer[services.Session], service: respx.MockRouter
+) -> None:
+    route = offers_route(service)
+
+    data(call(server, "search_offers", city=" warszawa "))
+
+    assert route.calls.last.request.url.path == "/ceny-ofertowe/warszawa/mieszkania"
+
+
+def test_search_offers_of_an_unknown_city_is_an_error_that_says_so(
+    server: MCPServer[services.Session], service: respx.MockRouter
+) -> None:
+    """The real answer (HTTP 200, Next.js's 404 marker) is "no such city", not "the
+    service may have changed": the model can fix the argument."""
+    unknown_city_route(service)
+
+    result = call(server, "search_offers", city=UNKNOWN_CITY)
+
+    assert result.is_error is True
+    assert text(result) == UNKNOWN_CITY_MESSAGE
+    assert not LEAKS.search(text(result))
 
 
 def test_get_offer(server: MCPServer[services.Session], service: respx.MockRouter) -> None:
@@ -1098,7 +1146,7 @@ def test_result_sizes_on_the_samples(
         page = offers_page(count=int(request.url.params["perPage"]))
         return httpx.Response(
             200,
-            content=rsc_payload({"initialData": page}),
+            content=offers_payload(page),
             headers={"Content-Type": "text/x-component"},
         )
 
@@ -1298,6 +1346,52 @@ def test_the_entry_point_speaks_only_json_rpc_on_stdout(tmp_path: Path) -> None:
     )
     assert in_schema["result"]["isError"] is True
     assert "sort" in in_schema["result"]["content"][0]["text"]
+
+
+TESTS = Path(__file__).resolve().parent
+
+# The real entry point with the network mocked inside the child: the offers list answers
+# with the real RSC responses (tests/fixtures/rsc/), everything else is refused by respx.
+ON_REAL_PAYLOADS = f"""{NO_NETWORK}
+import sys
+sys.path[:0] = [{str(TESTS)!r}]
+import respx
+from service_mocks import offers_route, unknown_city_route
+with respx.mock(assert_all_called=False, assert_all_mocked=True) as router:
+    unknown_city_route(router)
+    offers_route(router)
+    from deweloperuch_mcp.mcp_server import main
+    main()
+"""
+
+
+def test_the_entry_point_over_stdio_on_the_real_payloads(tmp_path: Path) -> None:
+    """What failed on the live service on 2026-10-10, offline: ``main()`` in a real process,
+    the SDK's stdio client, the real RSC responses for a known and an unknown city."""
+    params = StdioServerParameters(
+        command=sys.executable, args=["-c", ON_REAL_PAYLOADS], env=dict(os.environ)
+    )
+
+    async def session() -> tuple[list[str], CallToolResult, CallToolResult]:
+        with anyio.fail_after(60), (tmp_path / "stderr.txt").open("w") as errlog:
+            async with (
+                stdio_client(params, errlog=errlog) as (read, write),
+                ClientSession(read, write) as client,
+            ):
+                await client.initialize()
+                listed = await client.list_tools()
+                found = await client.call_tool("search_offers", {"city": "warszawa"})
+                unknown = await client.call_tool("search_offers", {"city": UNKNOWN_CITY})
+        return [tool.name for tool in listed.tools], found, unknown
+
+    names, found, unknown = anyio.run(session)
+
+    assert names == list(TOOLS)
+    result = data(found)
+    assert (result["total"], result["returned"], result["per_page"]) == (13324, 10, 10)
+    assert all({"offer_id", "investment_slug", "price"} <= set(item) for item in result["items"])
+    assert unknown.is_error is True
+    assert text(unknown) == UNKNOWN_CITY_MESSAGE
 
 
 # The warning is the expected effect here; elsewhere it still flags a real attempt.

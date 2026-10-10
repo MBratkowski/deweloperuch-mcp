@@ -5,6 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Zestaw e2e `tests/e2e/` (60 testów: MCP 48, CLI 10, recon 2) na żywym serwisie: `DEWELOPERUCH_LIVE=1 uv run pytest -m live tests/e2e -rs`; wymaga zgody (D9), plan ok. 46 zapytań, limit 60. Testy offline korzystają teraz z prawdziwych surowych payloadów RSC (`tests/fixtures/rsc/`). Zob. [tests/e2e/README.md](tests/e2e/README.md).
 - Trwały STOP między procesami. Po 401, 403, 429 albo challenge Cloudflare każdy proces (CLI, serwer MCP, `recon/probe.py`, `recon/scan_bundles.py`) zapisuje blokadę w `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/stop.json`, obok `throttle.lock` (format 1, `0600`, zapis atomowy pod zamkiem). Dopóki zapis jest aktywny, żaden proces nie wysyła zapytań. 429 wygasa po pauzie; 401, 403 i challenge są bezterminowe; nieczytelny zapis (także symlink, FIFO, katalog, obce `source`, niekanoniczny `reason`) to STOP bezterminowy. Pakiet zapisuje STOP zaraz po nagłówkach, recon po przeczytaniu ciała. Szczegóły: [docs/configuration.md](docs/configuration.md#stop-blokada-między-procesami).
 - `deweloperuch stop status [--json]`: pokazuje blokadę STOP (czasy, źródło, PID, ścieżka); offline, bez zamka, niczego nie tworzy; kod 0 bez STOP lub przy wygasłym, 3 przy aktywnym. Dokumentacja: [docs/cli/commands/stop-status.md](docs/cli/commands/stop-status.md).
 - `deweloperuch stop clear`: zdejmuje blokadę STOP pod zamkiem limitera (czeka na zamek najwyżej 300 s, po 2 s notatka na stderr, po limicie kod 1 bez zdejmowania), usuwa sieroty `.stop-*.tmp`, nie skraca pauzy 429. Tylko dla użytkownika; agentom blokuje ją hook Bash i reguła w `CLAUDE.md`, nie ma narzędzia MCP do zdejmowania. Dokumentacja: [docs/cli/commands/stop-clear.md](docs/cli/commands/stop-clear.md).
@@ -38,6 +39,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/).
 - `BASE_URL` i `USER_AGENT` zdefiniowane w `src/deweloperuch_mcp/identity.py` (jedno miejsce, D9); `recon/config.py` je reeksportuje. Nazwy i wartości bez zmian.
 - `recon/flight.py` objęty lintem (ruff); nowe funkcje `flight_from_html(html)` i `component_props(text)`.
 - **BREAKING:** `recon/flight.py` jako CLI wymaga Pythona >= 3.11 (na 3.9 czytelny komunikat zamiast działania).
+
+### Fixed
+- `search_offers` (MCP) i `offers search` (CLI) znów działają na żywym serwisie. Parser RSC nie widział wiersza z danymi za wierszami tekstowymi `T` (bez `\n`), więc każde wywołanie kończyło się błędem „Na stronie serwisu brakuje oczekiwanych danych…”.
+- Nieznane miasto w `search_offers` / `offers search` daje „Serwis nie zna miasta '<slug>'…” (CLI kod 7) zamiast „Serwis mógł się zmienić…” (kod 6).
 
 ### Removed
 - `probe.rsc_token` w `recon/probe.py` (nieużywana funkcja).

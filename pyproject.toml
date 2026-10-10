@@ -27,6 +27,10 @@ testpaths = ["tests"]
 pythonpath = ["recon"]
 # pytest-socket: no test may open a network socket (CLAUDE.md, D10).
 addopts = "--disable-socket"
+markers = [
+    # tests/e2e: skipped unless DEWELOPERUCH_LIVE=1 and -m live (tests/e2e/conftest.py).
+    "live: seria żywych zapytań do serwisu (tests/e2e); tylko z DEWELOPERUCH_LIVE=1 i -m live, za zgodą użytkownika (D9)",
+]
 
 [tool.ruff]
 line-length = 100
