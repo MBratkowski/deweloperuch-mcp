@@ -1,0 +1,30 @@
+{
+  "_request": "GET /api/location-search?q=mo&limit=20",
+  "_captured": "2026-10-10",
+  "response": {
+    "suggestions": [
+      {
+        "kind": "city",
+        "city": "Mościska",
+        "citySlug": "mosciska",
+        "count": 14
+      },
+      {
+        "kind": "city",
+        "city": "Modlnica",
+        "citySlug": "modlnica",
+        "count": 2
+      },
+      {
+        "kind": "district",
+        "city": "Warszawa",
+        "citySlug": "warszawa",
+        "district": "Mokotów",
+        "count": 1562,
+        "lat": 52.189818153819054,
+        "lng": 21.05171136865118
+      },
+      "... (17 more, 20 total)"
+    ]
+  }
+}

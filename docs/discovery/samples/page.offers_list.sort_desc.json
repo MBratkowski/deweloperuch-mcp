@@ -1,0 +1,103 @@
+{
+  "_request": "GET /ceny-ofertowe/warszawa/mieszkania?sortBy=amount&sortOrder=desc&perPage=10 (RSC)",
+  "_prop": "initialData",
+  "_captured": "2026-10-10",
+  "value": {
+    "data": [
+      {
+        "sale_id": 175781,
+        "name": "75",
+        "amount": "7820948",
+        "start_amount_difference": "-5055",
+        "start_amount_difference_percent": "-0.06",
+        "last_amount_difference": "-5055",
+        "last_amount_difference_percent": "-0.06",
+        "last_event_type": "PRICE_DECREASE",
+        "total_events": 2,
+        "currency": "PLN",
+        "size": "154.84",
+        "status": "active",
+        "last_event_date": "2026-10-03",
+        "last_change_event_date": "2026-08-01",
+        "creation_date": "2026-04-18",
+        "invest": {
+          "invest_id": 3012,
+          "name": "Konwiktorska Residence",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "slug": "konwiktorska-residence",
+          "developer": {
+            "developer_id": 284,
+            "name": "Mostostal S.A.",
+            "slug": "mostostal"
+          }
+        }
+      },
+      {
+        "sale_id": 143053,
+        "name": "P3.1.14.02",
+        "amount": "7093980",
+        "start_amount_difference": "0",
+        "start_amount_difference_percent": "0",
+        "last_amount_difference": "0",
+        "last_amount_difference_percent": "0",
+        "last_event_type": "NEW_OFFER",
+        "total_events": 1,
+        "currency": "PLN",
+        "size": "245.63",
+        "status": "active",
+        "last_event_date": "2026-09-03",
+        "last_change_event_date": "2025-12-04",
+        "creation_date": "2025-12-04",
+        "invest": {
+          "invest_id": 14,
+          "name": "Bulwary Praskie etap NOP",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "slug": "bulwary-praskie-etap-nop",
+          "developer": {
+            "developer_id": 14,
+            "name": "Mennica Polska S.A.",
+            "slug": "mennica-polska"
+          }
+        }
+      },
+      {
+        "sale_id": 190315,
+        "name": "I3.E.14.02",
+        "amount": "6724480",
+        "start_amount_difference": "884800",
+        "start_amount_difference_percent": "15.15",
+        "last_amount_difference": "884800",
+        "last_amount_difference_percent": "15.15",
+        "last_event_type": "PRICE_INCREASE",
+        "total_events": 2,
+        "currency": "PLN",
+        "size": "176.96",
+        "status": "active",
+        "last_event_date": "2026-10-03",
+        "last_change_event_date": "2026-10-03",
+        "creation_date": "2026-07-12",
+        "invest": {
+          "invest_id": 4409,
+          "name": "Bulwary Praskie etap I i J",
+          "city": "Warszawa",
+          "city_slug": "warszawa",
+          "slug": "bulwary-praskie-etap-i-i-j-warszawa",
+          "developer": {
+            "developer_id": 14,
+            "name": "Mennica Polska S.A.",
+            "slug": "mennica-polska"
+          }
+        }
+      },
+      "... (7 more, 10 total)"
+    ],
+    "pagination": {
+      "page": 1,
+      "perPage": 10,
+      "total": 13324,
+      "totalPages": 20
+    }
+  }
+}

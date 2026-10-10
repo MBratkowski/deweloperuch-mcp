@@ -1,6 +1,6 @@
 # deweloperuch.pl — mapa warstwy danych
 
-Stan na **2026-10-09**, build Next.js `KD_IOP6Grqba7xa86pGVG`.
+Stan na **2026-10-09** (uzupełnienia z weryfikacji B: 2026-10-10), build Next.js `KD_IOP6Grqba7xa86pGVG`.
 Metoda: statyczna analiza wszystkich chunków JS klienta (114 plików, w tym leniwie ładowane z runtime webpacka), dekodowanie payloadów RSC stron, pojedyncze requesty do każdego endpointu (odstęp ≥1 s, zgodnie z `Crawl-delay: 1`). Bez logowania, bez obchodzenia czegokolwiek.
 
 Oznaczenia używane w całej dokumentacji:
@@ -60,7 +60,7 @@ W serwisie są cztery kanały, z różną stabilnością i kosztem:
 ### A. JSON API `/api/*` [P]
 
 - Same-origin, `GET`, `application/json`, bez sesji.
-- Cache CF: `s-maxage` od 300 s (oferty, liczniki) do 86400 s (statystyki RCN); `max-age=28800` dla przeglądarki.
+- Cache CF: `s-maxage` od 300 s (oferty, liczniki) do 86400 s (statystyki RCN); `max-age=28800` dla przeglądarki. Część endpointów (`cities`, `location-search`, `sale-events`, `map/investments/visible`) i strony RSC nie mają `s-maxage`, tylko `max-age=28800` (strony: `private`) [P 2026-10-10].
 - Parametry zawsze w query stringu lub ścieżce. Nie spotkałem body ani nagłówków wymaganych do działania.
 - Błędy: `400 {"error": "..."}` przy złym parametrze (np. `avg-price-trend/building/<slug>` zamiast id). `valuation-pdf` jawnie obsługuje `429` + `Retry-After`.
 - Pełny katalog: [endpoints.md](endpoints.md).
@@ -71,8 +71,8 @@ Listy (mieszkania, inwestycje, deweloperzy, transakcje, adresy) i strony szczeg�
 
 - Request: `GET <ścieżka strony>?<filtry>&_rsc=<dowolny>` z nagłówkiem `RSC: 1` → `content-type: text/x-component`, ~10× mniej danych niż HTML.
 - Parametr `_rsc` jest potrzebny, bo Cloudflare ignoruje `Vary: RSC`: bez niego dostajemy zcache'owany HTML [P].
-- Format: linie `<id>:<json>`; propsy są w elementach `["$","$L<id>",null,{...props}]`. Parser: [`recon/flight.py`](../../recon/flight.py).
-- Paginacja ma twardy limit **20 stron** (`page=21` → zwraca stronę 20) [P]. `perPage` ∈ {10, 50, 100}; inne wartości → 10 [P].
+- Format: linie `<id>:<json>`; propsy są w elementach `["$","$L<id>",null,{...props}]`. Parser referencyjny: [`src/deweloperuch_mcp/flight.py`](../../src/deweloperuch_mcp/flight.py) (`recon/flight.py` go reeksportuje).
+- Paginacja ma twardy limit **20 stron** (`page=21` → zwraca stronę 20) [P]. `perPage` ∈ {10, 25, 50, 100} przyjęte (20 i 500 → 10) [P].
 - Szczegóły per strona: [pages-rsc.md](pages-rsc.md).
 
 ### C. Next.js Server Actions [P]

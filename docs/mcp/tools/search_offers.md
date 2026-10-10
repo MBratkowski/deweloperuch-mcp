@@ -41,7 +41,8 @@ Rozmiary (pełne strony z próbek): 10 pozycji ok. 3 400 znaków, 50 ok. 16 100,
 - Można przejrzeć najwyżej 20 stron (`page` 1–20) po `per_page` ofert; reszta jest nieosiągalna, trzeba zawęzić filtry. Zob. [pages-rsc.md](../../discovery/pages-rsc.md), „Wspólne reguły list”.
 - `per_page` w MCP to 10 i 50 ([P] w pages-rsc.md); CLI przyjmuje także 100.
 - Maksima `price_*` (99 999 999 PLN) i `area_*` (9 999 m²) to wartownicy zakresu [P z kodu] klienta serwisu, nie dane o rynku.
-- Sortowanie `price_desc` (`sortOrder=desc`) jest otwartym pytaniem (f) z handoffu S1a; bez `sort` kolejność serwisu nie jest gwarantowana. Zob. [open-questions.md](../../open-questions.md).
+- Sortowanie po cenie (`amount`, rosnąco i malejąco) jest potwierdzone [P 2026-10-10]; bez `sort` serwis sortuje rosnąco po identyfikatorze oferty, a nieznana wartość sortowania nie daje błędu (T3 w [open-questions.md](../../open-questions.md)).
+- Znane ograniczenie: dla nieznanego miasta strona serwisu zwraca 200 bez danych, więc dziś wynikiem jest błąd „Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji…”, a nie komunikat „Serwis nie zna miasta”. Ten drugi pojawia się tylko przy HTTP 404.
 - Ceny ofertowe z rynku pierwotnego, nie transakcyjne.
 
 ## Błędy
@@ -49,8 +50,9 @@ Rozmiary (pełne strony z próbek): 10 pozycji ok. 3 400 znaków, 50 ok. 16 100,
 |---|---|
 | `price_min` > `price_max` | `price_min (7) jest większe niż price_max (5); zamień je miejscami.` (analogicznie `area_`) |
 | Liczba poza zakresem | `<pole> musi być liczbą całkowitą z zakresu <od>–<do> …, podano <wartość>.` (lub błąd schematu z SDK) |
-| Nieznane miasto | `Serwis nie zna miasta '<city>'. Podaj city_slug z search_locations albo polska (cały kraj).` |
+| Nieznane miasto (HTTP 404) | `Serwis nie zna miasta '<city>'. Podaj city_slug z search_locations albo polska (cały kraj).` |
 | Zły `city` | `city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje search_locations; podano '…'.` |
+| Nieznane miasto (strona 200 bez danych, typowy przypadek) | `Wyszukiwanie ofert w '<city>': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.` |
 | `sort`/`per_page` spoza listy | Błąd walidacji schematu z SDK (angielski, prefiks „Error executing tool …”) |
 | STOP, błąd serwisu | Jak w [przeglądzie MCP](../README.md#błędy); błędy serwisu z przedrostkiem `Wyszukiwanie ofert w '<city>': …` |
 

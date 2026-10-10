@@ -21,10 +21,10 @@ Wynik strukturalny (`structuredContent`, zgodny z `outputSchema`) i ten sam JSON
 | `hint` | string | Wskazówka, gdy wynik jest obcięty (opcjonalna). |
 | `items` | tablica | Pozycje (poniżej). |
 
-Pozycja `items`: `kind` (`city`, `district`, `street`), `name`, `city`, `city_slug` (zawsze); `district`, `street`, `lat`, `lng` (opcjonalne); `offer_count` (opcjonalne: liczba ofert wg serwisu, 0 = brak ofert; dla dzielnic i ulic przybliżona).
+Pozycja `items`: `kind` (`city`, `district`, `street`), `name`, `city`, `city_slug` (zawsze); `district`, `street`, `lat`, `lng` (opcjonalne); `offer_count` (opcjonalne: liczba ofert wg serwisu, 0 = brak ofert; dla dzielnic dokładna, dla ulic i miast przybliżona).
 
 ## Ograniczenia danych
-- `offer_count` dla dzielnic i ulic jest [W] (wniosek bez bezpośredniego testu: pole `count` z lokalizacji to liczba ofert, przybliżona), a heurystyka `truncated` także [W]; dlatego opis mówi „może być więcej”. Zob. [endpoints.md](../../discovery/endpoints.md), sekcja `location-search`.
+- `offer_count` dla dzielnic to liczba aktywnych ofert [P 2026-10-10]; dla ulic i miast nadal [W] (wniosek bez bezpośredniego testu, T32), stąd „przybliżona”. Heurystyka `truncated` także [W]; dlatego opis mówi „może być więcej”. Zob. [endpoints.md](../../discovery/endpoints.md), sekcja `location-search`.
 - Tylko miasto daje `city_slug` do `search_offers`; dzielnica i ulica podają slug swojego miasta, a `search_offers` nie filtruje po dzielnicy.
 
 ## Błędy

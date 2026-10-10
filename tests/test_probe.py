@@ -1297,8 +1297,9 @@ def test_save_api_reproduces_existing_sample(env: Env, name: str) -> None:
     path = sample["_request"].removeprefix("GET ")
     service = FakeService([json_response(untrim(sample["response"]))])
     save_as = name.removeprefix("api.").removesuffix(".json")
+    captured = date.fromisoformat(sample["_captured"])  # samples come from different days
 
-    code = env.run(["api", path, "--save", save_as], service)
+    code = env.run(["api", path, "--save", save_as], service, today=captured)
 
     assert code == 0
     written = (env.samples_dir / name).read_text(encoding="utf-8")

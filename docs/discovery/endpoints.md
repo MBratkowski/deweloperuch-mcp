@@ -22,7 +22,9 @@ Startowe podpowiedzi wyszukiwarki.
 ### `GET /api/cities?q=&limit=` [P]
 - Query: `q` (fragment nazwy), `limit` (UI: 8), `variant`, `propertyType`
 - Response: `{ cities: [nazwa], cityMappings: [{city, city_slug, offerCount}], hasMore, total, page }`
-- Zwraca też miejscowości z 0 ofert. Paginacja (`page`) [H]: pola są w odpowiedzi, ale parametru nie testowano.
+- Zwraca też miejscowości z 0 ofert.
+- Paginacja [P 2026-10-10]: `page` działa. `q=krak&limit=2` → `hasMore: true, total: 4, page: 1` (Kraków, Krakowiany); `&page=2` → `hasMore: false, total: 4, page: 2` (Krakulice, Krakuszowice). Czyli `total` = liczba wszystkich pasujących miejscowości, `page` = numer zwróconej strony (od 1), `hasMore` = są kolejne strony. Obserwacja bez osobnej próbki (istniejąca `api.cities_q` ma `hasMore: false`).
+- Cache-Control: `max-age=28800` (bez `s-maxage`) [P 2026-10-10].
 - Sample: `api.cities_q.json`
 
 ### `GET /api/city-lookup?city=<nazwa|slug>[&source=transactions]` [P]
@@ -32,8 +34,11 @@ Startowe podpowiedzi wyszukiwarki.
 ### `GET /api/location-search?q=&limit=` [P]
 - Query: `q`, `limit` (UI: 6), `variant`, `propertyType`
 - Response: `{ suggestions: [{kind, city, citySlug, district, street?, count, lat, lng}] }`
-- `kind` ∈ {`district`, `street`} zaobserwowane [P]; inne wartości [H]. `count` = liczba ofert/transakcji w obszarze [W].
-- Sample: `api.location_search.json`
+- `kind` ∈ {`city`, `district`, `street`} [P 2026-10-10, `api.location_search.kinds_limit20`]. Pozycje `city` mają tylko `kind, city, citySlug?, count, lat, lng` (bez `district`/`street`, `district` bywa pominięte też dla ulic spoza dzielnic).
+- `count`: dla dzielnicy to liczba aktywnych ofert: `count` Mokotowa = 1562 = `pagination.total` listy `filterDistrict=Mokotów` [P 2026-10-10]. Dla ulic i miast (i w trybie transakcji) nadal [W].
+- `limit` jest honorowany co najmniej do 20 (`q=mo&limit=20` → 20 wyników, mieszane rodzaje, kolejność nie wg `count`); górny pułap nieznany. Brak flagi „są kolejne”; pełna strona nie dowodzi, że jest więcej [W]. `q=a` (1 znak) → pusta lista [P 2026-10-10].
+- Cache-Control: `private, max-age=28800` [P 2026-10-10].
+- Sample: `api.location_search.json`, `api.location_search.kinds_limit20.json`
 
 ### `GET /api/city-districts?citySlug=` [P]
 - Query: `citySlug`, `variant`, `propertyType`
@@ -71,8 +76,9 @@ Startowe podpowiedzi wyszukiwarki.
 ### `GET /api/offers/city-sales/{citySlug}` [P]
 - **Zrzut wszystkich aktywnych ofert w mieście** w kompaktowej postaci.
 - Response: `{ citySlug, investments: [{id, slug, developerSlug, status}], sales: [{id, investId, amount, size, priceSqm, status}] }`
-- Warszawa: 278 inwestycji, 13 351 ofert, 1,3 MB [P]. Wszystkie `status: active` [P]. Czy archiwalne bywają włączane: [H].
-- Cache CF 5 min. Używany w layoutach list ofert (`ceny-ofertowe/[city]/mieszkania|inwestycje`).
+- Warszawa: 278 inwestycji, 13 351 ofert, 1,3 MB [P]. Wszystkie `status: active` [P].
+- Archiwalne nie występują: `?includeArchived=true` jest ignorowane (Sopot: 6 ofert, wszystkie `active`, identycznie z parametrem i bez) [P 2026-10-10, bez osobnej próbki]. `polska` **nie działa**: `HTTP 400 {"error":"Invalid citySlug"}` (obalono: hipoteza, że działa; `polska` jest tylko w routingu stron) [P 2026-10-10].
+- Cache-Control: `public, max-age=28800, s-maxage=300, stale-while-revalidate=3600` [P 2026-10-10]. Używany w layoutach list ofert (`ceny-ofertowe/[city]/mieszkania|inwestycje`).
 - Sample: `api.city_sales_sopot.json`
 
 ### `GET /api/map/investments?…` [P]
@@ -86,6 +92,7 @@ Startowe podpowiedzi wyszukiwarki.
 - Response: inwestycja (`invest_id, developer_id, city, city_slug, street, latitude, longitude, year_construction, name, slug, status, currency, avg_*`, `active_offers, total_offers`) + `developer {developer_id, name, description, website, slug}` + `sale: [{sale_id, invest_id, name, type, status, amount, currency, size, start_amount_difference, start_amount_difference_percent, last_event_date, last_change_event_date, creation_date}]`
 - Kwoty w `sale[]` są stringami, a lat/lng stringami [P].
 - Identyfikacja wyłącznie po slugu, bez miasta [P].
+- Nieznany slug: `HTTP 404 {"error":"Investment not found"}` [P 2026-10-10, bez próbki, bo nie-2xx]. Cache-Control `max-age=28800` także dla 404.
 - Sample: `api.map_inv_visible.json`
 
 ### `GET /api/investments/{investId}/sale-events` [P]
@@ -94,7 +101,10 @@ Startowe podpowiedzi wyszukiwarki.
 
 ### `GET /api/sale-events?saleId=` [P]
 - Historia jednej oferty: `{ success, saleData: {name, amount, size, currency}, events: [...] }`
-- Sample: `api.sale_events.json`
+- Nieznany `saleId` (np. 999999999): `HTTP 200 {"success": true, "saleData": null, "events": []}` [P 2026-10-10, bez próbki]. `success: false` nie zaobserwowano (żaden z użytych wejść go nie wywołał); znaczenie nadal [H]. Brak oferty rozpoznaje się po `saleData: null`.
+- Zdarzenia rosnąco po `event_date`. `OFFER_EVENT` to **każdy wpis ceny ofertowej**, nie tylko pierwsza cena: oferta 4397 ma 12 zdarzeń `OFFER_EVENT` z 12 różnymi/nawracającymi kwotami (1 000 000 → 994 006 → 927 706 → … → 994 012), liczba = `total_events` z listy; pierwsze ma `source: ANNOUCMENT`, kolejne `ANNOUCMENT_PR` [P 2026-10-10, `api.sale_events.price_history`]. Zmiana ceny to nowy `OFFER_EVENT` z nową kwotą.
+- Cache-Control: `max-age=28800` (bez `s-maxage`) [P 2026-10-10].
+- Sample: `api.sale_events.json`, `api.sale_events.price_history.json`
 
 ### `GET /api/offer-count?…` [P]
 - Liczba ofert spełniających filtry: `{ count }`

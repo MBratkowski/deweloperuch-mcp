@@ -54,8 +54,10 @@ Serwis ma dwa niezależne „światy” danych, które łączą się tylko przez
 | Pole | Wartości | Źródło |
 |---|---|---|
 | Investment/Sale `status` | `active`, `archived` | [P] |
-| `SaleEvent.event_type` | `OFFER_EVENT`, `ARCHIVED_EVENT`, `RESTORED_EVENT` | [P]; inne (np. zmiana ceny jako osobny typ?) [H] |
-| `last_event_type` (lista ofert) | `PRICE_INCREASE`, `PRICE_DECREASE`, `NO_CHANGE` | [P] |
+| `SaleEvent.event_type` | `OFFER_EVENT`, `ARCHIVED_EVENT`, `RESTORED_EVENT` | [P]. `OFFER_EVENT` = każdy wpis ceny ofertowej w historii (także zmiany ceny), nie tylko pierwsza cena [P 2026-10-10, `api.sale_events.price_history`]; osobnego typu dla zmiany ceny nie zaobserwowano |
+| `last_event_type` (lista ofert) | `PRICE_INCREASE`, `PRICE_DECREASE`, `NO_CHANGE`, `NEW_OFFER` (nowa oferta, `total_events: 1`) | [P]; `NEW_OFFER` [P 2026-10-10, `page.offers_list.sort_desc`] |
+| `kind` (`location-search`) | `city`, `district`, `street` | [P 2026-10-10] |
+| Alfabet slugów (miasto, inwestycja, deweloper) | `[a-z0-9-]`: 166 z 168 slugów w próbkach; wyjątki tylko w mapie zgłoszeń (`Metro-Art`, `Forrest`, inny typ encji) | [W] |
 | `SaleEvent.source` | `ANNOUCMENT` (sic), `ANNOUCMENT_PR`, `""`; `event_data` może zawierać `{"source":"scraper_pr"}` | [P] |
 | filtr zmian ceny (URL) | `decrease`, `increase`, `no_change` | [P z kodu] |
 | `classification` (RCN) | `transakcja`, `udzial`, `anomalia_down`, `anomalia_up`, `hurt`, `rzadowa`, `egzekucja`, `bonifikata` | [P] (Warszawa, Sopot) |
