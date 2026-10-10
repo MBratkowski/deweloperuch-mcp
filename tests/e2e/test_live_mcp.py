@@ -28,7 +28,6 @@ from e2e.live import (
     McpLive,
     assert_listing_clean,
     mcp_server,
-    sdk_validation_leak,
 )
 
 pytestmark = pytest.mark.live
@@ -41,8 +40,11 @@ SIZE_BUDGET = 8_000
 SIZE_BUDGET_50 = 25_000
 PRICE_RANGE = {"price_min": 400_000, "price_max": 700_000}
 AREA_RANGE = {"area_min": 40, "area_max": 60}
-SMALL_PRICE_MAX = 300_000
-"""A price cap that leaves few offers in the city (fewer than 20 pages)."""
+SMALL_CITY = "sopot"
+"""A city with few offers: 6 active ones in city-sales (T12, [P 2026-10-10])."""
+STREET_QUERY = "mokot"
+"""Finds the district Mokotów and the street Mokotów in Warszawa ([P 2026-10-09], sample
+api.location_search, the same query and limit as search_locations sends)."""
 SLUG = re.compile(r"[a-z0-9][a-z0-9-]*")
 EVENT_KINDS = {"offer", "archived", "restored"}
 OFFER_ITEM = {"offer_id", "investment_slug", "name", "status", "investment_name", "developer_name"}
@@ -69,6 +71,11 @@ def city_slug(krakow: dict[str, Any]) -> str:
     assert cities, f"brak miasta Kraków w {krakow['items']}"
     slug: str = cities[0]["city_slug"]
     return slug
+
+
+@pytest.fixture(scope="module")
+def mokot(mcp: McpLive) -> dict[str, Any]:
+    return locations(mcp, STREET_QUERY)
 
 
 @pytest.fixture(scope="module")
@@ -153,23 +160,20 @@ def prices(items: list[dict[str, Any]]) -> list[float]:
     return values
 
 
-def from_cache(call: Call, *, cached: int = 0, uncached: int) -> bool:
-    """Whether the server's cache answered: ``cached`` requests if it did.
+def from_cache(call: Call, *, sent: int = 0) -> None:
+    """The server's cache answered what ``call`` repeats: it sent only ``sent`` requests.
 
-    The cache keeps an answer for ``s-maxage`` (300 s without one) minus the ``Age`` it
-    spent in Cloudflare's cache, so an entry may already be gone: ``uncached`` requests
-    then, with a warning (not an error). Compare with an earlier call only when cached:
-    fresh data may have changed.
+    Every endpoint the tools use sends ``max-age=28800`` without ``s-maxage``
+    [P 2026-10-10], so the server keeps a reply ``DEFAULT_TTL`` (300 s) unless
+    Cloudflare's ``Age`` is within 300 s of 28800 (``transport._ttl``); this module takes
+    about a minute. No tolerance, then: only an endpoint with ``s-maxage=300`` (city-sales,
+    which no tool uses) could expire during a run.
     """
-    assert call.sent in (cached, uncached), (call.tool, call.arguments, call.sent)
-    if call.sent == cached:
-        return True
-    warnings.warn(
-        f"{call.tool} {call.arguments}: {call.sent} zapytań zamiast {cached}; wpis cache "
-        "wygasł (TTL po odjęciu Age z Cloudflare)",
-        stacklevel=2,
+    assert call.sent == sent, (
+        f"{call.tool} {call.arguments}: {call.sent} zapytań zamiast {sent}; odpowiedź nie "
+        "przyszła z cache serwera. Sprawdź Age i Cache-Control tej odpowiedzi (log serwera "
+        "na DEBUG: 'TTL cache'): przy Age ≥ max-age TTL 0 jest zgodny z regułą D2"
     )
-    return False
 
 
 def check_investment(result: dict[str, Any]) -> None:
@@ -223,21 +227,21 @@ def test_locations_a_city_gives_its_slug(city_slug: str) -> None:
     assert city_slug == "krakow"
 
 
-def test_locations_a_district_gives_the_slug_of_its_city(mcp: McpLive) -> None:
-    result = locations(mcp, "Mokotów")
+def test_locations_a_district_gives_the_slug_of_its_city(mokot: dict[str, Any]) -> None:
+    items = mokot["items"]
 
-    districts = [i for i in result["items"] if i["kind"] == "district" and "Mokotów" in i["name"]]
-    assert districts, result["items"]
+    districts = [i for i in items if i["kind"] == "district" and "Mokotów" in i["name"]]
+    assert districts, items
     assert any(i["city_slug"] == "warszawa" for i in districts)
 
 
-def test_locations_a_street(mcp: McpLive) -> None:
-    result = locations(mcp, "Marszałkowska")
+def test_locations_a_street_gives_the_slug_of_its_city(mokot: dict[str, Any]) -> None:
+    """The same search (no request of its own): the street Mokotów in Warszawa."""
+    items = mokot["items"]
 
-    streets = [i for i in result["items"] if i["kind"] == "street"]
-    if not streets:
-        pytest.skip("serwis nie zwrócił ulicy (kind=street) dla 'Marszałkowska'")
-    assert any("Marszałkowska" in (i.get("street") or i["name"]) for i in streets)
+    streets = [i for i in items if i["kind"] == "street" and "Mokotów" in i["name"]]
+    assert streets, items
+    assert any(i["city_slug"] == "warszawa" and i.get("street") == "Mokotów" for i in streets)
 
 
 @pytest.mark.parametrize("name", ["Łódź", "Gdańsk"])
@@ -351,25 +355,26 @@ def test_offers_of_an_unknown_city_say_so(mcp: McpLive) -> None:
     assert call.sent == 1
 
 
-def test_offers_page_past_the_last_one(mcp: McpLive, city_slug: str) -> None:
-    """A known city, a page past the last one of a small result.
+def test_offers_page_past_the_last_one(mcp: McpLive) -> None:
+    """A known city with few offers, the page past its last one (T34).
 
     [W] Expected: an empty page with a hint naming the pages there are (the domain's
     hint for this case). If the service marks it as not found instead, the model reads
     "no such city": a known problem (xfail) for docs/open-questions.md.
     """
-    small = mcp.call_network("search_offers", city=city_slug, price_max=SMALL_PRICE_MAX).data
+    small = mcp.call_network("search_offers", city=SMALL_CITY).data
     total, pages = small["total"], small["pages_available"]
     if total == 0 or pages >= MAX_PAGES:
-        pytest.skip(f"brak małego wyniku dla price_max={SMALL_PRICE_MAX} (total {total})")
+        pytest.skip(f"{SMALL_CITY!r} nie ma małej liczby ofert (total {total})")
+    check_page(small, per_page=10)
     page = pages + 1
 
-    call = mcp.call_network("search_offers", city=city_slug, price_max=SMALL_PRICE_MAX, page=page)
+    call = mcp.call_network("search_offers", city=SMALL_CITY, page=page)
 
     if call.error and "nie zna miasta" in call.text:
         pytest.xfail(
             f"Znany problem: strona {page} poza zakresem dla znanego miasta "
-            f"{city_slug!r} daje „nie zna miasta” (digest 404 strony), a nie pustą stronę. "
+            f"{SMALL_CITY!r} daje „nie zna miasta” (digest 404 strony), a nie pustą stronę. "
             "Pozycja do docs/open-questions.md."
         )
     result = call.data
@@ -400,9 +405,8 @@ def test_offers_arguments_off_the_schema_are_refused_without_a_request(
 ) -> None:
     call = mcp.call("search_offers", city=city_slug, **arguments)
 
-    assert call.error and field in call.text
-    assert call.sent == 0
-    sdk_validation_leak(call)
+    assert call.error and field in call.text and "Input should" in call.text
+    assert call.sent == 0  # the leak check of every call also refuses pydantic's docs links
 
 
 def test_offers_numbers_as_text_are_the_same_request(
@@ -411,10 +415,8 @@ def test_offers_numbers_as_text_are_the_same_request(
     """ "10" and "1" as text: the same page, so it comes from the server's cache."""
     call = mcp.call("search_offers", city=city_slug, per_page="10", page="1")
 
-    if from_cache(call, uncached=1):
-        assert call.data["items"] == first_page.data["items"]
-    else:
-        check_page(call.data, per_page=10)
+    from_cache(call)
+    assert call.data["items"] == first_page.data["items"]
 
 
 @pytest.mark.parametrize(
@@ -435,10 +437,8 @@ def test_offers_filter_numbers_as_text_are_the_same_request(
 
     call = mcp.call("search_offers", city=city_slug, **arguments)
 
-    if from_cache(call, uncached=1):
-        assert call.data["items"] == earlier.data["items"]
-    else:
-        check_page(call.data, per_page=10)
+    from_cache(call)
+    assert call.data["items"] == earlier.data["items"]
 
 
 @pytest.mark.parametrize("arguments", [{"price_min": None}, {"sort": ""}, {"sort": None}])
@@ -448,10 +448,8 @@ def test_offers_empty_or_null_optional_arguments_are_the_defaults(
     """Models send null (or "") for what they leave out: the default request, cached."""
     call = mcp.call("search_offers", city=city_slug, **arguments)
 
-    if from_cache(call, uncached=1):
-        assert call.data["items"] == first_page.data["items"]
-    else:
-        check_page(call.data, per_page=10)
+    from_cache(call)
+    assert call.data["items"] == first_page.data["items"]
 
 
 def test_offers_result_of_10_fits_the_size_budget(first_page: Call) -> None:
@@ -479,10 +477,8 @@ def test_offers_city_with_spaces_around_is_trimmed(
 ) -> None:
     call = mcp.call("search_offers", city=f" {city_slug} ")
 
-    if from_cache(call, uncached=1):
-        assert call.data["items"] == first_page.data["items"]
-    else:
-        check_page(call.data, per_page=10)
+    from_cache(call)
+    assert call.data["items"] == first_page.data["items"]
 
 
 def test_offers_district_slug_as_city_is_an_unknown_city(mcp: McpLive) -> None:
@@ -516,8 +512,8 @@ def test_investment_limit_0_is_the_summary(
     result = call.data
     check_investment(result)
     assert (result["offers"], result["offers_returned"]) == ([], 0)
-    if from_cache(call, uncached=1):
-        assert result["offers_omitted"] == full["offers_returned"] + full["offers_omitted"]
+    from_cache(call)
+    assert result["offers_omitted"] == full["offers_returned"] + full["offers_omitted"]
 
 
 def test_investment_with_history(mcp: McpLive, investment: Call, offer: dict[str, Any]) -> None:
@@ -532,7 +528,7 @@ def test_investment_with_history(mcp: McpLive, investment: Call, offer: dict[str
         history = item["price_history"]
         assert history, item
         assert {event["kind"] for event in history} <= EVENT_KINDS
-    from_cache(call, cached=1, uncached=2)  # the history (+ the investment)
+    from_cache(call, sent=1)  # the history; the investment comes from the cache
 
 
 def test_investment_lists_the_offer_found_by_search(
@@ -544,10 +540,8 @@ def test_investment_lists_the_offer_found_by_search(
     ids = {o["offer_id"] for o in result["offers"]}
     if offer["offer_id"] not in ids and result["offers_omitted"]:
         pytest.skip("oferta z wyszukiwania jest poza limitem 200 ofert inwestycji")
-    if from_cache(call, uncached=1):
-        assert offer["offer_id"] in ids
-    elif offer["offer_id"] not in ids:
-        warnings.warn("oferty z wyszukiwania nie ma już w inwestycji", stacklevel=1)
+    from_cache(call)
+    assert offer["offer_id"] in ids
 
 
 def test_investment_unknown(mcp: McpLive) -> None:
@@ -580,7 +574,7 @@ def test_offer_with_its_price_history(
             "z wyszukiwania (dane mogły się zmienić między wywołaniami)",
             stacklevel=1,
         )
-    from_cache(call, cached=1, uncached=2)  # the history (+ the investment)
+    from_cache(call, sent=1)  # the history; the investment comes from the cache
 
 
 def test_offer_outside_its_investment(
@@ -589,7 +583,7 @@ def test_offer_outside_its_investment(
     call = mcp.call("get_offer", offer_id=999_999_999, investment_slug=offer["investment_slug"])
 
     assert call.error and "nie ma oferty" in call.text
-    from_cache(call, uncached=1)
+    from_cache(call)
 
 
 def test_offer_of_an_unknown_investment(mcp: McpLive, offer: dict[str, Any]) -> None:
@@ -625,7 +619,7 @@ def test_offer_from_another_city_found_in_the_whole_country(
     offer = detail.data
     assert (offer["offer_id"], offer["city_slug"]) == (found["offer_id"], found["city_slug"])
     assert offer["price_history"]
-    from_cache(detail, cached=1, uncached=2)  # the history (+ the investment)
+    from_cache(detail, sent=1)  # the history; the investment comes from the cache
 
 
 # --- two calls at once -----------------------------------------------------------------

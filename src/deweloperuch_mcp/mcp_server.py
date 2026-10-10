@@ -21,6 +21,8 @@ besides ``--help``. Four read-only tools: ``search_locations``, ``search_offers`
   what to change or that the series stopped (STOP); its ``detail`` (paths, statuses,
   bodies) goes only to the server log. Anything else -> a generic message; the
   traceback goes to the log. The log is stderr: stdout is the protocol.
+- Arguments off the input schema -> the SDK's error result (field, rule, value), without
+  the link to pydantic's docs it adds under each error (``Server``, D12).
 
 Tool descriptions and field descriptions are for the model: in Polish, like the
 services' messages, and without backend names (no endpoints, no ``invest``/``sale``).
@@ -38,8 +40,9 @@ from importlib import metadata
 from typing import Annotated, Any, Literal
 
 from mcp.server.mcpserver import Context, MCPServer
-from mcp.types import CallToolResult, TextContent, ToolAnnotations
-from pydantic import BeforeValidator, Field
+from mcp.server.mcpserver.exceptions import ToolError, UnexpectedToolError
+from mcp.types import CallToolResult, InputRequiredResult, TextContent, ToolAnnotations
+from pydantic import BeforeValidator, Field, ValidationError
 
 from deweloperuch_mcp import mcp_results, services
 from deweloperuch_mcp.errors import DeweloperuchError, ServiceBlockedError
@@ -362,6 +365,36 @@ TOOLS: tuple[tuple[Callable[..., Any], str, str], ...] = (
 
 # --- the server ----------------------------------------------------------------------------
 
+# The line pydantic puts under each validation error: a link to its docs, not a rule of
+# the tool. The model needs the field and the rule (D12: no library details).
+_DOCS_LINK = re.compile(r"\s*For further information visit https?://errors\.pydantic\.dev/\S*\s*")
+
+
+class Server(MCPServer[services.Session]):
+    """``MCPServer`` whose errors for arguments off the input schema carry no docs links.
+
+    The SDK raises them from ``call_tool`` as ``ToolError`` caused by pydantic's
+    ``ValidationError`` and shows the model ``str(error)``. Only the docs-link lines are
+    dropped from that text, and the cause stays, so the SDK still logs just the names of
+    the rejected fields. Any other error passes unchanged, ``UnexpectedToolError`` too
+    (the SDK logs it as a crash). The signature is ``MCPServer.call_tool``'s; the SDK has
+    no upper version bound, so tests/test_mcp_server.py catches a change at an update.
+    """
+
+    async def call_tool(
+        self, name: str, arguments: dict[str, Any], context: SessionContext | None = None
+    ) -> CallToolResult | InputRequiredResult:
+        try:
+            return await super().call_tool(name, arguments, context)
+        except UnexpectedToolError:
+            raise
+        except ToolError as err:
+            if not isinstance(err.__cause__, ValidationError):
+                raise
+            lines = str(err).splitlines()
+            text = "\n".join(line for line in lines if not _DOCS_LINK.fullmatch(line))
+            raise ToolError(text) from err.__cause__
+
 
 def build_server(
     open_session: Callable[[], services.Session] | None = None,
@@ -375,7 +408,7 @@ def build_server(
         with opener() as session:
             yield session
 
-    server = MCPServer(
+    server = Server(
         name=SERVER_NAME, version=_version(), instructions=INSTRUCTIONS, lifespan=lifespan
     )
     for tool, title, description in TOOLS:

@@ -826,6 +826,131 @@ def test_arguments_off_the_schema_are_tool_errors(
     assert service.calls.call_count == 0
 
 
+@pytest.mark.parametrize(
+    ("arguments", "lines"),
+    [
+        (
+            {"city": "warszawa", "per_page": 100},
+            [
+                "per_page",
+                "  Input should be 10 or 50 [type=literal_error, input_value=100, input_type=int]",
+            ],
+        ),
+        (
+            {"city": "warszawa", "page": 21, "sort": "area_asc"},
+            [
+                "sort",
+                "  Input should be 'price_asc' or 'price_desc' [type=literal_error, "
+                "input_value='area_asc', input_type=str]",
+                "page",
+                "  Input should be less than or equal to 20 [type=less_than_equal, "
+                "input_value=21, input_type=int]",
+            ],
+        ),
+        (
+            {"city": "warszawa", "price_min": "10.5"},
+            [
+                "price_min",
+                "  Value error, oczekiwano liczby całkowitej zapisanej cyframi, podano "
+                "'10.5' [type=value_error, input_value='10.5', input_type=str]",
+            ],
+        ),
+        (
+            {"per_page": 10},
+            [
+                "city",
+                "  Field required [type=missing, input_value={'per_page': 10}, input_type=dict]",
+            ],
+        ),
+    ],
+)
+def test_schema_errors_keep_the_field_and_the_rule_without_links_to_library_docs(
+    server: MCPServer[services.Session],
+    service: respx.MockRouter,
+    arguments: dict[str, Any],
+    lines: list[str],
+) -> None:
+    """D12: the SDK's text of a validation error, minus pydantic's "For further
+    information visit https://errors.pydantic.dev/..." line under each error."""
+    result = call(server, "search_offers", **arguments)
+
+    assert result.is_error is True
+    message = text(result)
+    count = len(lines) // 2
+    assert message.splitlines() == [
+        f"Error executing tool search_offers: {count} validation "
+        f"error{'s' if count > 1 else ''} for search_offersArguments",
+        *lines,
+    ]
+    assert "pydantic.dev" not in message
+    assert service.calls.call_count == 0
+
+
+def test_schema_errors_are_logged_by_field_name_only(
+    server: MCPServer[services.Session],
+    service: respx.MockRouter,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The cause of the rewritten error stays pydantic's, so the SDK logs only the names
+    of the rejected fields: the values are the caller's data."""
+    caplog.set_level(logging.INFO)
+
+    call(server, "search_offers", city="warszawa", per_page=100)
+
+    sdk = [r.getMessage() for r in caplog.records if r.name.startswith("mcp.server")]
+    assert "Tool 'search_offers' rejected arguments: ['per_page']" in sdk
+    assert not any("100" in line for line in sdk)
+
+
+def test_unknown_arguments_are_ignored(
+    server: MCPServer[services.Session], service: respx.MockRouter
+) -> None:
+    """The SDK drops arguments the input schema does not name (pinned: a model's typo in
+    an optional argument, e.g. max_price, is silently left out)."""
+    route = offers_route(service)
+
+    data(call(server, "search_offers", city="warszawa", max_price=500_000))
+
+    assert dict(route.calls.last.request.url.params.multi_items()).keys() == {
+        "page",
+        "perPage",
+        "_rsc",
+    }
+
+
+def test_a_crash_with_a_validation_error_as_its_cause_stays_a_crash(
+    server: MCPServer[services.Session], caplog: pytest.LogCaptureFixture
+) -> None:
+    """A tool whose result fails its output schema: the SDK's generic message and its
+    crash log (with the traceback), not a rewritten argument error."""
+
+    class Count(BaseModel):
+        n: int
+
+    def broken() -> Count:
+        return {"n": "abc"}  # type: ignore[return-value]
+
+    server.add_tool(broken)
+    caplog.set_level(logging.INFO)
+
+    result = call(server, "broken")
+
+    assert result.is_error is True
+    assert text(result) == "Error executing tool broken"
+    crashes = [r for r in caplog.records if r.name.startswith("mcp.server")]
+    assert [(r.levelno, r.getMessage()) for r in crashes] == [
+        (logging.ERROR, "Tool 'broken' raised an unexpected exception")
+    ]
+    assert crashes[0].exc_info is not None
+
+
+def test_other_tool_errors_pass_unchanged(server: MCPServer[services.Session]) -> None:
+    result = call(server, "no_such_tool")
+
+    assert result.is_error is True
+    assert text(result) == "Unknown tool: no_such_tool"
+
+
 def test_not_found_points_to_the_tool_with_the_slugs(
     server: MCPServer[services.Session], service: respx.MockRouter
 ) -> None:
@@ -1346,6 +1471,7 @@ def test_the_entry_point_speaks_only_json_rpc_on_stdout(tmp_path: Path) -> None:
     )
     assert in_schema["result"]["isError"] is True
     assert "sort" in in_schema["result"]["content"][0]["text"]
+    assert "pydantic" not in in_schema["result"]["content"][0]["text"]
 
 
 TESTS = Path(__file__).resolve().parent

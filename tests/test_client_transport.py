@@ -1,12 +1,13 @@
 """The HTTP transport keeps the D2 policy: one GET per call inside the shared limiter slot,
 STOP on 401/403/429/challenge, pauses from ``Retry-After``, no retries, no redirects,
-a body limit and an in-memory cache with a TTL from ``s-maxage``.
+a body limit and an in-memory cache (TTL from Cache-Control and Age, at most 300 s).
 
 Network is mocked with respx; pytest-socket blocks real sockets.
 """
 
 import fcntl
 import json
+import logging
 import os
 import re
 import threading
@@ -24,7 +25,6 @@ from deweloperuch_mcp.client import transport
 from deweloperuch_mcp.client.transport import (
     BODY_DEADLINE,
     DEFAULT_TTL,
-    MAX_TTL,
     HttpClient,
     Reply,
     ResponseCache,
@@ -1145,26 +1145,85 @@ def test_expired_entry_is_fetched_again(
     assert route.call_count == 2
 
 
+# Local cache TTL (D2): freshness = s-maxage, else max-age, else DEFAULT_TTL; TTL = that
+# minus Age, at most DEFAULT_TTL; 0 or less, no-store or no-cache: not cached. The service sends
+# max-age=28800 without s-maxage for RSC pages and most /api/* [P 2026-10-10], with an Age
+# of thousands of seconds from Cloudflare.
+RSC_CONTROL = "private, max-age=28800, must-revalidate"
+CITY_SALES_CONTROL = "public, max-age=28800, s-maxage=300, stale-while-revalidate=3600"
+
+
 @pytest.mark.parametrize(
-    ("cache_control", "ttl"),
+    ("cache_control", "age", "ttl"),
     [
-        ("public, max-age=28800, s-maxage=600", 600),
-        ("s-maxage=60, stale-while-revalidate=30", 60),
-        ("public, s-maxage=999999", MAX_TTL),
-        ("max-age=28800", DEFAULT_TTL),
-        ("s-maxage=abc", DEFAULT_TTL),
+        # nothing to go by: the default
+        (None, None, DEFAULT_TTL),
+        ("", None, DEFAULT_TTL),
+        # max-age without s-maxage: RSC pages, /api/cities, sale-events, investments
+        ("max-age=28800", None, DEFAULT_TTL),
+        ("max-age=28800", "5000", DEFAULT_TTL),  # the bug of 2026-10-10: was not cached
+        (RSC_CONTROL, "3000", DEFAULT_TTL),
+        ("max-age=28800", "28700", 100),
+        ("max-age=28800", "28800", 0),
+        ("max-age=28800", "100000", 0),
+        ("max-age=200", None, 200),
+        ("MAX-AGE=120", None, 120),
+        ("max-age=0", None, 0),
+        # s-maxage wins over max-age (city-sales)
+        (CITY_SALES_CONTROL, None, DEFAULT_TTL),
+        (CITY_SALES_CONTROL, "250", 50),
+        (CITY_SALES_CONTROL, "300", 0),
+        ("s-maxage=600", "500", 100),
+        ("s-maxage=60, stale-while-revalidate=30", None, 60),
+        ("public, max-age=100, s-maxage=600", None, DEFAULT_TTL),
+        ("public, max-age=600, s-maxage=100", None, 100),
+        ("s-maxage=0", None, 0),
+        ("S-MAXAGE=120", None, 120),
+        # an unreadable value is ignored
+        ("s-maxage=abc, max-age=120", None, 120),
+        ("max-age=abc", None, DEFAULT_TTL),
+        # an unreadable Age counts as 0
+        ("max-age=200", " 50 ", 150),
+        ("max-age=200", "abc", 200),
+        ("max-age=200", "-5", 200),
+        ("max-age=200", "1.5", 200),
+        ("max-age=200", "", 200),
+        # no-store or no-cache anywhere: not cached (the service sends neither today)
+        ("no-store", None, 0),
+        ("no-cache", None, 0),
+        ("NO-STORE", None, 0),
+        ("No-Cache", None, 0),
+        ("public, max-age=28800, no-store", None, 0),
+        ("private, no-cache, max-age=600", None, 0),
+        ('no-cache="Set-Cookie", max-age=600', None, 0),
+        ("no-store, max-age=0", None, 0),
+        ("max-age=200, x-no-store", None, 200),  # another directive, not no-store
+        # private and must-revalidate are not read: this cache is private to one process
+        ("private", None, DEFAULT_TTL),
+        ("must-revalidate, max-age=200", None, 200),
     ],
 )
-def test_ttl_follows_s_maxage(
+def test_ttl(
     client: HttpClient,
     service: respx.MockRouter,
     clock: FakeClock,
-    cache_control: str,
+    cache_control: str | None,
+    age: str | None,
     ttl: float,
 ) -> None:
-    route = service.get(URL).respond(200, json={}, headers={"Cache-Control": cache_control})
+    """``ttl``: seconds a reply is served from the cache; 0: not cached at all."""
+    headers = {}
+    if cache_control is not None:
+        headers["Cache-Control"] = cache_control
+    if age is not None:
+        headers["Age"] = age
+    route = service.get(URL).respond(200, json={}, headers=headers)
 
     client.get(TARGET, headers={}, decode=raw)
+    if ttl == 0:
+        client.get(TARGET, headers={}, decode=raw)
+        assert route.call_count == 2
+        return
     clock.advance(ttl - 1)
     client.get(TARGET, headers={}, decode=raw)
     assert route.call_count == 1
@@ -1173,35 +1232,34 @@ def test_ttl_follows_s_maxage(
     assert route.call_count == 2
 
 
-@pytest.mark.parametrize(
-    ("cache_control", "age", "ttl"),
-    [
-        ("s-maxage=600", "500", 100),
-        ("s-maxage=600", " 0 ", 600),
-        ("s-maxage=600", "abc", 600),
-        ("s-maxage=600", "-5", 600),
-        ("max-age=28800", "100", DEFAULT_TTL - 100),
-        ("s-maxage=999999", "100", MAX_TTL),
-    ],
-)
-def test_ttl_is_what_is_left_after_the_age_in_the_cdn(
-    client: HttpClient,
-    service: respx.MockRouter,
-    clock: FakeClock,
-    cache_control: str,
-    age: str,
-    ttl: float,
+def test_the_ttl_is_logged_for_debugging(
+    client: HttpClient, service: respx.MockRouter, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """``Age``: how long the response already sat in Cloudflare's cache."""
-    headers = {"Cache-Control": cache_control, "Age": age}
-    route = service.get(URL).respond(200, json={}, headers=headers)
+    """Why a reply was (not) cached, without the address or the body."""
+    caplog.set_level(logging.DEBUG, logger="deweloperuch_mcp.client.transport")
+    service.get(URL).respond(
+        200, json={"secret": 1}, headers={"Cache-Control": "max-age=28800", "Age": "28900"}
+    )
 
     client.get(TARGET, headers={}, decode=raw)
-    clock.advance(ttl - 1)
+
+    lines = [r.getMessage() for r in caplog.records if r.name.endswith("transport")]
+    assert lines == ["TTL cache 0 s (Cache-Control: 'max-age=28800', Age: '28900')"]
+    assert TARGET not in lines[0] and "secret" not in lines[0]
+
+
+def test_the_cache_never_keeps_a_reply_longer_than_the_default(
+    client: HttpClient, service: respx.MockRouter, clock: FakeClock
+) -> None:
+    """D2: whatever the headers say, local data is at most ``DEFAULT_TTL`` old."""
+    route = service.get(URL).respond(
+        200, json={}, headers={"Cache-Control": "public, max-age=31536000, s-maxage=31536000"}
+    )
+
     client.get(TARGET, headers={}, decode=raw)
-    assert route.call_count == 1
-    clock.advance(2)
+    clock.advance(DEFAULT_TTL + 1)
     client.get(TARGET, headers={}, decode=raw)
+
     assert route.call_count == 2
 
 

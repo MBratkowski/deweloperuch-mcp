@@ -32,16 +32,17 @@ and every call that is not served from the cache:
 - reads at most ``max_body_bytes`` (``http_policy.MAX_BODY_BYTES``, dumps are refused,
   D5) within ``BODY_DEADLINE``.
 
-Successful bodies are cached in memory for what is left of ``s-maxage`` from
-``Cache-Control`` (``DEFAULT_TTL`` without one) after the ``Age`` they already spent in
-Cloudflare's cache, and only after the caller's ``decode`` accepted them, so a body that
-does not match the contract is never served again from the cache.
+Successful bodies are cached in memory for what is left of their freshness after the
+``Age`` they already spent in Cloudflare's cache, at most ``DEFAULT_TTL`` (``_ttl``), and
+only after the caller's ``decode`` accepted them, so a body that does not match the
+contract (or says "not found") is never served again from the cache.
 
 Synchronous on purpose: the MCP server (S1b) runs calls with ``asyncio.to_thread``, which
 keeps the limiter slot's enter and exit in one thread, as ``RequestLimiter.slot`` requires.
 """
 
 import contextlib
+import logging
 import math
 import re
 import threading
@@ -90,6 +91,8 @@ from deweloperuch_mcp.throttle import (
 
 T = TypeVar("T")
 
+_log = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True)
 class _Latched:
@@ -136,10 +139,8 @@ BODY_DEADLINE = 120.0
 """Seconds for reading a body; checked after each chunk."""
 
 DEFAULT_TTL = 300.0
-"""Cache TTL without ``s-maxage``: the shortest the service uses (offers, counters)."""
-
-MAX_TTL = 86_400.0
-"""Longest cache TTL: the longest ``s-maxage`` seen (RCN statistics, 24 h)."""
+"""Longest a reply stays in the in-memory cache (D2), whatever its headers say; also its
+freshness when ``Cache-Control`` gives neither ``s-maxage`` nor ``max-age``."""
 
 CACHE_ENTRIES = 256
 CACHE_BYTES = 64 * 1024 * 1024
@@ -149,6 +150,8 @@ CACHE_BYTES = 64 * 1024 * 1024
 # host (`//...`), no fragment, no spaces.
 _TARGET = re.compile(r"/(?!/)[A-Za-z0-9._~!$&'()*+,;=:@/%?-]*")
 _S_MAXAGE = re.compile(r'(?:^|,)\s*s-maxage\s*=\s*"?([0-9]+)"?\s*(?:,|$)', re.IGNORECASE)
+_MAX_AGE = re.compile(r'(?:^|,)\s*max-age\s*=\s*"?([0-9]+)"?\s*(?:,|$)', re.IGNORECASE)
+_NO_CACHE = re.compile(r"(?:^|,)\s*no-(?:store|cache)\s*(?:[,=]|$)", re.IGNORECASE)
 
 
 def build_target(path: str, params: Sequence[tuple[str, str | int]] = ()) -> str:
@@ -596,16 +599,28 @@ def _check(target: str, reply: Reply, problem: Problem | None, pause: float | No
 
 
 def _ttl(headers: httpx.Headers) -> float:
-    """Freshness left: ``s-maxage`` (``DEFAULT_TTL`` without one) minus ``Age``, capped.
+    """Seconds the cache may serve a reply: its freshness left, at most ``DEFAULT_TTL`` (D2).
 
-    ``Age`` is how long the response already sat in Cloudflare's cache; anything but
-    ASCII digits is ignored. Never below 0 (not cached) or above ``MAX_TTL``.
+    Freshness is ``s-maxage`` (Cloudflare's), else ``max-age``, else ``DEFAULT_TTL``;
+    what is left is that minus ``Age``, how long the reply already sat in Cloudflare's
+    cache. 0 or less: not cached; ``no-store`` or ``no-cache`` (any case, with or without
+    a value): not cached either. Unreadable values (not ASCII digits) are ignored.
+    The service sends ``max-age=28800`` without ``s-maxage`` for RSC pages and most
+    ``/api/*`` (docs/discovery, [P 2026-10-10]) with an ``Age`` of thousands of seconds,
+    so counting from ``s-maxage`` alone left them uncached. ``private`` and
+    ``must-revalidate`` are not read: this cache is private to one process.
     """
-    found = _S_MAXAGE.search(headers.get("cache-control", ""))
-    fresh = DEFAULT_TTL if found is None else float(found[1])
+    control = headers.get("cache-control", "")
     age_text = headers.get("age", "").strip()
-    age = float(age_text) if age_text.isascii() and age_text.isdigit() else 0.0
-    return min(max(fresh - age, 0.0), MAX_TTL)
+    if _NO_CACHE.search(control):
+        ttl = 0.0
+    else:
+        found = _S_MAXAGE.search(control) or _MAX_AGE.search(control)
+        fresh = DEFAULT_TTL if found is None else float(found[1])
+        age = float(age_text) if age_text.isascii() and age_text.isdigit() else 0.0
+        ttl = max(min(DEFAULT_TTL, fresh - age), 0.0)
+    _log.debug("TTL cache %g s (Cache-Control: %r, Age: %r)", ttl, control, age_text)
+    return ttl
 
 
 def _excerpt(body: bytes, limit: int = 300) -> str:

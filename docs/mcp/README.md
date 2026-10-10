@@ -68,7 +68,8 @@ Serwer nie czyta żadnych własnych zmiennych środowiskowych. Zamek limitera i 
 
   Szczegóły (źródło, PID, czasy, pauza limitera) trafiają tylko do logu serwera na stderr. Pozostałe błędy serwisu (5xx, sieć i inne) też są bez szczegółów i mówią „Nic nie ponawiam; spróbuj później.”.
 - **Nieoczekiwany wyjątek:** `Nieoczekiwany błąd serwera MCP deweloperuch (szczegóły są w jego logu). Nie ponawiaj tego wywołania; zgłoś problem użytkownikowi.`
-- **Błąd walidacji schematu** (zły typ, brak pola, wartość spoza `enum`/zakresu): generuje SDK, po angielsku, z prefiksem `Error executing tool …`. Popraw wskazane pole zgodnie z `inputSchema` i ponów. Komunikat zawiera link `errors.pydantic.dev`: to szum SDK, nie dane z serwisu.
+- **Błąd walidacji schematu** (zły typ, brak pola, wartość spoza `enum`/zakresu): generuje SDK, po angielsku, z prefiksem `Error executing tool …`. Popraw wskazane pole zgodnie z `inputSchema` i ponów. Serwer usuwa z komunikatu SDK linię z odnośnikiem do dokumentacji pydantic; pole, reguła i wartość zostają.
+- **Znane ograniczenie, nieznane argumenty:** SDK MCP po cichu ignoruje argumenty, których nie ma w schemacie (literówka `max_price` zamiast `price_max` daje wynik bez filtra i bez błędu). Używaj dokładnie nazw z `inputSchema`. Decyzja o naprawie czeka na użytkownika.
 
 Błędy usług (`Wyszukiwanie ofert w 'warszawa': …`, `Inwestycja 'smolna': …`) dostają kontekst domenowy; zob. [konfiguracja, błędy pakietu](../configuration.md#błędy-pakietu).
 
