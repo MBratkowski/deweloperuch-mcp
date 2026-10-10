@@ -6,10 +6,12 @@ Network is mocked with respx; pytest-socket blocks real sockets.
 """
 
 import json
+import re
 import threading
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
 import httpx
 import pytest
@@ -26,6 +28,7 @@ from deweloperuch_mcp.client.transport import (
     ResponseCache,
 )
 from deweloperuch_mcp.errors import (
+    DeweloperuchError,
     InvalidInputError,
     LimiterWaitError,
     NotFoundError,
@@ -34,6 +37,7 @@ from deweloperuch_mcp.errors import (
     ServiceError,
     SessionClosedError,
     UnexpectedResponseError,
+    printable,
 )
 from deweloperuch_mcp.http_policy import MAX_BODY_BYTES
 from deweloperuch_mcp.throttle import (
@@ -146,9 +150,10 @@ def test_caller_headers_cannot_replace_the_user_agent(
 def test_only_service_paths_are_accepted(
     client: HttpClient, service: respx.MockRouter, target: str
 ) -> None:
-    with pytest.raises(InvalidInputError, match="ścieżk"):
+    with pytest.raises(InvalidInputError, match="adres zapytania") as caught:
         client.get(target, headers={}, decode=raw)
 
+    assert caught.value.detail is not None and "ścieżk" in caught.value.detail
     assert service.calls.call_count == 0
 
 
@@ -176,9 +181,11 @@ def test_only_service_paths_are_accepted(
 def test_only_documented_read_channels_are_requested(
     client: HttpClient, service: respx.MockRouter, target: str, reason: str
 ) -> None:
-    with pytest.raises(InvalidInputError, match=reason):
+    with pytest.raises(InvalidInputError) as caught:
         client.get(target, headers={}, decode=raw)
 
+    assert caught.value.detail is not None and reason in caught.value.detail
+    assert target.split("?")[0] not in str(caught.value)  # the path only in the detail
     assert service.calls.call_count == 0
 
 
@@ -655,11 +662,19 @@ def test_404_is_not_found(client: HttpClient, service: respx.MockRouter) -> None
         client.get(TARGET, headers={}, decode=raw)
 
 
-def test_400_shows_the_service_message(client: HttpClient, service: respx.MockRouter) -> None:
+def test_400_keeps_the_service_message_in_the_detail(
+    client: HttpClient, service: respx.MockRouter
+) -> None:
+    """The body is the service's text: for logs (detail), never for the message."""
     service.get(URL).respond(400, json={"error": "Valid investRcnId is required"})
 
-    with pytest.raises(ServiceError, match="Valid investRcnId is required"):
+    with pytest.raises(ServiceError, match="HTTP 400") as caught:
         client.get(TARGET, headers={}, decode=raw)
+
+    assert caught.value.detail is not None
+    assert "Valid investRcnId is required" in caught.value.detail
+    assert "investRcnId" not in str(caught.value)
+    assert TARGET not in str(caught.value)
 
 
 def test_redirects_are_not_followed(client: HttpClient, service: respx.MockRouter) -> None:
@@ -669,7 +684,8 @@ def test_redirects_are_not_followed(client: HttpClient, service: respx.MockRoute
     with pytest.raises(ServiceError, match="przekierowa") as caught:
         client.get(TARGET, headers={}, decode=raw)
 
-    assert "/elsewhere" in str(caught.value)
+    assert caught.value.detail is not None and "/elsewhere" in caught.value.detail
+    assert "/elsewhere" not in str(caught.value)
     assert route.call_count == 1
     assert elsewhere.call_count == 0
 
@@ -724,10 +740,11 @@ def test_declared_body_over_the_limit_is_refused_unread(
 
     with (
         HttpClient(limiter=limiter, monotonic=clock, max_body_bytes=20) as http,
-        pytest.raises(ServiceError, match="D5"),
+        pytest.raises(ServiceError, match="za duża") as caught,
     ):
         http.get(TARGET, headers={}, decode=raw)
 
+    assert caught.value.detail is not None and "D5" in caught.value.detail
     assert stream.read == 0
 
 
@@ -739,10 +756,11 @@ def test_streamed_body_over_the_limit_stops_reading(
 
     with (
         HttpClient(limiter=limiter, monotonic=clock, max_body_bytes=25) as http,
-        pytest.raises(ServiceError, match="D5"),
+        pytest.raises(ServiceError, match="za duża") as caught,
     ):
         http.get(TARGET, headers={}, decode=raw)
 
+    assert caught.value.detail is not None and "D5" in caught.value.detail
     assert stream.read == 3
 
 
@@ -993,3 +1011,168 @@ def test_cache_keeps_its_byte_budget() -> None:
     cache.put("big", reply(b"z" * 11), ttl=100)  # larger than the whole budget: not stored
     assert cache.get("big") is None
     assert cache.get("b") is not None
+
+
+# --- messages vs details (no target, no answer of the service in str(err)) --------------
+
+SECRET = "SECRET-from-the-service"
+
+
+def _answer(status: int, **kwargs: Any) -> Callable[[respx.MockRouter, FakeClock], object]:
+    return lambda router, clock: router.get(URL).respond(status, **kwargs)
+
+
+# case: (error type, max_body_bytes, how the service answers, text only the detail has)
+DETAIL_CASES: dict[
+    str,
+    tuple[type[Exception], int, Callable[[respx.MockRouter, FakeClock], object], str],
+] = {
+    # _check: STOP first
+    "403": (ServiceBlockedError, MAX_BODY_BYTES, _answer(403, text=SECRET), TARGET),
+    "429": (
+        RateLimitedError,
+        MAX_BODY_BYTES,
+        _answer(429, headers={"Retry-After": "5"}, text=SECRET),
+        TARGET,
+    ),
+    "challenge": (
+        ServiceBlockedError,
+        MAX_BODY_BYTES,
+        _answer(200, content=CHALLENGE_HTML, headers={"Content-Type": "text/html"}),
+        TARGET,
+    ),
+    # _check: the other statuses
+    "redirect": (
+        ServiceError,
+        MAX_BODY_BYTES,
+        _answer(301, headers={"Location": f"/{SECRET}"}),
+        f"-> /{SECRET}",
+    ),
+    "404": (NotFoundError, MAX_BODY_BYTES, _answer(404, text=SECRET), TARGET),
+    "400": (ServiceError, MAX_BODY_BYTES, _answer(400, json={"error": SECRET}), SECRET),
+    "500": (ServiceError, MAX_BODY_BYTES, _answer(500, text=SECRET), SECRET),
+    # _read_body
+    "declared too big": (
+        ServiceError,
+        20,
+        _answer(200, headers={"Content-Length": "30"}, stream=Chunks([b"x" * 10] * 3)),
+        "ponad 20 B",
+    ),
+    "streamed too big": (
+        ServiceError,
+        20,
+        _answer(200, stream=Chunks([b"x" * 10] * 5)),
+        "ponad 20 B",
+    ),
+    "too slow": (
+        ServiceError,
+        MAX_BODY_BYTES,
+        lambda router, clock: router.get(URL).respond(
+            200, stream=Chunks([b"x"] * 10, clock=clock, step=BODY_DEADLINE / 3)
+        ),
+        "przeczytano 4 B",
+    ),
+    "interrupted": (
+        ServiceError,
+        MAX_BODY_BYTES,
+        _answer(200, stream=Chunks([b"a", b"b"], fail_after=1)),
+        "connection reset",
+    ),
+    "truncated": (
+        ServiceError,
+        MAX_BODY_BYTES,
+        _answer(200, headers={"Content-Length": "100"}, stream=Chunks([b"{}"])),
+        "z 100 B",
+    ),
+    # _exchange
+    "network": (
+        ServiceError,
+        MAX_BODY_BYTES,
+        lambda router, clock: router.get(URL).mock(side_effect=httpx.ConnectError(SECRET)),
+        SECRET,
+    ),
+}
+
+
+@pytest.mark.parametrize("case", DETAIL_CASES)
+def test_messages_never_carry_the_target_or_the_answer(
+    limiter: RequestLimiter, clock: FakeClock, service: respx.MockRouter, case: str
+) -> None:
+    """``str(err)`` is for a model; the target and the service's text are in ``detail``."""
+    error_type, limit, answer, only_in_detail = DETAIL_CASES[case]
+    answer(service, clock)
+
+    with (
+        HttpClient(limiter=limiter, monotonic=clock, max_body_bytes=limit) as http,
+        pytest.raises(error_type) as caught,
+    ):
+        http.get(TARGET, headers={}, decode=raw)
+
+    error = caught.value
+    assert isinstance(error, DeweloperuchError)
+    message, detail = str(error), error.detail
+    assert detail is not None
+    assert TARGET in detail and only_in_detail in detail
+    assert TARGET not in message and "/api/" not in message
+    assert only_in_detail not in message
+    assert SECRET not in message
+    assert not re.search(r"\d+ B\b", message)  # sizes of the body are details too
+    assert not re.search(r"\bD\d+\b", message)  # project decisions mean nothing to a model
+
+
+@pytest.mark.parametrize(("status", "error"), [(403, ServiceBlockedError), (429, RateLimitedError)])
+def test_the_repeated_stop_keeps_the_detail_of_the_first(
+    client: HttpClient, service: respx.MockRouter, status: int, error: type[Exception]
+) -> None:
+    service.get(URL).respond(status)
+
+    with pytest.raises(error) as first:
+        client.get(TARGET, headers={}, decode=raw)
+    with pytest.raises(error) as again:
+        client.get("/api/city-lookup?city=krakow", headers={}, decode=raw)
+
+    assert isinstance(first.value, DeweloperuchError) and isinstance(again.value, DeweloperuchError)
+    assert first.value.detail == f"{TARGET}: HTTP {status}"
+    assert again.value.detail == first.value.detail
+
+
+TERMINAL = "\x1b]0;PWNED\x07\x1b[31m\x1b]52;c;ZXZpbA==\x07"
+TERMINAL_ESCAPED = "\\x1b]0;PWNED\\x07\\x1b[31m\\x1b]52;c;ZXZpbA==\\x07"
+BIDI = "\u202e"  # right-to-left override, invisible on a terminal
+
+
+@pytest.mark.parametrize(
+    ("answer", "escaped"),
+    [
+        (_answer(500, text=f"oops {TERMINAL}{BIDI} end"), TERMINAL_ESCAPED + "\\u202e"),
+        # httpx refuses such a Location itself (an error before the redirect branch);
+        # what reaches the detail is printable all the same.
+        (_answer(301, headers={"Location": f"/x{TERMINAL}"}), ""),
+    ],
+    ids=["body", "location"],
+)
+def test_text_of_the_service_in_the_detail_has_no_control_characters(
+    client: HttpClient,
+    clock: FakeClock,
+    service: respx.MockRouter,
+    answer: Callable[[respx.MockRouter, FakeClock], object],
+    escaped: str,
+) -> None:
+    """A detail goes to a terminal (CLI) or a log: no OSC/CSI sequences, no bidi tricks."""
+    answer(service, clock)
+
+    with pytest.raises(ServiceError) as caught:
+        client.get(TARGET, headers={}, decode=raw)
+
+    detail = caught.value.detail
+    assert detail is not None
+    assert escaped in detail
+    assert all(char.isprintable() for char in detail)
+
+
+def test_printable_escapes_only_what_cannot_be_printed() -> None:
+    assert printable("Kraków ąę ok") == "Kraków ąę ok"
+    assert printable(f"a\x1b[2J\nb\tc\x00{BIDI}\U000e0001") == (
+        "a\\x1b[2J\\x0ab\\x09c\\x00\\u202e\\U000e0001"
+    )
+    assert DeweloperuchError("m", detail="x\x07").detail == "x\\x07"

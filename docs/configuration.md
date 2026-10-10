@@ -1,6 +1,6 @@
 # Konfiguracja
 
-Stan po S1a. Istnieje wewnętrzny klient HTTP z cache w pamięci; serwer MCP i CLI jeszcze nie istnieją, więc ich ustawień tu nie ma. Klient nie ma własnych zmiennych środowiskowych ani plików (wartości poniżej są stałymi w kodzie).
+Stan po S1b. Pakiet ma wewnętrzny klient HTTP z cache w pamięci oraz dwa punkty wejścia: CLI [`deweloperuch`](cli/README.md) i serwer MCP [`deweloperuch-mcp`](mcp/README.md). Żaden z nich nie ma własnych zmiennych środowiskowych ani plików konfiguracyjnych (wartości poniżej są stałymi w kodzie).
 
 ## Zmienne środowiskowe
 
@@ -54,6 +54,25 @@ Klient (`deweloperuch_mcp.client.transport`) jest synchroniczny (`httpx`), z Use
 
 Cel żądania jest sprawdzany przed wysłaniem według allowlisty (`allowlist.py`) i reguły D5: ścieżki z `DUMP_PATHS` (`/api/map/powiat-sales/{id}`, strona `/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}` bez `/mapa`) nigdy nie są wywoływane. `valuation-pdf` i server actions są wykluczone. Naruszenie to `InvalidInputError` z prefiksem „Błąd programu”.
 
+## Błędy pakietu
+
+Wszystkie błędy zamierzone dziedziczą po `DeweloperuchError(message, detail=)` (`deweloperuch_mcp.errors`) i są wspólne dla klienta, usług, CLI i MCP.
+
+| Element | Zachowanie |
+|---|---|
+| `str(err)` | Komunikat domenowy po polsku: co się stało i co zrobić. Nigdy nie zawiera ścieżek serwisu, nazw propsów ani treści odpowiedzi. To jedyny tekst, który trafia do modelu (MCP) i po `Błąd:` na stderr (CLI). |
+| `err.detail` | Szczegóły techniczne: cel zapytania, status HTTP, fragment ciała odpowiedzi; `None`, gdy ich nie ma. Trafia do logu serwera MCP (stderr) i do linii `Szczegóły:` w CLI. |
+| Escapowanie | `detail` jest zawsze przepuszczany przez `errors.printable`: każdy znak niedrukowalny (sekwencje sterujące OSC/CSI, końce linii, sterowanie bidi) staje się `\xNN`, `\uNNNN` lub `\UNNNNNNNN`. Polskie litery zostają. |
+| Kontekst domenowy | Usługi dopisują przedrostek, np. `Inwestycja 'smolna': …`, `Wyszukiwanie ofert w 'warszawa': …`; `NotFoundError` ma komunikat domenowy (np. „Nie znaleziono inwestycji 'smolna'. …”). Typ błędu, `pause_seconds` i `detail` są zachowane. |
+| Dane niezgodne z kontraktem | `UnexpectedResponseError` z dopiskiem „Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.” |
+| Etykiety decyzji (np. „D5”) | Tylko w `detail`, nigdy w `str(err)`. |
+
+Mapowanie na kody wyjścia CLI: [docs/cli/README.md](cli/README.md#kody-wyjścia). Mapowanie na wynik MCP: [docs/mcp/README.md](mcp/README.md#błędy).
+
+## Dla deweloperów
+
+`DEWELOPERUCH_UPDATE_SNAPSHOTS=1 uv run pytest tests/test_mcp_server.py` odświeża zrzut `tests/snapshots/mcp_tools.json` (pełny `tools/list`, `instructions`, `serverInfo.name`). To narzędzie testów, nie konfiguracja produktu; zwykły `uv run pytest` porównuje wynik ze zrzutem.
+
 ## Skrypty recon
 
 Skrypty `recon/` uruchamiane jako `python3 recon/<skrypt>.py` wymagają Pythona 3.11 lub nowszego. Systemowy `python3` z macOS to 3.9 i kończy się komunikatem o wymaganej wersji. Alternatywa: `uv run python recon/<skrypt>.py`.
@@ -89,4 +108,4 @@ Skaner bundli JS (wykrywanie zmian po deployu, D7). Wszystkie żądania idą prz
 | `MAX_CHUNKS` | 400 | Twardy limit żądań chunków na skan (także gdy pliki cache są nieczytelne); przekroczenie to kod 6. |
 | Cache | `chunks/` | Zob. tabela „Pliki”. Skaner respektuje `XDG_CACHE_HOME`. |
 
-_Źródło: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `src/deweloperuch_mcp/retry_after.py`, `src/deweloperuch_mcp/http_policy.py`, `recon/config.py`, `recon/http_common.py`, `recon/probe.py`, `recon/scan_bundles.py`, `recon/allowlist.py`, `recon/flight.py`, `src/deweloperuch_mcp/client/transport.py`, `src/deweloperuch_mcp/allowlist.py`, `src/deweloperuch_mcp/flight.py`, `src/deweloperuch_mcp/errors.py`_
+_Źródło: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `src/deweloperuch_mcp/retry_after.py`, `src/deweloperuch_mcp/http_policy.py`, `recon/config.py`, `recon/http_common.py`, `recon/probe.py`, `recon/scan_bundles.py`, `recon/allowlist.py`, `recon/flight.py`, `src/deweloperuch_mcp/client/transport.py`, `src/deweloperuch_mcp/services.py`, `src/deweloperuch_mcp/cli.py`, `src/deweloperuch_mcp/mcp_server.py`, `src/deweloperuch_mcp/allowlist.py`, `src/deweloperuch_mcp/flight.py`, `src/deweloperuch_mcp/errors.py`_

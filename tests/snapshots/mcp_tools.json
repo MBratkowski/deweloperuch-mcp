@@ -1,0 +1,1232 @@
+{
+  "server": {
+    "name": "deweloperuch",
+    "instructions": "Dane z deweloperuch.pl: ceny ofertowe mieszkań od deweloperów (rynek pierwotny) w Polsce, z historią zmian cen. Typowa kolejność: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przerwij pracę z tymi narzędziami i powiedz o tym użytkownikowi: do restartu serwera nie wyśle on już żadnego zapytania do serwisu. Błędy walidacji argumentów bywają po angielsku: popraw wskazane pole zgodnie ze schematem i ponów."
+  },
+  "tools": [
+    {
+      "name": "search_locations",
+      "title": "Szukaj lokalizacji",
+      "description": "Znajduje miasta, dzielnice i ulice w Polsce po fragmencie nazwy. Użyj na początku, żeby zamienić nazwę miejsca na city_slug, którego wymaga search_offers. Nie zwraca ofert ani cen.\n\nZwraca items (kind: city, district albo street; name, city, city_slug, opcjonalnie district, street, lat, lng i offer_count, czyli liczbę ofert wg serwisu) oraz total, returned, truncated i hint. total jest null, gdy wyników jest więcej niż pokazano; truncated=true znaczy, że pasujących może być więcej: doprecyzuj nazwę. Miejscowości z offer_count=0 nie mają ofert: nie przekazuj ich do search_offers. Dzielnica i ulica podają city_slug swojego miasta; search_offers filtruje tylko po mieście.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "description": "Fragment nazwy miasta, dzielnicy lub ulicy, 2–100 znaków, z polskimi znakami, np. Kraków, Mokotów.",
+            "title": "Szukany tekst",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "search_locationsArguments"
+      },
+      "outputSchema": {
+        "$defs": {
+          "LocationItem": {
+            "properties": {
+              "kind": {
+                "description": "city, district albo street.",
+                "title": "Kind",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "city": {
+                "title": "City",
+                "type": "string"
+              },
+              "city_slug": {
+                "title": "City Slug",
+                "type": "string"
+              },
+              "district": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "District"
+              },
+              "street": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Street"
+              },
+              "lat": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Lat"
+              },
+              "lng": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Lng"
+              },
+              "offer_count": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Liczba ofert wg serwisu (dla dzielnic i ulic przybliżona; 0 = brak ofert).",
+                "title": "Offer Count"
+              }
+            },
+            "required": [
+              "kind",
+              "name",
+              "city",
+              "city_slug"
+            ],
+            "title": "LocationItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Wszystkie pasujące; null, gdy wyników jest więcej niż pokazano.",
+            "title": "Total"
+          },
+          "returned": {
+            "title": "Returned",
+            "type": "integer"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hint"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/LocationItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "total",
+          "returned",
+          "truncated",
+          "items"
+        ],
+        "title": "LocationsResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "search_offers",
+      "title": "Szukaj ofert mieszkań",
+      "description": "Wyszukuje oferty mieszkań od deweloperów (tylko rynek pierwotny, ceny ofertowe, nie transakcyjne) w jednym mieście albo w całej Polsce (city=polska), z filtrami ceny i metrażu i sortowaniem po cenie. Użyj, gdy szukasz mieszkań w budżecie albo o danym metrażu. Nie filtruje po dzielnicy, liczbie pokoi ani deweloperze.\n\nZwraca jedną stronę: total (wszystkie pasujące), returned, page, per_page, pages_available, truncated, hint i items (offer_id, investment_slug, name, cena w PLN, metraż w m², cena za m², status, inwestycja, deweloper, ostatnia zmiana ceny i zmiana od pierwszej ceny w procentach; miasto tylko przy city=polska). Pozycje są skrócone; szczegóły oferty i historię ceny daje get_offer.\n\nOgraniczenia: można przejrzeć najwyżej 20 stron po per_page ofert. Gdy truncated=true, zawęź filtry zamiast przeglądać kolejne strony. Wszystkie oferty jednej inwestycji daje get_investment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "description": "city_slug miasta z search_locations (np. warszawa, krakow) albo polska dla całego kraju.",
+            "title": "Miasto",
+            "type": "string"
+          },
+          "price_min": {
+            "anyOf": [
+              {
+                "maximum": 99999999,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Najniższa cena oferty w PLN.",
+            "title": "Cena od"
+          },
+          "price_max": {
+            "anyOf": [
+              {
+                "maximum": 99999999,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Najwyższa cena oferty w PLN.",
+            "title": "Cena do"
+          },
+          "area_min": {
+            "anyOf": [
+              {
+                "maximum": 9999,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Najmniejszy metraż w m².",
+            "title": "Metraż od"
+          },
+          "area_max": {
+            "anyOf": [
+              {
+                "maximum": 9999,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Największy metraż w m².",
+            "title": "Metraż do"
+          },
+          "sort": {
+            "anyOf": [
+              {
+                "enum": [
+                  "price_asc",
+                  "price_desc"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "price_asc: od najtańszych, price_desc: od najdroższych; brak: domyślna kolejność serwisu (nie jest gwarantowana).",
+            "title": "Kolejność"
+          },
+          "page": {
+            "default": 1,
+            "description": "Numer strony wyników, 1–20.",
+            "maximum": 20,
+            "minimum": 1,
+            "title": "Strona",
+            "type": "integer"
+          },
+          "per_page": {
+            "default": 10,
+            "description": "10 albo 50. Pozycja to ok. 350 znaków wyniku, więc 50 daje ok. 17 tys.; zwykle wystarcza 10.",
+            "enum": [
+              10,
+              50
+            ],
+            "title": "Ofert na stronie",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "title": "search_offersArguments"
+      },
+      "outputSchema": {
+        "$defs": {
+          "OfferItem": {
+            "properties": {
+              "offer_id": {
+                "title": "Offer Id",
+                "type": "integer"
+              },
+              "investment_slug": {
+                "title": "Investment Slug",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "price": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Cena ofertowa w PLN (nie transakcyjna).",
+                "title": "Price"
+              },
+              "area_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Metraż w m².",
+                "title": "Area M2"
+              },
+              "price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Cena za m² w PLN (price / area_m2).",
+                "title": "Price Per M2"
+              },
+              "status": {
+                "description": "active (aktualna) albo archived (wycofana).",
+                "title": "Status",
+                "type": "string"
+              },
+              "investment_name": {
+                "title": "Investment Name",
+                "type": "string"
+              },
+              "developer_name": {
+                "title": "Developer Name",
+                "type": "string"
+              },
+              "last_price_change_kind": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "increase, decrease albo no_change.",
+                "title": "Last Price Change Kind"
+              },
+              "last_price_change_pct": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Ostatnia zmiana ceny w procentach.",
+                "title": "Last Price Change Pct"
+              },
+              "price_change_since_start_pct": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Zmiana ceny od pierwszej zaobserwowanej, w procentach (ujemna = tańsza).",
+                "title": "Price Change Since Start Pct"
+              },
+              "city": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Tylko przy city=polska.",
+                "title": "City"
+              },
+              "city_slug": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Tylko przy city=polska.",
+                "title": "City Slug"
+              }
+            },
+            "required": [
+              "offer_id",
+              "investment_slug",
+              "name",
+              "status",
+              "investment_name",
+              "developer_name"
+            ],
+            "title": "OfferItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "returned": {
+            "title": "Returned",
+            "type": "integer"
+          },
+          "truncated": {
+            "description": "true: pasujących ofert jest więcej, niż można przejrzeć (najwyżej 20 stron); zawęź filtry.",
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "per_page": {
+            "title": "Per Page",
+            "type": "integer"
+          },
+          "pages_available": {
+            "title": "Pages Available",
+            "type": "integer"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hint"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/OfferItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "total",
+          "returned",
+          "truncated",
+          "page",
+          "per_page",
+          "pages_available",
+          "items"
+        ],
+        "title": "OffersResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "get_offer",
+      "title": "Oferta z historią ceny",
+      "description": "Zwraca jedną ofertę z pełną historią ceny, inwestycją i deweloperem. Użyj, gdy chcesz zobaczyć, jak zmieniała się cena mieszkania. Wymaga offer_id i investment_slug (oba podaje search_offers albo get_investment): samo offer_id nie wystarcza.\n\nZwraca cenę, metraż, cenę za m², status (active albo archived), zmianę od pierwszej ceny, daty i price_history (date, kind: offer, archived albo restored, price). Do listy ofert jednej inwestycji użyj get_investment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "offer_id": {
+            "description": "offer_id z search_offers albo get_investment.",
+            "minimum": 1,
+            "title": "Oferta",
+            "type": "integer"
+          },
+          "investment_slug": {
+            "description": "investment_slug inwestycji tej oferty, np. smolna (z search_offers).",
+            "title": "Inwestycja",
+            "type": "string"
+          }
+        },
+        "required": [
+          "offer_id",
+          "investment_slug"
+        ],
+        "title": "get_offerArguments"
+      },
+      "outputSchema": {
+        "$defs": {
+          "Developer": {
+            "properties": {
+              "developer_slug": {
+                "title": "Developer Slug",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "website": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Website"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              }
+            },
+            "required": [
+              "developer_slug",
+              "name"
+            ],
+            "title": "Developer",
+            "type": "object"
+          },
+          "PriceEventItem": {
+            "properties": {
+              "date": {
+                "anyOf": [
+                  {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Date"
+              },
+              "kind": {
+                "description": "offer (cena w ofercie), archived (wycofanie), restored (powrót).",
+                "title": "Kind",
+                "type": "string"
+              },
+              "price": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Cena ofertowa w PLN (nie transakcyjna).",
+                "title": "Price"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "title": "PriceEventItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "offer_id": {
+            "title": "Offer Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "description": "active (aktualna) albo archived (wycofana).",
+            "title": "Status",
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Cena ofertowa w PLN (nie transakcyjna).",
+            "title": "Price"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          },
+          "area_m2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Metraż w m².",
+            "title": "Area M2"
+          },
+          "price_per_m2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Cena za m² w PLN (price / area_m2).",
+            "title": "Price Per M2"
+          },
+          "price_change_since_start": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Zmiana ceny od pierwszej zaobserwowanej, w PLN (ujemna = tańsza).",
+            "title": "Price Change Since Start"
+          },
+          "price_change_since_start_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Zmiana ceny od pierwszej zaobserwowanej, w procentach (ujemna = tańsza).",
+            "title": "Price Change Since Start Pct"
+          },
+          "creation_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Creation Date"
+          },
+          "last_event_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Last Event Date"
+          },
+          "last_change_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Last Change Date"
+          },
+          "investment_slug": {
+            "title": "Investment Slug",
+            "type": "string"
+          },
+          "investment_name": {
+            "title": "Investment Name",
+            "type": "string"
+          },
+          "city": {
+            "title": "City",
+            "type": "string"
+          },
+          "city_slug": {
+            "title": "City Slug",
+            "type": "string"
+          },
+          "developer": {
+            "$ref": "#/$defs/Developer"
+          },
+          "price_history": {
+            "items": {
+              "$ref": "#/$defs/PriceEventItem"
+            },
+            "title": "Price History",
+            "type": "array"
+          }
+        },
+        "required": [
+          "offer_id",
+          "name",
+          "status",
+          "investment_slug",
+          "investment_name",
+          "city",
+          "city_slug",
+          "developer",
+          "price_history"
+        ],
+        "title": "OfferResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "get_investment",
+      "title": "Inwestycja z ofertami",
+      "description": "Zwraca inwestycję (projekt deweloperski): miasto, ulicę, współrzędne, dewelopera, średnie ceny aktywnych ofert, liczbę ofert i listę ofert (najpierw aktywne, potem archiwalne). Użyj, gdy chcesz zobaczyć mieszkania jednego projektu. investment_slug podaje search_offers.\n\nOgraniczenia: zwraca najwyżej limit ofert (domyślnie 20); offers_returned mówi, ile ich jest na liście, truncated i offers_omitted, czy i ile pominięto. offers_total to liczba z serwisu, a pominięte oferty liczy offers_omitted. Przy dużej inwestycji nie zwiększaj limitu bez potrzeby; offers_omitted > 0 znaczy, że lista jest niepełna. include_history=true dodaje historię ceny każdej zwróconej oferty: wynik jest dłuższy i powstaje wolniej. Dla jednej oferty lepiej użyć get_offer.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "investment_slug": {
+            "description": "investment_slug z search_offers, np. smolna.",
+            "title": "Inwestycja",
+            "type": "string"
+          },
+          "include_history": {
+            "default": false,
+            "description": "true: dołącz historię ceny każdej zwróconej oferty (dłuższy wynik).",
+            "title": "Z historią cen",
+            "type": "boolean"
+          },
+          "limit": {
+            "default": 20,
+            "description": "Najwięcej ofert w wyniku (najpierw aktywne), domyślnie 20, 0 = tylko podsumowanie inwestycji. Ile pominięto, mówi offers_omitted. Każda oferta to ok. 300 znaków wyniku, z historią ceny kilkaset więcej. Maksimum 200 daje ok. 60 tys. znaków; zwykle wystarcza domyślne 20.",
+            "maximum": 200,
+            "minimum": 0,
+            "title": "Limit ofert",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "investment_slug"
+        ],
+        "title": "get_investmentArguments"
+      },
+      "outputSchema": {
+        "$defs": {
+          "Developer": {
+            "properties": {
+              "developer_slug": {
+                "title": "Developer Slug",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "website": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Website"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              }
+            },
+            "required": [
+              "developer_slug",
+              "name"
+            ],
+            "title": "Developer",
+            "type": "object"
+          },
+          "InvestmentOfferItem": {
+            "properties": {
+              "offer_id": {
+                "title": "Offer Id",
+                "type": "integer"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "status": {
+                "description": "active (aktualna) albo archived (wycofana).",
+                "title": "Status",
+                "type": "string"
+              },
+              "price": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Cena ofertowa w PLN (nie transakcyjna).",
+                "title": "Price"
+              },
+              "currency": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Currency"
+              },
+              "area_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Metraż w m².",
+                "title": "Area M2"
+              },
+              "price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Cena za m² w PLN (price / area_m2).",
+                "title": "Price Per M2"
+              },
+              "price_change_since_start": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Zmiana ceny od pierwszej zaobserwowanej, w PLN (ujemna = tańsza).",
+                "title": "Price Change Since Start"
+              },
+              "price_change_since_start_pct": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Zmiana ceny od pierwszej zaobserwowanej, w procentach (ujemna = tańsza).",
+                "title": "Price Change Since Start Pct"
+              },
+              "creation_date": {
+                "anyOf": [
+                  {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Creation Date"
+              },
+              "last_event_date": {
+                "anyOf": [
+                  {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Last Event Date"
+              },
+              "last_change_date": {
+                "anyOf": [
+                  {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Last Change Date"
+              },
+              "price_history": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "$ref": "#/$defs/PriceEventItem"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Price History"
+              }
+            },
+            "required": [
+              "offer_id",
+              "name",
+              "status"
+            ],
+            "title": "InvestmentOfferItem",
+            "type": "object"
+          },
+          "PriceEventItem": {
+            "properties": {
+              "date": {
+                "anyOf": [
+                  {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Date"
+              },
+              "kind": {
+                "description": "offer (cena w ofercie), archived (wycofanie), restored (powrót).",
+                "title": "Kind",
+                "type": "string"
+              },
+              "price": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Cena ofertowa w PLN (nie transakcyjna).",
+                "title": "Price"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "title": "PriceEventItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "investment_slug": {
+            "title": "Investment Slug",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "description": "active (aktualna) albo archived (wycofana).",
+            "title": "Status",
+            "type": "string"
+          },
+          "city": {
+            "title": "City",
+            "type": "string"
+          },
+          "city_slug": {
+            "title": "City Slug",
+            "type": "string"
+          },
+          "street": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Street"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Lat"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Lng"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          },
+          "developer": {
+            "$ref": "#/$defs/Developer"
+          },
+          "avg_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Średnia cena aktywnych ofert w PLN.",
+            "title": "Avg Price"
+          },
+          "avg_area_m2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Avg Area M2"
+          },
+          "avg_price_per_m2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Avg Price Per M2"
+          },
+          "offers_active": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Offers Active"
+          },
+          "offers_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Wszystkie oferty inwestycji wg serwisu, także archiwalne; lista offers jest ucięta przez limit.",
+            "title": "Offers Total"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/$defs/InvestmentOfferItem"
+            },
+            "title": "Offers",
+            "type": "array"
+          },
+          "offers_returned": {
+            "description": "Ofert na liście offers.",
+            "title": "Offers Returned",
+            "type": "integer"
+          },
+          "offers_omitted": {
+            "description": "Ofert pominiętych przez limit.",
+            "title": "Offers Omitted",
+            "type": "integer"
+          },
+          "truncated": {
+            "description": "true: lista offers jest niepełna (offers_omitted > 0).",
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "investment_slug",
+          "name",
+          "status",
+          "city",
+          "city_slug",
+          "developer",
+          "offers",
+          "offers_returned",
+          "offers_omitted",
+          "truncated"
+        ],
+        "title": "InvestmentResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    }
+  ]
+}

@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 from deweloperuch_mcp.client.dto import OffersPageDto, validate
 from deweloperuch_mcp.client.transport import HttpClient, Reply, build_target, path_segment
-from deweloperuch_mcp.errors import UnexpectedResponseError
+from deweloperuch_mcp.errors import SERVICE_CHANGED, UnexpectedResponseError
 from deweloperuch_mcp.flight import component_props, flight_from_html, with_rsc_token
 from deweloperuch_mcp.http_policy import is_html
 
@@ -57,7 +57,8 @@ def _decode(path: str, prop: str, model: type[M], reply: Reply) -> M:
             text = flight_from_html(text)
         except ValueError as err:
             raise UnexpectedResponseError(
-                f"Strona {path} przyszła jako HTML z nieczytelnymi danymi RSC: {err}."
+                f"Serwis zwrócił stronę z nieczytelnymi danymi. {SERVICE_CHANGED}",
+                detail=f"{path}: HTML z nieczytelnymi danymi RSC: {err}",
             ) from err
     found: list[str] = []
     for name, value in component_props(text):
@@ -67,6 +68,6 @@ def _decode(path: str, prop: str, model: type[M], reply: Reply) -> M:
             found.append(name)
     names = ", ".join(found[:10]) or "brak"
     raise UnexpectedResponseError(
-        f"Strona {path} nie zawiera danych w propsie {prop!r} (propsy z danymi: {names}). "
-        "Serwis mógł zmienić stronę; zgłoś to użytkownikowi."
+        f"Na stronie serwisu brakuje oczekiwanych danych. {SERVICE_CHANGED}",
+        detail=f"{path} nie zawiera danych w propsie {prop!r} (propsy z danymi: {names})",
     )

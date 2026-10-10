@@ -22,7 +22,7 @@ from deweloperuch_mcp.client.dto import (
     validate,
 )
 from deweloperuch_mcp.client.transport import HttpClient, Reply, build_target, path_segment
-from deweloperuch_mcp.errors import UnexpectedResponseError
+from deweloperuch_mcp.errors import SERVICE_CHANGED, UnexpectedResponseError
 from deweloperuch_mcp.http_policy import is_html
 
 M = TypeVar("M", bound=BaseModel)
@@ -74,9 +74,15 @@ def _get(http: HttpClient, target: str, model: type[M]) -> M:
 def _decode(model: type[M], target: str, reply: Reply) -> M:
     path = target.split("?", 1)[0]
     if is_html(reply.headers, reply.body):
-        raise UnexpectedResponseError(f"Oczekiwano JSON z {path}, a serwis zwrócił stronę HTML.")
+        raise UnexpectedResponseError(
+            f"Serwis zwrócił stronę HTML zamiast danych. {SERVICE_CHANGED}",
+            detail=f"{path}: oczekiwano JSON, przyszedł HTML",
+        )
     try:
         data = json.loads(reply.body)
     except (ValueError, RecursionError) as err:
-        raise UnexpectedResponseError(f"Odpowiedź {path} nie jest poprawnym JSON: {err}.") from err
+        raise UnexpectedResponseError(
+            f"Serwis zwrócił nieczytelne dane (niepoprawny JSON). {SERVICE_CHANGED}",
+            detail=f"{path}: {err}",
+        ) from err
     return validate(model, data, path)

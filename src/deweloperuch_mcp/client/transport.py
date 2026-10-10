@@ -148,6 +148,14 @@ class Reply:
     body: bytes
 
 
+@dataclass(frozen=True)
+class Problem:
+    """Why a body is unusable: the message for people and models, and the detail."""
+
+    message: str
+    detail: str
+
+
 class ResponseCache:
     """In-memory LRU cache of replies with a TTL; thread-safe."""
 
@@ -304,14 +312,16 @@ class HttpClient:
 
     def _exchange(
         self, slot: Slot, target: str, headers: Mapping[str, str]
-    ) -> tuple[httpx.Response, bytes, str | None, float | None]:
+    ) -> tuple[httpx.Response, bytes, Problem | None, float | None]:
         try:
             with self._http.stream("GET", BASE_URL + target, headers=headers) as response:
                 pause = self._pause(slot, response)
                 body, problem = self._read_body(response)
         except httpx.HTTPError as err:
             raise ServiceError(
-                f"Błąd sieci, brak odpowiedzi serwisu deweloperuch.pl: {err!r}. Nie ponawiam."
+                "Błąd sieci: brak odpowiedzi serwisu deweloperuch.pl. Nic nie ponawiam; "
+                "spróbuj później.",
+                detail=f"{target}: {err!r}",
             ) from err
         return response, body, problem, pause
 
@@ -327,11 +337,12 @@ class HttpClient:
             return MAX_DEFER  # defer() recorded its cap before refusing the rest
         return seconds
 
-    def _read_body(self, response: httpx.Response) -> tuple[bytes, str | None]:
+    def _read_body(self, response: httpx.Response) -> tuple[bytes, Problem | None]:
         limit = self._max_body_bytes
-        too_big = (
-            f"Odpowiedź przekracza {limit} B: klient nie pobiera zrzutów (D5); "
-            "zawęź zapytanie (filtry, mniejszy zakres)."
+        too_big = Problem(
+            "Odpowiedź serwisu jest za duża: klient nie pobiera tak dużych danych. Zawęź "
+            "zapytanie (filtry, mniejszy zakres).",
+            f"ponad {limit} B (zrzut, D5)",
         )
         text = (body_length(response.status_code, response.headers) or "").strip()
         declared = int(text) if text.isascii() and text.isdigit() else None
@@ -347,16 +358,22 @@ class HttpClient:
                 if size > limit:
                     return b"".join(chunks)[:limit], too_big
                 if self._monotonic() - start > BODY_DEADLINE:
-                    return b"".join(chunks), (
-                        f"Czytanie odpowiedzi trwało za długo (ponad {BODY_DEADLINE:g} s, "
-                        f"{size} B)."
+                    return b"".join(chunks), Problem(
+                        f"Serwis odpowiadał za długo (ponad {BODY_DEADLINE:g} s). Nic nie "
+                        "ponawiam; spróbuj później.",
+                        f"przeczytano {size} B",
                     )
         except httpx.HTTPError as err:
-            return b"".join(chunks), f"Czytanie odpowiedzi przerwane ({size} B): {err!r}"
+            return b"".join(chunks), Problem(
+                "Połączenie z serwisem zostało przerwane w trakcie odpowiedzi. Nic nie "
+                "ponawiam; spróbuj później.",
+                f"przeczytano {size} B: {err!r}",
+            )
         # Content-Length counts bytes on the wire, before Content-Encoding is undone.
         if declared is not None and response.num_bytes_downloaded < declared:
-            return b"".join(chunks), (
-                f"Odpowiedź ucięta: {response.num_bytes_downloaded} z {declared} B."
+            return b"".join(chunks), Problem(
+                "Odpowiedź serwisu jest ucięta. Nic nie ponawiam; spróbuj później.",
+                f"{response.num_bytes_downloaded} z {declared} B",
             )
         return b"".join(chunks), None
 
@@ -372,27 +389,34 @@ def _check_target(target: str) -> None:
     """
     if not _TARGET.fullmatch(target):
         raise InvalidInputError(
-            f"{_PROGRAM_BUG}oczekiwano ścieżki serwisu z zakodowanym query "
-            f"(np. /api/cities?q=krak), podano {target!r}."
+            f"{_PROGRAM_BUG}nieprawidłowy adres zapytania.",
+            detail=(
+                "oczekiwano ścieżki serwisu z zakodowanym query (np. /api/cities?q=krak), "
+                f"podano {target!r}"
+            ),
         )
     path = target.split("?", 1)[0]
     # The allowlist matches the path as written; the server decodes `%2F` and resolves
     # `..`, so such paths could reach something else than what was checked.
     if "%" in path or any(segment in (".", "..") for segment in path.split("/")):
         raise InvalidInputError(
-            f"{_PROGRAM_BUG}ścieżka {path!r} nie może zawierać kodowania % ani segmentów "
-            ". i ..: slugi to zwykłe znaki ASCII."
+            f"{_PROGRAM_BUG}nieprawidłowy adres zapytania.",
+            detail=(
+                f"ścieżka {path!r} nie może zawierać kodowania % ani segmentów . i ..: "
+                "slugi to zwykłe znaki ASCII"
+            ),
         )
     if match_excluded_api(path) is not None or match_dump(path) is not None:
         raise InvalidInputError(
-            f"{_PROGRAM_BUG}{path} jest poza zakresem klienta (zrzuty D5, valuation-pdf); "
-            "klient go nie wywołuje."
+            f"{_PROGRAM_BUG}zapytanie o dane poza zakresem klienta.",
+            detail=f"{path} jest poza zakresem klienta (zrzuty D5, valuation-pdf)",
         )
     if match_api(path) is None and match_page(path) is None:
         raise InvalidInputError(
-            f"{_PROGRAM_BUG}{path} jest spoza allowlisty odczytu "
-            "(docs/discovery/endpoints.md, pages-rsc.md); klient woła tylko udokumentowane "
-            "kanały odczytu."
+            f"{_PROGRAM_BUG}zapytanie spoza udokumentowanych kanałów odczytu.",
+            detail=(
+                f"{path} jest spoza allowlisty odczytu (docs/discovery/endpoints.md, pages-rsc.md)"
+            ),
         )
 
 
@@ -403,12 +427,16 @@ def _still_stopped(first: ServiceBlockedError) -> ServiceBlockedError:
         f"nie zostało wysłane. Wcześniej: {first}"
     )
     if isinstance(first, RateLimitedError):
-        return RateLimitedError(message, first.pause_seconds)
-    return ServiceBlockedError(message)
+        return RateLimitedError(message, first.pause_seconds, detail=first.detail)
+    return ServiceBlockedError(message, detail=first.detail)
 
 
-def _check(target: str, reply: Reply, problem: str | None, pause: float | None) -> None:
-    """Raise for anything but a complete 2xx. STOP first, whatever else is wrong."""
+def _check(target: str, reply: Reply, problem: Problem | None, pause: float | None) -> None:
+    """Raise for anything but a complete 2xx. STOP first, whatever else is wrong.
+
+    Messages say what happened and what to do; the target, the status and an excerpt of
+    the body go to ``detail`` (an answer of the service is not text for a model).
+    """
     status = reply.status
     after = "" if pause is None else f" Limiter wstrzyma następne zapytanie o {math.ceil(pause)} s."
     why = stop_reason(status, reply.headers, reply.body)
@@ -418,22 +446,31 @@ def _check(target: str, reply: Reply, problem: str | None, pause: float | None) 
             f"i zgłoś to użytkownikowi. Klient nie wyśle już żadnego zapytania do restartu "
             f"procesu.{after}"
         )
+        detail = f"{target}: HTTP {status}"
         if status == 429:
-            raise RateLimitedError(message, pause if pause is not None else PAUSE_AFTER_429)
-        raise ServiceBlockedError(message)
+            waited = pause if pause is not None else PAUSE_AFTER_429
+            raise RateLimitedError(message, waited, detail=detail)
+        raise ServiceBlockedError(message, detail=detail)
     if problem is not None:
-        raise ServiceError(f"HTTP {status}. {problem}{after}", pause)
+        raise ServiceError(
+            f"{problem.message}{after}", pause, detail=f"{target}: HTTP {status}, {problem.detail}"
+        )
     if 300 <= status < 400:
         location = reply.headers.get("location", "?")
         raise ServiceError(
-            f"HTTP {status}: serwis przekierował {target} na {location}; klient nie podąża "
+            f"Serwis przekierował zapytanie gdzie indziej (HTTP {status}); klient nie podąża "
             "za przekierowaniami.",
             pause,
+            detail=f"{target} -> {location}",
         )
     if status == 404:
-        raise NotFoundError(f"HTTP 404: serwis nie zna {target}.")
+        raise NotFoundError("Serwis nie zna żądanych danych (HTTP 404).", detail=target)
     if not 200 <= status < 300:
-        raise ServiceError(f"HTTP {status}. Treść: {_excerpt(reply.body)}{after}", pause)
+        raise ServiceError(
+            f"Serwis odpowiedział błędem HTTP {status}. Nic nie ponawiam; spróbuj później.{after}",
+            pause,
+            detail=f"{target}: {_excerpt(reply.body)}",
+        )
 
 
 def _ttl(headers: httpx.Headers) -> float:
@@ -450,6 +487,9 @@ def _ttl(headers: httpx.Headers) -> float:
 
 
 def _excerpt(body: bytes, limit: int = 300) -> str:
-    """The start of a body on one line, for error messages."""
+    """The start of a body on one line, for ``detail`` (never for messages).
+
+    Control characters are escaped when the error stores it (``errors.printable``).
+    """
     text = " ".join(body[: limit * 4].decode("utf-8", "replace").split())
     return text[:limit] + ("…" if len(text) > limit or len(body) > limit * 4 else "")
