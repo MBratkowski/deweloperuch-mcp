@@ -34,7 +34,7 @@ Błąd to wynik z `isError=true` i polskim komunikatem (szczegóły techniczne t
 |---|---|
 | `query` krótsze niż 2 albo dłuższe niż 100 znaków (po przycięciu), nie tekst | `query: podaj od 2 do 100 znaków nazwy miasta, dzielnicy lub ulicy, podano '…'.` |
 | Brak argumentu `query`, zły typ | Błąd walidacji schematu z SDK (angielski, prefiks „Error executing tool …”) |
-| STOP (401/403/429/challenge) | `STOP: … Przerwij serię zapytań do deweloperuch.pl, niczego nie ponawiaj i zgłoś to użytkownikowi. Klient nie wyśle już żadnego zapytania do restartu procesu.` |
+| STOP (401/403/429/challenge, także zapisany przez inny proces) | `STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.` (pozostałe warianty: [przegląd MCP](../README.md#błędy)) |
 | Nic nie pasuje | Nie błąd: wynik z `returned=0` i `hint`: `Nic nie pasuje do '…'. Sprawdź pisownię (z polskimi znakami) albo podaj początek nazwy miasta, dzielnicy lub ulicy.` |
 | Błąd serwisu (5xx, sieć) | np. `Wyszukiwanie miast: Serwis odpowiedział błędem HTTP 500. Nic nie ponawiam; spróbuj później.` |
 

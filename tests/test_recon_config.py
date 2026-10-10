@@ -21,9 +21,11 @@ loaded = sorted(sys.modules)
 print(json.dumps({{
     "user_agent_is_shared": config.USER_AGENT is identity.USER_AGENT,
     "base_url_is_shared": config.BASE_URL is identity.BASE_URL,
-    "limiter_is_shared": config.RequestLimiter is throttle.RequestLimiter,
+    "limiter_is_shared": config.RequestLimiter is throttle.RequestLimiter
+        and config.StoppedError is throttle.StoppedError,
     "retry_after_is_shared": config.parse_retry_after is retry_after.parse_retry_after,
-    "policy_is_shared": config.stop_reason is http_policy.stop_reason,
+    "policy_is_shared": config.stop_reason is http_policy.stop_reason
+        and config.stop_cause is http_policy.stop_cause,
     "flight_is_shared": config.component_props is flight.component_props
         and config.with_rsc_token is flight.with_rsc_token,
     "allowlist_is_shared": config.match_api is allowlist.match_api
@@ -172,8 +174,19 @@ def test_recon_loaded_modules_import_only_stdlib() -> None:
                 imported[name].append(node.module)
 
     assert any(imported.values()), "parser found no imports at all"
+    # A module of the package counts only if it is one of these files, checked here too
+    # (throttle takes the STOP texts from http_policy).
+    checked = {
+        "deweloperuch_mcp." + str(path.relative_to(SRC / "deweloperuch_mcp").with_suffix(""))
+        for path in package_files_loaded_by_config()
+        if path.name != "__init__.py"
+    }
     non_stdlib = {
-        name: [m for m in modules if m.split(".")[0] not in sys.stdlib_module_names]
+        name: [
+            m
+            for m in modules
+            if m.split(".")[0] not in sys.stdlib_module_names and m not in checked
+        ]
         for name, modules in imported.items()
     }
     assert non_stdlib == {name: [] for name in imported}

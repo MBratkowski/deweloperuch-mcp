@@ -5,7 +5,11 @@ besides ``--help``. Four read-only tools: ``search_locations``, ``search_offers`
 ``get_offer``, ``get_investment``.
 
 - One ``services.Session`` for the life of the server (the lifespan opens it and closes
-  it on exit), so every call shares the limiter, the cache and the STOP latch.
+  it on exit), so every call shares the limiter, the cache and the STOP latch. A STOP
+  recorded by any process (CLI, recon) stops the tools too; no tool removes it (only a
+  person, with the CLI), and after a STOP the server needs a restart. Texts for the
+  model (instructions, STOP messages) say only "stop and report": nothing about
+  lifting the STOP or restarting, which is the user's call.
 - The services are synchronous; each call runs in a worker thread
   (``asyncio.to_thread``), so parallel calls do not block the event loop. The limiter
   still sends one request at a time.
@@ -70,10 +74,11 @@ INSTRUCTIONS = (
     "city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem "
     "get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią "
     "ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast "
-    "przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przerwij pracę z tymi "
-    "narzędziami i powiedz o tym użytkownikowi: do restartu serwera nie wyśle on już "
-    "żadnego zapytania do serwisu. Błędy walidacji argumentów bywają po angielsku: popraw "
-    "wskazane pole zgodnie ze schematem i ponów."
+    "przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych "
+    "narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, "
+    "podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie "
+    "odblokowuj ani nie uruchamiaj ponownie. Błędy walidacji argumentów bywają po "
+    "angielsku: popraw wskazane pole zgodnie ze schematem i ponów."
 )
 
 # Read-only: nothing changes anywhere. Open world: the data comes from an outside service

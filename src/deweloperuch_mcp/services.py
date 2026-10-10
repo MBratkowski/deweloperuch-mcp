@@ -24,7 +24,7 @@ details (paths, statuses, bodies) stay in ``err.detail``.
 """
 
 import re
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from types import TracebackType
 from typing import Literal, Self
@@ -40,7 +40,20 @@ from deweloperuch_mcp.domain.models import (
     OfferSearchResult,
 )
 from deweloperuch_mcp.errors import InvalidInputError, NotFoundError, ServiceError
-from deweloperuch_mcp.throttle import DEFAULT_MAX_WAIT, RequestLimiter
+from deweloperuch_mcp.throttle import (
+    CLEAR_NOTICE_AFTER,
+    CLEAR_WAIT_LIMIT,
+    DEFAULT_MAX_WAIT,
+    RequestLimiter,
+)
+
+# The STOP record of the shared limiter, for the CLI (``deweloperuch stop``), which may
+# import only the services (D6).
+from deweloperuch_mcp.throttle import LockWaitTimeout as LockWaitTimeout
+from deweloperuch_mcp.throttle import StopRecord as StopRecord
+from deweloperuch_mcp.throttle import StopStatus as StopStatus
+from deweloperuch_mcp.throttle import UnreadableStop as UnreadableStop
+from deweloperuch_mcp.throttle import format_time as format_time
 
 WHOLE_COUNTRY = "polska"
 """The ``city`` of ``search_offers`` that searches the whole country [P]."""
@@ -99,8 +112,10 @@ class Session:
     the in-memory cache. After a STOP (401, 403, 429, challenge) in any session of the
     process, every service call that needs the network raises the same
     ``ServiceBlockedError`` without sending anything; only a new process may try again
-    (CLAUDE.md: stop and report). Close it at the end (``close()`` or ``with``); a closed
-    session raises ``SessionClosedError``.
+    (CLAUDE.md: stop and report). The STOP is also recorded in the shared limiter, so
+    other processes stop too until a person removes it (``clear_stop``) or, after a 429,
+    until its pause ends. Close it at the end (``close()`` or ``with``); a closed session
+    raises ``SessionClosedError``.
     """
 
     def __init__(
@@ -282,6 +297,37 @@ def get_offer(session: Session, offer_id: int, investment_slug: str) -> OfferDet
     ):
         events = json_api.sale_events(session._http, oid)
     return normalize.offer_detail(investment, sale, events.events)
+
+
+# --- the STOP record --------------------------------------------------------------------------
+
+
+def stop_status(limiter: RequestLimiter | None = None) -> StopStatus:
+    """The STOP record of the shared limiter (``limiter`` defaults to the shared lock).
+
+    Offline and immediate: reads a local file without waiting for the limiter's lock
+    (``RequestLimiter.stop_status``), creates nothing, sends nothing.
+    """
+    return (limiter or RequestLimiter()).stop_status()
+
+
+def clear_stop(
+    limiter: RequestLimiter | None = None,
+    *,
+    wait_limit: float = CLEAR_WAIT_LIMIT,
+    notice_after: float = CLEAR_NOTICE_AFTER,
+    on_wait: Callable[[], None] | None = None,
+) -> StopStatus:
+    """Remove the STOP record; returns what it held. For people only: no MCP tool calls it.
+
+    Offline. Waits for the limiter's lock: ``on_wait`` once after ``notice_after`` s,
+    ``LockWaitTimeout`` (nothing removed) after ``wait_limit`` s. A process that has
+    latched its own STOP still sends nothing until restarted; the pause a 429 recorded
+    in the limiter still holds. Raises ``OSError`` when the record cannot be removed.
+    """
+    return (limiter or RequestLimiter()).clear_stop(
+        wait_limit=wait_limit, notice_after=notice_after, on_wait=on_wait
+    )
 
 
 # --- errors of the client in domain terms ----------------------------------------------------

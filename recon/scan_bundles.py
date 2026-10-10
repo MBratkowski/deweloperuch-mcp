@@ -15,7 +15,9 @@ the build ID change with every deploy and are not drift::
 
 - Every request goes through the shared limiter (1 request/s, one at a time, D2) with
   the one User-Agent (D9); no redirects, no retries. 401, 403, 429 and Cloudflare
-  challenges stop the scan, any other failure ends it too (recon/http_common.py).
+  challenges stop the scan, any other failure ends it too (recon/http_common.py). A
+  STOP is recorded for every process (source ``scan_bundles``), and a STOP recorded
+  earlier by any process ends the scan before its next request.
 - Only ``PAGES`` and ``/_next/static/chunks/*.js`` are requested (``is_scan_path``).
 - Chunk file names carry a content hash, so a cached chunk is never fetched again: a
   second scan of the same build fetches only the pages. The cache
@@ -41,6 +43,7 @@ from config import (
     DEFAULT_MAX_WAIT,
     USER_AGENT,
     RequestLimiter,
+    StoppedError,
     WaitTooLongError,
     default_lock_dir,
     is_html,
@@ -143,6 +146,9 @@ EXIT_WAIT = 5
 EXIT_DATA = 6
 EXIT_DRIFT = 7
 
+STOP_SOURCE = "scan_bundles"
+"""``source`` of the STOP records the scanner writes."""
+
 EXIT_CODES_HELP = f"""\
 kody wyjścia:
   0  sukces; z --compare: brak różnic względem baseline
@@ -152,7 +158,8 @@ kody wyjścia:
      (nie zostało wysłane)
   3  STOP: 401, 403, 429 albo challenge Cloudflare (captcha, WAF) na stronie lub
      chunku; skan przerwany: niczego nie ponawiaj i zgłoś to użytkownikowi (po 429
-     limiter wstrzymuje następne zapytanie co najmniej na 60 s)
+     limiter wstrzymuje następne zapytanie co najmniej na 60 s). STOP obowiązuje też
+     inne procesy: także wcześniejszy STOP, wtedy skan przerwany przed zapytaniem
   4  inny błąd HTTP (3xx, pozostałe 4xx, 5xx), sieci (timeout, brak połączenia) albo
      odpowiedź za duża lub czytana za długo; skan przerwany (po 502/503/504 limiter
      sam wstrzymuje następne zapytanie)
@@ -410,9 +417,12 @@ class Scanner:
                 limiter=self._limiter,
                 max_wait=DEFAULT_MAX_WAIT,
                 now=self._now,
+                source=STOP_SOURCE,
             )
         except NetworkError as err:
             raise ScanError(EXIT_HTTP, f"GET {path}: {err} Skan przerwany.") from err
+        except StoppedError as err:
+            raise ScanError(EXIT_STOP, f"{err} Skan przerwany przed GET {path}.") from err
         except WaitTooLongError as err:
             raise ScanError(EXIT_WAIT, f"{err} Skan przerwany przed GET {path}.") from err
         print(f"GET {path}: {status_line(reply)}", file=sys.stderr)

@@ -15,6 +15,7 @@ from deweloperuch_mcp.http_policy import (
     is_challenge,
     is_html,
     pause_seconds,
+    stop_cause,
     stop_reason,
 )
 
@@ -59,14 +60,21 @@ def test_pause_seconds(status: int, retry_after: float | None, pause: float | No
         (401, {}, b"", "HTTP 401 (brak autoryzacji)"),
         (403, {}, b"", "HTTP 403 (odmowa dostępu)"),
         (429, {}, b"", "HTTP 429 (limit zapytań)"),
-        (200, {"cf-mitigated": "challenge"}, b"{}", "HTTP 200, challenge Cloudflare (captcha/WAF)"),
+        # The status only when it is a STOP status itself: "HTTP 200" reads like success.
+        (200, {"cf-mitigated": "challenge"}, b"{}", "challenge Cloudflare (captcha/WAF)"),
         (
             403,
             {"content-type": "text/html"},
             CHALLENGE_HTML,
             "HTTP 403 (odmowa dostępu), challenge Cloudflare (captcha/WAF)",
         ),
-        (503, {}, CHALLENGE_HTML, "HTTP 503, challenge Cloudflare (captcha/WAF)"),
+        (
+            429,
+            {"cf-mitigated": "challenge"},
+            b"",
+            "HTTP 429 (limit zapytań), challenge Cloudflare (captcha/WAF)",
+        ),
+        (503, {}, CHALLENGE_HTML, "challenge Cloudflare (captcha/WAF)"),
         (200, {"content-type": "application/json"}, b"{}", None),
         (404, {}, b"not found", None),
         (503, {}, b"maintenance", None),
@@ -143,3 +151,30 @@ def test_content_type_is_lowercase_without_parameters() -> None:
 )
 def test_body_length(status: int, headers: dict[str, str], length: str | None) -> None:
     assert body_length(status, headers) == length
+
+
+CHALLENGE_CAUSE = ("challenge", "challenge Cloudflare (captcha/WAF)")
+
+
+@pytest.mark.parametrize(
+    ("status", "headers", "body", "cause"),
+    [
+        (401, {}, b"x", (401, "brak autoryzacji")),
+        (403, {}, b"x", (403, "odmowa dostępu")),
+        (429, {"retry-after": "90"}, b"", (429, "limit zapytań")),
+        (200, {"content-type": "text/html"}, CHALLENGE_HTML, CHALLENGE_CAUSE),
+        (429, {"cf-mitigated": "challenge"}, b"", CHALLENGE_CAUSE),
+        (403, {"cf-mitigated": "challenge"}, b"", CHALLENGE_CAUSE),
+        (200, {}, b"{}", None),
+        (404, {}, b"", None),
+        (503, {"retry-after": "30"}, b"", None),
+    ],
+)
+def test_stop_cause_is_what_the_stop_record_keeps(
+    status: int, headers: dict[str, str], body: bytes, cause: tuple[int | str, str] | None
+) -> None:
+    """A challenge never ends on its own, whatever the status; the cause carries neither
+    the body nor the headers. It stops exactly when stop_reason does."""
+    assert stop_cause(status, headers, body) == cause
+    stops = stop_reason(status, headers, body) is not None
+    assert (cause is not None) is stops

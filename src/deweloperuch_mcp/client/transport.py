@@ -19,6 +19,15 @@ and every call that is not served from the cache:
   sending anything (CLAUDE.md: stop and report); only a new process may try again.
   The STOP is latched before the limiter slot is released and checked again inside
   the slot, so a thread waiting for its turn never sends after another one's STOP;
+- records that STOP for every other process too (``Slot.stop``, source ``pakiet``),
+  before the slot is released; a STOP the headers already show (401, 403, 429,
+  ``cf-mitigated``) is latched and recorded before the body is read, so an interrupted
+  read cannot lose it. A STOP recorded by any process (also ``recon/``) makes the
+  limiter refuse the slot (``StoppedError``), which becomes the same
+  ``ServiceBlockedError`` (``RateLimitedError`` while a 429 lasts) and is latched too.
+  A 429 ends with its pause; anything else lasts until a person removes the record.
+  STOP messages tell a model to stop and report, nothing else (no waiting, no
+  restarting, no lifting); times, sources and pauses are in ``detail``;
 - never retries and never follows redirects;
 - reads at most ``max_body_bytes`` (``http_policy.MAX_BODY_BYTES``, dumps are refused,
   D5) within ``BODY_DEADLINE``.
@@ -32,6 +41,7 @@ Synchronous on purpose: the MCP server (S1b) runs calls with ``asyncio.to_thread
 keeps the limiter slot's enter and exit in one thread, as ``RequestLimiter.slot`` requires.
 """
 
+import contextlib
 import math
 import re
 import threading
@@ -54,12 +64,14 @@ from deweloperuch_mcp.errors import (
     ServiceBlockedError,
     ServiceError,
     SessionClosedError,
+    printable,
 )
 from deweloperuch_mcp.http_policy import (
     MAX_BODY_BYTES,
     PAUSE_AFTER_429,
     body_length,
     pause_seconds,
+    stop_cause,
     stop_reason,
 )
 from deweloperuch_mcp.identity import BASE_URL, USER_AGENT
@@ -67,29 +79,43 @@ from deweloperuch_mcp.retry_after import parse_retry_after
 from deweloperuch_mcp.throttle import (
     DEFAULT_MAX_WAIT,
     MAX_DEFER,
+    STOP_INSTRUCTION,
     RequestLimiter,
     Slot,
+    StoppedError,
+    StopRecord,
     WaitTooLongError,
+    format_time,
 )
 
 T = TypeVar("T")
 
-# The STOP latch of the process: the first ServiceBlockedError of any HttpClient. Read and
-# set under the lock; set inside the limiter slot (HttpClient._fetch).
+
+@dataclass(frozen=True)
+class _Latched:
+    """The first STOP of the process: its error and its reason in a few words
+    (``http_policy.stop_reason`` or the record's label), repeated by later calls."""
+
+    error: ServiceBlockedError
+    reason: str
+
+
+# The STOP latch of the process: the first STOP of any HttpClient. Read and set under the
+# lock; set inside the limiter slot (HttpClient._fetch).
 _stop_lock = threading.Lock()
-_stop: ServiceBlockedError | None = None
+_stop: _Latched | None = None
 
 
-def _stopped() -> ServiceBlockedError | None:
+def _stopped() -> _Latched | None:
     with _stop_lock:
         return _stop
 
 
-def _latch_stop(error: ServiceBlockedError) -> None:
+def _latch_stop(error: ServiceBlockedError, reason: str) -> None:
     global _stop
     with _stop_lock:
         if _stop is None:
-            _stop = error
+            _stop = _Latched(error, reason)
 
 
 def testing_only_reset_stop() -> None:
@@ -99,6 +125,9 @@ def testing_only_reset_stop() -> None:
     with _stop_lock:
         _stop = None
 
+
+STOP_SOURCE = "pakiet"
+"""``source`` of the STOP records this client writes (``recon/`` writes its own names)."""
 
 TIMEOUT = 30.0
 """Seconds for connecting and for each read from the socket (as in ``recon/``)."""
@@ -302,9 +331,24 @@ class HttpClient:
                 try:
                     _check(target, reply, problem, pause)
                 except ServiceBlockedError as err:
-                    _latch_stop(err)  # before the slot is released, see above
+                    # Both before the slot is released: the latch for the threads of this
+                    # process (see above), the record for every other process.
+                    why = stop_reason(reply.status, reply.headers, reply.body) or "STOP"
+                    _latch_stop(err, why)
+                    _record_stop(slot, reply, err)
                     raise
                 return reply, _ttl(response.headers)
+        except StoppedError as err:
+            # A STOP recorded earlier, maybe by another process; this process's own STOP,
+            # if it has one, says more (the first answer, its pause).
+            latched = _stopped()
+            if latched is not None:
+                raise _still_stopped(latched) from err
+            blocked = _blocked_by_record(err)
+            stop = err.stop
+            label = stop.label if isinstance(stop, StopRecord) else _UNREADABLE_REASON
+            _latch_stop(blocked, label)
+            raise blocked from err
         except WaitTooLongError as err:
             raise LimiterWaitError(
                 f"{err} Zapytanie nie zostało wysłane.", wait_seconds=err.remaining
@@ -316,6 +360,7 @@ class HttpClient:
         try:
             with self._http.stream("GET", BASE_URL + target, headers=headers) as response:
                 pause = self._pause(slot, response)
+                _stop_early(slot, target, response, pause)
                 body, problem = self._read_body(response)
         except httpx.HTTPError as err:
             raise ServiceError(
@@ -420,15 +465,101 @@ def _check_target(target: str) -> None:
         )
 
 
-def _still_stopped(first: ServiceBlockedError) -> ServiceBlockedError:
-    """The error of a call after a STOP: the same type, nothing sent."""
+def _stop_early(slot: Slot, target: str, response: httpx.Response, pause: float | None) -> None:
+    """Latch and record a STOP that the status and headers already show, before the body.
+
+    401, 403, 429 and ``cf-mitigated``: an interrupted read of the body (Ctrl+C, SIGTERM,
+    a timeout of the caller) must not lose them. A challenge seen only in the HTML comes
+    after the body (``_fetch``); the record keeps whichever came first. A record that
+    cannot be written here is tried again after the body, which reports the failure.
+    """
+    why = stop_reason(response.status_code, response.headers, b"")
+    error = _stop_error(target, response.status_code, response.headers, b"", pause)
+    cause = stop_cause(response.status_code, response.headers, b"")
+    if why is None or error is None or cause is None:
+        return
+    # Known: a 403 whose HTML turns out to be a challenge keeps "HTTP 403" here, while the
+    # caller then gets "…, challenge Cloudflare"; both STOPs are permanent anyway.
+    _latch_stop(error, why)
+    with contextlib.suppress(OSError, ValueError):
+        slot.stop(cause[0], cause[1], source=STOP_SOURCE)
+
+
+def _record_stop(slot: Slot, reply: Reply, error: ServiceBlockedError) -> None:
+    """Record the STOP for every process; a failure only goes to ``error.detail``.
+
+    The STOP itself must reach the caller whatever happens to the record.
+    """
+    cause = stop_cause(reply.status, reply.headers, reply.body)
+    if cause is None:  # never: _check stops exactly when stop_cause has a cause
+        return
+    status, reason = cause
+    try:
+        slot.stop(status, reason, source=STOP_SOURCE)
+    except (OSError, ValueError) as err:
+        error.detail = printable(
+            f"{error.detail}; STOP nie został zapisany dla innych procesów: {err!r}"
+        )
+
+
+def _blocked_by_record(stopped: StoppedError) -> ServiceBlockedError:
+    """The error of a call refused by an earlier STOP record; nothing was sent.
+
+    The message is the limiter's (no times, no source); they go to ``detail``.
+    """
+    stop = stopped.stop
+    if isinstance(stop, StopRecord):
+        detail = f"zapis STOP: {stop.summary()}"
+        if stop.pid is not None:
+            detail += f", PID {stop.pid}"
+        if stop.until is not None:
+            detail += f", do {format_time(stop.until)}"
+    else:
+        detail = f"nieczytelny zapis STOP: {stop.problem}"
+    if stopped.seconds_left is not None:  # a 429 that has not ended yet
+        return RateLimitedError(str(stopped), stopped.seconds_left, detail=detail)
+    return ServiceBlockedError(str(stopped), detail=detail)
+
+
+_UNREADABLE_REASON = "nieczytelny zapis o wcześniejszym STOP"
+"""The reason a later call repeats after a STOP from an unreadable record."""
+
+
+def _still_stopped(first: _Latched) -> ServiceBlockedError:
+    """The error of a call after a STOP: the same type and detail, nothing sent."""
     message = (
-        f"Seria zapytań do deweloperuch.pl jest przerwana do restartu procesu, a zapytanie "
-        f"nie zostało wysłane. Wcześniej: {first}"
+        "STOP: seria zapytań do deweloperuch.pl jest już przerwana; zapytanie nie zostało "
+        f"wysłane. Powód: {first.reason}. {STOP_INSTRUCTION}"
     )
-    if isinstance(first, RateLimitedError):
-        return RateLimitedError(message, first.pause_seconds, detail=first.detail)
-    return ServiceBlockedError(message, detail=first.detail)
+    error = first.error
+    if isinstance(error, RateLimitedError):
+        return RateLimitedError(message, error.pause_seconds, detail=error.detail)
+    return ServiceBlockedError(message, detail=error.detail)
+
+
+def _stop_error(
+    target: str, status: int, headers: httpx.Headers, body: bytes, pause: float | None
+) -> ServiceBlockedError | None:
+    """The STOP of an answer (``http_policy.stop_reason``), ``None`` for no STOP.
+
+    The message tells a model only to stop and report: nothing about waiting, restarting
+    or lifting anything. The pause of a 429 is in ``pause_seconds`` and, with the target
+    and the status, in ``detail``.
+    """
+    why = stop_reason(status, headers, body)
+    if why is None:
+        return None
+    message = (
+        f"STOP: {why}. Klient nie wyśle już żadnego zapytania; inne procesy też zostały "
+        f"wstrzymane. {STOP_INSTRUCTION}"
+    )
+    detail = f"{target}: HTTP {status}"
+    if pause is not None:
+        detail += f", pauza limitera {math.ceil(pause)} s"
+    if status == 429:
+        waited = pause if pause is not None else PAUSE_AFTER_429
+        return RateLimitedError(message, waited, detail=detail)
+    return ServiceBlockedError(message, detail=detail)
 
 
 def _check(target: str, reply: Reply, problem: Problem | None, pause: float | None) -> None:
@@ -439,18 +570,9 @@ def _check(target: str, reply: Reply, problem: Problem | None, pause: float | No
     """
     status = reply.status
     after = "" if pause is None else f" Limiter wstrzyma następne zapytanie o {math.ceil(pause)} s."
-    why = stop_reason(status, reply.headers, reply.body)
-    if why is not None:
-        message = (
-            f"STOP: {why}. Przerwij serię zapytań do deweloperuch.pl, niczego nie ponawiaj "
-            f"i zgłoś to użytkownikowi. Klient nie wyśle już żadnego zapytania do restartu "
-            f"procesu.{after}"
-        )
-        detail = f"{target}: HTTP {status}"
-        if status == 429:
-            waited = pause if pause is not None else PAUSE_AFTER_429
-            raise RateLimitedError(message, waited, detail=detail)
-        raise ServiceBlockedError(message, detail=detail)
+    stopped = _stop_error(target, status, reply.headers, reply.body, pause)
+    if stopped is not None:
+        raise stopped
     if problem is not None:
         raise ServiceError(
             f"{problem.message}{after}", pause, detail=f"{target}: HTTP {status}, {problem.detail}"

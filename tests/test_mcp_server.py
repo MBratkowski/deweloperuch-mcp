@@ -372,6 +372,14 @@ def test_server_info_and_instructions(server: MCPServer[services.Session]) -> No
     assert (name, version) == ("deweloperuch", metadata.version("deweloperuch-mcp"))
     assert instructions is not None
     assert "search_locations" in instructions and "STOP" in instructions
+    assert (
+        "Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie "
+        "ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z "
+        "komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie "
+        "uruchamiaj ponownie." in instructions
+    )
+    # Nothing that reads as "the STOP can be lifted" or "restart the server and go on".
+    assert not re.search(r"zdejm|zdjęci|restart|dopóki", instructions, re.I)
     assert "Błędy walidacji argumentów bywają po angielsku" in instructions
 
 
@@ -894,11 +902,51 @@ def test_a_stop_ends_the_series_for_every_tool(
     first, second = with_client(server, two_calls)
 
     assert first.is_error is True and text(first).startswith("STOP: ")
-    assert second.is_error is True and "przerwana do restartu procesu" in text(second)
+    assert second.is_error is True and "jest już przerwana" in text(second)
     assert service.calls.call_count == 1
     assert (cities.call_count, suggestions.call_count) == (0, 0)
     stops = [record for record in caplog.records if "STOP" in record.getMessage()]
     assert stops and all(record.levelno == logging.WARNING for record in stops)
+
+
+VALID_ARGUMENTS: dict[str, dict[str, Any]] = {
+    "search_locations": {"query": "krak"},
+    "search_offers": {"city": "warszawa"},
+    "get_offer": {"offer_id": 2377, "investment_slug": "smolna"},
+    "get_investment": {"investment_slug": "smolna"},
+}
+
+
+@pytest.mark.parametrize("tool", TOOLS)
+def test_a_stop_recorded_by_another_process_ends_the_series_without_a_request(
+    server: MCPServer[services.Session],
+    sessions: Sessions,
+    service: respx.MockRouter,
+    caplog: pytest.LogCaptureFixture,
+    tool: str,
+) -> None:
+    """A STOP of the CLI or recon (the record of the shared limiter) stops every tool; the
+    model learns what stopped the series, never when, from which program or how to lift it."""
+    caplog.set_level(logging.INFO, logger=mcp_server.__name__)
+    with sessions.limiter.slot() as slot:
+        slot.stop(403, "odmowa dostępu", source="probe")
+    location_routes(service)
+    offers_route(service)
+    investment_routes(service)
+
+    result = call(server, tool, **VALID_ARGUMENTS[tool])
+
+    assert result.is_error is True
+    message = text(result)
+    assert message == (
+        "STOP: seria zapytań do deweloperuch.pl jest wstrzymana po wcześniejszym STOP "
+        "(HTTP 403, odmowa dostępu). Zapytanie nie zostało wysłane. Przerwij, niczego nie "
+        "ponawiaj i zgłoś to użytkownikowi."
+    )
+    assert not LEAKS.search(message)
+    assert service.calls.call_count == 0
+    logged = [record.getMessage() for record in caplog.records]
+    assert any("Szczegóły: zapis STOP: HTTP 403" in line and "probe" in line for line in logged)
 
 
 def test_an_unexpected_error_hides_its_details(

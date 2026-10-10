@@ -9,8 +9,11 @@ one GET, inside the shared limiter slot (D2), with the one User-Agent (D9)::
 
 - Paths only, never URLs, and only those on the read allowlist (recon/allowlist.py).
 - No retries, no redirects. 401, 403, 429 and Cloudflare challenges stop the series
-  (exit code 3). A 429 pauses the shared limiter for at least ``PAUSE_AFTER_429``,
-  a 502/503/504 for ``Retry-After`` or ``PAUSE_AFTER_5XX``.
+  (exit code 3) and are recorded for every process (source ``probe``): while that
+  record holds, every probe, scan and package call ends with a STOP without sending
+  (exit code 3 here). A 429 pauses the shared limiter for at least ``PAUSE_AFTER_429``
+  and its record ends with that pause; any other STOP lasts until a person removes it.
+  A 502/503/504 pauses the limiter for ``Retry-After`` or ``PAUSE_AFTER_5XX``.
 - Bodies over ``MAX_BODY_BYTES`` or slower than ``BODY_DEADLINE`` are refused (exit
   code 4): probe is not a tool for dumps (D5).
 - Values of personal-data keys (``REDACTED_KEYS``) are replaced on stdout and in samples.
@@ -34,6 +37,7 @@ from config import (
     DEFAULT_MAX_WAIT,
     USER_AGENT,
     RequestLimiter,
+    StoppedError,
     WaitTooLongError,
     is_html,
     with_rsc_token,
@@ -97,6 +101,9 @@ EXIT_HTTP = 4
 EXIT_WAIT = 5
 EXIT_DATA = 6
 
+STOP_SOURCE = "probe"
+"""``source`` of the STOP records probe writes."""
+
 EXIT_CODES_HELP = """\
 kody wyjścia:
   0  sukces
@@ -105,7 +112,8 @@ kody wyjścia:
      plik próbki powstał w trakcie zapytania albo zapis próbki się nie udał)
   3  STOP: 401, 403, 429 albo challenge Cloudflare (captcha, WAF); przerwij serię
      zapytań i zgłoś to użytkownikowi, niczego nie ponawiaj (po 429 limiter wstrzymuje
-     następne zapytanie co najmniej na 60 s)
+     następne zapytanie co najmniej na 60 s). STOP obowiązuje też inne procesy: także
+     wcześniejszy STOP, wtedy zapytanie nie zostało wysłane
   4  inny błąd HTTP (3xx, pozostałe 4xx, 5xx), sieci (timeout, brak połączenia)
      albo odpowiedź za duża (zrzut, D5) lub czytana za długo; po 5xx odczekaj przed
      ponowieniem (po 502/503/504 limiter sam wstrzymuje następne zapytanie)
@@ -271,10 +279,18 @@ def send(
     """The one request, inside the limiter slot; ``Retry-After`` recorded before leaving it."""
     try:
         return get_once(
-            plan.url, plan.headers, fetch=fetch, limiter=limiter, max_wait=max_wait, now=now
+            plan.url,
+            plan.headers,
+            fetch=fetch,
+            limiter=limiter,
+            max_wait=max_wait,
+            now=now,
+            source=STOP_SOURCE,
         )
     except NetworkError as err:
         raise ProbeError(EXIT_HTTP, str(err)) from err
+    except StoppedError as err:
+        raise ProbeError(EXIT_STOP, str(err)) from err
     except WaitTooLongError as err:
         raise ProbeError(EXIT_WAIT, f"{err} Probe nie wysłał zapytania.") from err
 

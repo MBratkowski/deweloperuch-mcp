@@ -7,7 +7,15 @@ too; this module adds what needs urllib and the limiter:
 
 - ``urllib_fetch``: one GET, no redirects, no retries, error statuses returned;
 - ``read_body``: the body within ``MAX_BODY_BYTES`` and ``BODY_DEADLINE``;
-- ``get_once``: one request inside a limiter slot, the pause recorded before leaving it;
+- ``get_once``: one request inside a limiter slot; the pause and a STOP (for every
+  process, ``record_stop``) recorded before leaving it. A STOP recorded earlier by any
+  process makes the limiter refuse the slot (``StoppedError``): nothing is sent.
+  Known limit: ``fetch`` returns only after the body (``read_body``, up to
+  ``BODY_DEADLINE``), so unlike the package's client, recon records a STOP after the
+  body, not right after the headers. A run killed while reading the body of a 401, 403
+  or 429 (Ctrl+C, SIGTERM, a timeout of the caller) leaves no record, though the next
+  run still waits ``min_interval``. Closing it needs a headers callback in ``Fetch``,
+  which every transport and test double would have to take;
 - ``check_reply``: anything but a usable 2xx raises ``ReplyError``.
 
 Imported after config by the scripts, so it may use syntax newer than Python 3.9.
@@ -22,6 +30,7 @@ from config import (
     content_type,
     parse_retry_after,
     pause_seconds,
+    stop_cause,
     stop_reason,
 )
 
@@ -201,10 +210,13 @@ def get_once(
     limiter: RequestLimiter,
     max_wait: float,
     now: Callable[[], float],
+    source: str,
 ) -> tuple[Response, str | None]:
-    """One GET inside the limiter slot; the pause the reply asks for is recorded in it.
+    """One GET inside the limiter slot; the pause and a STOP are recorded in it.
 
-    Returns the response and a note about the pause (for stderr) or ``None``. Raises
+    ``source`` names the script in the STOP record (``probe``, ``scan_bundles``). Returns
+    the response and notes about the pause and the STOP record (for stderr) or ``None``.
+    Raises ``StoppedError`` (an earlier STOP of any process; nothing sent),
     ``WaitTooLongError`` (nothing sent) and ``NetworkError`` (no response). Never retries.
     """
     with limiter.slot(max_wait=max_wait) as slot:
@@ -214,8 +226,27 @@ def get_once(
             raise NetworkError(
                 f"Błąd sieci, brak odpowiedzi serwisu: {err}. Nie ponawiam."
             ) from err
-        note = pause_limiter(slot, reply, now())
-    return reply, note
+        notes = [pause_limiter(slot, reply, now()), record_stop(slot, reply, source)]
+    return reply, "\n".join(note for note in notes if note) or None
+
+
+def record_stop(slot: Slot, reply: Response, source: str) -> str | None:
+    """Record a STOP (401, 403, 429, challenge) for every process; the note goes to stderr.
+
+    Call it after ``pause_limiter``: a 429 ends with the pause recorded there. ``None``
+    when the reply is no STOP. A record that cannot be written is only a note: the STOP
+    of this run stands anyway (``check_reply``).
+    """
+    cause = stop_cause(reply.status, reply.headers, reply.body)
+    if cause is None:
+        return None
+    status, reason = cause
+    try:
+        slot.stop(status, reason, source=source)
+    except (OSError, ValueError) as err:
+        return f"Uwaga: STOP nie został zapisany dla innych procesów: {err}"
+    # Read by recon-verifier, a model too: say that, not when it ends or how to lift it.
+    return "Zapisano STOP: inne procesy też zostały wstrzymane."
 
 
 def pause_limiter(slot: Slot, reply: Response, now: float) -> str | None:

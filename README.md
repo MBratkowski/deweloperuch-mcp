@@ -56,6 +56,8 @@ Przegląd, format wyjścia i kody wyjścia 0–7: [docs/cli/README.md](docs/cli/
 | [`deweloperuch offers search CITY`](docs/cli/commands/offers-search.md) | Szuka ofert w mieście lub w całej Polsce z filtrami i sortowaniem po cenie. |
 | [`deweloperuch offers get OFFER_ID --investment SLUG`](docs/cli/commands/offers-get.md) | Pokazuje ofertę z historią ceny. |
 | [`deweloperuch investments get SLUG`](docs/cli/commands/investments-get.md) | Pokazuje inwestycję z deweloperem i ofertami. |
+| [`deweloperuch stop status [--json]`](docs/cli/commands/stop-status.md) | Pokazuje blokadę STOP wspólną dla wszystkich procesów (offline; kod 3 przy aktywnej). |
+| [`deweloperuch stop clear`](docs/cli/commands/stop-clear.md) | Zdejmuje blokadę STOP; tylko człowiek, po sprawdzeniu przyczyny (agent jej nie uruchamia). |
 
 ## Dla dewelopera
 
@@ -109,7 +111,7 @@ Skrypty wymagają Pythona >= 3.11 (systemowy `python3` z macOS to 3.9; alternaty
   - Cache chunków: `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/chunks/` (pliki `0600`); chunk z hashem w nazwie nie jest pobierany ponownie. Twardy limit `MAX_CHUNKS = 400` żądań chunków na skan.
   - `--json`: `build_id`, `pages`, `chunks`, `chunks_fetched`, `chunks_cached`, `api`, `actions`, zawsze `incomplete` (lista powodów niepełnego wyniku, pusta przy pełnym), z `--compare` także `drift` (`api_added`, `api_removed`, `actions_added`, `actions_removed`).
   - `--compare PLIK`: porównanie z baseline'em `{"api": [...], "actions": [nazwy]}`; liczą się tylko ścieżki `/api` i nazwy akcji (ID akcji i build ID są ignorowane). `--baseline-out PLIK`: zapis baseline'u (atomowo, musi być ścieżką pliku); przy wyniku niepełnym odmowa.
-  - Kody wyjścia: 0 sukces lub brak różnic; 2 błąd użycia (zły baseline, katalog zamiast pliku, nieudany zapis, zapytanie spoza allowlisty); 3 STOP (401/403/429/challenge Cloudflare); 4 inny błąd HTTP, sieci lub przekierowanie; 5 limiter wymaga czekania dłuższego niż 60 s; 6 wynik niepełny (z `--compare` ma pierwszeństwo przed 0 i 7; także przekroczenie `MAX_CHUNKS`); 7 różnice z `--compare` (tylko przy pełnym wyniku).
+  - Kody wyjścia: 0 sukces lub brak różnic; 2 błąd użycia (zły baseline, katalog zamiast pliku, nieudany zapis, zapytanie spoza allowlisty); 3 STOP (401/403/429/challenge Cloudflare, także wcześniejszy STOP zapisany przez inny proces: skan przerwany przed zapytaniem); 4 inny błąd HTTP, sieci lub przekierowanie; 5 limiter wymaga czekania dłuższego niż 60 s; 6 wynik niepełny (z `--compare` ma pierwszeństwo przed 0 i 7; także przekroczenie `MAX_CHUNKS`); 7 różnice z `--compare` (tylko przy pełnym wyniku).
   - stderr: `Uwaga (niepełny wynik): …` (wpływa na kompletność; wynik tekstowy ma wtedy nagłówek `# NIEPEŁNY WYNIK`) i `Info: …` (bez wpływu). Przykład: `python3 recon/scan_bundles.py --json --compare baseline.json`.
 - `recon/http_common.py`: wspólny transport urllib (`read_body`, `get_once`) dla probe i skanera.
 - `deweloperuch_mcp.http_policy` (`src/deweloperuch_mcp/http_policy.py`, tylko stdlib): czyste funkcje polityki odpowiedzi (STOP, challenge, pauzy, `body_length`), używane przez recon i przeznaczone dla przyszłego klienta httpx.
@@ -118,5 +120,5 @@ Skrypty wymagają Pythona >= 3.11 (systemowy `python3` z macOS to 3.9; alternaty
 - `python3 recon/probe.py`: jedyna dozwolona droga żywych zapytań weryfikacyjnych (pojedynczy GET, przez wspólny limiter). Przyjmuje tylko ścieżki z allowlisty, nigdy pełne URL-e. Jedno uruchomienie to jedno żądanie, bez przekierowań i ponowień.
   - `api ŚCIEŻKA`: `GET /api/*`, wynik JSON. `page ŚCIEŻKA [--prop NAZWA]`: strona jako RSC (`RSC: 1`, deterministyczny `_rsc`); bez `--prop` wypisuje propsy z danymi (nazwa, typ, rozmiar).
   - Opcje: `--save NAZWA[.WARIANT]` (zapis do `docs/discovery/samples/<api|page>.NAZWA[.WARIANT].json`, nigdy nie nadpisuje; tablice przycięte do 3 elementów, duże mapy o kluczach numerycznych do 2 kluczy, dane osobowe zastąpione `"[usunięte]"`), `--max-wait SEKUNDY` (domyślnie 60), `--trim N` (domyślnie 3), `--full`.
-  - Kody wyjścia: 0 sukces; 2 błąd użycia lub allowlisty (zapytanie niewysłane); 3 STOP (401/403/429/challenge Cloudflare: przerwij serię i zgłoś); 4 inny błąd HTTP, sieci, odpowiedź za duża (32 MiB), ucięta lub czytana za długo; 5 limiter wymaga dłuższego czekania niż `--max-wait`; 6 odpowiedź 2xx bez oczekiwanych danych.
+  - Kody wyjścia: 0 sukces; 2 błąd użycia lub allowlisty (zapytanie niewysłane); 3 STOP (401/403/429/challenge Cloudflare, także wcześniejszy STOP zapisany przez inny proces, wtedy bez wysyłki: przerwij serię i zgłoś); 4 inny błąd HTTP, sieci, odpowiedź za duża (32 MiB), ucięta lub czytana za długo; 5 limiter wymaga dłuższego czekania niż `--max-wait`; 6 odpowiedź 2xx bez oczekiwanych danych.
   - Przykład: `python3 recon/probe.py api "/api/cities?q=krak"`. Żywe serie wymagają zgody użytkownika (D9), zob. [CLAUDE.md](CLAUDE.md).

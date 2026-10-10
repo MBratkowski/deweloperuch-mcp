@@ -1,4 +1,5 @@
-"""The Bash safety-net hook blocks ad-hoc live calls to the service (CLAUDE.md, D10).
+"""The Bash safety-net hook blocks ad-hoc live calls to the service (CLAUDE.md, D10) and
+lifting a STOP, which only the user may do.
 
 The hook runs in its own process exactly as Claude Code starts it (``python3
 <hook>`` with the tool call as JSON on stdin); exit code 2 blocks the command,
@@ -8,6 +9,7 @@ The hook runs in its own process exactly as Claude Code starts it (``python3
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -131,3 +133,136 @@ def test_lets_other_commands_through(template: str) -> None:
 def test_blocks_when_input_is_malformed(stdin: str) -> None:
     """Fail-closed: a hook that cannot read the command must not wave it through."""
     assert run_hook(stdin) == BLOCKED
+
+
+# --- lifting a STOP is for the user only (CLAUDE.md) ---------------------------------------
+
+# Assembled in code, so that running or editing this file is not itself blocked.
+CLI = "deweloperuch"
+CLEAR = "stop " + "clear"
+RECORD = "stop" + ".json"
+LOCK = "throttle" + ".lock"
+LIMITER_DIR = "~/.cache/" + "deweloperuch-mcp"
+CACHE = LIMITER_DIR + "/"
+
+LIFTS_STOP = [
+    # The CLI command in any form, also behind a wrapper or after another command.
+    f"{CLI} {CLEAR}",
+    f"uv run {CLI} {CLEAR}",
+    f".venv/bin/{CLI} {CLEAR}",
+    f"/Users/x/deweloperuch-mcp/.venv/bin/{CLI} {CLEAR}",
+    f"python -m deweloperuch_mcp.cli {CLEAR}",
+    f"XDG_CACHE_HOME=/tmp/x uv run {CLI} {CLEAR}",
+    f"cd /tmp && {CLI} {CLEAR}",
+    f"{CLI} stop status; {CLI} {CLEAR}",
+    f"{CLI} stop status && uv run {CLI} {CLEAR}",
+    f"bash -c '{CLI} {CLEAR}'",
+    f"{CLI}   stop\tclear",
+    # The record itself: removed, moved, emptied, overwritten, edited.
+    f"rm {CACHE}{RECORD}",
+    f'rm -f "$XDG_CACHE_HOME/deweloperuch-mcp/{RECORD}"',
+    f"mv {CACHE}{RECORD} /tmp/",
+    f"unlink {CACHE}{RECORD}",
+    f"echo '{{}}' > {CACHE}{RECORD}",
+    f": >{CACHE}{RECORD}",
+    f"truncate -s0 {CACHE}{RECORD}",
+    f"sed -i '' 's/403/200/' {CACHE}{RECORD}",
+    f"python3 -c \"import os; os.remove('{CACHE}{RECORD}')\"",
+    f"python3 -c \"import pathlib; pathlib.Path('{RECORD}').unlink()\"",
+    f"python3 -c \"open('{RECORD}', 'w').write('x')\"",
+    f"find ~/.cache -name {RECORD} -exec rm {{}} +",
+    # The command split by a line continuation, quoted word by word, or with a comment
+    # that only mentions --help.
+    f"uv run {CLI} \\\n{CLEAR}",
+    f"uv run {CLI} stop \\\nclear",
+    f"uv run {CLI} stop 'clear'",
+    f'uv run {CLI} "stop" "clear"',
+    f"uv run {CLI} {CLEAR}  # not --help",
+    # The limiter's directory (the record and the 429 pause) and the lock file.
+    f"rm -rf {LIMITER_DIR}",
+    f"rm -rf {LIMITER_DIR}/",
+    'rm -rf "$XDG_CACHE_HOME/deweloperuch-mcp"',
+    "rm -rf ${XDG_CACHE_HOME}/deweloperuch-mcp/*",
+    f"mv {LIMITER_DIR} /tmp/old",
+    f"rm {LIMITER_DIR}/stop.*",
+    f"find {LIMITER_DIR} -name 'stop*' -delete",
+    f"rm {LIMITER_DIR}/{LOCK}",
+    f": > {LIMITER_DIR}/{LOCK}",
+    f"echo x >| {CACHE}{RECORD}",
+    f"echo x >{RECORD}",
+]
+
+STOP_PASSES = [
+    f"uv run {CLI} stop status",
+    f"uv run {CLI} stop status --json",
+    f"uv run {CLI} {CLEAR} --help",
+    f"uv run {CLI} stop --help",
+    f"cat {CACHE}{RECORD}",
+    f"ls -la {CACHE} 2>&1",
+    f"ls -la {CACHE}{RECORD} 2>/dev/null",
+    f"grep -rn '{RECORD}' src tests | head",
+    "grep -rn 'os.replace' src/deweloperuch_mcp/throttle.py",
+    "uv run pytest -q",
+    "git status --porcelain",
+    # Other directories of the same name, reading the limiter's files, unrelated redirects.
+    "rm -rf /Users/x/Projects/deweloperuch-mcp/build",
+    "rm -rf .pytest_cache",
+    f"ls -la {LIMITER_DIR}/",
+    f"du -sh {LIMITER_DIR}",
+    f"cat {LIMITER_DIR}/{LOCK}",
+    "uv run pytest -q > /tmp/out.txt 2>&1",
+    f"ls {CACHE}{RECORD} > /tmp/ls.txt",
+]
+
+# Known and accepted false alarms (not asserted): the CLI name next to the phrase as
+# plain text also blocks, e.g. grep -rn "deweloperuch <phrase>" docs, an echo or a commit
+# message quoting the command; so does the record's name, the lock's name or the limiter's
+# directory next to a tool or call name used as text, e.g. rg 'rm .*<record>', grep -n
+# 'open(' near <lock>, or cp of an unrelated file in a command that also lists the
+# directory. Narrowing that is a deliberate hook change, not a test tweak.
+
+
+@pytest.mark.parametrize("command", LIFTS_STOP)
+def test_blocks_lifting_a_stop(command: str) -> None:
+    assert run_hook_on(command) == BLOCKED
+
+
+@pytest.mark.parametrize("command", STOP_PASSES)
+def test_lets_reading_the_stop_through(command: str) -> None:
+    assert run_hook_on(command) == ALLOWED
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        ("a " * 50_000) + RECORD + (" b>" * 20_000),
+        f"{CLI} " + "stop " * 30_000,
+        ";".join([f"{CLI} stop status"] * 5_000),
+        ">" * 100_000,
+        "a>" * 50_000,
+        RECORD + ">" * 100_000,
+        RECORD + "a>" * 50_000,
+        (RECORD + ".") * 10_000,
+        "\\\n" * 50_000,
+        "'" * 100_000,
+    ],
+    ids=[
+        "record and redirects",
+        "repeated stop",
+        "many segments",
+        "redirects",
+        "short redirects",
+        "record then redirects",
+        "record then short redirects",
+        "repeated record",
+        "line continuations",
+        "quotes",
+    ],
+)
+def test_a_long_command_is_checked_fast(command: str) -> None:
+    """No catastrophic backtracking: about 100 000 characters within a second, process
+    start included."""
+    assert len(command) >= 90_000
+    start = time.perf_counter()
+    run_hook_on(command)
+    assert time.perf_counter() - start < 1.0
