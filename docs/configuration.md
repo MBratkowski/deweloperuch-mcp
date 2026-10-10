@@ -1,6 +1,6 @@
 # Konfiguracja
 
-Stan na bootstrap (A#1). Cache odpowiedzi, klient HTTP, serwer MCP i CLI jeszcze nie istnieją, więc ich ustawień tu nie ma. Dojdą razem z implementacją.
+Stan po S1a. Istnieje wewnętrzny klient HTTP z cache w pamięci; serwer MCP i CLI jeszcze nie istnieją, więc ich ustawień tu nie ma. Klient nie ma własnych zmiennych środowiskowych ani plików (wartości poniżej są stałymi w kodzie).
 
 ## Zmienne środowiskowe
 
@@ -35,13 +35,32 @@ Zachowanie z punktu widzenia użytkownika:
 - `Retry-After` dłuższe niż 1 h jest przycinane do 1 h i zgłaszane jako błąd, a następne zapytanie czeka tę godzinę.
 - Obsługiwane systemy: Linux i macOS. Na Windows limiter zgłasza czytelny błąd (brak `fcntl.flock`).
 
+## Klient pakietu
+
+Klient (`deweloperuch_mcp.client.transport`) jest synchroniczny (`httpx`), z User-Agentem z `identity`. Każde żądanie razem z czytaniem ciała mieści się w jednym slocie wspólnego limitera.
+
+| Parametr | Wartość | Opis |
+|---|---|---|
+| `max_wait` limitera | 60 s | Jak wyżej; dłuższe oczekiwanie to `LimiterWaitError`. |
+| Timeout żądania | 30 s | |
+| Limit czytania ciała | 120 s | |
+| Limit ciała | 32 MiB | Większa odpowiedź to błąd. |
+| Przekierowania, ponowienia | brak | |
+| Pauza po 429 | co najmniej 60 s | `max(Retry-After, 60)`. |
+| Pauza po 502/503/504 | `Retry-After` albo 30 s | |
+| STOP (401/403/429/challenge) | blokada procesu do restartu | Dotyczy wszystkich sesji w procesie (`ServiceBlockedError`, przy 429 `RateLimitedError`). Odpowiedzi z cache nadal są zwracane. |
+| Cache | w pamięci procesu | Nie jest zapisywany na dysk. TTL = `s-maxage` minus `Age` (domyślnie 300 s, maks. 24 h). LRU: 256 wpisów i 64 MiB. |
+| Sesja zamknięta | `SessionClosedError` | Użycie po wyjściu z `Session`. |
+
+Cel żądania jest sprawdzany przed wysłaniem według allowlisty (`allowlist.py`) i reguły D5: ścieżki z `DUMP_PATHS` (`/api/map/powiat-sales/{id}`, strona `/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}` bez `/mapa`) nigdy nie są wywoływane. `valuation-pdf` i server actions są wykluczone. Naruszenie to `InvalidInputError` z prefiksem „Błąd programu”.
+
 ## Skrypty recon
 
 Skrypty `recon/` uruchamiane jako `python3 recon/<skrypt>.py` wymagają Pythona 3.11 lub nowszego. Systemowy `python3` z macOS to 3.9 i kończy się komunikatem o wymaganej wersji. Alternatywa: `uv run python recon/<skrypt>.py`.
 
 `BASE_URL` i `USER_AGENT` (tymczasowy, `TODO(U1)`, do rozstrzygnięcia w U1/D9) są zdefiniowane w jednym miejscu: `src/deweloperuch_mcp/identity.py`. `recon/config.py` je reeksportuje i udostępnia skryptom razem z tym samym limiterem co pakiet.
 
-`recon/flight.py` uruchamiany jako CLI również wymaga Pythona 3.11+ (wcześniej działał na 3.9).
+`recon/flight.py` i `recon/allowlist.py` reeksportują implementacje z pakietu (`deweloperuch_mcp.flight`, `deweloperuch_mcp.allowlist`). `recon/flight.py` uruchamiany jako CLI również wymaga Pythona 3.11+ (wcześniej działał na 3.9).
 
 ### `recon/probe.py`
 
@@ -70,4 +89,4 @@ Skaner bundli JS (wykrywanie zmian po deployu, D7). Wszystkie żądania idą prz
 | `MAX_CHUNKS` | 400 | Twardy limit żądań chunków na skan (także gdy pliki cache są nieczytelne); przekroczenie to kod 6. |
 | Cache | `chunks/` | Zob. tabela „Pliki”. Skaner respektuje `XDG_CACHE_HOME`. |
 
-_Źródło: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `src/deweloperuch_mcp/retry_after.py`, `src/deweloperuch_mcp/http_policy.py`, `recon/config.py`, `recon/http_common.py`, `recon/probe.py`, `recon/scan_bundles.py`, `recon/allowlist.py`, `recon/flight.py`_
+_Źródło: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `src/deweloperuch_mcp/retry_after.py`, `src/deweloperuch_mcp/http_policy.py`, `recon/config.py`, `recon/http_common.py`, `recon/probe.py`, `recon/scan_bundles.py`, `recon/allowlist.py`, `recon/flight.py`, `src/deweloperuch_mcp/client/transport.py`, `src/deweloperuch_mcp/allowlist.py`, `src/deweloperuch_mcp/flight.py`, `src/deweloperuch_mcp/errors.py`_

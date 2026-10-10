@@ -36,6 +36,7 @@ from config import (
     RequestLimiter,
     WaitTooLongError,
     is_html,
+    with_rsc_token,
 )
 
 # Explicit re-exports (`X as X`): probe's documented limits and transport, used by its
@@ -47,7 +48,6 @@ from config import body_length as body_length
 
 # isort: split
 import argparse
-import hashlib
 import json
 import math
 import re
@@ -218,11 +218,6 @@ def encode_query(query: str) -> str:
     return urllib.parse.quote(_LONE_PERCENT.sub("%25", query), safe=_QUERY_SAFE)
 
 
-def rsc_token(target: str) -> str:
-    """``_rsc`` for a path with query: stable, so Cloudflare can cache the RSC response."""
-    return hashlib.sha256(target.encode("ascii")).hexdigest()[:8]
-
-
 def _sample_path(mode: str, name: str, prop: str | None, samples_dir: Path) -> Path:
     if not _SAVE_NAME.fullmatch(name):
         raise _usage(
@@ -262,7 +257,8 @@ def make_plan(
         headers["Accept"] = "application/json"
     else:
         headers["RSC"] = "1"
-        target += ("&" if query else "?") + "_rsc=" + rsc_token(target)
+        # The same deterministic token as the package's RSC adapter (deweloperuch_mcp.flight).
+        target = with_rsc_token(target)
     return Plan(mode, given, BASE_URL + target, headers, prop, save_to)
 
 

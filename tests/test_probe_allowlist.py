@@ -1,19 +1,25 @@
-"""recon/allowlist.py matches the read channels documented in docs/discovery/."""
+"""The read allowlist (``deweloperuch_mcp.allowlist``, re-exported by recon/allowlist.py)
+matches the read channels documented in docs/discovery/."""
 
+import ast
 import itertools
 import re
 from pathlib import Path
 
 import pytest
 
+import allowlist as recon_allowlist
 from allowlist import (
     API_PATHS,
+    DUMP_PATHS,
     EXCLUDED_API_PATHS,
     PAGE_ROUTES,
     match_api,
+    match_dump,
     match_excluded_api,
     match_page,
 )
+from deweloperuch_mcp import allowlist as package_allowlist
 
 REPO = Path(__file__).resolve().parent.parent
 ENDPOINTS = REPO / "docs" / "discovery" / "endpoints.md"
@@ -157,3 +163,61 @@ def test_api_rejects_undocumented_paths(path: str) -> None:
 )
 def test_page_rejects_undocumented_routes(path: str) -> None:
     assert match_page(path) is None
+
+
+# --- one implementation, dumps ------------------------------------------------
+
+
+@pytest.mark.parametrize("name", recon_allowlist.__all__)
+def test_recon_allowlist_reexports_the_package_one(name: str) -> None:
+    """probe and the package's transport check paths against one list."""
+    assert getattr(recon_allowlist, name) is getattr(package_allowlist, name)
+
+
+def test_recon_allowlist_defines_nothing_of_its_own() -> None:
+    tree = ast.parse((REPO / "recon" / "allowlist.py").read_text(encoding="utf-8"))
+    own = [
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef | ast.Assign)
+        and not (isinstance(node, ast.Assign) and ast.unparse(node.targets[0]) == "__all__")
+    ]
+
+    assert own == []
+
+
+def test_powiat_sales_is_a_documented_read_but_a_dump() -> None:
+    """recon may read it (within its body limit); the package's client never does (D5)."""
+    assert match_api("/api/map/powiat-sales/208") == "/api/map/powiat-sales/{powiatId}"
+    assert match_dump("/api/map/powiat-sales/208") == "/api/map/powiat-sales/{powiatId}"
+
+
+def test_dumps_are_documented_read_channels() -> None:
+    assert set(DUMP_PATHS) <= set(API_PATHS) | set(PAGE_ROUTES)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/statystyki/ceny-transakcyjne/mieszkania/warszawa",
+        "/statystyki/ceny-transakcyjne/domy/sopot",
+    ],
+)
+def test_stats_page_with_raw_transactions_is_a_documented_read_but_a_dump(path: str) -> None:
+    """D5 rawTransactions: recon may read the page; the package's client never does."""
+    assert match_page(path) == "/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}"
+    assert match_dump(path) == "/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}"
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/api/map/powiat-stats",
+        "/api/map/powiat-investments/208",
+        "/api/cities",
+        "/statystyki/ceny-transakcyjne/mieszkania/warszawa/mapa",
+        "/ceny-transakcyjne/warszawa/mieszkania",
+    ],
+)
+def test_other_endpoints_are_not_dumps(path: str) -> None:
+    assert match_dump(path) is None

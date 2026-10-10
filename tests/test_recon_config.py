@@ -16,7 +16,7 @@ PROBE = f"""
 import json, sys
 sys.path.insert(0, {str(RECON)!r})
 import config
-from deweloperuch_mcp import http_policy, identity, retry_after, throttle
+from deweloperuch_mcp import allowlist, flight, http_policy, identity, retry_after, throttle
 loaded = sorted(sys.modules)
 print(json.dumps({{
     "user_agent_is_shared": config.USER_AGENT is identity.USER_AGENT,
@@ -24,6 +24,10 @@ print(json.dumps({{
     "limiter_is_shared": config.RequestLimiter is throttle.RequestLimiter,
     "retry_after_is_shared": config.parse_retry_after is retry_after.parse_retry_after,
     "policy_is_shared": config.stop_reason is http_policy.stop_reason,
+    "flight_is_shared": config.component_props is flight.component_props
+        and config.with_rsc_token is flight.with_rsc_token,
+    "allowlist_is_shared": config.match_api is allowlist.match_api
+        and config.API_PATHS is allowlist.API_PATHS,
     "default_lock_dir": str(config.default_lock_dir()),
     "throttle_file": throttle.__file__,
     "site_loaded": "site" in sys.modules,
@@ -74,6 +78,8 @@ def test_config_exposes_limiter_without_installed_package(tmp_path: Path) -> Non
     assert data["limiter_is_shared"] is True
     assert data["retry_after_is_shared"] is True
     assert data["policy_is_shared"] is True
+    assert data["flight_is_shared"] is True
+    assert data["allowlist_is_shared"] is True
     assert Path(str(data["throttle_file"])) == REPO / "src" / "deweloperuch_mcp" / "throttle.py"
     assert str(data["default_lock_dir"]).endswith("deweloperuch-mcp")
     assert data["non_stdlib"] == []
@@ -137,11 +143,18 @@ def package_files_loaded_by_config() -> list[Path]:
 
 
 def test_shared_parsers_are_checked_for_stdlib_imports() -> None:
-    """recon gets the Retry-After parser and the response policy through config, so the
-    check below covers them."""
+    """recon gets the Retry-After parser, the response policy, the RSC decoder and the
+    allowlist through config, so the check below covers them."""
     names = {path.name for path in package_files_loaded_by_config()}
 
-    assert {"identity.py", "retry_after.py", "throttle.py", "http_policy.py"} <= names
+    assert {
+        "identity.py",
+        "retry_after.py",
+        "throttle.py",
+        "http_policy.py",
+        "flight.py",
+        "allowlist.py",
+    } <= names
 
 
 def test_recon_loaded_modules_import_only_stdlib() -> None:

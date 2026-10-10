@@ -8,7 +8,7 @@ deweloperuch.pl → client (JSON API + RSC) → domain/services → CLI + MCP �
 
 ## Status
 
-**Etap 1–2 (discovery + capability matrix): ukończone 2026-10-09.** Bootstrap pakietu (A#1) gotowy: `pyproject.toml`, wspólny limiter zapytań i testy. Narzędzi MCP ani komend CLI jeszcze nie ma. Stos wybrany (D8): Python >= 3.11, MCP SDK (`mcp`), pydantic, httpx, typer; pytest, pytest-socket, respx, ruff, mypy, uv. Zespół agentów skonfigurowany (zasady i przepływy w [CLAUDE.md](CLAUDE.md)).
+**Etap 1–2 (discovery + capability matrix): ukończone 2026-10-09.** Bootstrap pakietu (A#1) gotowy: `pyproject.toml`, wspólny limiter zapytań i testy. S1a gotowe: wewnętrzny rdzeń pakietu (klient, DTO, domena, usługi) bez CLI i MCP; narzędzi MCP ani komend CLI jeszcze nie ma (S1b). Stos wybrany (D8): Python >= 3.11, MCP SDK (`mcp`), pydantic, httpx, typer; pytest, pytest-socket, respx, ruff, mypy, uv. Zespół agentów skonfigurowany (zasady i przepływy w [CLAUDE.md](CLAUDE.md)).
 
 ## Dla dewelopera
 
@@ -38,6 +38,16 @@ Konfiguracja, limiter zapytań i plik zamka: [docs/configuration.md](docs/config
 | [handoffs/INDEX.md](handoffs/INDEX.md) | Indeks handoffów między sesjami |
 | [prompts/agent-team-setup.md](prompts/agent-team-setup.md) | Meta-prompt, z którego zainstalowano zespół agentów |
 
+## Struktura pakietu
+
+Rdzeń `src/deweloperuch_mcp/` (S1a) jest wewnętrzny, bez publicznego interfejsu produktu:
+
+- `client/`: klient HTTP (`transport.py`, `json_api.py`, `rsc.py`) i DTO (`dto.py`); ustawienia: [docs/configuration.md](docs/configuration.md)
+- `domain/`: modele i normalizacja (`models.py`, `normalize.py`)
+- `services.py`: usługi nad klientem (punkt wejścia dla przyszłego CLI i MCP)
+- `errors.py`: hierarchia błędów `DeweloperuchError`
+- `flight.py`: dekoder RSC; `allowlist.py`: allowlista odczytu (`recon/flight.py` i `recon/allowlist.py` je reeksportują)
+
 ## Narzędzia recon
 
 Skrypty wymagają Pythona >= 3.11 (systemowy `python3` z macOS to 3.9; alternatywa: `uv run python recon/<skrypt>.py`).
@@ -51,8 +61,8 @@ Skrypty wymagają Pythona >= 3.11 (systemowy `python3` z macOS to 3.9; alternaty
   - stderr: `Uwaga (niepełny wynik): …` (wpływa na kompletność; wynik tekstowy ma wtedy nagłówek `# NIEPEŁNY WYNIK`) i `Info: …` (bez wpływu). Przykład: `python3 recon/scan_bundles.py --json --compare baseline.json`.
 - `recon/http_common.py`: wspólny transport urllib (`read_body`, `get_once`) dla probe i skanera.
 - `deweloperuch_mcp.http_policy` (`src/deweloperuch_mcp/http_policy.py`, tylko stdlib): czyste funkcje polityki odpowiedzi (STOP, challenge, pauzy, `body_length`), używane przez recon i przeznaczone dla przyszłego klienta httpx.
-- `recon/flight.py`: dekoder payloadu RSC (`flight(html_path)`, `flight_from_html(html)`, `find_json_after(text, prop)`, `component_props(text)`); jako CLI wymaga Pythona >= 3.11
-- `recon/allowlist.py`: allowlista ścieżek `/api/*` i tras stron (zgodna z `endpoints.md` i `pages-rsc.md`; bez `/api/valuation-pdf` i server actions)
+- `recon/flight.py`: reeksport z `deweloperuch_mcp.flight`; dekoder payloadu RSC (`flight(html_path)`, `flight_from_html(html)`, `find_json_after(text, prop)`, `component_props(text)`); jako CLI wymaga Pythona >= 3.11
+- `recon/allowlist.py`: reeksport z `deweloperuch_mcp.allowlist`; allowlista ścieżek `/api/*` i tras stron (zgodna z `endpoints.md` i `pages-rsc.md`; bez `/api/valuation-pdf` i server actions)
 - `python3 recon/probe.py`: jedyna dozwolona droga żywych zapytań weryfikacyjnych (pojedynczy GET, przez wspólny limiter). Przyjmuje tylko ścieżki z allowlisty, nigdy pełne URL-e. Jedno uruchomienie to jedno żądanie, bez przekierowań i ponowień.
   - `api ŚCIEŻKA`: `GET /api/*`, wynik JSON. `page ŚCIEŻKA [--prop NAZWA]`: strona jako RSC (`RSC: 1`, deterministyczny `_rsc`); bez `--prop` wypisuje propsy z danymi (nazwa, typ, rozmiar).
   - Opcje: `--save NAZWA[.WARIANT]` (zapis do `docs/discovery/samples/<api|page>.NAZWA[.WARIANT].json`, nigdy nie nadpisuje; tablice przycięte do 3 elementów, duże mapy o kluczach numerycznych do 2 kluczy, dane osobowe zastąpione `"[usunięte]"`), `--max-wait SEKUNDY` (domyślnie 60), `--trim N` (domyślnie 3), `--full`.

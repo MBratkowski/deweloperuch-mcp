@@ -1,11 +1,16 @@
-"""recon/flight.py decodes RSC ("flight") payloads offline."""
+"""recon/flight.py decodes RSC ("flight") payloads offline with the package's decoder."""
 
 import ast
+import hashlib
 import json
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+import flight as recon_flight
+from deweloperuch_mcp import flight as package_flight
 from flight import component_props, find_json_after, flight, flight_from_html
 
 REPO = Path(__file__).resolve().parent.parent
@@ -117,3 +122,51 @@ runpy.run_path({str(FLIGHT)!r}, run_name="__main__")
     assert result.returncode == 1
     assert "3.11" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+# --- one implementation ------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "name", ["component_props", "find_json_after", "flight", "flight_from_html"]
+)
+def test_recon_flight_reexports_the_package_decoder(name: str) -> None:
+    """One implementation: recon and the package's RSC adapter decode the same way."""
+    assert getattr(recon_flight, name) is getattr(package_flight, name)
+
+
+def test_recon_flight_defines_no_decoder_of_its_own() -> None:
+    tree = ast.parse(FLIGHT.read_text(encoding="utf-8"))
+    defined = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+
+    assert defined == {"_main"}
+
+
+# --- the _rsc token ------------------------------------------------------------------
+
+
+def test_rsc_token_is_a_short_hash_of_path_and_query() -> None:
+    target = "/ceny-ofertowe/warszawa/mieszkania?page=2&perPage=50"
+
+    assert package_flight.rsc_token(target) == hashlib.sha256(target.encode()).hexdigest()[:8]
+    assert package_flight.rsc_token(target) != package_flight.rsc_token(target + "0")
+
+
+@pytest.mark.parametrize(
+    ("target", "expected_separator"),
+    [
+        ("/ceny-ofertowe/warszawa/mieszkania", "?"),
+        ("/ceny-ofertowe/warszawa/mieszkania?page=2", "&"),
+    ],
+)
+def test_with_rsc_token_appends_the_token_as_the_last_parameter(
+    target: str, expected_separator: str
+) -> None:
+    token = package_flight.rsc_token(target)
+
+    assert package_flight.with_rsc_token(target) == f"{target}{expected_separator}_rsc={token}"
+
+
+def test_rsc_token_refuses_unencoded_targets() -> None:
+    with pytest.raises(UnicodeEncodeError):
+        package_flight.rsc_token("/ceny-ofertowe/kraków/mieszkania")
