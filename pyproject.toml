@@ -18,7 +18,8 @@ build-backend = "uv_build"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # recon/ scripts are not part of the package; tests import them as top-level modules
-# (probe, flight, allowlist, config), the way `python3 recon/<script>.py` does.
+# (probe, scan_bundles, http_common, flight, allowlist, config), the way
+# `python3 recon/<script>.py` does.
 pythonpath = ["recon"]
 # pytest-socket: no test may open a network socket (CLAUDE.md, D10).
 addopts = "--disable-socket"
@@ -26,7 +27,8 @@ addopts = "--disable-socket"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-# recon/ modules (config, flight, allowlist, probe) are first-party for import sorting.
+# recon/ modules (config, http_common, flight, allowlist, probe, scan_bundles) are
+# first-party for import sorting.
 src = [".", "src", "recon"]
 extend-exclude = [
     # Markdown (ruff formats its code blocks by default) belongs to the documentation
@@ -34,9 +36,6 @@ extend-exclude = [
     "*.md",
     # Claude Code hooks: tooling of the main thread, not project code.
     ".claude/",
-    # Pre-existing recon scripts kept byte-for-byte until their own tasks.
-    # Remove each entry when its task reworks the file.
-    "recon/scan_bundles.py",  # A#3: throttling, cache, baseline
 ]
 
 [tool.ruff.lint]

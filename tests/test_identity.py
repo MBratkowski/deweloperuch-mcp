@@ -167,11 +167,6 @@ def test_user_agent_is_defined_only_in_identity() -> None:
     }
 
     expected = {Path("src/deweloperuch_mcp/identity.py")}
-    # A#3 switches the scanner to config.USER_AGENT. The exception expires on its own
-    # once the old literal is gone: if the scanner is still flagged then (e.g. via an
-    # alias such as `USER_AGENT as UA`), this test fails and the guard must learn it.
-    if "Mozilla/" in (REPO / "recon/scan_bundles.py").read_text(encoding="utf-8"):
-        expected.add(Path("recon/scan_bundles.py"))
     assert set(found) == expected, (
         f"User-Agent definitions (file: lines): {found}. The value must be one literal "
         "(adjacent strings are fine) assigned to USER_AGENT in identity.py and nowhere "

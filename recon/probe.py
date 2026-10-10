@@ -19,6 +19,10 @@ one GET, inside the shared limiter slot (D2), with the one User-Agent (D9)::
 
 Exit codes: ``EXIT_CODES_HELP`` (also in ``--help``).
 
+The transport and the checks are shared with recon/scan_bundles.py (recon/http_common.py);
+the response policy (STOP, pauses, body limit) with the package's client
+(``deweloperuch_mcp.http_policy``, through config).
+
 Keep this file parseable by Python 3.9 (no ``match``, no ``except*``): Python compiles
 the whole script before config's version check runs. Modules imported after config may
 use newer syntax.
@@ -30,45 +34,48 @@ from config import (
     DEFAULT_MAX_WAIT,
     USER_AGENT,
     RequestLimiter,
-    Slot,
     WaitTooLongError,
-    parse_retry_after,
+    is_html,
 )
+
+# Explicit re-exports (`X as X`): probe's documented limits and transport, used by its
+# docstring and its tests as probe.<name>.
+from config import MAX_BODY_BYTES as MAX_BODY_BYTES
+from config import PAUSE_AFTER_5XX as PAUSE_AFTER_5XX
+from config import PAUSE_AFTER_429 as PAUSE_AFTER_429
+from config import body_length as body_length
 
 # isort: split
 import argparse
 import hashlib
-import http.client
 import json
 import math
 import re
 import sys
 import time
-import urllib.error
 import urllib.parse
-import urllib.request
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
-from email.message import Message
 from pathlib import Path
-from typing import IO, Any, Protocol
+from typing import Any
 
 from allowlist import PAGE_ROUTES, match_api, match_excluded_api, match_page
 from flight import component_props, find_json_after, flight_from_html
-
-TIMEOUT = 30.0
-"""Seconds for connecting and for each read from the socket."""
-
-BODY_DEADLINE = 120.0
-"""Seconds for reading the body. Checked after each ``read1`` (one socket read, bounded
-by TIMEOUT), plus one last read to see EOF, so the worst case is about
-BODY_DEADLINE + 2 x TIMEOUT (a chunked body may add a chunk-header read per call)."""
-
-MAX_BODY_BYTES = 32 * 1024 * 1024
-"""Largest body probe reads; bigger ones are dumps (D5) and are refused."""
-
-_CHUNK = 64 * 1024
+from http_common import BODY_DEADLINE as BODY_DEADLINE
+from http_common import TIMEOUT as TIMEOUT
+from http_common import (
+    Fetch,
+    NetworkError,
+    ReplyError,
+    check_reply,
+    excerpt,
+    get_once,
+    status_line,
+)
+from http_common import Response as Response
+from http_common import read_body as read_body
+from http_common import urllib_fetch as urllib_fetch
 
 SAMPLES_DIR = Path(__file__).resolve().parent.parent / "docs" / "discovery" / "samples"
 
@@ -82,12 +89,6 @@ SAMPLE_MAP_THRESHOLD = 40
 SAMPLE_KEYS = 2
 """Sample convention: a map keyed by numeric ids with more than 40 keys keeps 2 of them
 (e.g. api.inv_sale_events.json, 16 keys, stays whole). Applies on stdout too."""
-
-PAUSE_AFTER_429 = 60.0
-"""Least pause after a 429, whatever ``Retry-After`` says or if it is missing."""
-
-PAUSE_AFTER_5XX = 30.0
-"""Pause after a 502/503/504 without a usable ``Retry-After``."""
 
 EXIT_OK = 0
 EXIT_USAGE = 2
@@ -114,20 +115,6 @@ kody wyjścia:
      zagnieżdżone zbyt głęboko)
 """
 
-STOP_STATUSES = {401: "brak autoryzacji", 403: "odmowa dostępu", 429: "limit zapytań"}
-PAUSE_5XX_STATUSES = frozenset({502, 503, 504})
-
-# Cloudflare challenge and block pages (besides the `cf-mitigated` header). Checked only
-# in HTML that came instead of the expected JSON or RSC. Turnstile itself
-# (challenges.cloudflare.com) is not a marker: the site's own pages embed it.
-CHALLENGE_MARKERS = (
-    "_cf_chl_opt",
-    "cf-browser-verification",
-    "cf_captcha_kind",
-    "<title>Just a moment...</title>",
-    "Attention Required! | Cloudflare",
-)
-
 REDACTED = "[usunięte]"
 # Keys whose values may hold personal data, compared case-insensitively at every level.
 # `additionalInfo` is free text: reports on the abuse map, remarks in RCN records.
@@ -144,35 +131,6 @@ _CONTROL_OR_BACKSLASH = re.compile(r"[\x00-\x1f\x7f\\]")
 _LONE_PERCENT = re.compile(r"%(?![0-9A-Fa-f]{2})")
 _QUERY_SAFE = "=&%+,:;@!$'()*/?~"  # kept as typed; everything else is percent-encoded
 _NUMERIC_KEY = re.compile(r"[0-9]+")
-
-
-@dataclass(frozen=True)
-class Response:
-    """What probe needs from an HTTP response. Header names are lowercase.
-
-    ``body_error`` says why the body is incomplete (too big, too slow, connection lost
-    while reading); the status and headers are still valid, so a 429 still pauses the
-    limiter and stops the series.
-    """
-
-    status: int
-    headers: Mapping[str, str]
-    body: bytes
-    body_error: str | None = None
-
-
-class Readable(Protocol):
-    """A response stream as ``read_body`` uses it (urllib's response or HTTPError).
-
-    ``read1`` returns after one read from the socket, unlike ``read``, which blocks until
-    ``size`` bytes or EOF and so would let a trickling body outlast ``BODY_DEADLINE``.
-    """
-
-    def read1(self, size: int, /) -> bytes: ...
-
-
-Fetch = Callable[[str, Mapping[str, str], float], Response]
-"""``fetch(url, headers, timeout)``: one GET, any status returned, never a redirect."""
 
 
 class ProbeError(Exception):
@@ -193,111 +151,6 @@ class Plan:
     headers: dict[str, str]
     prop: str | None
     save_to: Path | None
-
-
-# --- transport ----------------------------------------------------------------------
-
-
-class _NoRedirect(urllib.request.HTTPRedirectHandler):
-    """Hands a 3xx back to the caller: one probe run is exactly one request."""
-
-    def redirect_request(
-        self,
-        req: urllib.request.Request,
-        fp: IO[bytes],
-        code: int,
-        msg: str,
-        headers: Message,
-        newurl: str,
-    ) -> None:
-        return None
-
-
-def urllib_fetch(url: str, headers: Mapping[str, str], timeout: float) -> Response:
-    """GET ``url`` once: no redirects, no retries; error statuses are returned, not raised."""
-    opener = urllib.request.build_opener(_NoRedirect)
-    request = urllib.request.Request(url, headers=dict(headers), method="GET")
-    try:
-        with opener.open(request, timeout=timeout) as reply:
-            return _response(reply.status, reply.headers, reply)
-    except urllib.error.HTTPError as err:
-        with err:
-            return _response(err.code, err.headers, err)
-
-
-def _response(status: int, message: Message, stream: Readable) -> Response:
-    headers = _header_map(message)
-    body, problem = read_body(stream, body_length(status, headers))
-    return Response(status, headers, body, problem)
-
-
-def body_length(status: int, headers: Mapping[str, str]) -> str | None:
-    """``Content-Length`` if it describes the body, as http.client reads it (RFC 9112 §6.3).
-
-    Ignored with ``Transfer-Encoding`` (the encoding delimits the body) and for 1xx,
-    204 and 304, which have no body whatever the header says.
-    """
-    if "transfer-encoding" in headers or 100 <= status < 200 or status in (204, 304):
-        return None
-    return headers.get("content-length")
-
-
-def read_body(
-    stream: Readable, content_length: str | None, clock: Callable[[], float] = time.monotonic
-) -> tuple[bytes, str | None]:
-    """The body, read in chunks within ``MAX_BODY_BYTES`` and ``BODY_DEADLINE``.
-
-    Returns ``(body, problem)``. The response has already arrived, so its status must
-    still count: a read failing with ``OSError`` (timeout, reset), ``ValueError``
-    (closed stream) or ``http.client.HTTPException`` (``IncompleteRead``, broken
-    chunked encoding) becomes a problem instead of an exception. Anything else, e.g.
-    ``AttributeError`` for a stream without ``read1``, is a bug and propagates.
-
-    A declared ``Content-Length`` over the limit is refused before reading anything.
-    Otherwise reading stops, keeping what was read, at the first byte over the limit,
-    at a read error, or at the first chunk after the deadline; EOF right after the
-    deadline still counts as a complete body. EOF before the declared ``Content-Length``
-    is a truncated body: ``read1`` reports a connection closed early as plain EOF.
-    """
-    limit = MAX_BODY_BYTES
-    too_big = (
-        f"Odpowiedź przekracza {limit} B: probe nie służy do zrzutów (D5); "
-        "użyj filtrów albo mniejszego zakresu."
-    )
-    text = (content_length or "").strip()
-    # ASCII digits only, as [0-9]+ elsewhere: headers are latin-1, so "²" is a "digit" too.
-    declared = int(text) if text.isascii() and text.isdigit() else None
-    if declared is not None and declared > limit:
-        return b"", too_big
-    chunks: list[bytes] = []
-    size = 0
-    overdue = False
-    start = clock()
-    while True:
-        try:
-            chunk = stream.read1(min(_CHUNK, limit + 1 - size))
-        except (OSError, ValueError, http.client.HTTPException) as err:
-            return b"".join(chunks), f"Czytanie odpowiedzi przerwane ({size} B): {err!r}"
-        if not chunk:  # EOF wins, also right after the deadline
-            if declared is not None and size < declared:
-                return b"".join(chunks), f"Odpowiedź ucięta: {size} z {declared} B."
-            return b"".join(chunks), None
-        chunks.append(chunk)
-        size += len(chunk)
-        if size > limit:
-            return b"".join(chunks)[:limit], too_big
-        if overdue:
-            problem = f"Czytanie odpowiedzi przerwane po {BODY_DEADLINE:g} s ({size} B)."
-            return b"".join(chunks), problem
-        overdue = clock() - start > BODY_DEADLINE
-
-
-def _header_map(message: Message) -> dict[str, str]:
-    headers: dict[str, str] = {}
-    for name, value in message.items():
-        key = name.lower()
-        headers[key] = f"{headers[key]}, {value}" if key in headers else str(value)
-    return headers
 
 
 # --- checking the input --------------------------------------------------------------
@@ -421,114 +274,37 @@ def send(
 ) -> tuple[Response, str | None]:
     """The one request, inside the limiter slot; ``Retry-After`` recorded before leaving it."""
     try:
-        with limiter.slot(max_wait=max_wait) as slot:
-            try:
-                reply = fetch(plan.url, plan.headers, TIMEOUT)
-            except (urllib.error.URLError, http.client.HTTPException, OSError) as err:
-                raise ProbeError(
-                    EXIT_HTTP, f"Błąd sieci, brak odpowiedzi serwisu: {err}. Nie ponawiam."
-                ) from err
-            note = _pause_limiter(slot, reply, now())
+        return get_once(
+            plan.url, plan.headers, fetch=fetch, limiter=limiter, max_wait=max_wait, now=now
+        )
+    except NetworkError as err:
+        raise ProbeError(EXIT_HTTP, str(err)) from err
     except WaitTooLongError as err:
         raise ProbeError(EXIT_WAIT, f"{err} Probe nie wysłał zapytania.") from err
-    return reply, note
-
-
-def _pause_limiter(slot: Slot, reply: Response, now: float) -> str | None:
-    """Pause the shared limiter after a 429 or a 502/503/504; the note goes to stderr.
-
-    429: ``max(Retry-After, PAUSE_AFTER_429)``, also when the header is missing or
-    unreadable. 502/503/504: ``Retry-After``, or ``PAUSE_AFTER_5XX`` without a usable one.
-    """
-    if reply.status != 429 and reply.status not in PAUSE_5XX_STATUSES:
-        return None
-    raw = reply.headers.get("retry-after")
-    asked = parse_retry_after(raw, now)
-    if reply.status == 429:
-        seconds = max(asked or 0.0, PAUSE_AFTER_429)
-    else:
-        seconds = PAUSE_AFTER_5XX if asked is None else asked
-    if asked is not None:
-        source = f"Retry-After {raw!r}"
-    elif raw is None:
-        source = "Brak Retry-After"
-    else:
-        source = f"Nieczytelny Retry-After {raw!r}"
-    try:
-        slot.defer(seconds)
-    except ValueError as err:
-        return f"{source}: {err}"
-    return f"{source}: limiter wstrzyma następne zapytanie o {math.ceil(seconds)} s."
 
 
 # --- reading the response ------------------------------------------------------------
 
 
-def _content_type(reply: Response) -> str:
-    return reply.headers.get("content-type", "").split(";", 1)[0].strip().lower()
-
-
-def _is_html(reply: Response) -> bool:
-    if _content_type(reply) in ("text/html", "application/xhtml+xml"):
-        return True
-    return reply.body.lstrip()[:15].lower().startswith((b"<!doctype html", b"<html"))
-
-
-def is_challenge(reply: Response) -> bool:
-    """Cloudflare answered instead of the application (challenge, captcha, WAF block)."""
-    if "cf-mitigated" in reply.headers:
-        return True
-    if not _is_html(reply):
-        return False
-    text = reply.body.decode("utf-8", "replace")
-    return any(marker in text for marker in CHALLENGE_MARKERS)
-
-
-def _excerpt(body: bytes, limit: int = 300) -> str:
-    text = " ".join(body[: limit * 4].decode("utf-8", "replace").split())
-    return text[:limit] + ("…" if len(text) > limit or len(body) > limit * 4 else "")
-
-
-def _status_line(reply: Response) -> str:
-    parts = [f"HTTP {reply.status}", _content_type(reply) or "bez content-type"]
-    parts.append(f"{len(reply.body)} B")
-    for name in ("cache-control", "cf-cache-status", "age"):
-        if name in reply.headers:
-            parts.append(f"{name}: {reply.headers[name]}")
-    return ", ".join(parts)
-
-
 def check_status(reply: Response) -> None:
     """Raise for anything but a usable 2xx; never retry."""
-    status = reply.status
-    challenge = is_challenge(reply)
-    if status in STOP_STATUSES or challenge:
-        why = f"HTTP {status}"
-        if status in STOP_STATUSES:
-            why += f" ({STOP_STATUSES[status]})"
-        if challenge:
-            why += ", challenge Cloudflare (captcha/WAF)"
-        raise ProbeError(
-            EXIT_STOP,
-            f"STOP: {why}. Przerwij serię zapytań, niczego nie ponawiaj i zgłoś to "
-            "użytkownikowi (CLAUDE.md: 401, 403, 429, captcha, WAF).",
-        )
-    if reply.body_error is not None:
-        raise ProbeError(EXIT_HTTP, f"HTTP {status}. {reply.body_error}")
-    if 300 <= status < 400:
-        location = reply.headers.get("location", "?")
-        raise ProbeError(
-            EXIT_HTTP,
-            f"HTTP {status}: przekierowanie na {location}. Probe nie podąża za "
-            "przekierowaniami; jeśli cel jest na allowliście, podaj go wprost.",
-        )
-    if not 200 <= status < 300:
-        raise ProbeError(EXIT_HTTP, f"HTTP {status}. Treść: {_excerpt(reply.body)}")
+    try:
+        check_reply(reply)
+    except ReplyError as err:
+        if err.kind == "stop":
+            raise ProbeError(EXIT_STOP, str(err)) from err
+        hint = ""
+        if err.kind == "redirect":
+            hint = (
+                " Probe nie podąża za przekierowaniami; jeśli cel jest na allowliście, "
+                "podaj go wprost."
+            )
+        raise ProbeError(EXIT_HTTP, f"{err}{hint}") from err
 
 
 def _flight_text(reply: Response) -> str:
     text = reply.body.decode("utf-8", "replace")
-    if _is_html(reply):
+    if is_html(reply.headers, reply.body):
         print(
             "Uwaga: serwis zwrócił HTML zamiast RSC (text/x-component); "
             "dane odczytane ze skryptów self.__next_f strony.",
@@ -553,13 +329,13 @@ def data_props(text: str) -> list[dict[str, Any]]:
 def extract(plan: Plan, reply: Response) -> Any:
     """The data of a 2xx response: the JSON body (api) or the value of ``--prop`` (page)."""
     if plan.mode == "api":
-        if _is_html(reply):
+        if is_html(reply.headers, reply.body):
             raise ProbeError(EXIT_DATA, "Oczekiwano JSON, a serwis zwrócił stronę HTML.")
         try:
             return json.loads(reply.body)
         except ValueError as err:
             raise ProbeError(
-                EXIT_DATA, f"Odpowiedź nie jest JSON-em ({err}). Początek: {_excerpt(reply.body)}"
+                EXIT_DATA, f"Odpowiedź nie jest JSON-em ({err}). Początek: {excerpt(reply.body)}"
             ) from err
     assert plan.prop is not None
     text = _flight_text(reply)
@@ -755,7 +531,7 @@ def main(
     try:
         plan = make_plan(args.mode, args.path, args.prop, args.save, samples_dir)
         reply, note = send(plan, fetch, limiter or RequestLimiter(), args.max_wait, clock)
-        print(_status_line(reply), file=sys.stderr)
+        print(status_line(reply), file=sys.stderr)
         if note:
             print(note, file=sys.stderr)
         check_status(reply)
