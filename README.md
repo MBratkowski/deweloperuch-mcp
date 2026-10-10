@@ -8,7 +8,54 @@ deweloperuch.pl → client (JSON API + RSC) → domain/services → CLI + MCP �
 
 ## Status
 
-**Etap 1–2 (discovery + capability matrix): ukończone 2026-10-09.** Bootstrap pakietu (A#1) gotowy: `pyproject.toml`, wspólny limiter zapytań i testy. S1a gotowe: wewnętrzny rdzeń pakietu (klient, DTO, domena, usługi) bez CLI i MCP; narzędzi MCP ani komend CLI jeszcze nie ma (S1b). Stos wybrany (D8): Python >= 3.11, MCP SDK (`mcp`), pydantic, httpx, typer; pytest, pytest-socket, respx, ruff, mypy, uv. Zespół agentów skonfigurowany (zasady i przepływy w [CLAUDE.md](CLAUDE.md)).
+**Etap 1–2 (discovery + capability matrix): ukończone 2026-10-09.** Bootstrap pakietu (A#1) gotowy: `pyproject.toml`, wspólny limiter zapytań i testy. S1a gotowe: rdzeń pakietu (klient, DTO, domena, usługi). S1b gotowe: CLI `deweloperuch` i serwer MCP `deweloperuch-mcp` (stdio) z czterema capabilities: wyszukiwanie lokalizacji, wyszukiwanie ofert, oferta z historią ceny, inwestycja z ofertami. Stos wybrany (D8): Python >= 3.11, MCP SDK (`mcp`), pydantic, httpx, typer; pytest, pytest-socket, respx, ruff, mypy, uv. Zespół agentów skonfigurowany (zasady i przepływy w [CLAUDE.md](CLAUDE.md)).
+
+## Quickstart
+
+```
+uv sync
+uv run deweloperuch locations search krak     # CLI (wysyła żywe zapytania do serwisu, przez limiter 1/s)
+uv run deweloperuch-mcp                       # serwer MCP na stdio; zwykle uruchamia go klient MCP
+```
+
+Żywe zapytania (każda komenda CLI bez `--help` i każde narzędzie MCP) trafiają do deweloperuch.pl; zasady ostrożnego korzystania: [CLAUDE.md](CLAUDE.md). `--help` nie wysyła zapytań.
+
+Konfiguracja klienta MCP (format `mcpServers`):
+
+```json
+{
+  "mcpServers": {
+    "deweloperuch": {
+      "command": "uv",
+      "args": ["run", "--directory", "/ścieżka/do/deweloperuch-mcp", "deweloperuch-mcp"]
+    }
+  }
+}
+```
+
+Alternatywa: `"command": "/ścieżka/do/deweloperuch-mcp/.venv/bin/deweloperuch-mcp"`. Host powinien czytać stderr serwera; szczegóły: [docs/mcp/README.md](docs/mcp/README.md).
+
+## Narzędzia MCP
+
+Serwer `deweloperuch-mcp` (tylko stdio, tylko odczyt); przegląd: [docs/mcp/README.md](docs/mcp/README.md).
+
+| Narzędzie | Opis |
+|---|---|
+| [`search_locations`](docs/mcp/tools/search_locations.md) | Znajduje miasta, dzielnice i ulice po fragmencie nazwy i podaje `city_slug`. |
+| [`search_offers`](docs/mcp/tools/search_offers.md) | Strona ofert mieszkań od deweloperów w mieście lub w całej Polsce, z filtrami ceny i metrażu. |
+| [`get_offer`](docs/mcp/tools/get_offer.md) | Jedna oferta z pełną historią ceny. |
+| [`get_investment`](docs/mcp/tools/get_investment.md) | Inwestycja z deweloperem, średnimi cenami i listą ofert. |
+
+## Komendy CLI
+
+Przegląd, format wyjścia i kody wyjścia 0–7: [docs/cli/README.md](docs/cli/README.md).
+
+| Komenda | Opis |
+|---|---|
+| [`deweloperuch locations search QUERY`](docs/cli/commands/locations-search.md) | Znajduje miasta, dzielnice i ulice; podaje slug miasta. |
+| [`deweloperuch offers search CITY`](docs/cli/commands/offers-search.md) | Szuka ofert w mieście lub w całej Polsce z filtrami i sortowaniem po cenie. |
+| [`deweloperuch offers get OFFER_ID --investment SLUG`](docs/cli/commands/offers-get.md) | Pokazuje ofertę z historią ceny. |
+| [`deweloperuch investments get SLUG`](docs/cli/commands/investments-get.md) | Pokazuje inwestycję z deweloperem i ofertami. |
 
 ## Dla dewelopera
 
@@ -33,6 +80,8 @@ Konfiguracja, limiter zapytań i plik zamka: [docs/configuration.md](docs/config
 | [docs/capability-matrix.md](docs/capability-matrix.md) | Capabilities → requesty → CLI / MCP tool → status |
 | [docs/open-questions.md](docs/open-questions.md) | Luki, hipotezy, pytania do decyzji |
 | [docs/decisions.md](docs/decisions.md) | Decyzje architektoniczne i propozycja pierwszego vertical slice |
+| [docs/mcp/README.md](docs/mcp/README.md) | Serwer MCP: narzędzia, konfiguracja klienta, reguły argumentów, błędy, rozmiary wyników |
+| [docs/cli/README.md](docs/cli/README.md) | CLI `deweloperuch`: komendy, format wyjścia, kody wyjścia |
 | [docs/configuration.md](docs/configuration.md) | Zmienne środowiskowe, pliki konfiguracyjne i limiter zapytań |
 | [CLAUDE.md](CLAUDE.md) | Wspólne zasady pracy z serwisem, własność plików i przepływy A/B/C zespołu agentów |
 | [handoffs/INDEX.md](handoffs/INDEX.md) | Indeks handoffów między sesjami |
@@ -40,12 +89,15 @@ Konfiguracja, limiter zapytań i plik zamka: [docs/configuration.md](docs/config
 
 ## Struktura pakietu
 
-Rdzeń `src/deweloperuch_mcp/` (S1a) jest wewnętrzny, bez publicznego interfejsu produktu:
+Pakiet `src/deweloperuch_mcp/`. Publiczny interfejs produktu to `cli.py` i `mcp_server.py`; reszta jest wewnętrzna:
 
+- `cli.py`: CLI `deweloperuch` (typer), kody wyjścia `ExitCode`; [docs/cli/README.md](docs/cli/README.md)
+- `mcp_server.py`: serwer MCP `deweloperuch-mcp` (stdio), cztery narzędzia; [docs/mcp/README.md](docs/mcp/README.md)
+- `mcp_results.py`: reprezentacja wyników dla MCP (skrócone pozycje, bez pól `null`) nad modelem domenowym
 - `client/`: klient HTTP (`transport.py`, `json_api.py`, `rsc.py`) i DTO (`dto.py`); ustawienia: [docs/configuration.md](docs/configuration.md)
 - `domain/`: modele i normalizacja (`models.py`, `normalize.py`)
-- `services.py`: usługi nad klientem (punkt wejścia dla przyszłego CLI i MCP)
-- `errors.py`: hierarchia błędów `DeweloperuchError`
+- `services.py`: usługi nad klientem (jedyny punkt wejścia dla CLI i MCP)
+- `errors.py`: hierarchia błędów `DeweloperuchError` (`message`, `detail`)
 - `flight.py`: dekoder RSC; `allowlist.py`: allowlista odczytu (`recon/flight.py` i `recon/allowlist.py` je reeksportują)
 
 ## Narzędzia recon

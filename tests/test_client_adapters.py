@@ -212,9 +212,11 @@ def test_page_without_the_prop_is_unexpected(
     with pytest.raises(UnexpectedResponseError) as caught:
         rsc.offers_list(http, "warszawa", [])
 
-    message = str(caught.value)
-    assert "nie zawiera danych w propsie 'initialData'" in message
-    assert f"(propsy z danymi: {data_props})" in message
+    detail = caught.value.detail
+    assert detail is not None
+    assert "nie zawiera danych w propsie 'initialData'" in detail
+    assert f"(propsy z danymi: {data_props})" in detail
+    assert "initialData" not in str(caught.value)
 
 
 def test_reference_before_the_data_is_skipped(http: HttpClient, service: respx.MockRouter) -> None:

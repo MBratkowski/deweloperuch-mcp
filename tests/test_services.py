@@ -20,7 +20,9 @@ from deweloperuch_mcp.errors import (
     NotFoundError,
     RateLimitedError,
     ServiceBlockedError,
+    ServiceError,
     SessionClosedError,
+    UnexpectedResponseError,
 )
 from deweloperuch_mcp.flight import rsc_token
 from deweloperuch_mcp.throttle import LOCK_FILENAME, RequestLimiter
@@ -427,6 +429,78 @@ def test_get_offer_rejects_bad_input_without_requests(
         services.get_offer(session, **arguments)
 
     assert service.calls.call_count == 0
+
+
+# --- errors of the client in domain terms ------------------------------------------------
+
+
+def test_an_offer_without_history_is_not_found_in_domain_terms(
+    session: services.Session, service: respx.MockRouter
+) -> None:
+    service.get(INVESTMENT).respond(200, json=body("api.map_inv_visible"))
+    service.get(SALE_EVENTS).respond(404)
+
+    with pytest.raises(NotFoundError) as caught:
+        services.get_offer(session, 2377, "smolna")
+
+    assert str(caught.value).startswith(
+        "Serwis nie ma historii ceny oferty 2377 z inwestycji 'smolna'."
+    )
+    assert caught.value.detail == request_target("api.sale_events")
+
+
+def test_an_investment_without_history_is_not_found_in_domain_terms(
+    session: services.Session, service: respx.MockRouter
+) -> None:
+    service.get(INVESTMENT).respond(200, json=body("api.map_inv_visible"))
+    service.get(INVESTMENT_EVENTS).respond(404)
+
+    with pytest.raises(NotFoundError, match="get_offer") as caught:
+        services.get_investment(session, "smolna", include_history=True)
+
+    assert "/api/" not in str(caught.value)
+    assert caught.value.detail == request_target("api.inv_sale_events")
+
+
+def test_service_errors_name_what_failed_and_keep_type_pause_and_detail(
+    session: services.Session, service: respx.MockRouter
+) -> None:
+    service.route(method="GET", path__startswith="/ceny-ofertowe/").respond(
+        503, headers={"Retry-After": "10"}, text="busy"
+    )
+
+    with pytest.raises(ServiceError) as caught:
+        services.search_offers(session, "warszawa")
+
+    assert type(caught.value) is ServiceError
+    assert str(caught.value).startswith(
+        "Wyszukiwanie ofert w 'warszawa': Serwis odpowiedział błędem HTTP 503."
+    )
+    assert caught.value.pause_seconds == 10
+    assert caught.value.detail is not None and caught.value.detail.endswith(": busy")
+    assert "/ceny-ofertowe" not in str(caught.value) and "busy" not in str(caught.value)
+
+
+def test_data_off_the_contract_names_the_investment(
+    session: services.Session, service: respx.MockRouter
+) -> None:
+    service.get(INVESTMENT).respond(200, json={"unexpected": True})
+
+    with pytest.raises(UnexpectedResponseError) as caught:
+        services.get_investment(session, "smolna")
+
+    assert str(caught.value).startswith("Inwestycja 'smolna': Dane z serwisu nie pasują")
+    assert caught.value.detail is not None
+    assert caught.value.detail.startswith("/api/map/investments/visible/smolna: ")
+
+
+def test_location_errors_name_the_search(
+    session: services.Session, service: respx.MockRouter
+) -> None:
+    service.get(path="/api/cities").respond(500)
+
+    with pytest.raises(ServiceError, match="^Wyszukiwanie miast: Serwis odpowiedział błędem"):
+        services.search_locations(session, "krak")
 
 
 # --- every request ---------------------------------------------------------------------

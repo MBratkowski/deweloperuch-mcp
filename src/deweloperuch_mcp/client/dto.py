@@ -20,7 +20,7 @@ from typing import Annotated, Any, TypeVar
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, RootModel, ValidationError
 
-from deweloperuch_mcp.errors import UnexpectedResponseError
+from deweloperuch_mcp.errors import SERVICE_CHANGED, UnexpectedResponseError
 
 M = TypeVar("M", bound=BaseModel)
 
@@ -76,7 +76,10 @@ class Dto(BaseModel):
 
 
 def validate(model: type[M], data: Any, source: str) -> M:
-    """``data`` as ``model``; a mismatch is an ``UnexpectedResponseError`` naming ``source``."""
+    """``data`` as ``model``; a mismatch is an ``UnexpectedResponseError``.
+
+    ``source`` (where the data came from) and the problems go to its ``detail``.
+    """
     try:
         return model.model_validate(data)
     except ValidationError as err:
@@ -86,8 +89,8 @@ def validate(model: type[M], data: Any, source: str) -> M:
         )
         more = f" (i {err.error_count() - 3} innych)" if err.error_count() > 3 else ""
         raise UnexpectedResponseError(
-            f"Dane z {source} nie pasują do kontraktu klienta: {problems}{more}. Serwis mógł "
-            "zmienić format odpowiedzi; zgłoś to użytkownikowi."
+            f"Dane z serwisu nie pasują do kontraktu klienta (inny format). {SERVICE_CHANGED}",
+            detail=f"{source}: {problems}{more}",
         ) from err
 
 

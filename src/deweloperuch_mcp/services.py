@@ -18,10 +18,14 @@ marked [P] in docs/discovery/ reach the service. Not exposed until verified (flo
 - locations: ``variant`` and ``propertyType``, ``page`` of ``/api/cities``, ``limit``
   values other than the UI's.
 
-Errors are those of ``deweloperuch_mcp.errors``; their messages say what to change.
+Errors are those of ``deweloperuch_mcp.errors``; their messages say, in domain terms,
+what happened to the search, the investment or the offer and what to change. Technical
+details (paths, statuses, bodies) stay in ``err.detail``.
 """
 
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 from types import TracebackType
 from typing import Literal, Self
 
@@ -35,8 +39,11 @@ from deweloperuch_mcp.domain.models import (
     OfferDetail,
     OfferSearchResult,
 )
-from deweloperuch_mcp.errors import InvalidInputError, NotFoundError
+from deweloperuch_mcp.errors import InvalidInputError, NotFoundError, ServiceError
 from deweloperuch_mcp.throttle import DEFAULT_MAX_WAIT, RequestLimiter
+
+WHOLE_COUNTRY = "polska"
+"""The ``city`` of ``search_offers`` that searches the whole country [P]."""
 
 MAX_PAGES = 20
 """[P] docs/discovery/pages-rsc.md, "Wspólne reguły list": ``page`` > 20 returns page 20."""
@@ -44,7 +51,10 @@ MAX_PAGES = 20
 PER_PAGE_VALUES = (10, 50, 100)
 """[P] same section: other values (20, 500) silently fall back to 10."""
 
-DEFAULT_PER_PAGE = 10
+PerPage = Literal[10, 50, 100]
+"""``PER_PAGE_VALUES`` as a type, for the CLI options and the MCP input schema."""
+
+DEFAULT_PER_PAGE: PerPage = 10
 """The service's own default page size [P]."""
 
 # [P z kodu] docs/discovery/pages-rsc.md, "Wspólne reguły list": the UI sends a range
@@ -128,8 +138,10 @@ def search_locations(session: Session, query: str) -> LocationSearchResult:
     ``city_slug`` of a result in ``search_offers``.
     """
     text = _query(query)
-    cities = json_api.cities(session._http, text, CITIES_LIMIT)
-    found = json_api.location_search(session._http, text, SUGGESTIONS_LIMIT)
+    with _about("Wyszukiwanie miast"):
+        cities = json_api.cities(session._http, text, CITIES_LIMIT)
+    with _about("Wyszukiwanie dzielnic i ulic"):
+        found = json_api.location_search(session._http, text, SUGGESTIONS_LIMIT)
     items = [normalize.location_from_city(city) for city in cities.cityMappings]
     items += [normalize.location_from_suggestion(s) for s in found.suggestions]
     # [W] docs/discovery/endpoints.md, /api/cities: `hasMore` is in the response, but its
@@ -199,13 +211,14 @@ def search_offers(
             f"(inne serwis zamienia na 10), podano {per_page!r}."
         )
     params.append(("perPage", per_page))
-    try:
-        page_dto = rsc.offers_list(session._http, city_slug, params)
-    except NotFoundError as err:
-        raise NotFoundError(
+    with _about(
+        f"Wyszukiwanie ofert w {city_slug!r}",
+        not_found=(
             f"Serwis nie zna miasta {city_slug!r}. Podaj city_slug z search_locations "
             "albo polska (cały kraj)."
-        ) from err
+        ),
+    ):
+        page_dto = rsc.offers_list(session._http, city_slug, params)
     return normalize.offer_search_result(page_dto, max_pages=MAX_PAGES)
 
 
@@ -232,7 +245,14 @@ def get_investment(
     investment = _investment(session._http, slug)
     history = None
     if include_history:
-        history = json_api.investment_sale_events(session._http, investment.invest_id).root
+        with _about(
+            f"Historia cen inwestycji {slug!r}",
+            not_found=(
+                f"Serwis nie ma historii cen ofert inwestycji {slug!r}. Pobierz inwestycję bez "
+                "include_history, a historię pojedynczej oferty przez get_offer."
+            ),
+        ):
+            history = json_api.investment_sale_events(session._http, investment.invest_id).root
     return normalize.investment(investment, limit=limit, history=history)
 
 
@@ -252,23 +272,52 @@ def get_offer(session: Session, offer_id: int, investment_slug: str) -> OfferDet
             f"Inwestycja {slug!r} nie ma oferty {oid}. Sprawdź offer_id i investment_slug "
             "(oba podaje search_offers); wszystkie oferty inwestycji zwraca get_investment."
         )
-    events = json_api.sale_events(session._http, oid)
+    with _about(
+        f"Historia ceny oferty {oid}",
+        not_found=(
+            f"Serwis nie ma historii ceny oferty {oid} z inwestycji {slug!r}. Sprawdź offer_id "
+            "i investment_slug (oba podaje search_offers); ofertę bez historii pokazuje "
+            "get_investment."
+        ),
+    ):
+        events = json_api.sale_events(session._http, oid)
     return normalize.offer_detail(investment, sale, events.events)
+
+
+# --- errors of the client in domain terms ----------------------------------------------------
+
+
+@contextmanager
+def _about(subject: str, *, not_found: str | None = None) -> Iterator[None]:
+    """Say what a client error is about: ``subject`` (e.g. "Inwestycja 'smolna'").
+
+    ``NotFoundError`` becomes ``not_found`` (default: the subject and the client's
+    message); ``ServiceError`` and ``UnexpectedResponseError`` keep their type and pause
+    with the subject in front. ``detail`` stays. STOP, limiter and input errors pass
+    unchanged: they are about the series of requests, not about this data.
+    """
+    try:
+        yield
+    except NotFoundError as err:
+        raise NotFoundError(not_found or f"{subject}: {err}", detail=err.detail) from err
+    except ServiceError as err:
+        raise type(err)(f"{subject}: {err}", err.pause_seconds, detail=err.detail) from err
+
+
+def _investment(http: HttpClient, slug: str) -> InvestmentDto:
+    with _about(
+        f"Inwestycja {slug!r}",
+        not_found=(
+            f"Nie znaleziono inwestycji {slug!r}. Slug inwestycji podaje search_offers "
+            "(pole investment_slug)."
+        ),
+    ):
+        return json_api.investment(http, slug)
 
 
 # --- input ---------------------------------------------------------------------------------
 
 _INVESTMENT_SLUG_HELP = "slug inwestycji, np. smolna; podaje go search_offers (investment_slug)"
-
-
-def _investment(http: HttpClient, slug: str) -> InvestmentDto:
-    try:
-        return json_api.investment(http, slug)
-    except NotFoundError as err:
-        raise NotFoundError(
-            f"Nie znaleziono inwestycji {slug!r}. Slug inwestycji podaje search_offers "
-            "(pole investment_slug)."
-        ) from err
 
 
 def _is_int(value: object) -> bool:

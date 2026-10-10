@@ -17,11 +17,50 @@ handle errors without importing the client (D6)::
 Nothing is retried automatically (CLAUDE.md): after ``ServiceBlockedError`` stop and
 report it to the user; after ``ServiceError`` with ``pause_seconds`` wait at least that
 long.
+
+``str(err)`` is for the user or the model: what happened, in domain terms, and what to
+do. It never carries service paths, prop names or response bodies (an answer of the
+service is not text to show a model). Those go to ``err.detail``, for logs and the CLI,
+with every non-printable character escaped (``printable``): text from the service never
+reaches a terminal as control sequences.
 """
+
+SERVICE_CHANGED = (
+    "Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi."
+)
+"""What to do about data that does not match the contract (``UnexpectedResponseError``)."""
+
+
+def printable(text: str) -> str:
+    """``text`` with every non-printable character as an escape, ``repr``-like.
+
+    ``"a\\x1b]0;x\\x07"`` -> ``"a\\\\x1b]0;x\\\\x07"``: no terminal control sequences (OSC,
+    CSI), no line breaks, no invisible bidi controls. Printable text, Polish letters
+    included, stays as it is.
+    """
+    return "".join(char if char.isprintable() else _escape(char) for char in text)
+
+
+def _escape(char: str) -> str:
+    code = ord(char)
+    if code < 0x100:
+        return f"\\x{code:02x}"
+    if code < 0x10000:
+        return f"\\u{code:04x}"
+    return f"\\U{code:08x}"
 
 
 class DeweloperuchError(Exception):
-    """Base class of every error the package raises on purpose."""
+    """Base class of every error the package raises on purpose.
+
+    ``detail``: technical details (path, status, an excerpt of the body...), ``None``
+    when there are none. Never part of ``str(err)``; non-printable characters escaped
+    here, so no caller can forget it.
+    """
+
+    def __init__(self, message: str, *, detail: str | None = None) -> None:
+        super().__init__(message)
+        self.detail = None if detail is None else printable(detail)
 
 
 class InvalidInputError(DeweloperuchError):
@@ -39,8 +78,8 @@ class ServiceBlockedError(DeweloperuchError):
 class RateLimitedError(ServiceBlockedError):
     """429: stop the series; the shared limiter waits ``pause_seconds`` before the next one."""
 
-    def __init__(self, message: str, pause_seconds: float) -> None:
-        super().__init__(message)
+    def __init__(self, message: str, pause_seconds: float, *, detail: str | None = None) -> None:
+        super().__init__(message, detail=detail)
         self.pause_seconds = pause_seconds
 
 
@@ -50,8 +89,10 @@ class ServiceError(DeweloperuchError):
     ``pause_seconds``: the pause the shared limiter recorded (502/503/504), else ``None``.
     """
 
-    def __init__(self, message: str, pause_seconds: float | None = None) -> None:
-        super().__init__(message)
+    def __init__(
+        self, message: str, pause_seconds: float | None = None, *, detail: str | None = None
+    ) -> None:
+        super().__init__(message, detail=detail)
         self.pause_seconds = pause_seconds
 
 
@@ -69,6 +110,6 @@ class SessionClosedError(DeweloperuchError):
 class LimiterWaitError(DeweloperuchError):
     """The next request is allowed only after ``wait_seconds``; nothing was sent."""
 
-    def __init__(self, message: str, wait_seconds: float) -> None:
-        super().__init__(message)
+    def __init__(self, message: str, wait_seconds: float, *, detail: str | None = None) -> None:
+        super().__init__(message, detail=detail)
         self.wait_seconds = wait_seconds
