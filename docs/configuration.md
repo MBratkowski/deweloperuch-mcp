@@ -15,6 +15,7 @@ Stan na bootstrap (A#1). Cache odpowiedzi, klient HTTP, serwer MCP i CLI jeszcze
 | Ścieżka | Opis |
 |---|---|
 | `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/throttle.lock` | Zamek (`flock`) i stan wspólnego limitera zapytań. Tworzony automatycznie (katalog, plik z uprawnieniami `0600`). Wewnętrzny protokół między procesami: nie edytuj. |
+| `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/chunks/` | Cache chunków JS skanera `recon/scan_bundles.py` (ścieżka po `/_next/static/chunks/`). Pliki `0600`, zapis atomowy, tylko przy pełnym 200 z niepustym ciałem. Nazwy z hashem są niezmienne, więc taki chunk nie jest pobierany ponownie; pusty plik jest pobierany ponownie, a chunki bez hasha w nazwie przy każdym skanie. Można go usunąć bez skutków ubocznych (kolejny skan pobierze chunki od nowa). |
 
 ## Limiter zapytań
 
@@ -51,10 +52,22 @@ Pojedyncze żądanie GET na uruchomienie (bez przekierowań i ponowień), w sloc
 | `--max-wait` | 60 s (domyślnie) | Skończona liczba sekund. Dłuższa wymagana przerwa kończy się kodem 5, bez wysłania zapytania. |
 | Pauza po 429 | co najmniej 60 s | `max(Retry-After, 60)`. |
 | Pauza po 502/503/504 | `Retry-After` albo 30 s | `Retry-After` > 3600 s jest przycinane do 3600 s. |
-| Limit odpowiedzi | 32 MiB | Większa odpowiedź kończy się kodem 4 (D5: probe nie służy do zrzutów). |
+| Limit odpowiedzi | 32 MiB | Większa odpowiedź kończy się kodem 4 (D5: recon nie służy do zrzutów). |
 | Limit czytania odpowiedzi | ok. 120 s | Najgorszy przypadek ok. 120 s + 2 × 30 s. Odpowiedź krótsza niż `Content-Length` to kod 4, bez zapisu próbki. |
 | `--save` | `docs/discovery/samples/` | Jedyny katalog zapisu; istniejący plik nie jest nadpisywany. |
 
 Probe nie czyta własnych zmiennych środowiskowych. Parser `Retry-After` (sekundy albo data HTTP) jest wspólny z pakietem.
 
-_Źródło: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `src/deweloperuch_mcp/retry_after.py`, `recon/config.py`, `recon/probe.py`, `recon/allowlist.py`, `recon/flight.py`_
+### `recon/scan_bundles.py`
+
+Skaner bundli JS (wykrywanie zmian po deployu, D7). Wszystkie żądania idą przez ten sam zamek `throttle.lock` i z tym samym User-Agentem. Flagi, kody wyjścia i format `--json`: `python3 recon/scan_bundles.py --help` oraz [README.md](../README.md).
+
+| Parametr | Wartość | Opis |
+|---|---|---|
+| `max_wait` | 60 s (stałe) | Bez flagi. Dłuższa wymagana przerwa kończy skan kodem 5, przed wysłaniem zapytania. |
+| Pauzy, limity odpowiedzi | jak w probe | Pauza po 429 co najmniej 60 s, po 502/503/504 `Retry-After` albo 30 s; limit odpowiedzi 32 MiB i czas czytania jak wyżej. |
+| Przekierowania, ponowienia | brak | Każdy błąd (także 3xx) kończy cały skan. |
+| `MAX_CHUNKS` | 400 | Twardy limit żądań chunków na skan (także gdy pliki cache są nieczytelne); przekroczenie to kod 6. |
+| Cache | `chunks/` | Zob. tabela „Pliki”. Skaner respektuje `XDG_CACHE_HOME`. |
+
+_Źródło: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `src/deweloperuch_mcp/retry_after.py`, `src/deweloperuch_mcp/http_policy.py`, `recon/config.py`, `recon/http_common.py`, `recon/probe.py`, `recon/scan_bundles.py`, `recon/allowlist.py`, `recon/flight.py`_

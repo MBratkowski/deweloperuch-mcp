@@ -29,6 +29,7 @@ from typing import Any
 
 import pytest
 
+import http_common
 import probe
 from deweloperuch_mcp import identity
 from deweloperuch_mcp.throttle import LOCK_FILENAME, MAX_DEFER, RequestLimiter
@@ -322,7 +323,8 @@ class Chunks:
 
 @pytest.fixture
 def small_limit(monkeypatch: pytest.MonkeyPatch) -> int:
-    monkeypatch.setattr(probe, "MAX_BODY_BYTES", 100)
+    # read_body lives in recon/http_common.py (shared with the scanner) and reads its limit there.
+    monkeypatch.setattr(http_common, "MAX_BODY_BYTES", 100)
     return 100
 
 
