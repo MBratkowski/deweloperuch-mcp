@@ -1,0 +1,15 @@
+{
+  "args": [
+    "stop",
+    "clear"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Brak STOP: nie było czego zdejmować.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

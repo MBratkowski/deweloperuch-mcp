@@ -1,0 +1,39 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa",
+    "demography"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Urodzenia żywe, zgony i przyrost naturalny · Warszawa [warszawa]",
+    "Źródło: GUS · rocznie · okresy: pokazano 12 z 24 (dane od 2002).",
+    "Wskazówka: Pokazano ostatnie 12 z 24 okresów (dane od 2002); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-demografia",
+    "Kolumny:",
+    "  [1] Urodzenia żywe (osoby)",
+    "  [2] Zgony (osoby)",
+    "  [3] Przyrost naturalny (osoby)",
+    "Okres     [1]     [2]     [3]",
+    "2014   19 511  17 959   1 552",
+    "2015   19 905  18 592   1 313",
+    "2016   20 980  18 512   2 468",
+    "2017   21 315  19 118   2 197",
+    "2018   21 276  19 673   1 603",
+    "2019   21 364  19 083   2 281",
+    "2020   20 669  22 181  -1 512",
+    "2021   19 756  24 016  -4 260",
+    "2022   18 081  20 501  -2 420",
+    "2023   15 566  19 125  -3 559",
+    "2024   14 859  17 254  -2 395",
+    "2025   14 439  16 730  -2 291",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

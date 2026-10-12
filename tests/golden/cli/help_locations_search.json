@@ -1,0 +1,29 @@
+{
+  "args": [
+    "locations",
+    "search",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch locations search [OPTIONS] {QUERY}                                             ",
+    "                                                                                                    ",
+    " Znajdź miasta, dzielnice i ulice; podaje slug miasta do `offers search`.                           ",
+    "                                                                                                    ",
+    "╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ *    QUERY      <str>  Fragment nazwy miasta, dzielnicy lub ulicy (2–100 znaków), np. krak.      │",
+    "│                        [required]                                                                │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --json          Wypisz wynik jako JSON (model domenowy).                                         │",
+    "│ --help          Show this message and exit.                                                      │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

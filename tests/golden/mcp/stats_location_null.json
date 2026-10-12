@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": null,
+        "dataset": "wages"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool get_government_statistics: 1 validation error for get_government_statisticsArguments\nlocation\n  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

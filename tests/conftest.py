@@ -4,7 +4,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from deweloperuch_mcp.client import transport
+from deweloperuch_mcp.infrastructure.deweloperuch import transport
 
 
 @pytest.fixture(autouse=True)

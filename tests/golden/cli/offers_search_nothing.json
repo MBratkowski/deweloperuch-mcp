@@ -1,0 +1,20 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Pasujące oferty: 0 · pokazano 0.",
+    "Wskazówka: Brak ofert spełniających kryteria. Sprawdź slug miasta (search_locations) i poluzuj filtry.",
+    "Ta lista na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10&_rsc=cc6e11f9 [rsc: 1] [accept: */*]"
+  ]
+}

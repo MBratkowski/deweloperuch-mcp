@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "warszawa",
+        "area_max": false
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool search_offers: 1 validation error for search_offersArguments\narea_max\n  Value error, oczekiwano liczby całkowitej, a nie true/false [type=value_error, input_value=False, input_type=bool]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

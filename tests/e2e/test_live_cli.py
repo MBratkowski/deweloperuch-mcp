@@ -20,6 +20,7 @@ pytestmark = pytest.mark.live
 
 UNKNOWN_CITY = "nieistniejace-miasto"
 PAGES = BASE_URL + "/ceny-ofertowe"
+STATS = BASE_URL + "/statystyki/statystyki-rzadowe"
 FILTERS = ("--price-max", "900000", "--area-min", "30", "--sort", "price_asc")
 
 Cli = Callable[..., Run]
@@ -144,6 +145,20 @@ def test_offers_search_of_an_unknown_city(cli: Cli) -> None:
     assert SERVICE_CHANGED not in run.stderr
     assert lines[1].startswith("Szczegóły: ")
     assert "<html" not in run.stderr.lower() and "<!doctype" not in run.stderr.lower()
+    assert run.sent == 1
+
+
+def test_stats_government_as_text(cli: Cli) -> None:
+    run = cli("stats", "government", "warszawa", "unemployment")
+
+    lines = ok(run).splitlines()
+    assert lines[0] == "Stopa bezrobocia rejestrowanego · Warszawa [warszawa]"
+    assert lines[1].startswith("Źródło: GUS · miesięcznie · okresy: pokazano 12 z ")
+    assert f"Strona na deweloperuch.pl: {STATS}/warszawa#gus-bezrobocie" in lines
+    assert "  [1] Stopa bezrobocia (%)" in lines
+    header = next(i for i, line in enumerate(lines) if line.startswith("Okres "))
+    rows = lines[header + 1 :]
+    assert len(rows) == 12 and all(row[:7].count("-") == 1 for row in rows), rows
     assert run.sent == 1
 
 

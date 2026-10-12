@@ -43,4 +43,4 @@ Oferty: aktywne 3 z 16 · pokazano 2 · pominięto 1 (zwiększ --limit).
 
 The lines „Strona inwestycji” (investment page) and „Profil dewelopera” (developer profile) (D12) are omitted when the slug is missing.
 
-_Source: `src/deweloperuch_mcp/cli.py`, `uv run deweloperuch investments get --help`_
+_Source: `src/deweloperuch_mcp/interfaces/cli/`, `uv run deweloperuch investments get --help`_

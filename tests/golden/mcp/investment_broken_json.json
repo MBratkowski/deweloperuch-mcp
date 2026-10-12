@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "get_investment",
+      "arguments": {
+        "investment_slug": "smolna"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Inwestycja 'smolna': Serwis zwrócił nieczytelne dane (niepoprawny JSON). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "UnexpectedResponseError: Inwestycja 'smolna': Serwis zwrócił nieczytelne dane (niepoprawny JSON). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi. Szczegóły: /api/map/investments/visible/smolna: Expecting value: line 1 column 1 (char 0)"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

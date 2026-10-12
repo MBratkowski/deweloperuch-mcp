@@ -53,4 +53,4 @@ Ta lista na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/warszawa/mies
 Szczegóły oferty: deweloperuch offers get OFFER_ID --investment INVESTMENT_SLUG
 ```
 
-_Source: `src/deweloperuch_mcp/cli.py`, `uv run deweloperuch offers search --help`_
+_Source: `src/deweloperuch_mcp/interfaces/cli/`, `uv run deweloperuch offers search --help`_

@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "warszawa",
+        "price_min": "10.5"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool search_offers: 1 validation error for search_offersArguments\nprice_min\n  Value error, oczekiwano liczby całkowitej zapisanej cyframi, podano '10.5' [type=value_error, input_value='10.5', input_type=str]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

@@ -1,0 +1,21 @@
+{
+  "args": [
+    "investments",
+    "get",
+    "smolna",
+    "--history"
+  ],
+  "exit_code": 7,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Serwis nie ma historii cen ofert inwestycji 'smolna'. Pobierz inwestycję bez include_history, a historię pojedynczej oferty przez get_offer.",
+    "Szczegóły: /api/investments/33/sale-events",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]",
+    "GET https://deweloperuch.pl/api/investments/33/sale-events [accept: application/json]"
+  ]
+}

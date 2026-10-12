@@ -1,0 +1,25 @@
+{
+  "calls": [
+    {
+      "tool": "get_offer",
+      "arguments": {
+        "offer_id": 2377,
+        "investment_slug": "SMOLNA"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "investment_slug: oczekiwano slug inwestycji, np. smolna; podaje go search_offers (investment_slug); podano 'SMOLNA'.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: investment_slug: oczekiwano slug inwestycji, np. smolna; podaje go search_offers (investment_slug); podano 'SMOLNA'. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

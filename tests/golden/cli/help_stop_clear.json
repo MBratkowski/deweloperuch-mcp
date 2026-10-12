@@ -1,0 +1,24 @@
+{
+  "args": [
+    "stop",
+    "clear",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch stop clear [OPTIONS]                                                           ",
+    "                                                                                                    ",
+    " Zdejmij blokadę STOP. Tylko człowiek, po sprawdzeniu przyczyny (`stop status`).                    ",
+    "                                                                                                    ",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --help          Show this message and exit.                                                      │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

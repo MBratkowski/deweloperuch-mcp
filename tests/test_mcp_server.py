@@ -10,6 +10,7 @@ Server name, instructions, tool names, descriptions and schemas are public API:
 tests/snapshots/mcp_tools.json shows every change in the diff.
 """
 
+import dataclasses
 import json
 import logging
 import os
@@ -34,8 +35,26 @@ from mcp.types import CallToolResult, TextContent
 from mcp.types.version import LATEST_HANDSHAKE_VERSION
 from pydantic import BaseModel
 
-from deweloperuch_mcp import identity, mcp_results, mcp_server, services
-from deweloperuch_mcp.domain.models import (
+import deweloperuch_mcp.mcp_server
+from deweloperuch_mcp import bootstrap, identity
+from deweloperuch_mcp.application.investments import GetInvestment
+from deweloperuch_mcp.application.locations import SearchLocations
+from deweloperuch_mcp.application.offers import GetOffer, SearchOffers
+from deweloperuch_mcp.application.statistics import GetGovernmentStatistics
+from deweloperuch_mcp.domain.statistics import Dataset, TimeSeries
+from deweloperuch_mcp.domain.values import (
+    BROWSABLE_PAGES,
+    DEFAULT_PAGE_SIZE,
+    PAGE_SIZES,
+    AmountPln,
+    AreaM2,
+)
+from deweloperuch_mcp.interfaces.choices import DatasetChoice, PageSizeChoice
+from deweloperuch_mcp.interfaces.mcp import calls, inputs
+from deweloperuch_mcp.interfaces.mcp import presenters as mcp_results
+from deweloperuch_mcp.interfaces.mcp import server as mcp_server
+from deweloperuch_mcp.interfaces.views import (
+    GovernmentStatistics,
     Investment,
     Location,
     LocationSearchResult,
@@ -47,16 +66,20 @@ from deweloperuch_mcp.domain.models import (
 )
 from deweloperuch_mcp.throttle import RequestLimiter
 from discovery_samples import body, rsc_payload
-from rsc_fixtures import UNKNOWN_CITY, offers_payload
+from rsc_fixtures import STATS_POLSKA, UNKNOWN_CITY, offers_payload, raw
 from service_mocks import (
     INVESTMENT,
     SALE_EVENTS,
+    STATS_PATH,
+    UNKNOWN_LOCATION,
     investment_routes,
     investment_with_offers,
     location_routes,
     offers_page,
     offers_route,
+    stats_routes,
     unknown_city_route,
+    unknown_location_route,
 )
 
 T = TypeVar("T")
@@ -64,11 +87,21 @@ T = TypeVar("T")
 SNAPSHOT = Path(__file__).resolve().parent / "snapshots" / "mcp_tools.json"
 UPDATE_SNAPSHOTS = "DEWELOPERUCH_UPDATE_SNAPSHOTS"
 
-TOOLS = ("search_locations", "search_offers", "get_offer", "get_investment")
+TOOLS = (
+    "search_locations",
+    "search_offers",
+    "get_offer",
+    "get_investment",
+    "get_government_statistics",
+)
 # D3: backend names never reach the model (keys of results, descriptions, schemas).
 BACKEND_NAMES = re.compile(r"sale|invest(?!ment)|amount|_rsc|\brsc\b|/api/|initialData", re.I)
 # Error results: no paths, prop names or text of the service's answer either.
-LEAKS = re.compile(r"/api|/ceny-|initialData|invest(?!ment)|sale|Ignore previous|<html", re.I)
+LEAKS = re.compile(
+    r"/api|/ceny-|/statystyki|initialData|tocItems|currentSlug|invest(?!ment)|sale|"
+    r"Ignore previous|<html",
+    re.I,
+)
 PAGES = identity.BASE_URL + "/ceny-ofertowe"
 SIZE_BUDGET = 8_000
 """Characters of a result that fit the model's context comfortably (S1b)."""
@@ -107,10 +140,10 @@ class Sessions:
 
     def __init__(self, limiter: RequestLimiter) -> None:
         self.limiter = limiter
-        self.opened: list[services.Session] = []
+        self.opened: list[bootstrap.Session] = []
 
-    def __call__(self) -> services.Session:
-        session = services.Session(limiter=self.limiter)
+    def __call__(self) -> bootstrap.Session:
+        session = bootstrap.Session(limiter=self.limiter)
         self.opened.append(session)
         return session
 
@@ -121,7 +154,7 @@ def sessions(tmp_path: Path) -> Sessions:
 
 
 @pytest.fixture
-def server(sessions: Sessions) -> MCPServer[services.Session]:
+def server(sessions: Sessions) -> MCPServer[bootstrap.Session]:
     return mcp_server.build_server(sessions)
 
 
@@ -131,7 +164,7 @@ def service() -> Iterator[respx.MockRouter]:
         yield router
 
 
-def with_client(server: MCPServer[services.Session], use: Callable[[Client], Awaitable[T]]) -> T:
+def with_client(server: MCPServer[bootstrap.Session], use: Callable[[Client], Awaitable[T]]) -> T:
     async def main() -> T:
         async with Client(server) as client:
             return await use(client)
@@ -139,7 +172,7 @@ def with_client(server: MCPServer[services.Session], use: Callable[[Client], Awa
     return anyio.run(main)
 
 
-def call(server: MCPServer[services.Session], tool: str, **arguments: Any) -> CallToolResult:
+def call(server: MCPServer[bootstrap.Session], tool: str, **arguments: Any) -> CallToolResult:
     return with_client(server, lambda client: client.call_tool(tool, arguments))
 
 
@@ -186,7 +219,7 @@ def properties(schema: Any) -> Iterator[tuple[str, dict[str, Any]]]:
             yield from properties(value)
 
 
-def listing(server: MCPServer[services.Session]) -> dict[str, Any]:
+def listing(server: MCPServer[bootstrap.Session]) -> dict[str, Any]:
     """What a client sees before any call: the server and its tools."""
 
     async def read(client: Client) -> dict[str, Any]:
@@ -206,14 +239,14 @@ def listing(server: MCPServer[services.Session]) -> dict[str, Any]:
     return with_client(server, read)
 
 
-def tools(server: MCPServer[services.Session]) -> dict[str, dict[str, Any]]:
+def tools(server: MCPServer[bootstrap.Session]) -> dict[str, dict[str, Any]]:
     return {tool["name"]: tool for tool in listing(server)["tools"]}
 
 
-# --- the listing (public API) ------------------------------------------------------------
+# --- the listing (public API) ---------------------------------------------------------------------
 
 
-def test_the_server_lists_the_four_read_only_tools(server: MCPServer[services.Session]) -> None:
+def test_the_server_lists_its_read_only_tools(server: MCPServer[bootstrap.Session]) -> None:
     tools_listed = listing(server)["tools"]
 
     assert [tool["name"] for tool in tools_listed] == list(TOOLS)
@@ -228,7 +261,7 @@ def test_the_server_lists_the_four_read_only_tools(server: MCPServer[services.Se
 
 
 def test_descriptions_and_schemas_have_no_backend_names(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
 ) -> None:
     seen = listing(server)
     assert not BACKEND_NAMES.search(seen["server"]["instructions"])
@@ -241,7 +274,7 @@ def test_descriptions_and_schemas_have_no_backend_names(
 
 
 def test_descriptions_say_when_to_use_the_tool_and_its_limits(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
 ) -> None:
     described = {name: tool["description"] for name, tool in tools(server).items()}
 
@@ -258,11 +291,18 @@ def test_descriptions_say_when_to_use_the_tool_and_its_limits(
     assert "investment_slug" in described["get_offer"]
     assert "offers_omitted > 0 znaczy, że lista jest niepełna" in described["get_investment"]
     assert "offers_total to liczba z serwisu" in described["get_investment"]
+    stats = described["get_government_statistics"]
+    assert "GUS i NBP" in stats and "search_offers" in stats
+    assert "domyślnie ostatnie 12 okresów" in stats and "najwyżej 120" in stats
+    assert "nbp_prices: tylko 17 dużych miast i 3 agregaty, nie polska" in stats
+    assert "note" in stats and "stats_url" in stats
+    assert "Nie każdy zestaw jest dostępny dla każdej lokalizacji" in stats
+    assert "z opóźnieniem" in stats
     for description in described.values():
         assert len(description) <= 1_200
 
 
-def test_search_offers_input_schema(server: MCPServer[services.Session]) -> None:
+def test_search_offers_input_schema(server: MCPServer[bootstrap.Session]) -> None:
     schema = tools(server)["search_offers"]["inputSchema"]
     fields = schema["properties"]
 
@@ -272,19 +312,19 @@ def test_search_offers_input_schema(server: MCPServer[services.Session]) -> None
     assert fields["sort"]["default"] is None
     assert "nie jest gwarantowana" in fields["sort"]["description"]
     assert fields["per_page"]["default"] == 10  # the values: test_mcp_page_sizes_...
-    assert (fields["page"]["minimum"], fields["page"]["maximum"]) == (1, services.MAX_PAGES)
+    assert (fields["page"]["minimum"], fields["page"]["maximum"]) == (1, BROWSABLE_PAGES)
     assert fields["page"]["default"] == 1
     for name, limit in (
-        ("price_min", services.PRICE_LIMIT),
-        ("price_max", services.PRICE_LIMIT),
-        ("area_min", services.AREA_LIMIT),
-        ("area_max", services.AREA_LIMIT),
+        ("price_min", AmountPln.MAX),
+        ("price_max", AmountPln.MAX),
+        ("area_min", AreaM2.MAX),
+        ("area_max", AreaM2.MAX),
     ):
         assert fields[name]["anyOf"][0] == {"maximum": limit, "minimum": 0, "type": "integer"}
         assert fields[name]["default"] is None
 
 
-def test_the_other_input_schemas(server: MCPServer[services.Session]) -> None:
+def test_the_other_input_schemas(server: MCPServer[bootstrap.Session]) -> None:
     schemas = {name: tool["inputSchema"] for name, tool in tools(server).items()}
 
     assert schemas["search_locations"]["required"] == ["query"]
@@ -304,15 +344,40 @@ def test_the_other_input_schemas(server: MCPServer[services.Session]) -> None:
     )
 
 
+def test_government_statistics_input_schema(server: MCPServer[bootstrap.Session]) -> None:
+    schema = tools(server)["get_government_statistics"]["inputSchema"]
+    fields = schema["properties"]
+
+    assert schema["required"] == ["location", "dataset"]
+    assert fields["location"]["type"] == "string"
+    assert "jastrzebie" in fields["location"]["description"]
+    assert fields["location"]["description"].endswith(
+        "Dane są tylko dla 66 miast na prawach powiatu, a nie dla dzielnic i mniejszych "
+        "miejscowości."
+    )
+    assert "Częstotliwość zwraca pole frequency." in fields["dataset"]["description"]
+    assert "ok. 10 tys. znaków" in fields["periods"]["description"]
+    assert fields["dataset"]["enum"] == [dataset.value for dataset in Dataset]
+    for dataset in Dataset:  # each value explained in Polish
+        assert f"{dataset.value}:" in fields["dataset"]["description"]
+    periods = fields["periods"]
+    assert (periods["default"], periods["minimum"], periods["maximum"]) == (12, 1, 120)
+    assert periods["type"] == "integer"
+
+
+def test_mcp_dataset_names_are_the_domain_ones() -> None:
+    assert get_args(DatasetChoice) == tuple(dataset.value for dataset in Dataset)
+
+
 def test_mcp_page_sizes_are_confirmed_ones(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     """In MCP only 10 and 50: [P] values (D4) that keep a page readable. The one test of
     the page sizes: the others (and the subprocess smoke test) do not depend on them."""
-    assert get_args(mcp_server.McpPerPage) == (10, 50)
-    assert set(get_args(mcp_server.McpPerPage)) <= set(services.PER_PAGE_VALUES)
-    assert get_args(services.PerPage) == services.PER_PAGE_VALUES
-    assert services.DEFAULT_PER_PAGE == 10
+    assert get_args(inputs.McpPerPage) == (10, 50)
+    assert set(get_args(inputs.McpPerPage)) <= set(PAGE_SIZES)
+    assert get_args(PageSizeChoice) == PAGE_SIZES
+    assert DEFAULT_PAGE_SIZE == 10
     assert tools(server)["search_offers"]["inputSchema"]["properties"]["per_page"]["enum"] == [
         10,
         50,
@@ -330,7 +395,7 @@ def test_mcp_page_sizes_are_confirmed_ones(
 
 
 def test_output_schemas_describe_what_names_do_not_say(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
 ) -> None:
     described = {
         "price",
@@ -344,6 +409,13 @@ def test_output_schemas_describe_what_names_do_not_say(
         "offers_total",
         "offer_count",
         "kind",
+        "source",
+        "frequency",
+        "unit",
+        "values",
+        "note",
+        "stats_url",
+        "periods",
     }
     seen: set[str] = set()
     for tool in tools(server).values():
@@ -356,7 +428,7 @@ def test_output_schemas_describe_what_names_do_not_say(
     assert seen == described
 
 
-def test_the_listing_matches_the_snapshot(server: MCPServer[services.Session]) -> None:
+def test_the_listing_matches_the_snapshot(server: MCPServer[bootstrap.Session]) -> None:
     """Server name, instructions and tools as a client sees them. After an intended
     change: DEWELOPERUCH_UPDATE_SNAPSHOTS=1 uv run pytest tests/test_mcp_server.py"""
     seen = json.dumps(listing(server), ensure_ascii=False, indent=2) + "\n"
@@ -367,7 +439,7 @@ def test_the_listing_matches_the_snapshot(server: MCPServer[services.Session]) -
     assert seen == SNAPSHOT.read_text(encoding="utf-8")
 
 
-def test_server_info_and_instructions(server: MCPServer[services.Session]) -> None:
+def test_server_info_and_instructions(server: MCPServer[bootstrap.Session]) -> None:
     async def info(client: Client) -> tuple[str | None, str | None, str | None]:
         server_info = client.server_info
         if server_info is None:
@@ -390,7 +462,7 @@ def test_server_info_and_instructions(server: MCPServer[services.Session]) -> No
     assert "Błędy walidacji argumentów bywają po angielsku" in instructions
 
 
-# --- the MCP representation --------------------------------------------------------------
+# --- the MCP representation -----------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -409,8 +481,27 @@ def test_server_info_and_instructions(server: MCPServer[services.Session]) -> No
 def test_mcp_results_keep_the_domain_field_names(
     shown: type[BaseModel], domain: type[BaseModel], added: set[str]
 ) -> None:
-    """D3: the representation only drops fields (and adds the D4 counters)."""
+    """D3: the representation only drops fields of the views the CLI prints whole (and
+    adds the D4 counters)."""
     assert set(shown.model_fields) - added <= set(domain.model_fields)
+    assert added <= set(shown.model_fields)
+
+
+@pytest.mark.parametrize(
+    ("shown", "domain", "added"),
+    [
+        (mcp_results.GovernmentStatisticsResult, GovernmentStatistics, {"periods"}),
+        (mcp_results.SeriesItem, TimeSeries, {"values"}),
+    ],
+)
+def test_mcp_statistics_keep_the_domain_field_names(
+    shown: type[BaseModel], domain: type[Any], added: set[str]
+) -> None:
+    """D3 for the statistics (plain dataclasses, D13): the table form adds the periods
+    once and each series' values instead of its points."""
+    names = {field.name for field in dataclasses.fields(domain)}
+
+    assert set(shown.model_fields) - added <= names
     assert added <= set(shown.model_fields)
 
 
@@ -418,10 +509,10 @@ def test_search_items_are_compact() -> None:
     assert set(mcp_results.OfferItem.model_fields) == COMPACT_OFFER | {"city", "city_slug"}
 
 
-# --- calls -------------------------------------------------------------------------------
+# --- calls ----------------------------------------------------------------------------------------
 
 
-def test_search_locations(server: MCPServer[services.Session], service: respx.MockRouter) -> None:
+def test_search_locations(server: MCPServer[bootstrap.Session], service: respx.MockRouter) -> None:
     location_routes(service)
 
     result = data(call(server, "search_locations", query="krak"))
@@ -438,7 +529,7 @@ def test_search_locations(server: MCPServer[services.Session], service: respx.Mo
 
 
 def test_search_locations_without_a_total_has_total_null(
-    server: MCPServer[services.Session], service: respx.MockRouter, sessions: Sessions
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter, sessions: Sessions
 ) -> None:
     """D4: total is always there, null when unknown (the only null of the results); the
     schema requires it and allows null."""
@@ -457,7 +548,7 @@ def test_search_locations_without_a_total_has_total_null(
 
 
 def test_search_offers_with_defaults_lists_compact_offers(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     route = offers_route(service)  # the real Warsaw page: 10 offers
 
@@ -487,7 +578,7 @@ def test_search_offers_with_defaults_lists_compact_offers(
 
 
 def test_offer_and_investment_carry_the_links_of_their_pages(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     """D12: the investment's page and the developer's profile, from the result's slugs."""
     investment_routes(service)
@@ -503,7 +594,7 @@ def test_offer_and_investment_carry_the_links_of_their_pages(
 
 
 def test_search_offers_in_the_whole_country_keeps_the_city(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     offers_route(service)
 
@@ -513,7 +604,7 @@ def test_search_offers_in_the_whole_country_keeps_the_city(
 
 
 def test_search_offers_passes_every_argument(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     route = offers_route(service, offers_page("page.offers_list.filtered"))
 
@@ -546,7 +637,7 @@ def test_search_offers_passes_every_argument(
 
 @pytest.mark.parametrize("per_page", [10, 50])
 def test_truncated_hint_says_to_narrow_the_filters(
-    server: MCPServer[services.Session], service: respx.MockRouter, per_page: int
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter, per_page: int
 ) -> None:
     """A bigger page would not narrow 13 324 offers down; the hint does not suggest it."""
     offers_route(service, offers_page(count=per_page))
@@ -568,7 +659,7 @@ UNKNOWN_CITY_MESSAGE = (
 
 @pytest.mark.parametrize("city", ["Kraków", "Warszawa", "KRAKOW", ""])
 def test_search_offers_city_that_is_not_a_slug_points_to_search_locations(
-    server: MCPServer[services.Session], service: respx.MockRouter, city: str
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter, city: str
 ) -> None:
     """Mistakes a model makes with `city`: a name, capitals, nothing. No request."""
     result = call(server, "search_offers", city=city)
@@ -582,7 +673,7 @@ def test_search_offers_city_that_is_not_a_slug_points_to_search_locations(
 
 
 def test_search_offers_trims_spaces_around_the_city(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     route = offers_route(service)
 
@@ -594,7 +685,7 @@ def test_search_offers_trims_spaces_around_the_city(
 
 
 def test_search_offers_of_an_unknown_city_is_an_error_that_says_so(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     """The real answer (HTTP 200, Next.js's 404 marker) is "no such city", not "the
     service may have changed": the model can fix the argument."""
@@ -607,7 +698,7 @@ def test_search_offers_of_an_unknown_city_is_an_error_that_says_so(
     assert not LEAKS.search(text(result))
 
 
-def test_get_offer(server: MCPServer[services.Session], service: respx.MockRouter) -> None:
+def test_get_offer(server: MCPServer[bootstrap.Session], service: respx.MockRouter) -> None:
     investment_routes(service)
 
     result = data(call(server, "get_offer", offer_id=2377, investment_slug="smolna"))
@@ -622,7 +713,7 @@ def test_get_offer(server: MCPServer[services.Session], service: respx.MockRoute
 
 
 def test_get_investment_defaults_to_20_offers_without_history(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     _, history, _ = investment_routes(service, investment_with_offers(60))
 
@@ -641,7 +732,7 @@ def test_get_investment_defaults_to_20_offers_without_history(
 
 
 def test_get_investment_with_history(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     _, history, _ = investment_routes(service)
 
@@ -658,7 +749,7 @@ def test_get_investment_with_history(
 
 
 def test_get_investment_limit_0_is_the_summary(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     investment_routes(service)
 
@@ -669,7 +760,7 @@ def test_get_investment_limit_0_is_the_summary(
 
 
 def test_get_investment_with_every_offer_is_not_truncated(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     investment_routes(service)
 
@@ -683,11 +774,12 @@ def test_get_investment_with_every_offer_is_not_truncated(
 
 
 def test_results_have_no_backend_names(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     location_routes(service)
     offers_route(service)
     investment_routes(service)
+    stats_routes(service)
 
     async def every_tool(client: Client) -> list[CallToolResult]:
         return [
@@ -697,6 +789,12 @@ def test_results_have_no_backend_names(
             await client.call_tool(
                 "get_investment", {"investment_slug": "smolna", "include_history": True}
             ),
+            *[
+                await client.call_tool(
+                    "get_government_statistics", {"location": "warszawa", "dataset": dataset}
+                )
+                for dataset in Dataset
+            ],
         ]
 
     for result in with_client(server, every_tool):
@@ -704,7 +802,302 @@ def test_results_have_no_backend_names(
         assert found == []
 
 
-# --- arguments as models send them -------------------------------------------------------
+# --- get_government_statistics (the real pages) ---------------------------------------------------
+
+STATS = identity.BASE_URL + "/statystyki/statystyki-rzadowe"
+
+
+def test_government_statistics_as_a_table(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    stats_routes(service)
+
+    result = data(
+        call(
+            server,
+            "get_government_statistics",
+            location="warszawa",
+            dataset="nbp_prices",
+            periods=2,
+        )
+    )
+
+    assert result == {
+        "location_slug": "warszawa",
+        "location_name": "Warszawa",
+        "dataset": "nbp_prices",
+        "title": "Średnie ceny mieszkań za m² według NBP",
+        "source": "NBP",
+        "frequency": "quarter",
+        "total": 80,
+        "returned": 2,
+        "truncated": True,
+        "available_from": "2006-Q3",
+        "hint": (
+            "Pokazano ostatnie 2 z 80 okresów (dane od 2006-Q3); starsze pokaże większe "
+            "periods (najwyżej 120)."
+        ),
+        "stats_url": STATS + "/warszawa#nbp",
+        "periods": ["2026-Q1", "2026-Q2"],
+        "series": [
+            {
+                "series_id": "primary_asking",
+                "label": "Rynek pierwotny: cena ofertowa",
+                "unit": "PLN/m²",
+                "values": [18056, 18488],
+            },
+            {
+                "series_id": "primary_transaction",
+                "label": "Rynek pierwotny: cena transakcyjna",
+                "unit": "PLN/m²",
+                "values": [16471, 16783],
+            },
+            {
+                "series_id": "secondary_asking",
+                "label": "Rynek wtórny: cena ofertowa",
+                "unit": "PLN/m²",
+                "values": [18914, 19059],
+            },
+            {
+                "series_id": "secondary_transaction",
+                "label": "Rynek wtórny: cena transakcyjna",
+                "unit": "PLN/m²",
+                "values": [16523, 16723],
+            },
+        ],
+    }
+
+
+def test_government_statistics_with_the_defaults(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    stats_routes(service)
+
+    result = data(
+        call(server, "get_government_statistics", location="polska", dataset="average_area")
+    )
+
+    assert (result["total"], result["returned"], result["truncated"]) == (22, 12, True)
+    assert result["periods"] == [str(year) for year in range(2015, 2027)]
+    assert result["series"][0]["values"][-1] == 62.5
+    assert result["stats_url"] == STATS + "/polska#gus-srednia-powierzchnia"
+    assert "note" not in result  # no null fields
+    assert not has_null(result)
+
+
+def test_government_statistics_keep_null_values_in_place(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    """A period without data stays in the list as null, so values match periods."""
+    stats_routes(service)
+
+    result = data(
+        call(
+            server,
+            "get_government_statistics",
+            location="polska",
+            dataset="dwellings_quarterly",
+            periods=120,
+        )
+    )
+
+    assert result["returned"] == result["total"] == 87
+    rent = next(s for s in result["series"] if s["series_id"] == "started_for_rent")
+    assert len(rent["values"]) == len(result["periods"])
+    assert rent["values"][0] is None and rent["values"][-1] == 22
+    assert result["note"].startswith("Ostatni kwartał (2026-Q3) obejmuje tylko 2 z 3")
+
+
+@pytest.mark.parametrize(
+    ("arguments", "returned"),
+    [
+        ({"periods": "3"}, 3),
+        ({"periods": " 5 "}, 5),
+        ({"periods": None}, 12),
+        ({"dataset": " wages "}, 12),
+        ({"location": " polska "}, 12),
+    ],
+)
+def test_government_statistics_arguments_as_models_send_them(
+    server: MCPServer[bootstrap.Session],
+    service: respx.MockRouter,
+    arguments: dict[str, Any],
+    returned: int,
+) -> None:
+    stats_routes(service)
+
+    result = data(
+        call(
+            server,
+            "get_government_statistics",
+            **{"location": "polska", "dataset": "wages", **arguments},
+        )
+    )
+
+    assert result["returned"] == returned
+
+
+@pytest.mark.parametrize(
+    ("arguments", "field"),
+    [
+        ({"periods": 0}, "periods"),
+        ({"periods": 121}, "periods"),
+        ({"periods": True}, "periods"),
+        ({"periods": "3.0"}, "periods"),
+        ({"dataset": "prices"}, "dataset"),
+        ({"dataset": None}, "dataset"),
+        ({"location": None}, "location"),
+    ],
+)
+def test_government_statistics_arguments_off_the_schema_are_refused(
+    server: MCPServer[bootstrap.Session],
+    service: respx.MockRouter,
+    arguments: dict[str, Any],
+    field: str,
+) -> None:
+    result = call(
+        server,
+        "get_government_statistics",
+        **{"location": "polska", "dataset": "wages", **arguments},
+    )
+
+    assert result.is_error is True
+    assert field in text(result) and "pydantic.dev" not in text(result)
+    assert service.calls.call_count == 0
+
+
+@pytest.mark.parametrize("location", ["Kraków", "kraków", "", "a/b", "KRAKÓW"])
+def test_government_statistics_location_that_is_not_a_slug_says_what_to_give(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter, location: str
+) -> None:
+    result = call(server, "get_government_statistics", location=location, dataset="wages")
+
+    assert result.is_error is True
+    assert text(result).startswith("location: oczekiwano polska, agregat (7-miast")
+    assert service.calls.call_count == 0
+
+
+def test_government_statistics_nbp_prices_of_poland_point_to_cities(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    stats_routes(service)
+
+    result = call(server, "get_government_statistics", location="polska", dataset="nbp_prices")
+
+    assert result.is_error is True
+    assert text(result).startswith("NBP nie podaje jednej ceny dla całej Polski")
+    assert "warszawa, krakow" in text(result) and "sopot" not in text(result)
+    assert not LEAKS.search(text(result))
+
+
+def test_government_statistics_of_an_unknown_location(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    unknown_location_route(service)
+
+    result = call(server, "get_government_statistics", location=UNKNOWN_LOCATION, dataset="wages")
+
+    assert result.is_error is True
+    assert text(result) == (
+        f"Serwis nie ma statystyk rządowych dla lokalizacji {UNKNOWN_LOCATION!r}. Podaj "
+        "polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta na "
+        "prawach powiatu bez polskich znaków, np. warszawa, krakow. Jeśli nie znasz sluga "
+        "miasta, spróbuj city_slug z search_locations (zwykle jest taki sam, ale nie "
+        "zawsze, np. dla Jastrzębia-Zdroju użyj jastrzebie). Statystyki są tylko dla miast "
+        "na prawach powiatu."
+    )
+    assert not LEAKS.search(text(result))
+
+
+@pytest.mark.parametrize("location", ["Warszawa", " WARSZAWA ", "WarSzawa"])
+def test_government_statistics_location_in_capitals_is_the_slug(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter, location: str
+) -> None:
+    """Models write names with capitals: lowercased, without touching Polish letters."""
+    routes = stats_routes(service)
+
+    result = data(call(server, "get_government_statistics", location=location, dataset="wages"))
+
+    assert (result["location_slug"], routes["warszawa"].call_count) == ("warszawa", 1)
+    assert result["stats_url"] == STATS + "/warszawa#gus-wynagrodzenia"
+
+
+@pytest.mark.parametrize(
+    ("location", "dataset", "periods", "hint"),
+    [
+        (
+            "polska",
+            "dwellings_monthly",
+            120,
+            "Pokazano ostatnie 120 z 260 okresów (dane od 2005-01). To maksimum w jednym "
+            "wywołaniu; starszych okresów tym narzędziem nie pobierzesz.",
+        ),
+        (
+            "polska",
+            "unemployment",
+            119,
+            "Pokazano ostatnie 119 z 188 okresów (dane od 2011-01); starsze pokaże większe "
+            "periods (najwyżej 120).",
+        ),
+        ("polska", "dwellings_quarterly", 120, None),  # 87 periods: nothing older
+    ],
+)
+def test_government_statistics_hint_at_the_cap_of_periods(
+    server: MCPServer[bootstrap.Session],
+    service: respx.MockRouter,
+    location: str,
+    dataset: str,
+    periods: int,
+    hint: str | None,
+) -> None:
+    """At the cap of 120 a larger periods is no way to older data: the hint says so
+    instead of asking for it (the CLI, without that cap, keeps the domain's hint)."""
+    stats_routes(service)
+
+    result = data(
+        call(
+            server,
+            "get_government_statistics",
+            location=location,
+            dataset=dataset,
+            periods=periods,
+        )
+    )
+
+    assert result.get("hint") == hint
+    assert result["truncated"] is (hint is not None)
+
+
+def test_government_statistics_results_fit_the_size_budget(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    """Every dataset of both pages: the default (12 periods) < 8000 characters; the most
+    (120) within what the description of periods promises (about 11k)."""
+    stats_routes(service)
+
+    async def sizes(client: Client) -> dict[tuple[str, str, int], int]:
+        measured: dict[tuple[str, str, int], int] = {}
+        for location in ("polska", "warszawa"):
+            for dataset in Dataset:
+                if location == "polska" and dataset is Dataset.NBP_PRICES:
+                    continue
+                for periods in (12, 120):
+                    result = await client.call_tool(
+                        "get_government_statistics",
+                        {"location": location, "dataset": dataset.value, "periods": periods},
+                    )
+                    measured[(location, dataset.value, periods)] = len(text(result))
+        return measured
+
+    measured = with_client(server, sizes)
+
+    assert max(size for key, size in measured.items() if key[2] == 12) < SIZE_BUDGET
+    assert max(size for key, size in measured.items() if key[2] == 12) < 3_500
+    assert max(measured.values()) <= 11_000
+    assert max(measured, key=lambda key: measured[key]) == ("polska", "dwellings_monthly", 120)
+
+
+# --- arguments as models send them ----------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -726,7 +1119,7 @@ def test_results_have_no_backend_names(
     ],
 )
 def test_numbers_as_text_and_empty_optional_arguments_are_accepted(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
     service: respx.MockRouter,
     arguments: dict[str, Any],
     sent: dict[str, str],
@@ -744,7 +1137,7 @@ def test_numbers_as_text_and_empty_optional_arguments_are_accepted(
 
 
 def test_limit_and_offer_id_as_text_are_accepted(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     investment_routes(service)
 
@@ -761,7 +1154,7 @@ def test_limit_and_offer_id_as_text_are_accepted(
 
 
 def test_null_limit_and_history_are_the_defaults(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     _, history, _ = investment_routes(service, investment_with_offers(30))
 
@@ -799,7 +1192,7 @@ def test_null_limit_and_history_are_the_defaults(
     ],
 )
 def test_booleans_and_other_values_off_the_schema_are_rejected(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
     service: respx.MockRouter,
     tool: str,
     arguments: dict[str, Any],
@@ -812,11 +1205,11 @@ def test_booleans_and_other_values_off_the_schema_are_rejected(
     assert service.calls.call_count == 0
 
 
-# --- errors ------------------------------------------------------------------------------
+# --- errors ---------------------------------------------------------------------------------------
 
 
 def test_invalid_input_is_a_tool_error_that_says_what_to_fix(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     result = call(server, "search_offers", city="warszawa", price_min=700_000, price_max=500_000)
 
@@ -838,7 +1231,7 @@ def test_invalid_input_is_a_tool_error_that_says_what_to_fix(
     ],
 )
 def test_arguments_off_the_schema_are_tool_errors(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
     service: respx.MockRouter,
     arguments: dict[str, Any],
     field: str,
@@ -889,7 +1282,7 @@ def test_arguments_off_the_schema_are_tool_errors(
     ],
 )
 def test_schema_errors_keep_the_field_and_the_rule_without_links_to_library_docs(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
     service: respx.MockRouter,
     arguments: dict[str, Any],
     lines: list[str],
@@ -911,7 +1304,7 @@ def test_schema_errors_keep_the_field_and_the_rule_without_links_to_library_docs
 
 
 def test_schema_errors_are_logged_by_field_name_only(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
     service: respx.MockRouter,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -927,7 +1320,7 @@ def test_schema_errors_are_logged_by_field_name_only(
 
 
 def test_unknown_arguments_are_ignored(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     """The SDK drops arguments the input schema does not name (pinned: a model's typo in
     an optional argument, e.g. max_price, is silently left out)."""
@@ -943,7 +1336,7 @@ def test_unknown_arguments_are_ignored(
 
 
 def test_a_crash_with_a_validation_error_as_its_cause_stays_a_crash(
-    server: MCPServer[services.Session], caplog: pytest.LogCaptureFixture
+    server: MCPServer[bootstrap.Session], caplog: pytest.LogCaptureFixture
 ) -> None:
     """A tool whose result fails its output schema: the SDK's generic message and its
     crash log (with the traceback), not a rewritten argument error."""
@@ -968,7 +1361,7 @@ def test_a_crash_with_a_validation_error_as_its_cause_stays_a_crash(
     assert crashes[0].exc_info is not None
 
 
-def test_other_tool_errors_pass_unchanged(server: MCPServer[services.Session]) -> None:
+def test_other_tool_errors_pass_unchanged(server: MCPServer[bootstrap.Session]) -> None:
     result = call(server, "no_such_tool")
 
     assert result.is_error is True
@@ -976,7 +1369,7 @@ def test_other_tool_errors_pass_unchanged(server: MCPServer[services.Session]) -
 
 
 def test_not_found_points_to_the_tool_with_the_slugs(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     service.get(INVESTMENT).respond(404)
 
@@ -1041,6 +1434,18 @@ ERRORS: dict[str, tuple[str, dict[str, Any], Callable[[respx.MockRouter], Any]]]
         lambda r: r.get(INVESTMENT).mock(side_effect=httpx.ConnectError(INJECTED)),
     ),
     "page without the data": ("search_offers", {"city": "warszawa"}, no_page_data),
+    "statistics page without the data": (
+        "get_government_statistics",
+        {"location": "warszawa", "dataset": "wages"},
+        lambda r: r.get(path=STATS_PATH + "warszawa").respond(
+            200, content=rsc_payload({"other": {"text": INJECTED}})
+        ),
+    ),
+    "statistics page of another location": (
+        "get_government_statistics",
+        {"location": "krakow", "dataset": "wages"},
+        lambda r: r.get(path=STATS_PATH + "krakow").respond(200, content=raw(STATS_POLSKA)),
+    ),
     "offer without history": (
         "get_offer",
         {"offer_id": 2377, "investment_slug": "smolna"},
@@ -1051,14 +1456,14 @@ ERRORS: dict[str, tuple[str, dict[str, Any], Callable[[respx.MockRouter], Any]]]
 
 @pytest.mark.parametrize("case", ERRORS)
 def test_error_results_carry_no_backend_details(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
     service: respx.MockRouter,
     caplog: pytest.LogCaptureFixture,
     case: str,
 ) -> None:
     """D3 and CLAUDE.md: no paths, prop names or text of the service's answer reach the
     model; the details go to the server log only."""
-    caplog.set_level(logging.INFO, logger=mcp_server.__name__)
+    caplog.set_level(logging.INFO, logger=calls.LOGGER_NAME)
     tool, arguments, answer = ERRORS[case]
     answer(service)
 
@@ -1068,11 +1473,33 @@ def test_error_results_carry_no_backend_details(
     assert not LEAKS.search(text(result)), text(result)
     logged = " ".join(record.getMessage() for record in caplog.records)
     assert "Szczegóły: " in logged
-    assert re.search(r"/api|/ceny-", logged)
+    assert re.search(r"/api|/ceny-|/statystyki", logged)
+
+
+def test_terminal_sequences_from_the_service_are_escaped_in_the_log(
+    server: MCPServer[bootstrap.Session],
+    service: respx.MockRouter,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The log is stderr, often a terminal: the detail is escaped there (``printable``)."""
+    caplog.set_level(logging.INFO, logger=calls.LOGGER_NAME)
+    service.get(INVESTMENT).respond(500, text="\x1b]0;PWNED\x07\x1b[31mred")
+
+    result = call(server, "get_investment", investment_slug="smolna")
+
+    assert result.is_error is True
+    logged = " ".join(record.getMessage() for record in caplog.records)
+    assert "\\x1b]0;PWNED\\x07\\x1b[31mred" in logged
+    assert "\x1b" not in logged and "\x07" not in logged
+
+
+def test_the_script_module_is_a_shim_of_the_interface() -> None:
+    assert deweloperuch_mcp.mcp_server.main is mcp_server.main
+    assert deweloperuch_mcp.mcp_server.__all__ == ["main"]
 
 
 def test_an_offer_without_history_is_explained_in_domain_terms(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     offer_without_history(service)
 
@@ -1082,12 +1509,12 @@ def test_an_offer_without_history_is_explained_in_domain_terms(
 
 
 def test_a_stop_ends_the_series_for_every_tool(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
     service: respx.MockRouter,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """CLAUDE.md: after 401/403/429/challenge stop and report; the STOP of S1a is sticky."""
-    caplog.set_level(logging.INFO, logger=mcp_server.__name__)
+    caplog.set_level(logging.INFO, logger=calls.LOGGER_NAME)
     service.get(INVESTMENT).respond(403)
     cities, suggestions = location_routes(service)
 
@@ -1111,12 +1538,13 @@ VALID_ARGUMENTS: dict[str, dict[str, Any]] = {
     "search_offers": {"city": "warszawa"},
     "get_offer": {"offer_id": 2377, "investment_slug": "smolna"},
     "get_investment": {"investment_slug": "smolna"},
+    "get_government_statistics": {"location": "warszawa", "dataset": "wages"},
 }
 
 
 @pytest.mark.parametrize("tool", TOOLS)
 def test_a_stop_recorded_by_another_process_ends_the_series_without_a_request(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
     sessions: Sessions,
     service: respx.MockRouter,
     caplog: pytest.LogCaptureFixture,
@@ -1124,12 +1552,13 @@ def test_a_stop_recorded_by_another_process_ends_the_series_without_a_request(
 ) -> None:
     """A STOP of the CLI or recon (the record of the shared limiter) stops every tool; the
     model learns what stopped the series, never when, from which program or how to lift it."""
-    caplog.set_level(logging.INFO, logger=mcp_server.__name__)
+    caplog.set_level(logging.INFO, logger=calls.LOGGER_NAME)
     with sessions.limiter.slot() as slot:
         slot.stop(403, "odmowa dostępu", source="probe")
     location_routes(service)
     offers_route(service)
     investment_routes(service)
+    stats_routes(service)
 
     result = call(server, tool, **VALID_ARGUMENTS[tool])
 
@@ -1147,25 +1576,25 @@ def test_a_stop_recorded_by_another_process_ends_the_series_without_a_request(
 
 
 def test_an_unexpected_error_hides_its_details(
-    server: MCPServer[services.Session], monkeypatch: pytest.MonkeyPatch
+    server: MCPServer[bootstrap.Session], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     def crash(*args: object, **kwargs: object) -> None:
         raise RuntimeError("internal detail /secret/path")
 
-    monkeypatch.setattr(services, "search_locations", crash)
+    monkeypatch.setattr(SearchLocations, "__call__", crash)
 
     result = call(server, "search_locations", query="krak")
 
     assert result.is_error is True
-    assert text(result) == mcp_server.UNEXPECTED_ERROR
+    assert text(result) == calls.UNEXPECTED_ERROR
     assert "secret" not in text(result)
 
 
-# --- the session, threads and stdout -----------------------------------------------------
+# --- the session, threads and stdout --------------------------------------------------------------
 
 
 def test_one_session_for_the_server_closed_when_it_stops(
-    server: MCPServer[services.Session], sessions: Sessions, service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], sessions: Sessions, service: respx.MockRouter
 ) -> None:
     location_routes(service)
     investment_routes(service)
@@ -1186,16 +1615,16 @@ def test_one_session_for_the_server_closed_when_it_stops(
 def test_the_default_server_opens_one_services_session(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, service: respx.MockRouter
 ) -> None:
-    """``build_server()`` as ``main()`` builds it: ``services.Session()`` once per run."""
+    """``build_server()`` as ``main()`` builds it: ``bootstrap.Session()`` once per run."""
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-    opened: list[services.Session] = []
+    opened: list[bootstrap.Session] = []
 
-    class Recorded(services.Session):
+    class Recorded(bootstrap.Session):
         def __init__(self) -> None:
             super().__init__()
             opened.append(self)
 
-    monkeypatch.setattr(services, "Session", Recorded)
+    monkeypatch.setattr(bootstrap, "Session", Recorded)
 
     result = call(
         mcp_server.build_server(), "search_offers", city="warszawa", price_min=7, price_max=5
@@ -1208,7 +1637,7 @@ def test_the_default_server_opens_one_services_session(
 
 
 def test_parallel_calls_run_in_worker_threads(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
     service: respx.MockRouter,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1217,15 +1646,22 @@ def test_parallel_calls_run_in_worker_threads(
     location_routes(service)
     offers_route(service)
     investment_routes(service)
+    stats_routes(service)
     threads: list[str] = []
-    for name in TOOLS:
-        original = getattr(services, name)
+    for use_case in (
+        SearchLocations,
+        SearchOffers,
+        GetOffer,
+        GetInvestment,
+        GetGovernmentStatistics,
+    ):
+        original = use_case.__call__
 
         def recorded(*args: Any, original: Any = original, **kwargs: Any) -> Any:
             threads.append(threading.current_thread().name)
             return original(*args, **kwargs)
 
-        monkeypatch.setattr(services, name, recorded)
+        monkeypatch.setattr(use_case, "__call__", recorded)
 
     async def parallel(client: Client) -> list[CallToolResult]:
         results: list[CallToolResult] = []
@@ -1238,17 +1674,20 @@ def test_parallel_calls_run_in_worker_threads(
             group.start_soon(one, "search_offers", {"city": "warszawa"})
             group.start_soon(one, "get_offer", {"offer_id": 2377, "investment_slug": "smolna"})
             group.start_soon(one, "get_investment", {"investment_slug": "smolna"})
+            group.start_soon(
+                one, "get_government_statistics", {"location": "polska", "dataset": "wages"}
+            )
         return results
 
     results = with_client(server, parallel)
 
-    assert [result.is_error for result in results] == [False] * 4
-    assert len(threads) == 4
+    assert [result.is_error for result in results] == [False] * 5
+    assert len(threads) == 5
     assert threading.main_thread().name not in threads
 
 
 def test_tools_write_nothing_to_stdout(
-    server: MCPServer[services.Session],
+    server: MCPServer[bootstrap.Session],
     service: respx.MockRouter,
     monkeypatch: pytest.MonkeyPatch,
     capfd: pytest.CaptureFixture[str],
@@ -1260,7 +1699,7 @@ def test_tools_write_nothing_to_stdout(
     def crash(*args: object, **kwargs: object) -> None:
         raise RuntimeError("bug")
 
-    monkeypatch.setattr(services, "get_offer", crash)
+    monkeypatch.setattr(GetOffer, "__call__", crash)
 
     async def calls(client: Client) -> list[bool]:
         return [
@@ -1280,11 +1719,11 @@ def test_tools_write_nothing_to_stdout(
     assert capfd.readouterr().out == ""
 
 
-# --- result size -------------------------------------------------------------------------
+# --- result size ----------------------------------------------------------------------------------
 
 
 def test_result_sizes_on_the_samples(
-    server: MCPServer[services.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     """Sizes of the text content (compact JSON) on full pages built from the samples.
 
@@ -1326,7 +1765,7 @@ def test_result_sizes_on_the_samples(
     assert measured["investment_200"] <= 200 * 320
 
 
-# --- the entry point ---------------------------------------------------------------------
+# --- the entry point ------------------------------------------------------------------------------
 
 
 def test_main_runs_the_server_over_stdio(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1375,17 +1814,18 @@ except pytest_socket.SocketBlockedError:
 
 # The package's own client, pointed at a local discard port: without the guard this
 # would be a refused local connection, never a request to the service.
-from deweloperuch_mcp import services
-from deweloperuch_mcp.client import transport
+from deweloperuch_mcp.application import arguments
+from deweloperuch_mcp.bootstrap import Session
+from deweloperuch_mcp.infrastructure.deweloperuch import transport
 from deweloperuch_mcp.throttle import RequestLimiter
 
 transport.BASE_URL = "http://127.0.0.1:9"
 limiter = RequestLimiter(
     Path.cwd(), min_interval=0, testing_only_allow_fast_interval=True
 )
-with services.Session(limiter=limiter) as session:
+with Session(limiter=limiter) as session:
     try:
-        services.search_locations(session, "krak")
+        session.search_locations(arguments.location_query("krak"))
     except pytest_socket.SocketBlockedError:
         print("blocked client")
 """
@@ -1508,10 +1948,11 @@ ON_REAL_PAYLOADS = f"""{NO_NETWORK}
 import sys
 sys.path[:0] = [{str(TESTS)!r}]
 import respx
-from service_mocks import offers_route, unknown_city_route
+from service_mocks import offers_route, stats_routes, unknown_city_route
 with respx.mock(assert_all_called=False, assert_all_mocked=True) as router:
     unknown_city_route(router)
     offers_route(router)
+    stats_routes(router)
     from deweloperuch_mcp.mcp_server import main
     main()
 """
@@ -1524,7 +1965,7 @@ def test_the_entry_point_over_stdio_on_the_real_payloads(tmp_path: Path) -> None
         command=sys.executable, args=["-c", ON_REAL_PAYLOADS], env=dict(os.environ)
     )
 
-    async def session() -> tuple[list[str], CallToolResult, CallToolResult]:
+    async def session() -> tuple[list[str], CallToolResult, CallToolResult, CallToolResult]:
         with anyio.fail_after(60), (tmp_path / "stderr.txt").open("w") as errlog:
             async with (
                 stdio_client(params, errlog=errlog) as (read, write),
@@ -1534,9 +1975,13 @@ def test_the_entry_point_over_stdio_on_the_real_payloads(tmp_path: Path) -> None
                 listed = await client.list_tools()
                 found = await client.call_tool("search_offers", {"city": "warszawa"})
                 unknown = await client.call_tool("search_offers", {"city": UNKNOWN_CITY})
-        return [tool.name for tool in listed.tools], found, unknown
+                stats = await client.call_tool(
+                    "get_government_statistics",
+                    {"location": "polska", "dataset": "average_area", "periods": 3},
+                )
+        return [tool.name for tool in listed.tools], found, unknown, stats
 
-    names, found, unknown = anyio.run(session)
+    names, found, unknown, stats = anyio.run(session)
 
     assert names == list(TOOLS)
     result = data(found)
@@ -1544,6 +1989,11 @@ def test_the_entry_point_over_stdio_on_the_real_payloads(tmp_path: Path) -> None
     assert all({"offer_id", "investment_slug", "price"} <= set(item) for item in result["items"])
     assert unknown.is_error is True
     assert text(unknown) == UNKNOWN_CITY_MESSAGE
+    area = data(stats)
+    assert (area["periods"], area["series"][0]["values"]) == (
+        ["2024", "2025", "2026"],
+        [61.6, 62.3, 62.5],
+    )
 
 
 # The warning is the expected effect here; elsewhere it still flags a real attempt.

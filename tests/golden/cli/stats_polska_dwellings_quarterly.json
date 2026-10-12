@@ -1,0 +1,52 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "polska",
+    "dwellings_quarterly"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Mieszkania oddane do użytkowania i rozpoczęte (kwartalnie) · Polska [polska]",
+    "Źródło: GUS · kwartalnie · okresy: pokazano 12 z 87 (dane od 2005-Q1).",
+    "Wskazówka: Pokazano ostatnie 12 z 87 okresów (dane od 2005-Q1); starsze pokaże większa wartość periods.",
+    "Uwaga: Ostatni kwartał (2026-Q3) obejmuje tylko 2 z 3 miesięcy (dane miesięczne do 2026-08); nie porównuj go z pełnymi kwartałami.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-mieszkania",
+    "Kolumny:",
+    "  [1] Oddane do użytkowania: razem (mieszkania)",
+    "  [2] Oddane: deweloperskie (mieszkania)",
+    "  [3] Oddane: indywidualne (mieszkania)",
+    "  [4] Oddane: spółdzielcze (mieszkania)",
+    "  [5] Oddane: komunalne (mieszkania)",
+    "  [6] Oddane: społeczne (mieszkania)",
+    "  [7] Oddane: zakładowe (mieszkania)",
+    "  [8] Rozpoczęte budowy: razem (mieszkania)",
+    "  [9] Rozpoczęte: deweloperskie (mieszkania)",
+    "  [10] Rozpoczęte: indywidualne (mieszkania)",
+    "  [11] Rozpoczęte: spółdzielcze (mieszkania)",
+    "  [12] Rozpoczęte: komunalne (mieszkania)",
+    "  [13] Rozpoczęte: społeczne (mieszkania)",
+    "  [14] Rozpoczęte: zakładowe (mieszkania)",
+    "  [15] Rozpoczęte: na wynajem (mieszkania)",
+    "Okres       [1]     [2]     [3]  [4]  [5]    [6]  [7]     [8]     [9]    [10]  [11]  [12]   [13]  [14]  [15]",
+    "2023-Q4  60 416  40 648  18 544  157  309    713   45  50 209  34 328  14 060   175   216  1 429     1   121",
+    "2024-Q1  48 382  29 231  18 061   56  423    611    0  60 078  41 994  17 031   104   102    845     2   134",
+    "2024-Q2  47 235  29 479  16 558  244  446    495   13  62 294  38 597  22 893   220   302    267    15    60",
+    "2024-Q3  49 350  30 586  16 847  576  485    840   16  59 114  36 382  21 459   217    58    998     0    65",
+    "2024-Q4  55 139  35 357  18 117  447  553    620   45  52 346  35 540  15 374   178   654    599     1   169",
+    "2025-Q1  45 885  27 690  16 910  204  302    740   39  55 717  36 531  17 964   168   429    620     5   316",
+    "2025-Q2  46 062  29 249  15 833   52  212    715    1  55 023  31 802  22 549     0   131    509    32   303",
+    "2025-Q3  52 791  33 925  15 971  359  745  1 730   61  55 272  31 780  22 301    65   189    937     0   122",
+    "2025-Q4  63 559  43 042  18 527  343  385  1 198   64  46 412  29 601  15 964    86   300    459     2    89",
+    "2026-Q1  45 540  26 431  17 859  194   70    885  101  49 372  30 886  16 838     1   679    962     6   125",
+    "2026-Q2  49 293  31 067  16 083  135  319  1 647   42  65 196  38 736  25 214    75   245    866    60    68",
+    "2026-Q3  37 395  24 001  11 273  128  362  1 631    0  38 969  22 024  15 398    47   528    972     0    22",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "polska",
+        "dataset": "wages",
+        "periods": 1
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "polska",
+        "location_name": "Polska",
+        "dataset": "wages",
+        "title": "Przeciętne miesięczne wynagrodzenie brutto w sektorze przedsiębiorstw",
+        "source": "GUS",
+        "frequency": "month",
+        "total": 199,
+        "returned": 1,
+        "truncated": true,
+        "available_from": "2010-01",
+        "hint": "Pokazano ostatnie 1 z 199 okresów (dane od 2010-01); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-wynagrodzenia",
+        "periods": [
+          "2026-07"
+        ],
+        "series": [
+          {
+            "series_id": "gross",
+            "label": "Wynagrodzenie brutto",
+            "unit": "PLN",
+            "values": [
+              9509.02
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+  ]
+}

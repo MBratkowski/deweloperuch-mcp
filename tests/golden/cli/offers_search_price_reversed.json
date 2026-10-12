@@ -1,0 +1,20 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--price-min",
+    "7",
+    "--price-max",
+    "5"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: price_min (7) jest większe niż price_max (5); zamień je miejscami.",
+    ""
+  ],
+  "requests": []
+}

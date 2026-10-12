@@ -1,0 +1,20 @@
+{
+  "args": [
+    "offers",
+    "get",
+    "999",
+    "--investment",
+    "smolna"
+  ],
+  "exit_code": 7,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Inwestycja 'smolna' nie ma oferty 999. Sprawdź offer_id i investment_slug (oba podaje search_offers); wszystkie oferty inwestycji zwraca get_investment.",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

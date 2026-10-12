@@ -1,0 +1,22 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--page",
+    "9"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Pasujące oferty: 30 · strona 9 z 3 (po 10) · pokazano 0.",
+    "Wskazówka: Strona 9 jest pusta; dostępne strony: 1–3.",
+    "Ta lista na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=9&perPage=10",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=9&perPage=10&_rsc=e1e2aa8d [rsc: 1] [accept: */*]"
+  ]
+}

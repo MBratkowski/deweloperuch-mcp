@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "warszawa",
+        "dataset": "wages"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Statystyki rządowe dla 'warszawa': Serwis odpowiedział błędem HTTP 503. Nic nie ponawiam; spróbuj później. Limiter wstrzyma następne zapytanie o 10 s.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "ServiceError: Statystyki rządowe dla 'warszawa': Serwis odpowiedział błędem HTTP 503. Nic nie ponawiam; spróbuj później. Limiter wstrzyma następne zapytanie o 10 s. Szczegóły: /statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c: "
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

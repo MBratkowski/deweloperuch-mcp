@@ -1,0 +1,51 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa",
+    "dwellings_monthly"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Mieszkania oddane do użytkowania i rozpoczęte (miesięcznie) · Warszawa [warszawa]",
+    "Źródło: GUS · miesięcznie · okresy: pokazano 12 z 260 (dane od 2005-01).",
+    "Wskazówka: Pokazano ostatnie 12 z 260 okresów (dane od 2005-01); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-mieszkania",
+    "Kolumny:",
+    "  [1] Oddane do użytkowania: razem (mieszkania)",
+    "  [2] Oddane: deweloperskie (mieszkania)",
+    "  [3] Oddane: indywidualne (mieszkania)",
+    "  [4] Oddane: spółdzielcze (mieszkania)",
+    "  [5] Oddane: komunalne (mieszkania)",
+    "  [6] Oddane: społeczne (mieszkania)",
+    "  [7] Oddane: zakładowe (mieszkania)",
+    "  [8] Rozpoczęte budowy: razem (mieszkania)",
+    "  [9] Rozpoczęte: deweloperskie (mieszkania)",
+    "  [10] Rozpoczęte: indywidualne (mieszkania)",
+    "  [11] Rozpoczęte: spółdzielcze (mieszkania)",
+    "  [12] Rozpoczęte: komunalne (mieszkania)",
+    "  [13] Rozpoczęte: społeczne (mieszkania)",
+    "  [14] Rozpoczęte: zakładowe (mieszkania)",
+    "  [15] Rozpoczęte: na wynajem (mieszkania)",
+    "Okres      [1]    [2]  [3]  [4]  [5]  [6]  [7]    [8]    [9]  [10]  [11]  [12]  [13]  [14]  [15]",
+    "2025-09  1 711  1 305   37  196    0  173    0  1 575  1 530    45     0     0     0     0     0",
+    "2025-10  2 148  2 109   39    0    0    0    0  2 008  1 967    41     0     0     0     0     0",
+    "2025-11  1 732  1 680   52    0    0    0    0  1 105  1 088    17     0     0     0     0     0",
+    "2025-12  3 010  2 665   30  315    0    0    0  1 077  1 043    34     0     0     0     0     0",
+    "2026-01    881    832   49    0    0    0    0  1 477  1 458    19     0     0     0     0     0",
+    "2026-02    868    821   47    0    0    0    0    575    555    20     0     0     0     0     0",
+    "2026-03    853    725   28    0    0    0  100    871    806    65     0     0     0     0     0",
+    "2026-04  1 078  1 033   45    0    0    0    0    663    607    56     0     0     0     0     0",
+    "2026-05  1 295  1 238   12    5    0   40    0  1 418  1 357    61     0     0     0     0     0",
+    "2026-06  1 871  1 627   39    0    0  205    0  1 524  1 477    47     0     0     0     0     0",
+    "2026-07  1 794  1 711   40   43    0    0    0  1 443  1 414    29     0     0     0     0     0",
+    "2026-08  1 817  1 712  105    0    0    0    0  1 414  1 348    66     0     0     0     0     0",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

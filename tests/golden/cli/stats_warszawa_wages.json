@@ -1,0 +1,38 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa",
+    "wages"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Przeciętne miesięczne wynagrodzenie brutto w sektorze przedsiębiorstw · Warszawa [warszawa]",
+    "Źródło: GUS · rocznie · okresy: pokazano 12 z 21 (dane od 2005).",
+    "Wskazówka: Pokazano ostatnie 12 z 21 okresów (dane od 2005); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-wynagrodzenia",
+    "Kolumny:",
+    "  [1] Wynagrodzenie brutto (PLN)",
+    "  [2] Relacja do średniej krajowej (Polska = 100) (%)",
+    "Okres        [1]    [2]",
+    "2014     5 385,8  134,5",
+    "2015    5 591,46  134,7",
+    "2016    5 739,61  133,8",
+    "2017    6 059,04  133,8",
+    "2018    6 432,78  133,1",
+    "2019     6 802,6  131,3",
+    "2020    7 147,46  129,4",
+    "2021    7 687,58  128,1",
+    "2022    8 540,11  127,4",
+    "2023    9 625,74  126,7",
+    "2024   10 714,99  124,2",
+    "2025   11 677,57  124,6",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

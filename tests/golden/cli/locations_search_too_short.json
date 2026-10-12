@@ -1,0 +1,16 @@
+{
+  "args": [
+    "locations",
+    "search",
+    "k"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: query: podaj od 2 do 100 znaków nazwy miasta, dzielnicy lub ulicy, podano 'k'.",
+    ""
+  ],
+  "requests": []
+}

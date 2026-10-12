@@ -1,0 +1,19 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "polska"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool get_government_statistics: 1 validation error for get_government_statisticsArguments\ndataset\n  Field required [type=missing, input_value={'location': 'polska'}, input_type=dict]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

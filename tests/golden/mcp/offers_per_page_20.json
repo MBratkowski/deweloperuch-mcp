@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "warszawa",
+        "per_page": 20
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool search_offers: 1 validation error for search_offersArguments\nper_page\n  Input should be 10 or 50 [type=literal_error, input_value=20, input_type=int]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

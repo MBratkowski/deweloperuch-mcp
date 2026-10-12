@@ -1,0 +1,28 @@
+{
+  "calls": [
+    {
+      "tool": "search_locations",
+      "arguments": {
+        "query": "xyzzy"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false,
+        "hint": "Nic nie pasuje do 'xyzzy'. Sprawdź pisownię (z polskimi znakami) albo podaj początek nazwy miasta, dzielnicy lub ulicy.",
+        "items": []
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/cities?q=xyzzy&limit=8 [accept: application/json]",
+    "GET https://deweloperuch.pl/api/location-search?q=xyzzy&limit=6 [accept: application/json]"
+  ]
+}

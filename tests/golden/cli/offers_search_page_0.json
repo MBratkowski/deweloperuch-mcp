@@ -1,0 +1,18 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--page",
+    "0"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: page musi być liczbą całkowitą z zakresu 1–20 (serwis ma najwyżej 20 stron), podano 0.",
+    ""
+  ],
+  "requests": []
+}

@@ -1,0 +1,19 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa",
+    "wages",
+    "--periods",
+    "1001"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: periods musi być liczbą całkowitą z zakresu 1–1000 (liczba ostatnich okresów), podano 1001.",
+    ""
+  ],
+  "requests": []
+}

@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "get_offer",
+      "arguments": {
+        "offer_id": true,
+        "investment_slug": "smolna"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool get_offer: 1 validation error for get_offerArguments\noffer_id\n  Value error, oczekiwano liczby całkowitej, a nie true/false [type=value_error, input_value=True, input_type=bool]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

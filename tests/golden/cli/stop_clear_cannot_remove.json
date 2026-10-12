@@ -1,0 +1,15 @@
+{
+  "args": [
+    "stop",
+    "clear"
+  ],
+  "exit_code": 1,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: nie udało się zdjąć zapisu STOP: [Errno 1] Operation not permitted: '<LOCK_DIR>/stop.json'",
+    ""
+  ],
+  "requests": []
+}

@@ -1,0 +1,25 @@
+{
+  "args": [
+    "locations",
+    "search",
+    "  Kraków "
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Lokalizacje: 5.",
+    "miasto     Kraków [krakow] · ofert: 8 082",
+    "miasto     Krakowiany [krakowiany] · ofert: 0",
+    "miasto     Krakulice [krakulice] · ofert: 0",
+    "dzielnica  Mokotów, Warszawa [warszawa] · ofert: ok. 1 562",
+    "ulica      Mokotów, Warszawa [warszawa] · ofert: ok. 191",
+    "W nawiasach [] slug miasta dla: deweloperuch offers search CITY_SLUG",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/cities?q=Krak%C3%B3w&limit=8 [accept: application/json]",
+    "GET https://deweloperuch.pl/api/location-search?q=Krak%C3%B3w&limit=6 [accept: application/json]"
+  ]
+}

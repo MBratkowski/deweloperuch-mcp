@@ -1,0 +1,39 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa",
+    "population"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Ludność według płci (stan na 31 grudnia) · Warszawa [warszawa]",
+    "Źródło: GUS · rocznie · okresy: pokazano 12 z 21 (dane od 2005).",
+    "Wskazówka: Pokazano ostatnie 12 z 21 okresów (dane od 2005); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-wiek",
+    "Kolumny:",
+    "  [1] Razem (osoby)",
+    "  [2] Kobiety (osoby)",
+    "  [3] Mężczyźni (osoby)",
+    "Okres        [1]        [2]      [3]",
+    "2014   1 735 442    939 250  796 192",
+    "2015   1 744 351    943 551  800 800",
+    "2016   1 753 977    948 596  805 381",
+    "2017   1 764 615    953 838  810 777",
+    "2018   1 777 972    960 312  817 660",
+    "2019   1 790 658    966 319  824 339",
+    "2020   1 861 774  1 003 012  858 762",
+    "2021   1 863 056  1 003 355  859 701",
+    "2022   1 861 975  1 002 594  859 381",
+    "2023   1 861 599  1 001 975  859 624",
+    "2024   1 863 845  1 002 505  861 340",
+    "2025   1 866 729  1 003 678  863 051",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

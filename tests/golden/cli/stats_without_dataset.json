@@ -1,0 +1,28 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch stats government [OPTIONS] {LOCATION} {DATASET}",
+    "Try 'deweloperuch stats government --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Missing argument 'DATASET'. Choose from:                                                         │",
+    "│         dwellings_quarterly,                                                                     │",
+    "│         dwellings_monthly,                                                                       │",
+    "│         average_area,                                                                            │",
+    "│         demography,                                                                              │",
+    "│         population,                                                                              │",
+    "│         unemployment,                                                                            │",
+    "│         wages,                                                                                   │",
+    "│         nbp_prices                                                                               │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

@@ -1,0 +1,24 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "Warszawa"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje search_locations; podano 'Warszawa'.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje search_locations; podano 'Warszawa'. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

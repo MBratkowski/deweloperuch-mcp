@@ -10,6 +10,7 @@ See tests/fixtures/rsc/README.md for their source.
 """
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,16 @@ OFFERS_UNKNOWN_CITY = FIXTURES / "unknown_city_perPage10.rsc"
 
 UNKNOWN_CITY = "nieistniejace-miasto"
 """The city slug the unknown-city payload was requested with."""
+
+STATS_POLSKA = FIXTURES / "stats_gov_polska.rsc"
+"""``/statystyki/statystyki-rzadowe/polska``: the root page of the government statistics
+(GUS, NBP grid of cities), ``currentSlug`` null."""
+
+STATS_WARSZAWA = FIXTURES / "stats_gov_warszawa.rsc"
+"""``/statystyki/statystyki-rzadowe/warszawa``: a city with its own NBP prices."""
+
+STATS_FIXTURES = {"polska": STATS_POLSKA, "warszawa": STATS_WARSZAWA}
+"""Location -> its real page."""
 
 _PROP = b'"initialData":'
 
@@ -55,3 +66,62 @@ def offers_payload(page: Any = None) -> bytes:
     start, end = initial_data_span(payload)
     value = json.dumps(page, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     return payload[:start] + value + payload[end:]
+
+
+def prop_value_span(
+    payload: bytes, prop: str, matches: Callable[[Any], bool] = lambda value: True
+) -> tuple[int, int]:
+    """Byte offsets (start, end) of the one value after ``"prop":`` that ``matches``.
+
+    The page of the government statistics has several props called ``data``; ``matches``
+    picks one by its value (e.g. rows with the key ``averageSizeM2``).
+    """
+    text = payload.decode("utf-8")
+    decoder = json.JSONDecoder()
+    key = f'"{prop}":'
+    found: list[tuple[int, int]] = []
+    start = text.find(key)
+    while start >= 0:
+        try:
+            value, end = decoder.raw_decode(text, start + len(key))
+        except ValueError:
+            value, end = None, start + len(key)
+        if value is not None and matches(value):
+            found.append((start + len(key), end))
+        start = text.find(key, end)
+    assert len(found) == 1, f"{prop}: {len(found)} pasujących wartości"
+    char_start, char_end = found[0]
+    byte_start = len(text[:char_start].encode("utf-8"))
+    return byte_start, byte_start + len(text[char_start:char_end].encode("utf-8"))
+
+
+def rows_with(key: str) -> Callable[[Any], bool]:
+    """A prop value that is a list of rows, the first of which has ``key``."""
+    return lambda value: isinstance(value, list) and bool(value) and key in value[0]
+
+
+def replace_prop(payload: bytes, prop: str, matches: Callable[[Any], bool], value: Any) -> bytes:
+    """``payload`` with that one value replaced by ``value`` (compact JSON).
+
+    The values sit in rows that end with a newline, and these pages have no text rows,
+    so no byte length in the stream changes.
+    """
+    start, end = prop_value_span(payload, prop, matches)
+    encoded = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    return payload[:start] + encoded + payload[end:]
+
+
+def swap_props(
+    payload: bytes, prop: str, first: Callable[[Any], bool], second: Callable[[Any], bool]
+) -> bytes:
+    """``payload`` with the values of two ``prop`` props swapped in place (as bytes)."""
+    spans = sorted([prop_value_span(payload, prop, first), prop_value_span(payload, prop, second)])
+    (a_start, a_end), (b_start, b_end) = spans
+    assert a_end <= b_start
+    return (
+        payload[:a_start]
+        + payload[b_start:b_end]
+        + payload[a_end:b_start]
+        + payload[a_start:a_end]
+        + payload[b_end:]
+    )

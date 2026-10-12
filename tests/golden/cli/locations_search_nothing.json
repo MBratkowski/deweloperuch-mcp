@@ -1,0 +1,20 @@
+{
+  "args": [
+    "locations",
+    "search",
+    "xyzzy"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Lokalizacje: 0.",
+    "Wskazówka: Nic nie pasuje do 'xyzzy'. Sprawdź pisownię (z polskimi znakami) albo podaj początek nazwy miasta, dzielnicy lub ulicy.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/cities?q=xyzzy&limit=8 [accept: application/json]",
+    "GET https://deweloperuch.pl/api/location-search?q=xyzzy&limit=6 [accept: application/json]"
+  ]
+}

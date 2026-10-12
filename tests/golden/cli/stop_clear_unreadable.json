@@ -1,0 +1,16 @@
+{
+  "args": [
+    "stop",
+    "clear"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Zdjęto nieczytelny zapis STOP (niepoprawna treść: to nie jest poprawny JSON (UTF-8)).",
+    "Działający serwer MCP, który trafił na STOP, wyśle zapytania dopiero po ponownym uruchomieniu.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

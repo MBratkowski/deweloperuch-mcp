@@ -1,7 +1,7 @@
 {
   "server": {
     "name": "deweloperuch",
-    "instructions": "Dane z deweloperuch.pl: ceny ofertowe mieszkań od deweloperów (rynek pierwotny) w Polsce, z historią zmian cen. Typowa kolejność: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Błędy walidacji argumentów bywają po angielsku: popraw wskazane pole zgodnie ze schematem i ponów. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert."
+    "instructions": "Dane z deweloperuch.pl: ceny ofertowe mieszkań od deweloperów (rynek pierwotny) w Polsce, z historią zmian cen. Typowa kolejność: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Błędy walidacji argumentów bywają po angielsku: popraw wskazane pole zgodnie ze schematem i ponów. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert. Oficjalne statystyki GUS i NBP dla Polski i miast (mieszkania oddane i rozpoczęte, ceny NBP, bezrobocie, wynagrodzenia) daje get_government_statistics; to dane rynkowe, nie oferty, i nie wymagają wcześniejszego search_locations."
   },
   "tools": [
     {
@@ -1299,6 +1299,219 @@
           "truncated"
         ],
         "title": "InvestmentResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "get_government_statistics",
+      "title": "Statystyki GUS i NBP",
+      "description": "Zwraca oficjalne statystyki GUS i NBP jako szeregi czasowe dla Polski, agregatu miast albo miasta na prawach powiatu: mieszkania oddane do użytkowania i rozpoczęte (razem, wg form budownictwa, na wynajem), średnią powierzchnię mieszkań oddanych przez deweloperów, średnie ceny m² wg NBP (rynek pierwotny i wtórny, ceny ofertowe i transakcyjne), stopę bezrobocia, wynagrodzenia, demografię i ludność. Użyj jako kontekstu rynku; ofert i cen konkretnych mieszkań tu nie ma (search_offers).\n\nZwraca periods (od najstarszego) i series (series_id, label, unit, values wyrównane z periods; null = brak danych) oraz frequency, source, total, returned, truncated, available_from, note i stats_url (sekcja strony na deweloperuch.pl: podaj ją użytkownikowi jako link).\n\nOgraniczenia: domyślnie ostatnie 12 okresów; truncated=true znaczy, że są starsze (zwiększ periods, najwyżej 120). nbp_prices: tylko 17 dużych miast i 3 agregaty, nie polska. Nie każdy zestaw jest dostępny dla każdej lokalizacji (błąd wskaże, co podać); dane GUS i NBP są publikowane z opóźnieniem, ostatni okres bywa sprzed kilku tygodni lub miesięcy. Przeczytaj note: ostatni okres bywa niepełny.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "description": "polska (cała Polska), agregat 7-miast, 10-miast albo 6-miast-bez-warszawy, albo jedno z 66 miast na prawach powiatu: nazwa małymi literami bez polskich znaków, z myślnikami zamiast spacji, np. warszawa, krakow, lodz, bielsko-biala, zielona-gora; Jastrzębie-Zdrój to jastrzebie. Dane są tylko dla 66 miast na prawach powiatu, a nie dla dzielnic i mniejszych miejscowości.",
+            "title": "Lokalizacja",
+            "type": "string"
+          },
+          "dataset": {
+            "description": "dwellings_quarterly: mieszkania oddane do użytkowania i rozpoczęte (razem, wg form budownictwa, na wynajem), kwartalnie; dwellings_monthly: to samo miesięcznie; average_area: średnia powierzchnia mieszkania oddanego przez deweloperów (m², rocznie); demography: urodzenia żywe, zgony, przyrost naturalny (dla Polski miesięcznie, dla miast rocznie); population: ludność, kobiety i mężczyźni (rocznie); unemployment: stopa bezrobocia rejestrowanego (%, miesięcznie); wages: przeciętne miesięczne wynagrodzenie brutto w PLN (dla Polski miesięcznie, dla miast rocznie, czasem z relacją do średniej krajowej); nbp_prices: średnie ceny m² wg NBP, rynek pierwotny i wtórny, ofertowe i transakcyjne (PLN/m², kwartalnie). Częstotliwość zwraca pole frequency.",
+            "enum": [
+              "dwellings_quarterly",
+              "dwellings_monthly",
+              "average_area",
+              "demography",
+              "population",
+              "unemployment",
+              "wages",
+              "nbp_prices"
+            ],
+            "title": "Zestaw danych",
+            "type": "string"
+          },
+          "periods": {
+            "default": 12,
+            "description": "Ile ostatnich okresów zwrócić (lat, kwartałów albo miesięcy), 1–120, domyślnie 12. Najszerszy zestaw (mieszkania, 15 szeregów) przy 120 miesiącach to ok. 10 tys. znaków. Dla trendów bierz dane roczne/kwartalne; miesięczne 120 okresów tylko, gdy użytkownik o to prosi.",
+            "maximum": 120,
+            "minimum": 1,
+            "title": "Liczba okresów",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "location",
+          "dataset"
+        ],
+        "title": "get_government_statisticsArguments"
+      },
+      "outputSchema": {
+        "$defs": {
+          "SeriesItem": {
+            "properties": {
+              "series_id": {
+                "description": "Stały identyfikator szeregu, np. completed_total.",
+                "title": "Series Id",
+                "type": "string"
+              },
+              "label": {
+                "title": "Label",
+                "type": "string"
+              },
+              "unit": {
+                "description": "mieszkania, m², osoby, %, PLN albo PLN/m².",
+                "title": "Unit",
+                "type": "string"
+              },
+              "values": {
+                "description": "Wartości kolejnych okresów z periods (ta sama długość); null = brak danych.",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "title": "Values",
+                "type": "array"
+              }
+            },
+            "required": [
+              "series_id",
+              "label",
+              "unit",
+              "values"
+            ],
+            "title": "SeriesItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "location_slug": {
+            "title": "Location Slug",
+            "type": "string"
+          },
+          "location_name": {
+            "title": "Location Name",
+            "type": "string"
+          },
+          "dataset": {
+            "title": "Dataset",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "source": {
+            "description": "Źródło danych: GUS, NBP albo Eurostat.",
+            "title": "Source",
+            "type": "string"
+          },
+          "frequency": {
+            "description": "year (lata), quarter (kwartały) albo month (miesiące).",
+            "title": "Frequency",
+            "type": "string"
+          },
+          "total": {
+            "description": "Wszystkie okresy, które serwis ma dla tego zestawu.",
+            "title": "Total",
+            "type": "integer"
+          },
+          "returned": {
+            "description": "Okresy w wyniku: ostatnie z nich.",
+            "title": "Returned",
+            "type": "integer"
+          },
+          "truncated": {
+            "description": "true: są starsze okresy niż pokazane; co dalej, mówi hint.",
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "available_from": {
+            "description": "Najstarszy okres, jaki ma serwis.",
+            "title": "Available From",
+            "type": "string"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Co zrobić dalej, gdy wynik jest obcięty.",
+            "title": "Hint"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Uwaga do danych, np. ostatni kwartał obejmuje tylko część miesięcy.",
+            "title": "Note"
+          },
+          "stats_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Link do sekcji z tymi danymi w serwisie: podaj go użytkownikowi.",
+            "title": "Stats Url"
+          },
+          "periods": {
+            "description": "Okresy od najstarszego: 2025 (rok), 2025-Q3 (kwartał) albo 2025-08 (miesiąc).",
+            "items": {
+              "type": "string"
+            },
+            "title": "Periods",
+            "type": "array"
+          },
+          "series": {
+            "items": {
+              "$ref": "#/$defs/SeriesItem"
+            },
+            "title": "Series",
+            "type": "array"
+          }
+        },
+        "required": [
+          "location_slug",
+          "location_name",
+          "dataset",
+          "title",
+          "source",
+          "frequency",
+          "total",
+          "returned",
+          "truncated",
+          "available_from",
+          "periods",
+          "series"
+        ],
+        "title": "GovernmentStatisticsResult",
         "type": "object"
       },
       "annotations": {

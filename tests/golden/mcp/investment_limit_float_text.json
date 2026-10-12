@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "get_investment",
+      "arguments": {
+        "investment_slug": "smolna",
+        "limit": "5.0"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool get_investment: 1 validation error for get_investmentArguments\nlimit\n  Value error, oczekiwano liczby całkowitej zapisanej cyframi, podano '5.0' [type=value_error, input_value='5.0', input_type=str]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

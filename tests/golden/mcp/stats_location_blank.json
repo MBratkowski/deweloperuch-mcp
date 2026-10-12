@@ -1,0 +1,25 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "",
+        "dataset": "wages"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "location: oczekiwano polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta bez polskich znaków, np. warszawa, krakow, jastrzebie (Jastrzębie-Zdrój); podano ''.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: location: oczekiwano polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta bez polskich znaków, np. warszawa, krakow, jastrzebie (Jastrzębie-Zdrój); podano ''. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

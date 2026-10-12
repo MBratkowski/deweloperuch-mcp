@@ -1,0 +1,20 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa",
+    "wages"
+  ],
+  "exit_code": 6,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Statystyki rządowe dla 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+    "Szczegóły: /statystyki/statystyki-rzadowe/warszawa nie zawiera spisu treści 'tocItems' (propsy z danymi: other)",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

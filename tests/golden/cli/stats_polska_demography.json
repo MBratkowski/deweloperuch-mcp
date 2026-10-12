@@ -1,0 +1,39 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "polska",
+    "demography"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Urodzenia żywe, zgony i przyrost naturalny · Polska [polska]",
+    "Źródło: Eurostat · miesięcznie · okresy: pokazano 12 z 357 (dane od 1996-01).",
+    "Wskazówka: Pokazano ostatnie 12 z 357 okresów (dane od 1996-01); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#eurostat-demografia",
+    "Kolumny:",
+    "  [1] Urodzenia żywe (osoby)",
+    "  [2] Zgony (osoby)",
+    "  [3] Przyrost naturalny (osoby)",
+    "Okres       [1]     [2]      [3]",
+    "2024-10  20 923  35 602  -14 679",
+    "2024-11  18 893  33 404  -14 511",
+    "2024-12  20 295  39 498  -19 203",
+    "2025-01  20 834  41 102  -20 268",
+    "2025-02  17 962  35 228  -17 266",
+    "2025-03  18 724  36 418  -17 694",
+    "2025-04  19 254  32 748  -13 494",
+    "2025-05  19 410  31 391  -11 981",
+    "2025-06  19 571  31 477  -11 906",
+    "2025-07  22 500  32 000   -9 500",
+    "2025-08  20 500  29 500   -9 000",
+    "2025-09  22 500  33 000  -10 500",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+  ]
+}

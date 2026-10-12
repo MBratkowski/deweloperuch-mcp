@@ -1,0 +1,84 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "warszawa",
+        "price_min": 500000,
+        "price_max": 700000,
+        "area_min": 40,
+        "area_max": 60,
+        "sort": "price_asc",
+        "page": 2,
+        "per_page": 50
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 1192,
+        "returned": 3,
+        "truncated": true,
+        "page": 2,
+        "per_page": 50,
+        "pages_available": 20,
+        "hint": "Pasujących ofert jest 1192, a można przejrzeć najwyżej 20 stron po 50 (1000). Zawęź filtry (cena, metraż).",
+        "list_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?filterPrice=500000-700000&filterSize=40-60&sortBy=amount&sortOrder=asc&page=2&perPage=50",
+        "items": [
+          {
+            "offer_id": 120306,
+            "investment_slug": "werandowa",
+            "name": "B29",
+            "price": 530559.0,
+            "area_m2": 43.02,
+            "price_per_m2": 12332.85,
+            "status": "active",
+            "investment_name": "Werandowa",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/zeranski-development/werandowa",
+            "developer_name": "Żerański Development",
+            "last_price_change_kind": "increase",
+            "last_price_change_pct": 0.35,
+            "price_change_since_start_pct": 0.35
+          },
+          {
+            "offer_id": 120307,
+            "investment_slug": "werandowa",
+            "name": "B19",
+            "price": 530559.0,
+            "area_m2": 43.02,
+            "price_per_m2": 12332.85,
+            "status": "active",
+            "investment_name": "Werandowa",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/zeranski-development/werandowa",
+            "developer_name": "Żerański Development",
+            "last_price_change_kind": "increase",
+            "last_price_change_pct": 0.35,
+            "price_change_since_start_pct": 0.35
+          },
+          {
+            "offer_id": 120300,
+            "investment_slug": "werandowa",
+            "name": "B10",
+            "price": 530938.0,
+            "area_m2": 44.42,
+            "price_per_m2": 11952.68,
+            "status": "active",
+            "investment_name": "Werandowa",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/zeranski-development/werandowa",
+            "developer_name": "Żerański Development",
+            "last_price_change_kind": "increase",
+            "last_price_change_pct": 0.02,
+            "price_change_since_start_pct": 0.02
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?filterPrice=500000-700000&filterSize=40-60&sortBy=amount&sortOrder=asc&page=2&perPage=50&_rsc=f100e92a [rsc: 1] [accept: */*]"
+  ]
+}

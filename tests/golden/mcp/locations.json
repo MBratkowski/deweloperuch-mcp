@@ -1,0 +1,70 @@
+{
+  "calls": [
+    {
+      "tool": "search_locations",
+      "arguments": {
+        "query": "krak"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 5,
+        "returned": 5,
+        "truncated": false,
+        "items": [
+          {
+            "kind": "city",
+            "name": "Kraków",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "offer_count": 8082
+          },
+          {
+            "kind": "city",
+            "name": "Krakowiany",
+            "city": "Krakowiany",
+            "city_slug": "krakowiany",
+            "offer_count": 0
+          },
+          {
+            "kind": "city",
+            "name": "Krakulice",
+            "city": "Krakulice",
+            "city_slug": "krakulice",
+            "offer_count": 0
+          },
+          {
+            "kind": "district",
+            "name": "Mokotów",
+            "city": "Warszawa",
+            "city_slug": "warszawa",
+            "district": "Mokotów",
+            "lat": 52.189818153819054,
+            "lng": 21.05171136865118,
+            "offer_count": 1562
+          },
+          {
+            "kind": "street",
+            "name": "Mokotów",
+            "city": "Warszawa",
+            "city_slug": "warszawa",
+            "district": "Mokotów",
+            "street": "Mokotów",
+            "lat": 52.192957042570164,
+            "lng": 21.042743849065836,
+            "offer_count": 191
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/cities?q=krak&limit=8 [accept: application/json]",
+    "GET https://deweloperuch.pl/api/location-search?q=krak&limit=6 [accept: application/json]"
+  ]
+}

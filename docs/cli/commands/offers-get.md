@@ -46,4 +46,4 @@ The lines „Strona inwestycji” (investment page) and „Profil dewelopera” 
 
 With `--json` the result has all fields of the domain model, also `null` ones (e.g. `developer.website`).
 
-_Source: `src/deweloperuch_mcp/cli.py`, `uv run deweloperuch offers get --help`_
+_Source: `src/deweloperuch_mcp/interfaces/cli/`, `uv run deweloperuch offers get --help`_

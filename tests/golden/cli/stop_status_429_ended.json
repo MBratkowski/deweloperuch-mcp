@@ -1,0 +1,18 @@
+{
+  "args": [
+    "stop",
+    "status"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "STOP wygasł <TIME>: HTTP 429 (limit zapytań).",
+    "Od: <TIME> · źródło: probe (PID <PID>)",
+    "Zapytania do deweloperuch.pl nie są wstrzymane.",
+    "Plik: <LOCK_DIR>/stop.json",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

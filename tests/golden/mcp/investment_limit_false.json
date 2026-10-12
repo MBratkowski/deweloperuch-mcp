@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "get_investment",
+      "arguments": {
+        "investment_slug": "smolna",
+        "limit": false
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool get_investment: 1 validation error for get_investmentArguments\nlimit\n  Value error, oczekiwano liczby całkowitej, a nie true/false [type=value_error, input_value=False, input_type=bool]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

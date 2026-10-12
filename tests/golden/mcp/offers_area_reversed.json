@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "warszawa",
+        "area_min": 60,
+        "area_max": 40
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "area_min (60) jest większe niż area_max (40); zamień je miejscami.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: area_min (60) jest większe niż area_max (40); zamień je miejscami. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

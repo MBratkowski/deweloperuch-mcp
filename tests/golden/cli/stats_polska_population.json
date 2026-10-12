@@ -1,0 +1,39 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "polska",
+    "population"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Ludność według płci (stan na 31 grudnia) · Polska [polska]",
+    "Źródło: GUS · rocznie · okresy: pokazano 12 z 21 (dane od 2005).",
+    "Wskazówka: Pokazano ostatnie 12 z 21 okresów (dane od 2005); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-wiek",
+    "Kolumny:",
+    "  [1] Razem (osoby)",
+    "  [2] Kobiety (osoby)",
+    "  [3] Mężczyźni (osoby)",
+    "Okres         [1]         [2]         [3]",
+    "2014   38 478 602  19 858 793  18 619 809",
+    "2015   38 437 239  19 839 248  18 597 991",
+    "2016   38 432 992  19 839 826  18 593 166",
+    "2017   38 433 558  19 840 383  18 593 175",
+    "2018   38 411 148  19 829 262  18 581 886",
+    "2019   38 382 576  19 815 524  18 567 052",
+    "2020   38 088 564  19 671 402  18 417 162",
+    "2021   37 907 704  19 584 787  18 322 917",
+    "2022   37 766 327  19 517 006  18 249 321",
+    "2023   37 636 508  19 454 109  18 182 399",
+    "2024   37 489 087  19 382 060  18 107 027",
+    "2025   37 332 510  19 305 606  18 026 904",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+  ]
+}

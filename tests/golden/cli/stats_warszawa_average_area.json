@@ -1,0 +1,37 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa",
+    "average_area"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Średnia powierzchnia użytkowa mieszkania lub domu oddanego przez deweloperów · Warszawa [warszawa]",
+    "Źródło: GUS · rocznie · okresy: pokazano 12 z 22 (dane od 2005).",
+    "Wskazówka: Pokazano ostatnie 12 z 22 okresów (dane od 2005); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-srednia-powierzchnia",
+    "Kolumny:",
+    "  [1] Średnia powierzchnia (m²)",
+    "Okres   [1]",
+    "2015   58,6",
+    "2016   55,3",
+    "2017   58,1",
+    "2018   56,1",
+    "2019   56,3",
+    "2020     56",
+    "2021   60,3",
+    "2022   56,9",
+    "2023   57,6",
+    "2024     58",
+    "2025   56,7",
+    "2026   56,5",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

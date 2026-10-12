@@ -1,0 +1,36 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch stats government [OPTIONS] {LOCATION} {DATASET}                                ",
+    "                                                                                                    ",
+    " Pokaż statystyki GUS i NBP lokalizacji jako tabelę okresów i wartości.                             ",
+    "                                                                                                    ",
+    "╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ *    LOCATION      <str>                                  polska, agregat (7-miast, 10-miast,    │",
+    "│                                                           6-miast-bez-warszawy) albo miasto na   │",
+    "│                                                           prawach powiatu bez polskich znaków,   │",
+    "│                                                           np. warszawa, bielsko-biala.           │",
+    "│                                                           [required]                             │",
+    "│ *    DATASET       <dwellings_quarterly|dwellings_monthl  Zestaw danych. [required]              │",
+    "│                    y|average_area|demography|population|                                         │",
+    "│                    unemployment|wages|nbp_prices>                                                │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --periods        <int>  Ile ostatnich okresów pokazać (lat, kwartałów, miesięcy). [default: 12]  │",
+    "│ --json                  Wypisz wynik jako JSON (model domenowy).                                 │",
+    "│ --help                  Show this message and exit.                                              │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

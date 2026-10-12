@@ -1,0 +1,51 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "polska",
+    "dwellings_monthly"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Mieszkania oddane do użytkowania i rozpoczęte (miesięcznie) · Polska [polska]",
+    "Źródło: GUS · miesięcznie · okresy: pokazano 12 z 260 (dane od 2005-01).",
+    "Wskazówka: Pokazano ostatnie 12 z 260 okresów (dane od 2005-01); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-mieszkania",
+    "Kolumny:",
+    "  [1] Oddane do użytkowania: razem (mieszkania)",
+    "  [2] Oddane: deweloperskie (mieszkania)",
+    "  [3] Oddane: indywidualne (mieszkania)",
+    "  [4] Oddane: spółdzielcze (mieszkania)",
+    "  [5] Oddane: komunalne (mieszkania)",
+    "  [6] Oddane: społeczne (mieszkania)",
+    "  [7] Oddane: zakładowe (mieszkania)",
+    "  [8] Rozpoczęte budowy: razem (mieszkania)",
+    "  [9] Rozpoczęte: deweloperskie (mieszkania)",
+    "  [10] Rozpoczęte: indywidualne (mieszkania)",
+    "  [11] Rozpoczęte: spółdzielcze (mieszkania)",
+    "  [12] Rozpoczęte: komunalne (mieszkania)",
+    "  [13] Rozpoczęte: społeczne (mieszkania)",
+    "  [14] Rozpoczęte: zakładowe (mieszkania)",
+    "  [15] Rozpoczęte: na wynajem (mieszkania)",
+    "Okres       [1]     [2]    [3]  [4]  [5]    [6]  [7]     [8]     [9]   [10]  [11]  [12]  [13]  [14]  [15]",
+    "2025-09  18 184  11 342  5 388  221  241    932   60  19 563  11 598  7 565    65    30   305     0     3",
+    "2025-10  20 126  13 187  6 322    0  168    449    0  20 304  12 793  7 135     0    93   283     0    17",
+    "2025-11  19 249  13 680  5 240    0   33    296    0  13 013   7 966  4 941     0    58    48     0    66",
+    "2025-12  24 184  16 175  6 965  343  184    453   64  13 095   8 842  3 888    86   149   128     2     6",
+    "2026-01  14 907   8 859  5 847  112   44     44    1  12 307   8 888  2 878     0   167   368     6     9",
+    "2026-02  14 972   8 845  5 887    0    0    240    0  14 127   9 647  4 061     0    76   343     0     4",
+    "2026-03  15 661   8 727  6 125   82   26    601  100  22 938  12 351  9 899     1   436   251     0   112",
+    "2026-04  15 592   9 847  5 648    0    0     57   40  24 936  15 118  9 371     0   161   286     0     6",
+    "2026-05  14 991   9 415  5 201   57  137    181    0  20 406  11 963  8 263     0    28   152     0    21",
+    "2026-06  18 710  11 805  5 234   78  182  1 409    2  19 854  11 655  7 580    75    56   428    60    41",
+    "2026-07  19 250  12 132  6 060   91  149    818    0  20 219  11 557  8 183    47   129   303     0     7",
+    "2026-08  18 145  11 869  5 213   37  213    813    0  18 750  10 467  7 215     0   399   669     0    15",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+  ]
+}

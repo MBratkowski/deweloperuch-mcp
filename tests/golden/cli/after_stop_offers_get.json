@@ -1,0 +1,20 @@
+{
+  "args": [
+    "offers",
+    "get",
+    "2377",
+    "--investment",
+    "smolna"
+  ],
+  "exit_code": 3,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: STOP: seria zapytań do deweloperuch.pl jest wstrzymana po wcześniejszym STOP (HTTP 429, limit zapytań); wstrzymanie trwa jeszcze ok. <N> s. Zapytanie nie zostało wysłane. Nie ponawiaj w tej sesji; przerwij i zgłoś to użytkownikowi.",
+    "Szczegóły: zapis STOP: HTTP 429 (limit zapytań), <TIME>, źródło: probe, PID <PID>, do <TIME>",
+    "Nie uruchamiaj kolejnych poleceń deweloperuch ani pętli: przerwij i zgłoś to użytkownikowi. Blokada obejmuje też inne procesy.",
+    ""
+  ],
+  "requests": []
+}

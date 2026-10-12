@@ -1,0 +1,21 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "polska",
+        "dataset": "wages",
+        "periods": "3.0"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool get_government_statistics: 1 validation error for get_government_statisticsArguments\nperiods\n  Value error, oczekiwano liczby całkowitej zapisanej cyframi, podano '3.0' [type=value_error, input_value='3.0', input_type=str]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

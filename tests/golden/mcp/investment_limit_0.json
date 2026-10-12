@@ -1,0 +1,47 @@
+{
+  "calls": [
+    {
+      "tool": "get_investment",
+      "arguments": {
+        "investment_slug": "smolna",
+        "limit": 0
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "investment_slug": "smolna",
+        "name": "Smolna",
+        "status": "active",
+        "investment_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna",
+        "city": "Sopot",
+        "city_slug": "sopot",
+        "street": "Świemirowo",
+        "lat": 54.42735985,
+        "lng": 18.55839032,
+        "currency": "PLN",
+        "developer": {
+          "developer_slug": "invest-komfort-spolka-akcyjna",
+          "name": "Invest Komfort Spółka Akcyjna Sp.K."
+        },
+        "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna",
+        "avg_price": 1566392.0,
+        "avg_area_m2": 63.97,
+        "avg_price_per_m2": 24487.63,
+        "offers_active": 3,
+        "offers_total": 16,
+        "offers": [],
+        "offers_returned": 0,
+        "offers_omitted": 3,
+        "truncated": true
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

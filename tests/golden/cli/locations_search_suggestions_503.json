@@ -1,0 +1,20 @@
+{
+  "args": [
+    "locations",
+    "search",
+    "krak"
+  ],
+  "exit_code": 4,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Wyszukiwanie dzielnic i ulic: Serwis odpowiedział błędem HTTP 503. Nic nie ponawiam; spróbuj później. Limiter wstrzyma następne zapytanie o 10 s.",
+    "Szczegóły: /api/location-search?q=krak&limit=6: ",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/cities?q=krak&limit=8 [accept: application/json]",
+    "GET https://deweloperuch.pl/api/location-search?q=krak&limit=6 [accept: application/json]"
+  ]
+}

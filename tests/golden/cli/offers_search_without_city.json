@@ -1,0 +1,19 @@
+{
+  "args": [
+    "offers",
+    "search"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch offers search [OPTIONS] {CITY}",
+    "Try 'deweloperuch offers search --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Missing argument 'CITY'.                                                                         │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

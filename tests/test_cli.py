@@ -1,6 +1,6 @@
 """The ``deweloperuch`` CLI over a mocked service (respx, bodies from samples).
 
-Commands go through the real services and client (D6); only the network is mocked and
+Commands go through the real use cases and client (D13); only the network is mocked and
 the session gets a limiter without the 1 s pause. Exit codes are public API.
 """
 
@@ -15,14 +15,17 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from importlib import import_module
 from pathlib import Path
-from typing import Any
+from typing import Any, get_args
 
 import pytest
 import respx
 from typer.testing import CliRunner
 
-from deweloperuch_mcp import cli, identity, services
-from deweloperuch_mcp.client import transport
+import deweloperuch_mcp.cli
+from deweloperuch_mcp import bootstrap, identity
+from deweloperuch_mcp.application.investments import GetInvestment
+from deweloperuch_mcp.application.locations import SearchLocations
+from deweloperuch_mcp.domain.values import DEFAULT_PAGE_SIZE, PAGE_SIZES, OfferSort
 from deweloperuch_mcp.errors import (
     DeweloperuchError,
     InvalidInputError,
@@ -35,6 +38,13 @@ from deweloperuch_mcp.errors import (
     UnexpectedResponseError,
 )
 from deweloperuch_mcp.flight import rsc_token
+from deweloperuch_mcp.infrastructure.deweloperuch import transport
+from deweloperuch_mcp.interfaces import choices
+from deweloperuch_mcp.interfaces.choices import PageSizeChoice, SortChoice
+from deweloperuch_mcp.interfaces.cli import app as cli_app
+from deweloperuch_mcp.interfaces.cli import stop as cli_stop
+from deweloperuch_mcp.interfaces.cli import text as cli_text
+from deweloperuch_mcp.interfaces.cli.common import STOP_ADVICE, ExitCode
 from deweloperuch_mcp.throttle import (
     LOCK_FILENAME,
     STOP_FILENAME,
@@ -42,15 +52,19 @@ from deweloperuch_mcp.throttle import (
     default_lock_dir,
 )
 from discovery_samples import request_target
-from rsc_fixtures import UNKNOWN_CITY
+from rsc_fixtures import STATS_POLSKA, UNKNOWN_CITY, raw
 from service_mocks import (
     BASE,
     INVESTMENT,
+    STATS_PATH,
+    UNKNOWN_LOCATION,
     investment_routes,
     location_routes,
     offers_page,
     offers_route,
+    stats_routes,
     unknown_city_route,
+    unknown_location_route,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -64,15 +78,15 @@ class Cli:
 
     def __init__(self, limiter: RequestLimiter) -> None:
         self.limiter = limiter
-        self.sessions: list[services.Session] = []
+        self.sessions: list[bootstrap.Session] = []
 
-    def factory(self) -> services.Session:
-        session = services.Session(limiter=self.limiter)
+    def factory(self) -> bootstrap.Session:
+        session = bootstrap.Session(limiter=self.limiter)
         self.sessions.append(session)
         return session
 
     def __call__(self, *args: str) -> Any:
-        return CliRunner().invoke(cli.app, list(args), obj=self.factory)
+        return CliRunner().invoke(cli_app.app, list(args), obj=self.factory)
 
 
 @pytest.fixture
@@ -93,7 +107,7 @@ def ok(result: Any) -> str:
     return text
 
 
-# --- locations search --------------------------------------------------------------------
+# --- locations search -----------------------------------------------------------------------------
 
 
 def test_locations_search_prints_locations_with_their_city_slugs(
@@ -143,7 +157,7 @@ def test_locations_search_without_matches_shows_the_hint(
     assert "Wskazówka: Nic nie pasuje do 'xyzzy'." in out
 
 
-# --- offers search -----------------------------------------------------------------------
+# --- offers search --------------------------------------------------------------------------------
 
 
 def test_offers_search_prints_the_page_with_the_limits_of_d4(
@@ -244,7 +258,7 @@ def test_offers_search_of_an_unknown_city_ends_with_not_found(
 
     result = run("offers", "search", UNKNOWN_CITY)
 
-    assert result.exit_code == 7  # cli.ExitCode.NOT_FOUND, public API
+    assert result.exit_code == 7  # ExitCode.NOT_FOUND, public API
     assert result.stdout == ""
     assert result.stderr.splitlines() == [
         f"Błąd: Serwis nie zna miasta {UNKNOWN_CITY!r}. Podaj city_slug z search_locations "
@@ -254,7 +268,7 @@ def test_offers_search_of_an_unknown_city_ends_with_not_found(
     ]
 
 
-# --- offers get --------------------------------------------------------------------------
+# --- offers get -----------------------------------------------------------------------------------
 
 
 def test_offers_get_prints_the_offer_with_its_price_history(
@@ -293,13 +307,13 @@ def test_offers_get_json_is_the_domain_model(run: Cli, service: respx.MockRouter
 def test_offers_get_requires_the_investment(run: Cli, service: respx.MockRouter) -> None:
     result = run("offers", "get", "2377")
 
-    assert result.exit_code == cli.ExitCode.INVALID_INPUT
+    assert result.exit_code == ExitCode.INVALID_INPUT
     assert "--investment" in result.stderr
     assert run.sessions == []
     assert service.calls.call_count == 0
 
 
-# --- investments get ---------------------------------------------------------------------
+# --- investments get ------------------------------------------------------------------------------
 
 
 def test_investments_get_prints_the_investment_and_its_offers(
@@ -349,7 +363,180 @@ def test_investments_get_json_is_the_domain_model(run: Cli, service: respx.MockR
     assert data["offers"][0]["price_history"] is None
 
 
-# --- input checks ------------------------------------------------------------------------
+# --- stats government (the real pages) ------------------------------------------------------------
+
+STATS = identity.BASE_URL + "/statystyki/statystyki-rzadowe"
+
+
+def test_stats_government_prints_a_table_of_periods_and_values(
+    run: Cli, service: respx.MockRouter
+) -> None:
+    stats_routes(service)
+
+    out = ok(run("stats", "government", "warszawa", "nbp_prices", "--periods", "2"))
+
+    assert out.splitlines() == [
+        "Średnie ceny mieszkań za m² według NBP · Warszawa [warszawa]",
+        "Źródło: NBP · kwartalnie · okresy: pokazano 2 z 80 (dane od 2006-Q3).",
+        "Wskazówka: Pokazano ostatnie 2 z 80 okresów (dane od 2006-Q3); starsze pokaże "
+        "większa wartość periods.",
+        f"Strona na deweloperuch.pl: {STATS}/warszawa#nbp",
+        "Kolumny:",
+        "  [1] Rynek pierwotny: cena ofertowa (PLN/m²)",
+        "  [2] Rynek pierwotny: cena transakcyjna (PLN/m²)",
+        "  [3] Rynek wtórny: cena ofertowa (PLN/m²)",
+        "  [4] Rynek wtórny: cena transakcyjna (PLN/m²)",
+        "Okres       [1]     [2]     [3]     [4]",
+        "2026-Q1  18 056  16 471  18 914  16 523",
+        "2026-Q2  18 488  16 783  19 059  16 723",
+    ]
+
+
+def test_stats_government_shows_the_note_decimals_and_missing_values(
+    run: Cli, service: respx.MockRouter
+) -> None:
+    stats_routes(service)
+
+    dwellings = ok(run("stats", "government", "polska", "dwellings_quarterly", "--periods", "87"))
+    area = ok(run("stats", "government", "polska", "average_area"))
+
+    lines = dwellings.splitlines()
+    assert "Uwaga: Ostatni kwartał (2026-Q3) obejmuje tylko 2 z 3 miesięcy" in lines[2]
+    assert "Wskazówka" not in dwellings  # all 87 periods
+    assert lines[-87].startswith("2005-Q1") and lines[-87].endswith("–")  # no data for rent
+    assert lines[-1].startswith("2026-Q3") and lines[-1].endswith(" 22")
+    assert area.splitlines()[-1] == "2026   62,5"
+    assert len(area.splitlines()) == 7 + 12  # default: 12 periods
+
+
+def test_stats_government_json_is_the_domain_model(run: Cli, service: respx.MockRouter) -> None:
+    stats_routes(service)
+
+    data = json.loads(
+        ok(run("stats", "government", "polska", "unemployment", "--periods", "2", "--json"))
+    )
+
+    assert data == {
+        "location_slug": "polska",
+        "location_name": "Polska",
+        "dataset": "unemployment",
+        "title": "Stopa bezrobocia rejestrowanego",
+        "source": "GUS",
+        "frequency": "month",
+        "total": 188,
+        "returned": 2,
+        "truncated": True,
+        "available_from": "2011-01",
+        "hint": (
+            "Pokazano ostatnie 2 z 188 okresów (dane od 2011-01); starsze pokaże większa "
+            "wartość periods."
+        ),
+        "note": None,
+        "stats_url": f"{STATS}/polska#gus-bezrobocie",
+        "series": [
+            {
+                "series_id": "rate",
+                "label": "Stopa bezrobocia",
+                "unit": "%",
+                "points": [
+                    {"period": "2026-07", "value": 5.8},
+                    {"period": "2026-08", "value": 5.8},
+                ],
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    ("args", "answer", "code", "message"),
+    [
+        (
+            ["polska", "nbp_prices"],
+            stats_routes,
+            7,
+            "Błąd: NBP nie podaje jednej ceny dla całej Polski",
+        ),
+        (
+            [UNKNOWN_LOCATION, "wages"],
+            unknown_location_route,
+            7,
+            f"Błąd: Serwis nie ma statystyk rządowych dla lokalizacji {UNKNOWN_LOCATION!r}.",
+        ),
+        (
+            ["krakow", "wages"],
+            lambda r: r.get(path=STATS_PATH + "krakow").respond(200, content=raw(STATS_POLSKA)),
+            6,
+            "Błąd: Statystyki rządowe dla 'krakow': Serwis zwrócił statystyki innej lokalizacji",
+        ),
+    ],
+)
+def test_stats_government_errors_have_their_exit_codes(
+    run: Cli,
+    service: respx.MockRouter,
+    args: list[str],
+    answer: Callable[[respx.MockRouter], Any],
+    code: int,
+    message: str,
+) -> None:
+    answer(service)
+
+    result = run("stats", "government", *args)
+
+    assert result.exit_code == code
+    assert result.stdout == ""
+    assert result.stderr.startswith(message)
+    assert "Traceback" not in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("args", "message"),
+    [
+        (["Kraków", "wages"], "location: oczekiwano polska"),
+        (["warszawa", "wages", "--periods", "0"], "periods musi być liczbą całkowitą"),
+        (["warszawa", "wages", "--periods", "1001"], "periods"),
+    ],
+)
+def test_stats_government_input_checked_by_the_domain(
+    run: Cli, service: respx.MockRouter, args: list[str], message: str
+) -> None:
+    result = run("stats", "government", *args)
+
+    assert result.exit_code == ExitCode.INVALID_INPUT
+    assert result.stderr.startswith("Błąd: ") and message in result.stderr
+    assert service.calls.call_count == 0
+
+
+def test_stats_government_location_in_capitals_is_the_slug(
+    run: Cli, service: respx.MockRouter
+) -> None:
+    routes = stats_routes(service)
+
+    out = ok(run("stats", "government", "Warszawa", "unemployment", "--periods", "1"))
+
+    assert out.splitlines()[0] == "Stopa bezrobocia rejestrowanego · Warszawa [warszawa]"
+    assert routes["warszawa"].call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("args", "option"),
+    [
+        (["warszawa", "prices"], "DATASET"),
+        (["warszawa", "wages", "--periods", "x"], "--periods"),
+        (["warszawa"], "DATASET"),
+    ],
+)
+def test_stats_government_types_and_choices_are_checked_before_a_session_opens(
+    run: Cli, service: respx.MockRouter, args: list[str], option: str
+) -> None:
+    result = run("stats", "government", *args)
+
+    assert result.exit_code == ExitCode.INVALID_INPUT
+    assert option in result.stderr
+    assert run.sessions == []
+    assert service.calls.call_count == 0
+
+
+# --- input checks ---------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -368,7 +555,7 @@ def test_types_and_enums_are_checked_before_a_session_opens(
 ) -> None:
     result = run(*args)
 
-    assert result.exit_code == cli.ExitCode.INVALID_INPUT
+    assert result.exit_code == ExitCode.INVALID_INPUT
     assert option in result.stderr
     assert result.stdout == ""
     assert run.sessions == []
@@ -387,12 +574,12 @@ def test_types_and_enums_are_checked_before_a_session_opens(
         (["locations", "search", "k"], "query"),
     ],
 )
-def test_the_services_check_the_rest_and_say_what_to_fix(
+def test_the_application_checks_the_rest_and_says_what_to_fix(
     run: Cli, service: respx.MockRouter, args: list[str], message: str
 ) -> None:
     result = run(*args)
 
-    assert result.exit_code == cli.ExitCode.INVALID_INPUT
+    assert result.exit_code == ExitCode.INVALID_INPUT
     assert result.stderr.startswith("Błąd: ")
     assert message in result.stderr
     assert "Traceback" not in result.stderr
@@ -400,7 +587,7 @@ def test_the_services_check_the_rest_and_say_what_to_fix(
     assert service.calls.call_count == 0
 
 
-# --- errors and exit codes ---------------------------------------------------------------
+# --- errors and exit codes ------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -422,12 +609,12 @@ def test_each_error_has_its_exit_code_and_a_message_without_traceback(
     def fail(*args: object, **kwargs: object) -> None:
         raise error
 
-    monkeypatch.setattr(services, "get_investment", fail)
+    monkeypatch.setattr(GetInvestment, "__call__", fail)
 
     result = run("investments", "get", "smolna")
 
     assert result.exit_code == code
-    advice = f"{cli.STOP_ADVICE}\n" if code == cli.ExitCode.STOP else ""
+    advice = f"{STOP_ADVICE}\n" if code == ExitCode.STOP else ""
     assert result.stderr == f"Błąd: {error}\n{advice}"
     assert result.stdout == ""
     assert run.sessions[0].closed
@@ -439,16 +626,16 @@ def test_the_detail_of_an_error_follows_on_its_own_line(
     def fail(*args: object, **kwargs: object) -> None:
         raise ServiceError("Serwis odpowiedział błędem HTTP 500.", detail="/api/x: oops")
 
-    monkeypatch.setattr(services, "get_investment", fail)
+    monkeypatch.setattr(GetInvestment, "__call__", fail)
 
     result = run("investments", "get", "smolna")
 
-    assert result.exit_code == cli.ExitCode.SERVICE_ERROR
+    assert result.exit_code == ExitCode.SERVICE_ERROR
     assert result.stderr == "Błąd: Serwis odpowiedział błędem HTTP 500.\nSzczegóły: /api/x: oops\n"
 
 
 def test_exit_codes_are_the_documented_ones() -> None:
-    assert {code.name: code.value for code in cli.ExitCode} == {
+    assert {code.name: code.value for code in ExitCode} == {
         "OK": 0,
         "UNEXPECTED": 1,
         "INVALID_INPUT": 2,
@@ -464,11 +651,11 @@ def test_another_exception_exits_with_1(run: Cli, monkeypatch: pytest.MonkeyPatc
     def crash(*args: object, **kwargs: object) -> None:
         raise RuntimeError("bug")
 
-    monkeypatch.setattr(services, "get_investment", crash)
+    monkeypatch.setattr(GetInvestment, "__call__", crash)
 
     result = run("investments", "get", "smolna")
 
-    assert result.exit_code == cli.ExitCode.UNEXPECTED
+    assert result.exit_code == ExitCode.UNEXPECTED
     assert isinstance(result.exception, RuntimeError)
     assert run.sessions[0].closed
 
@@ -476,10 +663,10 @@ def test_another_exception_exits_with_1(run: Cli, monkeypatch: pytest.MonkeyPatc
 @pytest.mark.parametrize(
     ("status", "code", "message"),
     [
-        (403, cli.ExitCode.STOP, "STOP: "),
-        (429, cli.ExitCode.STOP, "STOP: "),
-        (500, cli.ExitCode.SERVICE_ERROR, "500"),
-        (404, cli.ExitCode.NOT_FOUND, "Nie znaleziono inwestycji 'smolna'"),
+        (403, ExitCode.STOP, "STOP: "),
+        (429, ExitCode.STOP, "STOP: "),
+        (500, ExitCode.SERVICE_ERROR, "500"),
+        (404, ExitCode.NOT_FOUND, "Nie znaleziono inwestycji 'smolna'"),
     ],
 )
 def test_service_answers_map_to_exit_codes(
@@ -494,7 +681,7 @@ def test_service_answers_map_to_exit_codes(
     assert first.startswith("Błąd: ") and message in first
     assert "/api/" not in first and "the body" not in first  # details on their own line
     assert rest[0].startswith("Szczegóły: /api/map/investments/visible/smolna")
-    assert (rest[-1] == cli.STOP_ADVICE) is (code == cli.ExitCode.STOP)
+    assert (rest[-1] == STOP_ADVICE) is (code == ExitCode.STOP)
     assert "Traceback" not in result.stderr
 
 
@@ -526,15 +713,15 @@ def test_terminal_sequences_from_the_service_are_escaped_on_stderr(
 
 
 def test_numbers_have_no_negative_zero_and_no_unit_without_a_currency() -> None:
-    assert cli._number(-0.001) == "0"
-    assert cli._number(-0.004, 2, signed=True) == "0"
-    assert cli._number(0.0, signed=True) == "0"
-    assert cli._number(-5988, signed=True) == "-5 988"
-    assert cli._number(0.01, 2, signed=True) == "+0,01"
-    assert cli._number(1234567.5, 2) == "1 234 567,5"
-    assert cli._amount(17991.17, cli._per_m2(""), 2) == "17 991,17"
-    assert cli._amount(None, cli._per_m2(""), 2) == "?"
-    assert cli._amount(None, cli._per_m2("PLN"), 2) == "? PLN/m²"
+    assert cli_text._number(-0.001) == "0"
+    assert cli_text._number(-0.004, 2, signed=True) == "0"
+    assert cli_text._number(0.0, signed=True) == "0"
+    assert cli_text._number(-5988, signed=True) == "-5 988"
+    assert cli_text._number(0.01, 2, signed=True) == "+0,01"
+    assert cli_text._number(1234567.5, 2) == "1 234 567,5"
+    assert cli_text._amount(17991.17, cli_text._per_m2(""), 2) == "17 991,17"
+    assert cli_text._amount(None, cli_text._per_m2(""), 2) == "?"
+    assert cli_text._amount(None, cli_text._per_m2("PLN"), 2) == "? PLN/m²"
 
 
 def test_data_off_the_contract_exits_with_6(run: Cli, service: respx.MockRouter) -> None:
@@ -542,7 +729,7 @@ def test_data_off_the_contract_exits_with_6(run: Cli, service: respx.MockRouter)
 
     result = run("investments", "get", "smolna")
 
-    assert result.exit_code == cli.ExitCode.UNEXPECTED_RESPONSE
+    assert result.exit_code == ExitCode.UNEXPECTED_RESPONSE
     assert result.stderr.startswith("Błąd: ")
 
 
@@ -555,28 +742,29 @@ def test_one_session_per_run_closed_at_the_end(run: Cli, service: respx.MockRout
     assert run.sessions[0].closed
 
 
-def test_the_default_session_is_the_services_one(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Without ``obj`` (the real ``deweloperuch``) a command opens ``services.Session()``."""
+def test_the_default_session_is_the_bootstraps_one(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without ``obj`` (the real ``deweloperuch``) a command opens ``bootstrap.Session()``
+    through ``bootstrap.new_session``."""
     opened: list[str] = []
 
-    class Recorded(services.Session):
+    class Recorded(bootstrap.Session):
         def __init__(self) -> None:
             opened.append("session")
             super().__init__()
 
-    def fail(session: services.Session, query: str) -> None:
+    def fail(use_case: object, query: object) -> None:
         raise InvalidInputError("stop here")
 
-    monkeypatch.setattr(services, "Session", Recorded)
-    monkeypatch.setattr(services, "search_locations", fail)
+    monkeypatch.setattr(bootstrap, "Session", Recorded)
+    monkeypatch.setattr(SearchLocations, "__call__", fail)
 
-    result = CliRunner().invoke(cli.app, ["locations", "search", "krak"])
+    result = CliRunner().invoke(cli_app.app, ["locations", "search", "krak"])
 
-    assert result.exit_code == cli.ExitCode.INVALID_INPUT
+    assert result.exit_code == ExitCode.INVALID_INPUT
     assert opened == ["session"]
 
 
-# --- stop: the STOP record of the shared limiter ---------------------------------------------
+# --- stop: the STOP record of the shared limiter --------------------------------------------------
 
 
 def shared_limiter(clock: Callable[[], float] = time.time) -> RequestLimiter:
@@ -617,7 +805,7 @@ def test_stop_status_of_a_permanent_stop_exits_with_3(run: Cli) -> None:
 
     result = run("stop", "status")
 
-    assert result.exit_code == cli.ExitCode.STOP
+    assert result.exit_code == ExitCode.STOP
     assert result.stderr == ""
     head, origin, *rest = result.stdout.splitlines()
     assert head == "STOP aktywny: HTTP 403 (odmowa dostępu)."
@@ -635,7 +823,7 @@ def test_stop_status_of_a_429_shows_when_it_ends(run: Cli) -> None:
 
     result = run("stop", "status")
 
-    assert result.exit_code == cli.ExitCode.STOP
+    assert result.exit_code == ExitCode.STOP
     assert result.stdout.startswith("STOP aktywny: HTTP 429 (limit zapytań).\n")
     assert re.search(r"^Wygasa: \S+ \S+ \(za 1[12]\d s\)\.$", result.stdout, re.M)
 
@@ -657,7 +845,7 @@ def test_stop_status_of_an_unreadable_record_exits_with_3(run: Cli) -> None:
 
     result = run("stop", "status")
 
-    assert result.exit_code == cli.ExitCode.STOP
+    assert result.exit_code == ExitCode.STOP
     assert result.stdout.startswith(
         "STOP aktywny bezterminowo: zapis jest nieczytelny.\nProblem: niepoprawna treść: "
     )
@@ -668,7 +856,7 @@ def test_stop_status_json(run: Cli) -> None:
 
     result = run("stop", "status", "--json")
 
-    assert result.exit_code == cli.ExitCode.STOP
+    assert result.exit_code == ExitCode.STOP
     data = json.loads(result.stdout)
     assert data["active"] is True and 110 < data["seconds_left"] <= 120
     assert data["path"] == str(stop_file())
@@ -700,7 +888,7 @@ def test_stop_clear_removes_the_stop_and_says_what_it_was(run: Cli) -> None:
         "uruchomieniu."
     ]
     assert not stop_file().exists()
-    assert run("stop", "status").exit_code == cli.ExitCode.OK
+    assert run("stop", "status").exit_code == ExitCode.OK
     assert run.sessions == []
 
 
@@ -731,7 +919,7 @@ def test_stop_clear_that_cannot_remove_the_record_exits_with_1(run: Cli) -> None
 
     result = run("stop", "clear")
 
-    assert result.exit_code == cli.ExitCode.UNEXPECTED
+    assert result.exit_code == ExitCode.UNEXPECTED
     assert result.stderr.startswith("Błąd: nie udało się zdjąć zapisu STOP: ")
     assert result.stdout == ""
 
@@ -771,16 +959,16 @@ def test_stop_clear_waits_for_the_lock_and_gives_up_with_1(
     run: Cli, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     record_stop(shared_limiter())
-    monkeypatch.setattr(cli, "STOP_LOCK_WAIT", 0.6)
-    monkeypatch.setattr(cli, "STOP_LOCK_NOTICE", 0.2)
+    monkeypatch.setattr(cli_stop, "STOP_LOCK_WAIT", 0.6)
+    monkeypatch.setattr(cli_stop, "STOP_LOCK_NOTICE", 0.2)
 
     with limiter_lock_held():
         result = run("stop", "clear")
 
-    assert result.exit_code == cli.ExitCode.UNEXPECTED
+    assert result.exit_code == ExitCode.UNEXPECTED
     assert result.stdout == ""
     assert result.stderr.splitlines() == [
-        cli.STOP_LOCK_WAITING,
+        cli_stop.STOP_LOCK_WAITING,
         "Błąd: Nie udało się uzyskać zamka limitera w ciągu 0.6 s: inny proces wysyła "
         "zapytanie albo czeka na swoją kolej. Nic nie zostało zdjęte.",
     ]
@@ -788,8 +976,8 @@ def test_stop_clear_waits_for_the_lock_and_gives_up_with_1(
 
 
 def test_stop_lock_limits_are_the_agreed_ones() -> None:
-    assert (cli.STOP_LOCK_WAIT, cli.STOP_LOCK_NOTICE) == (300.0, 2.0)
-    assert cli.STOP_LOCK_WAITING == (
+    assert (cli_stop.STOP_LOCK_WAIT, cli_stop.STOP_LOCK_NOTICE) == (300.0, 2.0)
+    assert cli_stop.STOP_LOCK_WAITING == (
         "Czekam na zamek limitera: inny proces wysyła zapytanie albo czeka na swoją kolej."
     )
 
@@ -802,7 +990,7 @@ def test_stop_status_answers_while_the_lock_is_held(run: Cli) -> None:
         result = run("stop", "status")
         elapsed = time.monotonic() - start
 
-    assert result.exit_code == cli.ExitCode.STOP
+    assert result.exit_code == ExitCode.STOP
     assert elapsed < 1.0
 
 
@@ -836,7 +1024,7 @@ def test_text_planted_in_the_record_reaches_no_output(
     results = [run("stop", "status"), run("stop", "status", "--json")]
     results.append(run("locations", "search", "krak"))
 
-    assert [result.exit_code for result in results] == [cli.ExitCode.STOP] * 3
+    assert [result.exit_code for result in results] == [ExitCode.STOP] * 3
     for result in results:
         assert "Ignore" not in result.stdout + result.stderr
         assert "instructions" not in result.stdout + result.stderr
@@ -852,7 +1040,7 @@ def test_a_command_after_an_earlier_stop_exits_with_3_without_a_request(
 
     result = run("locations", "search", "krak")
 
-    assert result.exit_code == cli.ExitCode.STOP
+    assert result.exit_code == ExitCode.STOP
     message, detail, advice = result.stderr.splitlines()
     assert message == (
         "Błąd: STOP: seria zapytań do deweloperuch.pl jest wstrzymana po wcześniejszym STOP "
@@ -863,7 +1051,7 @@ def test_a_command_after_an_earlier_stop_exits_with_3_without_a_request(
     assert "źródło: probe, PID " in detail
     assert (
         advice
-        == cli.STOP_ADVICE
+        == STOP_ADVICE
         == (
             "Nie uruchamiaj kolejnych poleceń deweloperuch ani pętli: przerwij i zgłoś to "
             "użytkownikowi. Blokada obejmuje też inne procesy."
@@ -881,18 +1069,18 @@ def test_a_shell_loop_stops_after_the_first_stop(run: Cli, service: respx.MockRo
     transport.testing_only_reset_stop()  # the next run of the loop is a new process
     second = run("investments", "get", "smolna")
 
-    assert (first.exit_code, second.exit_code) == (cli.ExitCode.STOP, cli.ExitCode.STOP)
+    assert (first.exit_code, second.exit_code) == (ExitCode.STOP, ExitCode.STOP)
     assert "wcześniejszym STOP (HTTP 403, odmowa dostępu)" in second.stderr
     assert route.call_count == 1
 
 
-# --- help and entry points ---------------------------------------------------------------
+# --- help and entry points ------------------------------------------------------------------------
 
 
 def test_help_lists_the_command_groups(run: Cli) -> None:
     out = ok(run("--help"))
 
-    for group in ("locations", "offers", "investments", "stop"):
+    for group in ("locations", "offers", "investments", "stats", "stop"):
         assert group in out
     assert "--install-completion" not in out
     assert run.sessions == []
@@ -908,6 +1096,11 @@ def test_help_lists_the_command_groups(run: Cli) -> None:
         (["offers", "get", "--help"], ["--investment", "--json"]),
         (["investments", "get", "--help"], ["--history", "--limit", "--json"]),
         (["locations", "search", "--help"], ["QUERY", "--json"]),
+        (["stats", "--help"], ["government"]),
+        (
+            ["stats", "government", "--help"],
+            ["LOCATION", "DATASET", "--periods", "--json", "nbp_prices"],
+        ),
         (["stop", "--help"], ["status", "clear"]),
         (["stop", "status", "--help"], ["--json"]),
         (["stop", "clear", "--help"], ["STOP"]),
@@ -940,10 +1133,22 @@ def test_project_scripts_point_to_the_adapters() -> None:
         assert callable(getattr(import_module(module), name))
 
 
+def test_the_choices_of_the_options_are_the_domains() -> None:
+    """The ``Literal`` types of the options are projections of the domain's value sets."""
+    assert get_args(SortChoice) == tuple(sort.value for sort in OfferSort)
+    assert get_args(PageSizeChoice) == PAGE_SIZES
+    assert choices.DEFAULT_PAGE_SIZE == DEFAULT_PAGE_SIZE
+
+
+def test_the_script_module_is_a_shim_of_the_interface() -> None:
+    assert deweloperuch_mcp.cli.main is cli_app.main
+    assert deweloperuch_mcp.cli.__all__ == ["main"]
+
+
 def test_main_runs_the_app(monkeypatch: pytest.MonkeyPatch) -> None:
     called: list[str] = []
-    monkeypatch.setattr(cli, "app", lambda: called.append("app"))
+    monkeypatch.setattr(cli_app, "app", lambda: called.append("app"))
 
-    cli.main()
+    cli_app.main()
 
     assert called == ["app"]

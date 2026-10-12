@@ -1,0 +1,20 @@
+{
+  "args": [
+    "offers",
+    "get",
+    "2377"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch offers get [OPTIONS] {OFFER_ID}",
+    "Try 'deweloperuch offers get --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Missing option '--investment'.                                                                   │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

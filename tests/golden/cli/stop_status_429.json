@@ -1,0 +1,19 @@
+{
+  "args": [
+    "stop",
+    "status"
+  ],
+  "exit_code": 3,
+  "stdout": [
+    "STOP aktywny: HTTP 429 (limit zapytań).",
+    "Od: <TIME> · źródło: probe (PID <PID>)",
+    "Wygasa: <TIME> (za <N> s).",
+    "Blokadę zdejmuje użytkownik po sprawdzeniu przyczyny: deweloperuch stop clear",
+    "Plik: <LOCK_DIR>/stop.json",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

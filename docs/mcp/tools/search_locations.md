@@ -66,4 +66,4 @@ The `structuredContent` result (the mock does not filter by `query`: the distric
 
 Size: about 680 characters.
 
-_Source: `src/deweloperuch_mcp/mcp_server.py`, `src/deweloperuch_mcp/mcp_results.py`, `tests/snapshots/mcp_tools.json`_
+_Source: `src/deweloperuch_mcp/interfaces/mcp/server.py`, `src/deweloperuch_mcp/interfaces/mcp/presenters.py`, `tests/snapshots/mcp_tools.json`_

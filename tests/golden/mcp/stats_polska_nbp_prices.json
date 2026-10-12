@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "polska",
+        "dataset": "nbp_prices"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj jedną z lokalizacji: 7-miast, 10-miast, 6-miast-bez-warszawy, warszawa, krakow, gdansk, wroclaw, gdynia, poznan, katowice, opole, szczecin, bialystok, lublin, bydgoszcz, olsztyn, kielce, rzeszow, lodz, zielona-gora.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj jedną z lokalizacji: 7-miast, 10-miast, 6-miast-bez-warszawy, warszawa, krakow, gdansk, wroclaw, gdynia, poznan, katowice, opole, szczecin, bialystok, lublin, bydgoszcz, olsztyn, kielce, rzeszow, lodz, zielona-gora. Szczegóły: None"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+  ]
+}

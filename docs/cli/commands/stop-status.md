@@ -75,4 +75,4 @@ Plik: <ścieżka>/deweloperuch-mcp/stop.json
 }
 ```
 
-_Source: `src/deweloperuch_mcp/cli.py` (`stop_status`, `format_stop_status`), `src/deweloperuch_mcp/throttle.py`, `uv run deweloperuch stop status --help`, `tests/test_cli.py`_
+_Source: `src/deweloperuch_mcp/interfaces/cli/` (`stop_status`, `format_stop_status`), `src/deweloperuch_mcp/throttle.py`, `uv run deweloperuch stop status --help`, `tests/test_cli.py`_

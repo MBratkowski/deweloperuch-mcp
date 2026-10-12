@@ -1,0 +1,20 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "krakow",
+    "wages"
+  ],
+  "exit_code": 6,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Statystyki rządowe dla 'krakow': Serwis zwrócił statystyki innej lokalizacji niż żądana. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+    "Szczegóły: /statystyki/statystyki-rzadowe/krakow: currentSlug [None, None], oczekiwano 'krakow'",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/krakow?_rsc=7789e4e4 [rsc: 1] [accept: */*]"
+  ]
+}

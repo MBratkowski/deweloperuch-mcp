@@ -1,0 +1,20 @@
+{
+  "args": [
+    "investments",
+    "get",
+    "smolna"
+  ],
+  "exit_code": 3,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.",
+    "Szczegóły: /api/map/investments/visible/smolna: HTTP 403",
+    "Nie uruchamiaj kolejnych poleceń deweloperuch ani pętli: przerwij i zgłoś to użytkownikowi. Blokada obejmuje też inne procesy.",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

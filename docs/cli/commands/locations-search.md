@@ -38,4 +38,4 @@ W nawiasach [] slug miasta dla: deweloperuch offers search CITY_SLUG
 
 When there are more results than shown, the header reads `Lokalizacje: pokazano N, może być więcej.` (shown N, there may be more).
 
-_Source: `src/deweloperuch_mcp/cli.py`, `uv run deweloperuch locations search --help`_
+_Source: `src/deweloperuch_mcp/interfaces/cli/`, `uv run deweloperuch locations search --help`_

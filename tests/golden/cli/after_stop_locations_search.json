@@ -1,0 +1,18 @@
+{
+  "args": [
+    "locations",
+    "search",
+    "krak"
+  ],
+  "exit_code": 3,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: STOP: seria zapytań do deweloperuch.pl jest wstrzymana po wcześniejszym STOP (HTTP 403, odmowa dostępu). Zapytanie nie zostało wysłane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.",
+    "Szczegóły: zapis STOP: HTTP 403 (odmowa dostępu), <TIME>, źródło: probe, PID <PID>",
+    "Nie uruchamiaj kolejnych poleceń deweloperuch ani pętli: przerwij i zgłoś to użytkownikowi. Blokada obejmuje też inne procesy.",
+    ""
+  ],
+  "requests": []
+}

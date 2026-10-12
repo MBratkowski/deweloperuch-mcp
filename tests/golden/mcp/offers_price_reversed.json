@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "warszawa",
+        "price_min": 700000,
+        "price_max": 500000
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "price_min (700000) jest większe niż price_max (500000); zamień je miejscami.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: price_min (700000) jest większe niż price_max (500000); zamień je miejscami. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

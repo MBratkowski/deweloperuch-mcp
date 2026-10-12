@@ -1,0 +1,40 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa",
+    "nbp_prices"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Średnie ceny mieszkań za m² według NBP · Warszawa [warszawa]",
+    "Źródło: NBP · kwartalnie · okresy: pokazano 12 z 80 (dane od 2006-Q3).",
+    "Wskazówka: Pokazano ostatnie 12 z 80 okresów (dane od 2006-Q3); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#nbp",
+    "Kolumny:",
+    "  [1] Rynek pierwotny: cena ofertowa (PLN/m²)",
+    "  [2] Rynek pierwotny: cena transakcyjna (PLN/m²)",
+    "  [3] Rynek wtórny: cena ofertowa (PLN/m²)",
+    "  [4] Rynek wtórny: cena transakcyjna (PLN/m²)",
+    "Okres       [1]     [2]     [3]     [4]",
+    "2023-Q3  14 880  14 032  14 953  13 744",
+    "2023-Q4  15 559  14 927  16 660  14 149",
+    "2024-Q1  16 190  15 880  17 586  15 233",
+    "2024-Q2  16 512  15 996  18 675  16 279",
+    "2024-Q3  16 821  16 323  18 709  16 849",
+    "2024-Q4  16 787  16 548  18 675  16 972",
+    "2025-Q1  16 948  16 437  18 493  16 682",
+    "2025-Q2  17 293  16 387  18 393  16 507",
+    "2025-Q3  17 355  16 291  19 094  16 444",
+    "2025-Q4  17 743  16 577  18 892  16 759",
+    "2026-Q1  18 056  16 471  18 914  16 523",
+    "2026-Q2  18 488  16 783  19 059  16 723",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

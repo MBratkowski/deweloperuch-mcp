@@ -1,0 +1,21 @@
+{
+  "args": [
+    "offers",
+    "get",
+    "2377",
+    "--investment",
+    "smolna"
+  ],
+  "exit_code": 7,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Nie znaleziono inwestycji 'smolna'. Slug inwestycji podaje search_offers (pole investment_slug).",
+    "Szczegóły: /api/map/investments/visible/smolna",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "nieistniejace-miasto"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Serwis nie zna miasta 'nieistniejace-miasto'. Podaj city_slug z search_locations albo polska (cały kraj).",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Serwis nie zna miasta 'nieistniejace-miasto'. Podaj city_slug z search_locations albo polska (cały kraj). Szczegóły: /ceny-ofertowe/nieistniejace-miasto/mieszkania: brak propsa 'initialData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/nieistniejace-miasto/mieszkania?page=1&perPage=10&_rsc=bd285b39 [rsc: 1] [accept: */*]"
+  ]
+}

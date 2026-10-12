@@ -1,0 +1,22 @@
+{
+  "args": [
+    "offers",
+    "get",
+    "2377",
+    "--investment",
+    "smolna"
+  ],
+  "exit_code": 4,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Historia ceny oferty 2377: Serwis odpowiedział błędem HTTP 500. Nic nie ponawiam; spróbuj później.",
+    "Szczegóły: /api/sale-events?saleId=2377: busy",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]",
+    "GET https://deweloperuch.pl/api/sale-events?saleId=2377 [accept: application/json]"
+  ]
+}

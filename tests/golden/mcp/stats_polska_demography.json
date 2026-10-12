@@ -1,0 +1,108 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "polska",
+        "dataset": "demography"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "polska",
+        "location_name": "Polska",
+        "dataset": "demography",
+        "title": "Urodzenia żywe, zgony i przyrost naturalny",
+        "source": "Eurostat",
+        "frequency": "month",
+        "total": 357,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "1996-01",
+        "hint": "Pokazano ostatnie 12 z 357 okresów (dane od 1996-01); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#eurostat-demografia",
+        "periods": [
+          "2024-10",
+          "2024-11",
+          "2024-12",
+          "2025-01",
+          "2025-02",
+          "2025-03",
+          "2025-04",
+          "2025-05",
+          "2025-06",
+          "2025-07",
+          "2025-08",
+          "2025-09"
+        ],
+        "series": [
+          {
+            "series_id": "births",
+            "label": "Urodzenia żywe",
+            "unit": "osoby",
+            "values": [
+              20923,
+              18893,
+              20295,
+              20834,
+              17962,
+              18724,
+              19254,
+              19410,
+              19571,
+              22500,
+              20500,
+              22500
+            ]
+          },
+          {
+            "series_id": "deaths",
+            "label": "Zgony",
+            "unit": "osoby",
+            "values": [
+              35602,
+              33404,
+              39498,
+              41102,
+              35228,
+              36418,
+              32748,
+              31391,
+              31477,
+              32000,
+              29500,
+              33000
+            ]
+          },
+          {
+            "series_id": "natural_increase",
+            "label": "Przyrost naturalny",
+            "unit": "osoby",
+            "values": [
+              -14679,
+              -14511,
+              -19203,
+              -20268,
+              -17266,
+              -17694,
+              -13494,
+              -11981,
+              -11906,
+              -9500,
+              -9000,
+              -10500
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+  ]
+}

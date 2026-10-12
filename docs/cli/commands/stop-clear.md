@@ -48,4 +48,4 @@ Zdjęto STOP: HTTP 403 (odmowa dostępu), <czas>, źródło: probe.
 Działający serwer MCP, który trafił na STOP, wyśle zapytania dopiero po ponownym uruchomieniu.
 ```
 
-_Source: `src/deweloperuch_mcp/cli.py` (`stop_clear`, `format_stop_clear`), `src/deweloperuch_mcp/throttle.py` (`clear_stop`), `uv run deweloperuch stop clear --help`, `tests/test_cli.py`_
+_Source: `src/deweloperuch_mcp/interfaces/cli/` (`stop_clear`, `format_stop_clear`), `src/deweloperuch_mcp/throttle.py` (`clear_stop`), `uv run deweloperuch stop clear --help`, `tests/test_cli.py`_
