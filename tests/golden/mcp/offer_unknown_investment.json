@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "get_offer",
+      "arguments": {
+        "offer_id": 2377,
+        "investment_slug": "smolna"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Nie znaleziono inwestycji 'smolna'. Slug inwestycji podaje search_offers (pole investment_slug).",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Nie znaleziono inwestycji 'smolna'. Slug inwestycji podaje search_offers (pole investment_slug). Szczegóły: /api/map/investments/visible/smolna"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

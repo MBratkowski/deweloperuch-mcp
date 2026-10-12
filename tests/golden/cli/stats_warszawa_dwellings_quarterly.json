@@ -1,0 +1,52 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa",
+    "dwellings_quarterly"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Mieszkania oddane do użytkowania i rozpoczęte (kwartalnie) · Warszawa [warszawa]",
+    "Źródło: GUS · kwartalnie · okresy: pokazano 12 z 87 (dane od 2005-Q1).",
+    "Wskazówka: Pokazano ostatnie 12 z 87 okresów (dane od 2005-Q1); starsze pokaże większa wartość periods.",
+    "Uwaga: Ostatni kwartał (2026-Q3) obejmuje tylko 2 z 3 miesięcy (dane miesięczne do 2026-08); nie porównuj go z pełnymi kwartałami.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-mieszkania",
+    "Kolumny:",
+    "  [1] Oddane do użytkowania: razem (mieszkania)",
+    "  [2] Oddane: deweloperskie (mieszkania)",
+    "  [3] Oddane: indywidualne (mieszkania)",
+    "  [4] Oddane: spółdzielcze (mieszkania)",
+    "  [5] Oddane: komunalne (mieszkania)",
+    "  [6] Oddane: społeczne (mieszkania)",
+    "  [7] Oddane: zakładowe (mieszkania)",
+    "  [8] Rozpoczęte budowy: razem (mieszkania)",
+    "  [9] Rozpoczęte: deweloperskie (mieszkania)",
+    "  [10] Rozpoczęte: indywidualne (mieszkania)",
+    "  [11] Rozpoczęte: spółdzielcze (mieszkania)",
+    "  [12] Rozpoczęte: komunalne (mieszkania)",
+    "  [13] Rozpoczęte: społeczne (mieszkania)",
+    "  [14] Rozpoczęte: zakładowe (mieszkania)",
+    "  [15] Rozpoczęte: na wynajem (mieszkania)",
+    "Okres      [1]    [2]  [3]  [4]  [5]  [6]  [7]    [8]    [9]  [10]  [11]  [12]  [13]  [14]  [15]",
+    "2023-Q4  5 247  5 122   96    0    0   29    0  3 283  2 512   336    37     0   398     0     0",
+    "2024-Q1  3 505  3 382  123    0    0    0    0  4 359  4 283    76     0     0     0     0     0",
+    "2024-Q2  2 706  2 493  141    0   72    0    0  4 090  3 968   122     0     0     0     0     0",
+    "2024-Q3  3 708  3 568  140    0    0    0    0  3 811  3 714    97     0     0     0     0     0",
+    "2024-Q4  4 954  4 803  127    0   24    0    0  3 910  3 818    92     0     0     0     0     0",
+    "2025-Q1  4 215  3 994  157   64    0    0    0  4 192  4 047   145     0     0     0     0     0",
+    "2025-Q2  4 085  3 871  148    0    0   66    0  2 811  2 685   126     0     0     0     0     0",
+    "2025-Q3  4 654  4 128  157  196    0  173    0  3 206  3 094   112     0     0     0     0     0",
+    "2025-Q4  6 890  6 454  121  315    0    0    0  4 190  4 098    92     0     0     0     0     0",
+    "2026-Q1  2 602  2 378  124    0    0    0  100  2 923  2 819   104     0     0     0     0     0",
+    "2026-Q2  4 244  3 898   96    5    0  245    0  3 605  3 441   164     0     0     0     0     0",
+    "2026-Q3  3 611  3 423  145   43    0    0    0  2 857  2 762    95     0     0     0     0     0",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

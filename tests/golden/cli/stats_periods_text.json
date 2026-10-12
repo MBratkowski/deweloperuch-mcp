@@ -1,0 +1,23 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa",
+    "wages",
+    "--periods",
+    "x"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch stats government [OPTIONS] {LOCATION} {DATASET}",
+    "Try 'deweloperuch stats government --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for '--periods': 'x' is not a valid int.                                           │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

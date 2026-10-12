@@ -1,0 +1,19 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa"
+  ],
+  "exit_code": 6,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Wyszukiwanie ofert w 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+    "Szczegóły: /ceny-ofertowe/warszawa/mieszkania nie zawiera danych w propsie 'initialData' (propsy z danymi: other)",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10&_rsc=cc6e11f9 [rsc: 1] [accept: */*]"
+  ]
+}

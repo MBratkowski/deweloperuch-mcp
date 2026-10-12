@@ -1,0 +1,18 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--area-max",
+    "10000"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: area_max musi być liczbą całkowitą z zakresu 0–9999 (m²), podano 10000.",
+    ""
+  ],
+  "requests": []
+}

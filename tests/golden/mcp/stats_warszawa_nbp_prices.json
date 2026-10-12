@@ -1,0 +1,127 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "warszawa",
+        "dataset": "nbp_prices"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "warszawa",
+        "location_name": "Warszawa",
+        "dataset": "nbp_prices",
+        "title": "Średnie ceny mieszkań za m² według NBP",
+        "source": "NBP",
+        "frequency": "quarter",
+        "total": 80,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "2006-Q3",
+        "hint": "Pokazano ostatnie 12 z 80 okresów (dane od 2006-Q3); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#nbp",
+        "periods": [
+          "2023-Q3",
+          "2023-Q4",
+          "2024-Q1",
+          "2024-Q2",
+          "2024-Q3",
+          "2024-Q4",
+          "2025-Q1",
+          "2025-Q2",
+          "2025-Q3",
+          "2025-Q4",
+          "2026-Q1",
+          "2026-Q2"
+        ],
+        "series": [
+          {
+            "series_id": "primary_asking",
+            "label": "Rynek pierwotny: cena ofertowa",
+            "unit": "PLN/m²",
+            "values": [
+              14880,
+              15559,
+              16190,
+              16512,
+              16821,
+              16787,
+              16948,
+              17293,
+              17355,
+              17743,
+              18056,
+              18488
+            ]
+          },
+          {
+            "series_id": "primary_transaction",
+            "label": "Rynek pierwotny: cena transakcyjna",
+            "unit": "PLN/m²",
+            "values": [
+              14032,
+              14927,
+              15880,
+              15996,
+              16323,
+              16548,
+              16437,
+              16387,
+              16291,
+              16577,
+              16471,
+              16783
+            ]
+          },
+          {
+            "series_id": "secondary_asking",
+            "label": "Rynek wtórny: cena ofertowa",
+            "unit": "PLN/m²",
+            "values": [
+              14953,
+              16660,
+              17586,
+              18675,
+              18709,
+              18675,
+              18493,
+              18393,
+              19094,
+              18892,
+              18914,
+              19059
+            ]
+          },
+          {
+            "series_id": "secondary_transaction",
+            "label": "Rynek wtórny: cena transakcyjna",
+            "unit": "PLN/m²",
+            "values": [
+              13744,
+              14149,
+              15233,
+              16279,
+              16849,
+              16972,
+              16682,
+              16507,
+              16444,
+              16759,
+              16523,
+              16723
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

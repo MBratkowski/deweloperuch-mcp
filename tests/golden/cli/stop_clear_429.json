@@ -1,0 +1,17 @@
+{
+  "args": [
+    "stop",
+    "clear"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Zdjęto STOP: HTTP 429 (limit zapytań), <TIME>, źródło: probe.",
+    "Pauza po 429 zapisana w limiterze nadal obowiązuje.",
+    "Działający serwer MCP, który trafił na STOP, wyśle zapytania dopiero po ponownym uruchomieniu.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

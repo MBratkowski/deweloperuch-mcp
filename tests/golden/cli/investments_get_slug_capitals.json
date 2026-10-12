@@ -1,0 +1,16 @@
+{
+  "args": [
+    "investments",
+    "get",
+    "Smolna"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: investment_slug: oczekiwano slug inwestycji, np. smolna; podaje go search_offers (investment_slug); podano 'Smolna'.",
+    ""
+  ],
+  "requests": []
+}

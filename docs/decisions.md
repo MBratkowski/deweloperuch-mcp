@@ -64,7 +64,7 @@ The CLI and MCP call the same service functions. The CLI also serves as a develo
 - `services.Session` is the only entry point.
 - The CLI and MCP import from the package only `services`, `errors` and `domain.models`; MCP additionally its own representation `mcp_results`. `tests/test_layering.py` enforces this.
 
-Superseded in structure by D13 (the spirit stays: one core, thin adapters).
+Superseded in structure by D13 (the spirit stays: one core, thin adapters). Since the D13 refactor (2026-10-12) the entry point is `bootstrap.Session`, the CLI and MCP live in `interfaces/` and import only `application`, `domain` and `bootstrap`; `services.py` and `domain/models.py` no longer exist.
 
 ## D7. Detecting service drift (proposed)
 
@@ -192,6 +192,8 @@ The next features (price-history flags, `market_stats`, GUS/NBP) are domain logi
   - the live e2e suite is the acceptance test;
   - tests may be reorganized, not weakened.
 - **New features start in the domain**, e.g. the flags are methods of the price history and `market_stats` is an aggregate over a set of offers.
+
+**Clarification (2026-10-12, done).** Both steps are done; the goldens in `tests/golden/` (352 CLI and MCP cases) stayed byte-identical through the refactor. The parameter names shared by the CLI and MCP (`city`, `price_min`, `per_page`…), their check order and the refusal messages that name tools are the application's contract (`application/arguments.py` and the use-case hints); domain value objects raise a structured `InvalidValueError` in neutral domain words and never name tools or parameters. Domain and application modules may import only an allowlist of pure stdlib modules (enforced by `tests/test_layering.py`).
 
 **Consequences.** D6 still holds in spirit (one shared core, thin adapters), but the split above replaces its diagram. The layering tests (`tests/test_layering.py`) enforce the new dependency direction. The refactor goes in steps, each reviewed: the domain with ports and use cases; the interfaces; GUS/NBP in the new shape.
 

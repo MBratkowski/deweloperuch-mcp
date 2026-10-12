@@ -1,0 +1,78 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "warszawa",
+        "dataset": "nbp_prices",
+        "periods": 2
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "warszawa",
+        "location_name": "Warszawa",
+        "dataset": "nbp_prices",
+        "title": "Średnie ceny mieszkań za m² według NBP",
+        "source": "NBP",
+        "frequency": "quarter",
+        "total": 80,
+        "returned": 2,
+        "truncated": true,
+        "available_from": "2006-Q3",
+        "hint": "Pokazano ostatnie 2 z 80 okresów (dane od 2006-Q3); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#nbp",
+        "periods": [
+          "2026-Q1",
+          "2026-Q2"
+        ],
+        "series": [
+          {
+            "series_id": "primary_asking",
+            "label": "Rynek pierwotny: cena ofertowa",
+            "unit": "PLN/m²",
+            "values": [
+              18056,
+              18488
+            ]
+          },
+          {
+            "series_id": "primary_transaction",
+            "label": "Rynek pierwotny: cena transakcyjna",
+            "unit": "PLN/m²",
+            "values": [
+              16471,
+              16783
+            ]
+          },
+          {
+            "series_id": "secondary_asking",
+            "label": "Rynek wtórny: cena ofertowa",
+            "unit": "PLN/m²",
+            "values": [
+              18914,
+              19059
+            ]
+          },
+          {
+            "series_id": "secondary_transaction",
+            "label": "Rynek wtórny: cena transakcyjna",
+            "unit": "PLN/m²",
+            "values": [
+              16523,
+              16723
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

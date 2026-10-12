@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "get_investment",
+      "arguments": {
+        "investment_slug": "smolna"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Inwestycja 'smolna': Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "UnexpectedResponseError: Inwestycja 'smolna': Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi. Szczegóły: /api/map/investments/visible/smolna: invest_id: Field required; city: Field required; city_slug: Field required (i 5 innych)"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

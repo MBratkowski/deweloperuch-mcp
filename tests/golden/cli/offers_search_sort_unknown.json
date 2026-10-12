@@ -1,0 +1,22 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--sort",
+    "area_asc"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch offers search [OPTIONS] {CITY}",
+    "Try 'deweloperuch offers search --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for '--sort': 'area_asc' is not one of 'price_asc', 'price_desc'.                  │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

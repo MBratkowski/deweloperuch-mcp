@@ -1,0 +1,30 @@
+{
+  "args": [
+    "locations",
+    "search",
+    "mokot"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Lokalizacje: pokazano 9, może być więcej.",
+    "miasto     Kraków [krakow] · ofert: 8 082",
+    "miasto     Krakowiany [krakowiany] · ofert: 0",
+    "miasto     Krakulice [krakulice] · ofert: 0",
+    "ulica      Mokotów, Warszawa [warszawa] · ofert: ok. 191",
+    "ulica      Mokotów, Warszawa [warszawa] · ofert: ok. 191",
+    "ulica      Mokotów, Warszawa [warszawa] · ofert: ok. 191",
+    "ulica      Mokotów, Warszawa [warszawa] · ofert: ok. 191",
+    "ulica      Mokotów, Warszawa [warszawa] · ofert: ok. 191",
+    "ulica      Mokotów, Warszawa [warszawa] · ofert: ok. 191",
+    "Wskazówka: Pasujących lokalizacji może być więcej: doprecyzuj nazwę (np. dodaj miasto).",
+    "W nawiasach [] slug miasta dla: deweloperuch offers search CITY_SLUG",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/cities?q=mokot&limit=8 [accept: application/json]",
+    "GET https://deweloperuch.pl/api/location-search?q=mokot&limit=6 [accept: application/json]"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "calls": [
+    {
+      "tool": "get_offer",
+      "arguments": {
+        "offer_id": 2377,
+        "investment_slug": "smolna"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Serwis nie ma historii ceny oferty 2377 z inwestycji 'smolna'. Sprawdź offer_id i investment_slug (oba podaje search_offers); ofertę bez historii pokazuje get_investment.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Serwis nie ma historii ceny oferty 2377 z inwestycji 'smolna'. Sprawdź offer_id i investment_slug (oba podaje search_offers); ofertę bez historii pokazuje get_investment. Szczegóły: /api/sale-events?saleId=2377"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]",
+    "GET https://deweloperuch.pl/api/sale-events?saleId=2377 [accept: application/json]"
+  ]
+}

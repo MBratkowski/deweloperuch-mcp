@@ -35,9 +35,16 @@ from e2e.live import (
 
 pytestmark = pytest.mark.live
 
-TOOLS = ["search_locations", "search_offers", "get_offer", "get_investment"]
+TOOLS = [
+    "search_locations",
+    "search_offers",
+    "get_offer",
+    "get_investment",
+    "get_government_statistics",
+]
 UNKNOWN_CITY = "nieistniejace-miasto"
 UNKNOWN_INVESTMENT = "nieistniejaca-inwestycja-e2e"
+UNKNOWN_LOCATION = "nieistniejaca-lokalizacja-e2e"
 MAX_PAGES = 20
 SIZE_BUDGET = 8_000
 SIZE_BUDGET_50 = 25_000
@@ -52,6 +59,14 @@ SLUG = re.compile(r"[a-z0-9][a-z0-9-]*")
 PAGES = BASE_URL + "/ceny-ofertowe"
 """Public pages of the service: the only addresses a result may hold (D12, 2026-10-11)."""
 EVENT_KINDS = {"offer", "archived", "restored"}
+STATS = BASE_URL + "/statystyki/statystyki-rzadowe"
+"""The government statistics pages (D12): a stats_url is one of them at a section."""
+PERIOD = {
+    "year": re.compile(r"\d{4}"),
+    "quarter": re.compile(r"\d{4}-Q[1-4]"),
+    "month": re.compile(r"\d{4}-(?:0[1-9]|1[0-2])"),
+}
+NBP_SERIES = ["primary_asking", "primary_transaction", "secondary_asking", "secondary_transaction"]
 OFFER_ITEM = {"offer_id", "investment_slug", "name", "status", "investment_name", "developer_name"}
 
 
@@ -106,6 +121,16 @@ def area_range(mcp: McpLive, city_slug: str) -> Call:
 @pytest.fixture(scope="module")
 def polska_page(mcp: McpLive) -> Call:
     return mcp.call_network("search_offers", city="polska")
+
+
+@pytest.fixture(scope="module")
+def polska_area(mcp: McpLive) -> Call:
+    return mcp.call_network("get_government_statistics", location="polska", dataset="average_area")
+
+
+@pytest.fixture(scope="module")
+def warszawa_nbp(mcp: McpLive) -> Call:
+    return mcp.call_network("get_government_statistics", location="warszawa", dataset="nbp_prices")
 
 
 @pytest.fixture(scope="module")
@@ -713,6 +738,149 @@ def test_offer_from_another_city_found_in_the_whole_country(
     assert (offer["offer_id"], offer["city_slug"]) == (found["offer_id"], found["city_slug"])
     assert offer["price_history"]
     from_cache(detail, sent=1)  # the history; the investment comes from the cache
+
+
+# --- get_government_statistics ---------------------------------------------------------
+
+
+def check_statistics(result: dict[str, Any], location: str, dataset: str, section: str) -> None:
+    """D4 counters, periods of the frequency in time order, values aligned with them, the
+    link to the section of the page (D12)."""
+    assert (result["location_slug"], result["dataset"]) == (location, dataset)
+    total, returned = result["total"], result["returned"]
+    assert returned == min(12, total) == len(result["periods"]) and returned > 0
+    assert result["truncated"] == (total > returned)
+    assert ("hint" in result) == result["truncated"]
+    pattern = PERIOD[result["frequency"]]
+    assert all(pattern.fullmatch(period) for period in result["periods"]), result["periods"]
+    assert result["periods"] == sorted(set(result["periods"]))
+    assert result["available_from"] <= result["periods"][0]
+    assert result["series"]
+    for series in result["series"]:
+        assert len(series["values"]) == returned, series
+    assert result["stats_url"] == f"{STATS}/{location}#{section}"
+
+
+def values(result: dict[str, Any]) -> list[float]:
+    found = [v for series in result["series"] for v in series["values"] if v is not None]
+    assert found, "brak wartości"
+    return found
+
+
+def test_government_average_area_of_poland(polska_area: Call) -> None:
+    """The page the user showed: polska#gus-srednia-powierzchnia."""
+    result = polska_area.data
+
+    check_statistics(result, "polska", "average_area", "gus-srednia-powierzchnia")
+    assert (result["frequency"], result["source"]) == ("year", "GUS")
+    assert [s["unit"] for s in result["series"]] == ["m²"]
+    assert all(30 <= v <= 150 for v in values(result)), values(result)
+    assert polska_area.sent == 1
+
+
+def test_government_nbp_prices_of_a_city(warszawa_nbp: Call) -> None:
+    result = warszawa_nbp.data
+
+    check_statistics(result, "warszawa", "nbp_prices", "nbp")
+    assert (result["frequency"], result["source"]) == ("quarter", "NBP")
+    assert [s["series_id"] for s in result["series"]] == NBP_SERIES
+    assert all(s["unit"] == "PLN/m²" for s in result["series"])
+    assert all(3_000 <= v <= 80_000 for v in values(result)), values(result)
+    assert warszawa_nbp.sent == 1
+
+
+def test_government_average_area_of_an_aggregate(mcp: McpLive) -> None:
+    """1 request: an aggregate's page, never seen live. Its ``currentSlug`` is [H]: a value
+    other than the aggregate's slug (e.g. ``null``) makes every aggregate a "service
+    changed" error, and this test says so with the line of the server log."""
+    call = mcp.call_network("get_government_statistics", location="7-miast", dataset="average_area")
+
+    if call.error and SERVICE_CHANGED in call.text:
+        logged = [line for line in mcp.log.text().splitlines() if "currentSlug" in line]
+        pytest.fail(
+            "Ustalenie: strona agregatu 7-miast nie przeszła sprawdzenia currentSlug "
+            f"(docs/open-questions.md, [H]); log serwera: {logged[-1:] or 'brak linii'}; "
+            f"komunikat: {call.text[:160]!r}"
+            if logged
+            else f"Agregat 7-miast: zmiana serwisu inna niż currentSlug: {call.text[:200]!r}"
+        )
+    result = call.data
+    assert (result["location_slug"], result["dataset"]) == ("7-miast", "average_area")
+    assert result["returned"] == min(12, result["total"]) == len(result["periods"]) > 0
+    assert all(30 <= v <= 150 for v in values(result)), values(result)
+    assert result["stats_url"].startswith(f"{STATS}/7-miast")
+    assert call.sent == 1
+
+
+def test_government_another_dataset_of_the_same_location_comes_from_the_cache(
+    mcp: McpLive, polska_area: Call
+) -> None:
+    """One page per location [P]: unemployment of polska is on the page already read."""
+    call = mcp.call("get_government_statistics", location="polska", dataset="unemployment")
+
+    result = call.data
+    check_statistics(result, "polska", "unemployment", "gus-bezrobocie")
+    assert all(0 <= v <= 40 for v in values(result)), values(result)
+    from_cache(call)
+
+
+def test_government_nbp_prices_of_poland_point_to_cities(mcp: McpLive, polska_area: Call) -> None:
+    """[P 2026-10-11] the root page has a grid of cities, no NBP series of its own."""
+    call = mcp.call("get_government_statistics", location="polska", dataset="nbp_prices")
+
+    assert call.error, f"polska ma własną serię NBP: {call.text[:200]}"
+    assert "NBP nie podaje jednej ceny dla całej Polski" in call.text
+    assert "warszawa" in call.text
+    from_cache(call)
+
+
+def test_government_dwellings_fit_the_size_budget(mcp: McpLive, polska_area: Call) -> None:
+    """The widest dataset (15 series) with the default 12 periods."""
+    call = mcp.call("get_government_statistics", location="polska", dataset="dwellings_quarterly")
+
+    check_statistics(call.data, "polska", "dwellings_quarterly", "gus-mieszkania")
+    assert len(call.data["series"]) >= 14
+    assert len(call.text) < SIZE_BUDGET
+    from_cache(call)
+
+
+def test_government_unknown_location(mcp: McpLive) -> None:
+    """[H] Expected: the page answers like an unknown city on the offers list (HTTP 200
+    with Next.js's 404 marker), so the model reads "no such location" with what to give.
+    If the page has no such marker, the client reports a change of the service: the run
+    finds out which (xfail with the finding, for docs/open-questions.md)."""
+    call = mcp.call_network("get_government_statistics", location=UNKNOWN_LOCATION, dataset="wages")
+
+    assert call.error, f"serwis zna lokalizację {UNKNOWN_LOCATION!r}: {call.text[:200]}"
+    if SERVICE_CHANGED in call.text:
+        pytest.xfail(
+            "Ustalenie: strona statystyk nieznanej lokalizacji nie ma znacznika 404 Next.js "
+            f"(komunikat: {call.text[:160]!r}). Pozycja do docs/open-questions.md."
+        )
+    assert f"Serwis nie ma statystyk rządowych dla lokalizacji {UNKNOWN_LOCATION!r}" in call.text
+    assert "polska" in call.text and "7-miast" in call.text
+    assert call.sent == 1
+
+
+@pytest.mark.parametrize("location", ["Kraków", "kraków", ""])
+def test_government_location_that_is_not_a_slug_is_refused_without_a_request(
+    mcp: McpLive, location: str
+) -> None:
+    call = mcp.call("get_government_statistics", location=location, dataset="wages")
+
+    assert call.error and call.text.startswith("location: oczekiwano polska")
+    assert call.sent == 0
+
+
+def test_the_statistics_link_leads_to_its_section(budget: Budget, polska_area: Call) -> None:
+    """1 request (probe): the page of stats_url, without its fragment, lists the section
+    the fragment names in its table of contents."""
+    page, section = polska_area.data["stats_url"].removeprefix(BASE_URL).split("#")
+
+    run = run_probe(budget, "page", page, "--prop", "tocItems")
+
+    assert run.code == 0, (run.code, run.stderr)
+    assert section in [item.get("id") for item in json.loads(run.stdout)]
 
 
 # --- two calls at once -----------------------------------------------------------------

@@ -11,11 +11,14 @@ from pathlib import Path
 import pytest
 import respx
 
-from deweloperuch_mcp import identity, links, services
+import operations
+from deweloperuch_mcp import bootstrap, identity
 from deweloperuch_mcp.allowlist import match_page
-from deweloperuch_mcp.client.transport import build_target
+from deweloperuch_mcp.infrastructure.deweloperuch import links
+from deweloperuch_mcp.infrastructure.deweloperuch.transport import build_target
 from deweloperuch_mcp.throttle import RequestLimiter
 from rsc_fixtures import offers_payload
+from service_mocks import stats_routes
 
 BASE = identity.BASE_URL
 
@@ -25,7 +28,7 @@ def path_of(url: str) -> str:
     return url.removeprefix(BASE)
 
 
-# --- the routes ----------------------------------------------------------------------------
+# --- the routes -----------------------------------------------------------------------------------
 
 
 def test_investment_url() -> None:
@@ -89,7 +92,34 @@ def test_the_samples_were_captured_at_these_routes() -> None:
     )
 
 
-# --- segments ------------------------------------------------------------------------------
+def test_government_stats_url_points_to_a_section() -> None:
+    url = links.government_stats_url("polska", "gus-srednia-powierzchnia")
+
+    assert url == BASE + "/statystyki/statystyki-rzadowe/polska#gus-srednia-powierzchnia"
+    page, fragment = path_of(url).split("#")
+    assert match_page(page) == "/statystyki/statystyki-rzadowe/{location}"
+    assert fragment == "gus-srednia-powierzchnia"
+
+
+@pytest.mark.parametrize("section", [None, "", "Gus", "a#b", "../x", "x y", "nbp?x=1", "-nbp"])
+def test_government_stats_url_without_a_section_id_has_no_fragment(section: str | None) -> None:
+    assert links.government_stats_url("warszawa", section) == (
+        BASE + "/statystyki/statystyki-rzadowe/warszawa"
+    )
+
+
+@pytest.mark.parametrize("location", [None, "", "  ", ".", "..", "\ud800"])
+def test_no_government_stats_url_without_a_location(location: str | None) -> None:
+    assert links.government_stats_url(location, "nbp") is None
+
+
+def test_government_stats_url_encodes_the_location_like_the_client() -> None:
+    assert links.government_stats_url("a/b?c", "nbp") == (
+        BASE + "/statystyki/statystyki-rzadowe/a%2Fb%3Fc#nbp"
+    )
+
+
+# --- segments -------------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -150,13 +180,13 @@ def test_addresses_have_no_rsc_token_nor_api_paths() -> None:
         assert url.startswith(BASE + "/ceny-ofertowe/")
 
 
-# --- the list link is the request search_offers sends -----------------------------------
+# --- the list link is the request search_offers sends ---------------------------------------------
 
 
 @pytest.fixture
-def session(tmp_path: Path) -> Iterator[services.Session]:
+def session(tmp_path: Path) -> Iterator[bootstrap.Session]:
     limiter = RequestLimiter(tmp_path, min_interval=0, testing_only_allow_fast_interval=True)
-    with services.Session(limiter=limiter) as opened:
+    with bootstrap.Session(limiter=limiter) as opened:
         yield opened
 
 
@@ -177,14 +207,14 @@ def session(tmp_path: Path) -> Iterator[services.Session]:
     ],
 )
 def test_the_list_link_is_the_request_without_its_token(
-    session: services.Session, arguments: dict[str, object]
+    session: bootstrap.Session, arguments: dict[str, object]
 ) -> None:
     with respx.mock(assert_all_mocked=True) as router:
         route = router.route(method="GET", path__startswith="/ceny-ofertowe/").respond(
             200, content=offers_payload(), headers={"Content-Type": "text/x-component"}
         )
 
-        result = services.search_offers(session, **arguments)  # type: ignore[arg-type]
+        result = operations.search_offers(session, **arguments)
 
     sent = route.calls.last.request.url
     query = sent.query.decode()
@@ -193,3 +223,16 @@ def test_the_list_link_is_the_request_without_its_token(
         result.list_url
         == f"{BASE}{sent.raw_path.decode().split('?')[0]}?{query.rsplit('&_rsc=', 1)[0]}"
     )
+
+
+def test_the_statistics_link_is_the_request_without_its_token(session: bootstrap.Session) -> None:
+    """The page the service read, at the section of the dataset (D12)."""
+    with respx.mock(assert_all_called=False, assert_all_mocked=True) as router:
+        route = stats_routes(router)["warszawa"]
+
+        result = operations.get_government_statistics(session, "warszawa", "unemployment")
+
+    sent = route.calls.last.request.url
+    assert sent.query.decode() == f"_rsc={sent.params['_rsc']}"
+    assert result.stats_url == f"{BASE}{sent.raw_path.decode().split('?')[0]}#gus-bezrobocie"
+    assert result.stats_url is not None and "_rsc" not in result.stats_url

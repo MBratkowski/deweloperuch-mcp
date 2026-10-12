@@ -1,0 +1,16 @@
+{
+  "args": [
+    "stop",
+    "clear"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Zdjęto STOP: HTTP 403 (odmowa dostępu), <TIME>, źródło: probe.",
+    "Działający serwer MCP, który trafił na STOP, wyśle zapytania dopiero po ponownym uruchomieniu.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

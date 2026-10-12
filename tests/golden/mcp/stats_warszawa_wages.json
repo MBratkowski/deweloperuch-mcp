@@ -1,0 +1,89 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "warszawa",
+        "dataset": "wages"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "warszawa",
+        "location_name": "Warszawa",
+        "dataset": "wages",
+        "title": "Przeciętne miesięczne wynagrodzenie brutto w sektorze przedsiębiorstw",
+        "source": "GUS",
+        "frequency": "year",
+        "total": 21,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "2005",
+        "hint": "Pokazano ostatnie 12 z 21 okresów (dane od 2005); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-wynagrodzenia",
+        "periods": [
+          "2014",
+          "2015",
+          "2016",
+          "2017",
+          "2018",
+          "2019",
+          "2020",
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025"
+        ],
+        "series": [
+          {
+            "series_id": "gross",
+            "label": "Wynagrodzenie brutto",
+            "unit": "PLN",
+            "values": [
+              5385.8,
+              5591.46,
+              5739.61,
+              6059.04,
+              6432.78,
+              6802.6,
+              7147.46,
+              7687.58,
+              8540.11,
+              9625.74,
+              10714.99,
+              11677.57
+            ]
+          },
+          {
+            "series_id": "relative_to_poland",
+            "label": "Relacja do średniej krajowej (Polska = 100)",
+            "unit": "%",
+            "values": [
+              134.5,
+              134.7,
+              133.8,
+              133.8,
+              133.1,
+              131.3,
+              129.4,
+              128.1,
+              127.4,
+              126.7,
+              124.2,
+              124.6
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

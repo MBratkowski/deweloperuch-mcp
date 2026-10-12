@@ -1,0 +1,21 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "polska",
+        "dataset": "wages",
+        "periods": 0
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool get_government_statistics: 1 validation error for get_government_statisticsArguments\nperiods\n  Input should be greater than or equal to 1 [type=greater_than_equal, input_value=0, input_type=int]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

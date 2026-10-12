@@ -1,0 +1,19 @@
+{
+  "args": [
+    "investments",
+    "get",
+    "smolna"
+  ],
+  "exit_code": 4,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Inwestycja 'smolna': Serwis przekierował zapytanie gdzie indziej (HTTP 301); klient nie podąża za przekierowaniami.",
+    "Szczegóły: /api/map/investments/visible/smolna -> /api/elsewhere",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

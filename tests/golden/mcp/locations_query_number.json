@@ -1,0 +1,19 @@
+{
+  "calls": [
+    {
+      "tool": "search_locations",
+      "arguments": {
+        "query": 42
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool search_locations: 1 validation error for search_locationsArguments\nquery\n  Input should be a valid string [type=string_type, input_value=42, input_type=int]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

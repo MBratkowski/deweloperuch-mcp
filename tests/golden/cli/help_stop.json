@@ -1,0 +1,28 @@
+{
+  "args": [
+    "stop",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch stop [OPTIONS] COMMAND [ARGS]...                                               ",
+    "                                                                                                    ",
+    " Blokada STOP: po 401, 403, 429 albo challenge Cloudflare żaden proces (CLI, serwer MCP, recon) nie ",
+    " wysyła zapytań. Działa offline.                                                                    ",
+    "                                                                                                    ",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --help          Show this message and exit.                                                      │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ status  Pokaż blokadę STOP; kod 3, gdy wstrzymuje zapytania (także wygasająca), 0, gdy nie.      │",
+    "│ clear   Zdejmij blokadę STOP. Tylko człowiek, po sprawdzeniu przyczyny (`stop status`).          │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

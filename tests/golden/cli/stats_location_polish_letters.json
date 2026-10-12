@@ -1,0 +1,17 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "kraków",
+    "wages"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: location: oczekiwano polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta bez polskich znaków, np. warszawa, krakow, jastrzebie (Jastrzębie-Zdrój); podano 'kraków'.",
+    ""
+  ],
+  "requests": []
+}

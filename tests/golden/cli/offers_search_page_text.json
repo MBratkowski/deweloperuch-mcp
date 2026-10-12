@@ -1,0 +1,22 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--page",
+    "two"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch offers search [OPTIONS] {CITY}",
+    "Try 'deweloperuch offers search --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for '--page': 'two' is not a valid int.                                            │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

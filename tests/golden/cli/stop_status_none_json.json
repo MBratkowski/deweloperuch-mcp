@@ -1,0 +1,22 @@
+{
+  "args": [
+    "stop",
+    "status",
+    "--json"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "{",
+    "  \"active\": false,",
+    "  \"seconds_left\": null,",
+    "  \"path\": \"<LOCK_DIR>/stop.json\",",
+    "  \"record\": null,",
+    "  \"unreadable\": null",
+    "}",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

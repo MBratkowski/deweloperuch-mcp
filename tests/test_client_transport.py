@@ -21,14 +21,6 @@ import pytest
 import respx
 
 from deweloperuch_mcp import identity
-from deweloperuch_mcp.client import transport
-from deweloperuch_mcp.client.transport import (
-    BODY_DEADLINE,
-    DEFAULT_TTL,
-    HttpClient,
-    Reply,
-    ResponseCache,
-)
 from deweloperuch_mcp.errors import (
     DeweloperuchError,
     InvalidInputError,
@@ -42,6 +34,14 @@ from deweloperuch_mcp.errors import (
     printable,
 )
 from deweloperuch_mcp.http_policy import MAX_BODY_BYTES
+from deweloperuch_mcp.infrastructure.deweloperuch import transport
+from deweloperuch_mcp.infrastructure.deweloperuch.transport import (
+    BODY_DEADLINE,
+    DEFAULT_TTL,
+    HttpClient,
+    Reply,
+    ResponseCache,
+)
 from deweloperuch_mcp.throttle import (
     DEFAULT_MAX_WAIT,
     LOCK_FILENAME,
@@ -117,7 +117,7 @@ def pause_after_last_request(lock_dir: Path) -> float:
     return state["next_start"] - state["last_end"]
 
 
-# --- the request -------------------------------------------------------------------------
+# --- the request ----------------------------------------------------------------------------------
 
 
 def test_one_get_to_the_base_url_with_the_shared_user_agent(
@@ -322,7 +322,7 @@ def test_max_body_bytes_can_only_be_lowered(limiter: RequestLimiter) -> None:
         HttpClient(limiter=limiter, max_body_bytes=MAX_BODY_BYTES + 1)
 
 
-# --- STOP and pauses ---------------------------------------------------------------------
+# --- STOP and pauses ------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -382,7 +382,7 @@ def test_after_a_429_another_process_stops_instead_of_sending(
     assert route.call_count == 1
 
 
-# --- STOP is sticky ----------------------------------------------------------------------
+# --- STOP is sticky -------------------------------------------------------------------------------
 
 OTHER = "/api/city-lookup?city=krakow"
 
@@ -503,7 +503,7 @@ def test_closed_client_does_not_answer_from_the_cache(
         http.get(TARGET, headers={}, decode=raw)
 
 
-# --- STOP is per process -------------------------------------------------------------------
+# --- STOP is per process --------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(("status", "error"), [(403, ServiceBlockedError), (429, RateLimitedError)])
@@ -717,7 +717,7 @@ def test_network_error_is_not_retried_and_releases_the_slot(
     assert set(lock_state(lock_dir)) == {"last_end", "next_start"}
 
 
-# --- STOP for every process (the record of the shared limiter) ----------------------------
+# --- STOP for every process (the record of the shared limiter) ------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -1006,7 +1006,7 @@ def test_a_stop_that_cannot_be_recorded_still_stops_the_series(
         client.get(OTHER, headers={}, decode=raw)
 
 
-# --- the body ----------------------------------------------------------------------------
+# --- the body -------------------------------------------------------------------------------------
 
 
 class Chunks(httpx.SyncByteStream):
@@ -1117,7 +1117,7 @@ def test_read_error_on_200_is_a_service_error(
         client.get(TARGET, headers={}, decode=raw)
 
 
-# --- the cache ---------------------------------------------------------------------------
+# --- the cache ------------------------------------------------------------------------------------
 
 
 def test_second_call_within_ttl_is_served_from_the_cache(
@@ -1236,7 +1236,7 @@ def test_the_ttl_is_logged_for_debugging(
     client: HttpClient, service: respx.MockRouter, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Why a reply was (not) cached, without the address or the body."""
-    caplog.set_level(logging.DEBUG, logger="deweloperuch_mcp.client.transport")
+    caplog.set_level(logging.DEBUG, logger="deweloperuch_mcp.infrastructure.deweloperuch.transport")
     service.get(URL).respond(
         200, json={"secret": 1}, headers={"Cache-Control": "max-age=28800", "Age": "28900"}
     )
@@ -1375,7 +1375,7 @@ def test_cache_keeps_its_byte_budget() -> None:
     assert cache.get("b") is not None
 
 
-# --- messages vs details (no target, no answer of the service in str(err)) --------------
+# --- messages vs details (no target, no answer of the service in str(err)) ------------------------
 
 SECRET = "SECRET-from-the-service"
 
@@ -1514,21 +1514,22 @@ BIDI = "\u202e"  # right-to-left override, invisible on a terminal
     ],
     ids=["body", "location"],
 )
-def test_text_of_the_service_in_the_detail_has_no_control_characters(
+def test_text_of_the_service_in_the_detail_is_shown_without_control_characters(
     client: HttpClient,
     clock: FakeClock,
     service: respx.MockRouter,
     answer: Callable[[respx.MockRouter, FakeClock], object],
     escaped: str,
 ) -> None:
-    """A detail goes to a terminal (CLI) or a log: no OSC/CSI sequences, no bidi tricks."""
+    """A detail goes to a terminal (CLI) or a log, through ``printable`` there
+    (tests/test_cli.py, tests/test_mcp_server.py): no OSC/CSI sequences, no bidi tricks."""
     answer(service, clock)
 
     with pytest.raises(ServiceError) as caught:
         client.get(TARGET, headers={}, decode=raw)
 
-    detail = caught.value.detail
-    assert detail is not None
+    assert caught.value.detail is not None
+    detail = printable(caught.value.detail)
     assert escaped in detail
     assert all(char.isprintable() for char in detail)
 
@@ -1538,4 +1539,5 @@ def test_printable_escapes_only_what_cannot_be_printed() -> None:
     assert printable(f"a\x1b[2J\nb\tc\x00{BIDI}\U000e0001") == (
         "a\\x1b[2J\\x0ab\\x09c\\x00\\u202e\\U000e0001"
     )
-    assert DeweloperuchError("m", detail="x\x07").detail == "x\\x07"
+    assert printable(printable("x\x07")) == printable("x\x07")  # escaping twice is harmless
+    assert DeweloperuchError("m", detail="x\x07").detail == "x\x07"  # kept as received

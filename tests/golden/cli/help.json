@@ -1,0 +1,31 @@
+{
+  "args": [
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch [OPTIONS] COMMAND [ARGS]...                                                    ",
+    "                                                                                                    ",
+    " Ceny ofertowe mieszkań od deweloperów (rynek pierwotny) z deweloperuch.pl. Tylko odczyt; zapytania ",
+    " idą przez wspólny limiter (najwyżej 1 na sekundę).                                                 ",
+    "                                                                                                    ",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --help          Show this message and exit.                                                      │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ locations    Lokalizacje: miasta, dzielnice, ulice.                                              │",
+    "│ offers       Oferty mieszkań od deweloperów.                                                     │",
+    "│ investments  Inwestycje deweloperskie.                                                           │",
+    "│ stats        Statystyki rządowe: GUS i NBP.                                                      │",
+    "│ stop         Blokada STOP: po 401, 403, 429 albo challenge Cloudflare żaden proces (CLI, serwer  │",
+    "│              MCP, recon) nie wysyła zapytań. Działa offline.                                     │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

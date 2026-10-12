@@ -1,0 +1,144 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "warszawa",
+        "dataset": "population",
+        "periods": 120
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "warszawa",
+        "location_name": "Warszawa",
+        "dataset": "population",
+        "title": "Ludność według płci (stan na 31 grudnia)",
+        "source": "GUS",
+        "frequency": "year",
+        "total": 21,
+        "returned": 21,
+        "truncated": false,
+        "available_from": "2005",
+        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-wiek",
+        "periods": [
+          "2005",
+          "2006",
+          "2007",
+          "2008",
+          "2009",
+          "2010",
+          "2011",
+          "2012",
+          "2013",
+          "2014",
+          "2015",
+          "2016",
+          "2017",
+          "2018",
+          "2019",
+          "2020",
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025"
+        ],
+        "series": [
+          {
+            "series_id": "total",
+            "label": "Razem",
+            "unit": "osoby",
+            "values": [
+              1697596,
+              1702139,
+              1706624,
+              1709781,
+              1714446,
+              1700112,
+              1708491,
+              1715517,
+              1724404,
+              1735442,
+              1744351,
+              1753977,
+              1764615,
+              1777972,
+              1790658,
+              1861774,
+              1863056,
+              1861975,
+              1861599,
+              1863845,
+              1866729
+            ]
+          },
+          {
+            "series_id": "women",
+            "label": "Kobiety",
+            "unit": "osoby",
+            "values": [
+              915265,
+              918678,
+              921835,
+              923496,
+              926497,
+              919772,
+              924674,
+              928629,
+              933197,
+              939250,
+              943551,
+              948596,
+              953838,
+              960312,
+              966319,
+              1003012,
+              1003355,
+              1002594,
+              1001975,
+              1002505,
+              1003678
+            ]
+          },
+          {
+            "series_id": "men",
+            "label": "Mężczyźni",
+            "unit": "osoby",
+            "values": [
+              782331,
+              783461,
+              784789,
+              786285,
+              787949,
+              780340,
+              783817,
+              786888,
+              791207,
+              796192,
+              800800,
+              805381,
+              810777,
+              817660,
+              824339,
+              858762,
+              859701,
+              859381,
+              859624,
+              861340,
+              863051
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

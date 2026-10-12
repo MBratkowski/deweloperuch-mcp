@@ -14,14 +14,15 @@ Tool descriptions, schema field descriptions, `instructions` and error messages 
 | [`search_offers`](tools/search_offers.md) | A page of offers in a city (or the whole of Poland) with price and area filters. |
 | [`get_offer`](tools/get_offer.md) | One offer with its full price history. |
 | [`get_investment`](tools/get_investment.md) | An investment with its developer and a list of offers. |
+| [`get_government_statistics`](tools/get_government_statistics.md) | Official GUS and NBP time series for Poland, an aggregate or a city (market context, not offers). |
 
-All four have the annotations `readOnlyHint=true` and `openWorldHint=true`. Typical order: `search_locations` → `search_offers` → `get_investment` or `get_offer`.
+All five have the annotations `readOnlyHint=true` and `openWorldHint=true`. Typical order: `search_locations` → `search_offers` → `get_investment` or `get_offer`.
 
 ## Server instructions (`instructions`)
 
-> Dane z deweloperuch.pl: ceny ofertowe mieszkań od deweloperów (rynek pierwotny) w Polsce, z historią zmian cen. Typowa kolejność: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Błędy walidacji argumentów bywają po angielsku: popraw wskazane pole zgodnie ze schematem i ponów. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert.
+> Dane z deweloperuch.pl: ceny ofertowe mieszkań od deweloperów (rynek pierwotny) w Polsce, z historią zmian cen. Typowa kolejność: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Błędy walidacji argumentów bywają po angielsku: popraw wskazane pole zgodnie ze schematem i ponów. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert. Oficjalne statystyki GUS i NBP dla Polski i miast (mieszkania oddane i rozpoczęte, ceny NBP, bezrobocie, wynagrodzenia) daje get_government_statistics; to dane rynkowe, nie oferty, i nie wymagają wcześniejszego search_locations.
 
-Summary: asking prices of developers' apartments (primary market) in Poland with price-change history; the typical tool order; the service is a community project, so ask sparingly and narrow filters instead of paging; on a STOP error stop using the tools, retry nothing, look for no workaround, report the reason to the user and unblock or restart nothing yourself; validation errors may be in English, so fix the field and retry; fields ending in `_url` are links to deweloperuch.pl pages to be shown to the user.
+Summary: asking prices of developers' apartments (primary market) in Poland with price-change history; the typical tool order; the service is a community project, so ask sparingly and narrow filters instead of paging; on a STOP error stop using the tools, retry nothing, look for no workaround, report the reason to the user and unblock or restart nothing yourself; validation errors may be in English, so fix the field and retry; fields ending in `_url` are links to deweloperuch.pl pages to be shown to the user; official GUS/NBP statistics come from `get_government_statistics` (market data, no `search_locations` needed).
 
 ### Links to service pages
 
@@ -65,7 +66,7 @@ The server reads no environment variables of its own. The limiter lock and the S
 
 - **Numbers:** a JSON integer or a string of digits only (`"10"`, `" 10 "`, with an optional `+`/`-`, up to 18 digits). Rejected: `"10.0"`, a string with other characters, `true`/`false`. (The JSON number `10.0` is accepted as 10.)
 - **Optional** (`price_min`, `price_max`, `area_min`, `area_max`, `sort`): `""` or `null` means "none".
-- **With a default value:** `null` means the default: `page` (1), `per_page` (10), `limit` (20), `include_history` (`false`). `include_history: ""` is an error.
+- **With a default value:** `null` means the default: `page` (1), `per_page` (10), `limit` (20), `periods` (12), `include_history` (`false`). `include_history: ""` is an error.
 - **`sort`** is trimmed (`" price_asc "` works).
 - Texts (`query`, `city`, slugs) are validated by the services; the error has a Polish message.
 
@@ -106,6 +107,8 @@ Compact JSON in the content (the same as `structuredContent`), full pages from s
 | `search_offers`, 50, `city=polska` | 23 270 |
 | `get_investment`, 20 (default) | 6 415 |
 | `get_investment`, 200 | 58 135 |
+| `get_government_statistics`, 12 periods (default) | at most about 3 000 |
+| `get_government_statistics`, 120 periods, widest dataset | about 10 500 |
 
 The whole `tools/list` is about 19.2k characters. Lists have `total`/`returned`/`truncated`; results contain no `null` fields, except `total` in `search_locations` (always present, `null` when truncated).
 
@@ -122,4 +125,4 @@ The server logs to stderr: INFO for domain errors, and for an unexpected error a
 
 The data and its limits: [discovery](../discovery/README.md), [endpoints](../discovery/endpoints.md), [pages-rsc](../discovery/pages-rsc.md), [entities](../discovery/entities.md). Open questions: [open-questions](../open-questions.md).
 
-_Source: `src/deweloperuch_mcp/mcp_server.py`, `src/deweloperuch_mcp/mcp_results.py`, `tests/snapshots/mcp_tools.json`_
+_Source: `src/deweloperuch_mcp/interfaces/mcp/server.py`, `src/deweloperuch_mcp/interfaces/mcp/presenters.py`, `tests/snapshots/mcp_tools.json`_

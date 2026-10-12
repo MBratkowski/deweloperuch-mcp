@@ -1,0 +1,41 @@
+{
+  "calls": [
+    {
+      "tool": "get_investment",
+      "arguments": {
+        "investment_slug": "smolna"
+      }
+    },
+    {
+      "tool": "search_locations",
+      "arguments": {
+        "query": "krak"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.",
+      "structured_content": null
+    },
+    {
+      "is_error": true,
+      "text": "STOP: seria zapytań do deweloperuch.pl jest już przerwana; zapytanie nie zostało wysłane. Powód: HTTP 403 (odmowa dostępu). Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "WARNING",
+      "STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi. Szczegóły: /api/map/investments/visible/smolna: HTTP 403"
+    ],
+    [
+      "WARNING",
+      "STOP: seria zapytań do deweloperuch.pl jest już przerwana; zapytanie nie zostało wysłane. Powód: HTTP 403 (odmowa dostępu). Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi. Szczegóły: /api/map/investments/visible/smolna: HTTP 403"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

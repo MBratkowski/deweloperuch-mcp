@@ -85,4 +85,4 @@ The result from the test mock (sample `api.map_inv_visible`):
 
 (The sample has 3 offers; `offers_total` 16 comes from the investment data in the sample.)
 
-_Source: `src/deweloperuch_mcp/mcp_server.py`, `src/deweloperuch_mcp/mcp_results.py`, `src/deweloperuch_mcp/services.py`, `tests/snapshots/mcp_tools.json`_
+_Source: `src/deweloperuch_mcp/interfaces/mcp/server.py`, `src/deweloperuch_mcp/interfaces/mcp/presenters.py`, `src/deweloperuch_mcp/application/`, `tests/snapshots/mcp_tools.json`_

@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "krakow",
+        "dataset": "wages"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Statystyki rządowe dla 'krakow': Serwis zwrócił statystyki innej lokalizacji niż żądana. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "UnexpectedResponseError: Statystyki rządowe dla 'krakow': Serwis zwrócił statystyki innej lokalizacji niż żądana. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi. Szczegóły: /statystyki/statystyki-rzadowe/krakow: currentSlug [None, None], oczekiwano 'krakow'"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/krakow?_rsc=7789e4e4 [rsc: 1] [accept: */*]"
+  ]
+}

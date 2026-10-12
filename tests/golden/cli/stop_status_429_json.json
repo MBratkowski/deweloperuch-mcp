@@ -1,0 +1,29 @@
+{
+  "args": [
+    "stop",
+    "status",
+    "--json"
+  ],
+  "exit_code": 3,
+  "stdout": [
+    "{",
+    "  \"active\": true,",
+    "  \"seconds_left\": \"<NUMBER>\",",
+    "  \"path\": \"<LOCK_DIR>/stop.json\",",
+    "  \"record\": {",
+    "    \"since\": \"<TIME>\",",
+    "    \"status\": 429,",
+    "    \"reason\": \"limit zapytań\",",
+    "    \"until\": \"<TIME>\",",
+    "    \"source\": \"probe\",",
+    "    \"pid\": \"<NUMBER>\"",
+    "  },",
+    "  \"unreadable\": null",
+    "}",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

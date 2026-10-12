@@ -1,0 +1,18 @@
+{
+  "args": [
+    "investments",
+    "get",
+    "smolna",
+    "--limit",
+    "-1"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: limit musi być liczbą całkowitą z zakresu 0–100000 (liczba ofert w wyniku), podano -1.",
+    ""
+  ],
+  "requests": []
+}

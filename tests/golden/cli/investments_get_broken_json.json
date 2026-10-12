@@ -1,0 +1,19 @@
+{
+  "args": [
+    "investments",
+    "get",
+    "smolna"
+  ],
+  "exit_code": 6,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Inwestycja 'smolna': Serwis zwrócił nieczytelne dane (niepoprawny JSON). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+    "Szczegóły: /api/map/investments/visible/smolna: Expecting value: line 1 column 1 (char 0)",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

@@ -11,10 +11,10 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from deweloperuch_mcp.client import dto
+from deweloperuch_mcp.infrastructure.deweloperuch import dto
 from discovery_samples import body, envelope, untrimmed
 
-# --- the helper ------------------------------------------------------------------------
+# --- the helper -----------------------------------------------------------------------------------
 
 
 def test_untrimmed_removes_only_the_markers() -> None:
@@ -49,7 +49,7 @@ def test_dtos_refuse_trimming_markers(name: str, model: type[Any]) -> None:
         model.model_validate(raw)
 
 
-# --- locations ---------------------------------------------------------------------------
+# --- locations ------------------------------------------------------------------------------------
 
 
 def test_cities_sample() -> None:
@@ -98,7 +98,7 @@ def test_city_districts_sample() -> None:
     ]
 
 
-# --- offers and investments ------------------------------------------------------------
+# --- offers and investments -----------------------------------------------------------------------
 
 
 def test_investment_sample_keeps_values_as_sent() -> None:
@@ -202,7 +202,7 @@ def test_offers_page_sample_fields() -> None:
     assert (first.invest.developer.name, first.invest.developer.slug) == ("ATAL S.A.", "atal")
 
 
-# --- tolerance -------------------------------------------------------------------------
+# --- tolerance ------------------------------------------------------------------------------------
 
 
 def sale(**changes: Any) -> dict[str, Any]:

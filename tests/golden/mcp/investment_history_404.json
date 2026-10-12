@@ -1,0 +1,28 @@
+{
+  "calls": [
+    {
+      "tool": "get_investment",
+      "arguments": {
+        "investment_slug": "smolna",
+        "include_history": true
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Serwis nie ma historii cen ofert inwestycji 'smolna'. Pobierz inwestycję bez include_history, a historię pojedynczej oferty przez get_offer.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Serwis nie ma historii cen ofert inwestycji 'smolna'. Pobierz inwestycję bez include_history, a historię pojedynczej oferty przez get_offer. Szczegóły: /api/investments/33/sale-events"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]",
+    "GET https://deweloperuch.pl/api/investments/33/sale-events [accept: application/json]"
+  ]
+}

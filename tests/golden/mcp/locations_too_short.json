@@ -1,0 +1,24 @@
+{
+  "calls": [
+    {
+      "tool": "search_locations",
+      "arguments": {
+        "query": "k"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "query: podaj od 2 do 100 znaków nazwy miasta, dzielnicy lub ulicy, podano 'k'.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: query: podaj od 2 do 100 znaków nazwy miasta, dzielnicy lub ulicy, podano 'k'. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

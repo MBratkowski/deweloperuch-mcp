@@ -18,7 +18,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from deweloperuch_mcp import services
+from deweloperuch_mcp import bootstrap
 from e2e.live import (
     MAX_REQUESTS,
     SKIP_REASON,
@@ -55,7 +55,7 @@ def budget(request: pytest.FixtureRequest) -> Iterator[Budget]:
     of the shared record); at the end asserts the total against ``MAX_REQUESTS``."""
     if not live_enabled(request.config):  # belt and braces: the items are skipped anyway
         pytest.skip(SKIP_REASON)
-    state = services.stop_status()  # reads the local record; sends nothing
+    state = bootstrap.stop_status()  # reads the local record; sends nothing
     if state.active:
         stop_exit("blokada STOP jest aktywna przed startem zestawu")
     spent = Budget(MAX_REQUESTS)

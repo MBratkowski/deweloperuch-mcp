@@ -9,6 +9,7 @@ Commands:
   locations    Lokalizacje: miasta, dzielnice, ulice.
   offers       Oferty mieszkań od deweloperów.
   investments  Inwestycje deweloperskie.
+  stats        Statystyki rządowe: GUS i NBP.
   stop         Blokada STOP: po 401, 403, 429 albo challenge Cloudflare żaden
                proces (CLI, serwer MCP, recon) nie wysyła zapytań. Działa offline.
 ```
@@ -23,15 +24,16 @@ Commands:
 | [`offers search CITY`](commands/offers-search.md) | Searches apartment offers in a city (or `polska`) with price and area filters; at most 20 pages of results. |
 | [`offers get OFFER_ID --investment SLUG`](commands/offers-get.md) | Shows an offer with its price history. |
 | [`investments get SLUG`](commands/investments-get.md) | Shows an investment with its developer and offers. |
+| [`stats government LOCATION DATASET`](commands/stats-government.md) | Shows GUS and NBP statistics of `polska`, an aggregate or a city as a table of periods (`--periods`, default 12, max 1000). |
 | [`stop status [--json]`](commands/stop-status.md) | Shows the STOP lock shared by all processes; offline, immediately. |
 | [`stop clear`](commands/stop-clear.md) | Clears the STOP lock. **Humans only**, after checking the cause. |
 
-Typical order: `locations search` → `offers search` → `investments get` or `offers get`.
+Typical order: `locations search` → `offers search` → `investments get` or `offers get`. `stats government` needs no earlier search.
 
 ## Output format
 
 - **Text** (default, stdout): in Polish, numbers with digit grouping and a decimal comma (`1 620 175 PLN`), without plural forms. For districts and streets the number of offers is `ofert: ok. N` (for districts it is the number of active offers [P], for streets still [W]).
-- **`--json`** (stdout): the full domain model, `model_dump_json(indent=2)`, all fields including `null`. It is a different, richer representation than in MCP (where items are shortened and have no `null`).
+- **`--json`** (stdout): the full domain model as JSON (`indent=2`), all fields including `null`. It is a different, richer representation than in MCP (where items are shortened and have no `null`).
 - **Errors** (stderr, no traceback):
   - `Błąd: <message>`
   - `Szczegóły: <detail>` (when present; target, status and body fragment, non-printable characters written as `\xNN`/`\uNNNN`)
@@ -69,4 +71,4 @@ The `cli.ExitCode` constants (public):
 
 No flags or environment variables of its own. The limiter and cache: [docs/configuration.md](../configuration.md).
 
-_Source: `src/deweloperuch_mcp/cli.py`, `src/deweloperuch_mcp/throttle.py`, `uv run deweloperuch --help`_
+_Source: `src/deweloperuch_mcp/interfaces/cli/`, `src/deweloperuch_mcp/throttle.py`, `uv run deweloperuch --help`_

@@ -1,0 +1,22 @@
+{
+  "args": [
+    "investments",
+    "get",
+    "smolna",
+    "--limit",
+    "x"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch investments get [OPTIONS] {SLUG}",
+    "Try 'deweloperuch investments get --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for '--limit': 'x' is not a valid int.                                             │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

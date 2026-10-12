@@ -18,8 +18,8 @@ import pytest
 
 import flight as recon_flight
 from deweloperuch_mcp import flight as package_flight
-from deweloperuch_mcp.client.dto import OffersPageDto
 from deweloperuch_mcp.flight import Row, error_digests, rows
+from deweloperuch_mcp.infrastructure.deweloperuch.dto import OffersPageDto
 from flight import component_props, find_json_after, flight, flight_from_html
 from rsc_fixtures import OFFERS_UNKNOWN_CITY, OFFERS_WARSZAWA, raw
 

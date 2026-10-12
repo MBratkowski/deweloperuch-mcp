@@ -1,0 +1,21 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "warszawa",
+        "page": 21,
+        "sort": "area_asc"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool search_offers: 2 validation errors for search_offersArguments\nsort\n  Input should be 'price_asc' or 'price_desc' [type=literal_error, input_value='area_asc', input_type=str]\npage\n  Input should be less than or equal to 20 [type=less_than_equal, input_value=21, input_type=int]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

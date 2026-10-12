@@ -1,0 +1,29 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--json"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "{",
+    "  \"total\": 0,",
+    "  \"returned\": 0,",
+    "  \"truncated\": false,",
+    "  \"page\": 1,",
+    "  \"per_page\": 10,",
+    "  \"pages_available\": 0,",
+    "  \"hint\": \"Brak ofert spełniających kryteria. Sprawdź slug miasta (search_locations) i poluzuj filtry.\",",
+    "  \"list_url\": \"https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10\",",
+    "  \"items\": []",
+    "}",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10&_rsc=cc6e11f9 [rsc: 1] [accept: */*]"
+  ]
+}

@@ -16,8 +16,6 @@ import respx
 
 from deweloperuch_mcp import identity
 from deweloperuch_mcp.allowlist import match_api, match_dump, match_page
-from deweloperuch_mcp.client import dto, json_api, rsc
-from deweloperuch_mcp.client.transport import HttpClient, path_segment
 from deweloperuch_mcp.errors import (
     SERVICE_CHANGED,
     InvalidInputError,
@@ -25,6 +23,8 @@ from deweloperuch_mcp.errors import (
     UnexpectedResponseError,
 )
 from deweloperuch_mcp.flight import rsc_token
+from deweloperuch_mcp.infrastructure.deweloperuch import dto, json_api, rsc
+from deweloperuch_mcp.infrastructure.deweloperuch.transport import HttpClient, path_segment
 from deweloperuch_mcp.throttle import RequestLimiter
 from discovery_samples import body, request_target, rsc_payload
 from rsc_fixtures import OFFERS_UNKNOWN_CITY, OFFERS_WARSZAWA, UNKNOWN_CITY, offers_payload, raw
@@ -51,7 +51,7 @@ def html_page(rsc_text: str) -> bytes:
     ).encode()
 
 
-# --- JSON API: one function per endpoint ------------------------------------------------
+# --- JSON API: one function per endpoint ----------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -141,7 +141,7 @@ def test_json_that_does_not_match_the_contract_is_unexpected(
         json_api.investment(http, "smolna")
 
 
-# --- RSC: the offers list page ---------------------------------------------------------
+# --- RSC: the offers list page --------------------------------------------------------------------
 
 FILTERED_PARAMS = [
     ("filterPrice", "500000-700000"),
@@ -201,7 +201,7 @@ def test_html_instead_of_rsc_is_decoded_from_the_page_scripts(
     assert parsed.pagination.total == 13324
 
 
-# --- RSC: real payloads (tests/fixtures/rsc/) -------------------------------------------
+# --- RSC: real payloads (tests/fixtures/rsc/) -----------------------------------------------------
 
 RSC = {"Content-Type": "text/x-component"}
 NOT_FOUND_ROW = b'f:E{"digest":"NEXT_HTTP_ERROR_FALLBACK;404"}\n'

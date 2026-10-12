@@ -1,0 +1,19 @@
+{
+  "args": [
+    "transactions",
+    "search"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch [OPTIONS] COMMAND [ARGS]...",
+    "Try 'deweloperuch --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ No such command 'transactions'.                                                                  │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

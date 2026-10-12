@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "polska",
+        "dataset": null
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool get_government_statistics: 1 validation error for get_government_statisticsArguments\ndataset\n  Input should be 'dwellings_quarterly', 'dwellings_monthly', 'average_area', 'demography', 'population', 'unemployment', 'wages' or 'nbp_prices' [type=literal_error, input_value=None, input_type=NoneType]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

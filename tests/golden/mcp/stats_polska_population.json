@@ -1,0 +1,108 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "polska",
+        "dataset": "population"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "polska",
+        "location_name": "Polska",
+        "dataset": "population",
+        "title": "Ludność według płci (stan na 31 grudnia)",
+        "source": "GUS",
+        "frequency": "year",
+        "total": 21,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "2005",
+        "hint": "Pokazano ostatnie 12 z 21 okresów (dane od 2005); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-wiek",
+        "periods": [
+          "2014",
+          "2015",
+          "2016",
+          "2017",
+          "2018",
+          "2019",
+          "2020",
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025"
+        ],
+        "series": [
+          {
+            "series_id": "total",
+            "label": "Razem",
+            "unit": "osoby",
+            "values": [
+              38478602,
+              38437239,
+              38432992,
+              38433558,
+              38411148,
+              38382576,
+              38088564,
+              37907704,
+              37766327,
+              37636508,
+              37489087,
+              37332510
+            ]
+          },
+          {
+            "series_id": "women",
+            "label": "Kobiety",
+            "unit": "osoby",
+            "values": [
+              19858793,
+              19839248,
+              19839826,
+              19840383,
+              19829262,
+              19815524,
+              19671402,
+              19584787,
+              19517006,
+              19454109,
+              19382060,
+              19305606
+            ]
+          },
+          {
+            "series_id": "men",
+            "label": "Mężczyźni",
+            "unit": "osoby",
+            "values": [
+              18619809,
+              18597991,
+              18593166,
+              18593175,
+              18581886,
+              18567052,
+              18417162,
+              18322917,
+              18249321,
+              18182399,
+              18107027,
+              18026904
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+  ]
+}

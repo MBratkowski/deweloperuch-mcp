@@ -1,0 +1,22 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--per-page",
+    "20"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch offers search [OPTIONS] {CITY}",
+    "Try 'deweloperuch offers search --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for '--per-page': '20' is not one of '10', '50', '100'.                            │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

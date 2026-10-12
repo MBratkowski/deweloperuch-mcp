@@ -1,0 +1,30 @@
+{
+  "args": [
+    "offers",
+    "get",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch offers get [OPTIONS] {OFFER_ID}                                                ",
+    "                                                                                                    ",
+    " Pokaż ofertę z historią ceny.                                                                      ",
+    "                                                                                                    ",
+    "╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ *    OFFER_ID      <int>  Identyfikator oferty z `offers search`. [required]                     │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ *  --investment        SLUG  Slug inwestycji oferty (investment_slug z `offers search`).         │",
+    "│                              [required]                                                          │",
+    "│    --json                    Wypisz wynik jako JSON (model domenowy).                            │",
+    "│    --help                    Show this message and exit.                                         │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

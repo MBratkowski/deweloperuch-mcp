@@ -1,0 +1,18 @@
+{
+  "args": [
+    "offers",
+    "get",
+    "0",
+    "--investment",
+    "smolna"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: offer_id musi być liczbą całkowitą z zakresu 1–9223372036854775807 (identyfikator oferty z search_offers), podano 0.",
+    ""
+  ],
+  "requests": []
+}

@@ -1,0 +1,16 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa/../x"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje search_locations; podano 'warszawa/../x'.",
+    ""
+  ],
+  "requests": []
+}

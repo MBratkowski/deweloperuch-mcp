@@ -1,0 +1,19 @@
+{
+  "args": [
+    "investments",
+    "get",
+    "smolna"
+  ],
+  "exit_code": 6,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Inwestycja 'smolna': Serwis zwrócił stronę HTML zamiast danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+    "Szczegóły: /api/map/investments/visible/smolna: oczekiwano JSON, przyszedł HTML",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

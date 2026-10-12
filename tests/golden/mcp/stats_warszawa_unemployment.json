@@ -1,0 +1,70 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "warszawa",
+        "dataset": "unemployment"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "warszawa",
+        "location_name": "Warszawa",
+        "dataset": "unemployment",
+        "title": "Stopa bezrobocia rejestrowanego",
+        "source": "GUS",
+        "frequency": "month",
+        "total": 188,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "2011-01",
+        "hint": "Pokazano ostatnie 12 z 188 okresów (dane od 2011-01); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-bezrobocie",
+        "periods": [
+          "2025-09",
+          "2025-10",
+          "2025-11",
+          "2025-12",
+          "2026-01",
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06",
+          "2026-07",
+          "2026-08"
+        ],
+        "series": [
+          {
+            "series_id": "rate",
+            "label": "Stopa bezrobocia",
+            "unit": "%",
+            "values": [
+              1.6,
+              1.6,
+              1.5,
+              1.5,
+              1.5,
+              1.5,
+              1.6,
+              1.6,
+              1.6,
+              1.6,
+              1.6,
+              1.6
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Pasujące oferty: 3 · strona 1 z 1 (po 10) · pokazano 3.",
+    "Ta lista na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10",
+    "[4397] D1.1.1.4 · 994 012 PLN · 55,25 m² · 17 991,17 PLN/m² · aktywna · od pierwszej ceny -5 988 PLN (-0,6%)",
+    "    Nowy Targówek VI [nowy-targowek-vi] · ATAL S.A. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/nowy-targowek-vi",
+    "[4406] D1.2.0.1 · 659 315 PLN · 36,49 m² · 18 068,37 PLN/m² · aktywna · od pierwszej ceny -30 685 PLN (-4,45%)",
+    "    Nowy Targówek VI [nowy-targowek-vi] · ATAL S.A. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/nowy-targowek-vi",
+    "[4412] D1.2.2.1 · 1 191 364 PLN · 66,58 m² · 17 893,72 PLN/m² · aktywna · od pierwszej ceny -8 636 PLN (-0,72%)",
+    "    Nowy Targówek VI [nowy-targowek-vi] · ATAL S.A. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/nowy-targowek-vi",
+    "Szczegóły oferty: deweloperuch offers get OFFER_ID --investment INVESTMENT_SLUG",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10&_rsc=cc6e11f9 [rsc: 1] [accept: */*]"
+  ]
+}

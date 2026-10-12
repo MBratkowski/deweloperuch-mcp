@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "get_offer",
+      "arguments": {
+        "offer_id": 0,
+        "investment_slug": "smolna"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Error executing tool get_offer: 1 validation error for get_offerArguments\noffer_id\n  Input should be greater than or equal to 1 [type=greater_than_equal, input_value=0, input_type=int]",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

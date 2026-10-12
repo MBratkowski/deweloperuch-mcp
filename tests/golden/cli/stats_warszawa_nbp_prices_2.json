@@ -1,0 +1,32 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa",
+    "nbp_prices",
+    "--periods",
+    "2"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Średnie ceny mieszkań za m² według NBP · Warszawa [warszawa]",
+    "Źródło: NBP · kwartalnie · okresy: pokazano 2 z 80 (dane od 2006-Q3).",
+    "Wskazówka: Pokazano ostatnie 2 z 80 okresów (dane od 2006-Q3); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#nbp",
+    "Kolumny:",
+    "  [1] Rynek pierwotny: cena ofertowa (PLN/m²)",
+    "  [2] Rynek pierwotny: cena transakcyjna (PLN/m²)",
+    "  [3] Rynek wtórny: cena ofertowa (PLN/m²)",
+    "  [4] Rynek wtórny: cena transakcyjna (PLN/m²)",
+    "Okres       [1]     [2]     [3]     [4]",
+    "2026-Q1  18 056  16 471  18 914  16 523",
+    "2026-Q2  18 488  16 783  19 059  16 723",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

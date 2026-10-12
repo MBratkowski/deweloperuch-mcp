@@ -8,7 +8,7 @@ deweloperuch.pl → client (JSON API + RSC) → domain/services → CLI + MCP �
 
 ## Status
 
-**Stages 1-2 (discovery + capability matrix): completed 2026-10-09.** Package bootstrap (A#1) is done: `pyproject.toml`, the shared request limiter and tests. S1a is done: the package core (client, DTOs, domain, services). S1b is done: the `deweloperuch` CLI and the `deweloperuch-mcp` MCP server (stdio) with four capabilities: location search, offer search, an offer with its price history, and an investment with its offers. Chosen stack (D8): Python >= 3.11, MCP SDK (`mcp`), pydantic, httpx, typer; pytest, pytest-socket, respx, ruff, mypy, uv. The agent team is configured (rules and workflows in [CLAUDE.md](CLAUDE.md)).
+**Stages 1-2 (discovery + capability matrix): completed 2026-10-09.** Package bootstrap (A#1) is done: `pyproject.toml`, the shared request limiter and tests. S1a is done: the package core (client, DTOs, domain, services). S1b is done: the `deweloperuch` CLI and the `deweloperuch-mcp` MCP server (stdio) with five capabilities: location search, offer search, an offer with its price history, an investment with its offers, and GUS/NBP government statistics. Chosen stack (D8): Python >= 3.11, MCP SDK (`mcp`), pydantic, httpx, typer; pytest, pytest-socket, respx, ruff, mypy, uv. The agent team is configured (rules and workflows in [CLAUDE.md](CLAUDE.md)).
 
 Note on language: the documentation is in English, but the product texts it quotes (MCP tool descriptions, schema field descriptions, `instructions`, error messages, CLI output and `--help`) are in Polish, as in the code, and are quoted verbatim. Longer quotes come with a short English summary.
 
@@ -47,6 +47,7 @@ The `deweloperuch-mcp` server (stdio only, read-only); overview: [docs/mcp/READM
 | [`search_offers`](docs/mcp/tools/search_offers.md) | A page of developers' apartment offers in a city or the whole of Poland, with price and area filters. |
 | [`get_offer`](docs/mcp/tools/get_offer.md) | One offer with its full price history. |
 | [`get_investment`](docs/mcp/tools/get_investment.md) | An investment with its developer, average prices and a list of offers. |
+| [`get_government_statistics`](docs/mcp/tools/get_government_statistics.md) | Official GUS and NBP time series (dwellings, NBP prices, unemployment, wages, demography) for Poland, aggregates and 66 cities. |
 
 ## CLI commands
 
@@ -58,6 +59,7 @@ Overview, output format and exit codes 0-7: [docs/cli/README.md](docs/cli/README
 | [`deweloperuch offers search CITY`](docs/cli/commands/offers-search.md) | Searches offers in a city or the whole of Poland with filters and price sorting. |
 | [`deweloperuch offers get OFFER_ID --investment SLUG`](docs/cli/commands/offers-get.md) | Shows an offer with its price history. |
 | [`deweloperuch investments get SLUG`](docs/cli/commands/investments-get.md) | Shows an investment with its developer and offers. |
+| [`deweloperuch stats government LOCATION DATASET`](docs/cli/commands/stats-government.md) | Shows GUS and NBP statistics of a location as a table of periods. |
 | [`deweloperuch stop status [--json]`](docs/cli/commands/stop-status.md) | Shows the STOP lock shared by all processes (offline; exit code 3 when active). |
 | [`deweloperuch stop clear`](docs/cli/commands/stop-clear.md) | Clears the STOP lock; humans only, after checking the cause (agents do not run it). |
 
@@ -121,18 +123,9 @@ Terms used in the documentation; the service and its data are Polish.
 | kod wyjścia | exit code |
 | rekonesans (recon) | reconnaissance (discovery of the service's data) |
 
-## Package structure
+## Architecture
 
-The package is `src/deweloperuch_mcp/`. The product's public interface is `cli.py` and `mcp_server.py`; the rest is internal:
-
-- `cli.py`: the `deweloperuch` CLI (typer), exit codes `ExitCode`; [docs/cli/README.md](docs/cli/README.md)
-- `mcp_server.py`: the `deweloperuch-mcp` MCP server (stdio), four tools; [docs/mcp/README.md](docs/mcp/README.md)
-- `mcp_results.py`: the representation of results for MCP (shortened items, no `null` fields) on top of the domain model
-- `client/`: the HTTP client (`transport.py`, `json_api.py`, `rsc.py`) and DTOs (`dto.py`); settings: [docs/configuration.md](docs/configuration.md)
-- `domain/`: models and normalization (`models.py`, `normalize.py`)
-- `services.py`: services over the client (the only entry point for CLI and MCP)
-- `errors.py`: the `DeweloperuchError` error hierarchy (`message`, `detail`)
-- `flight.py`: the RSC decoder; `allowlist.py`: the read allowlist (`recon/flight.py` and `recon/allowlist.py` re-export them)
+Since D13 ([docs/decisions.md](docs/decisions.md)) the package `src/deweloperuch_mcp/` has layers: `domain/` (values, entities, ports, errors), `application/` (use cases and argument rules), `infrastructure/` (the HTTP client, `infrastructure/deweloperuch/transport` and friends, the limiter, the cache), `interfaces/` (`interfaces/cli`, `interfaces/mcp`, shared `views`) and `bootstrap.py` (wiring). The entry points are unchanged: `deweloperuch` ([docs/cli/README.md](docs/cli/README.md)) and `deweloperuch-mcp` ([docs/mcp/README.md](docs/mcp/README.md)). Other modules: `errors.py` (the `DeweloperuchError` hierarchy), `flight.py` (the RSC decoder) and `allowlist.py` (the read allowlist); `recon/flight.py` and `recon/allowlist.py` re-export them. Settings: [docs/configuration.md](docs/configuration.md).
 
 ## Recon tools
 

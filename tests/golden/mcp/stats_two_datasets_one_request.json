@@ -1,0 +1,130 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "polska",
+        "dataset": "average_area"
+      }
+    },
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "polska",
+        "dataset": "unemployment"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "polska",
+        "location_name": "Polska",
+        "dataset": "average_area",
+        "title": "Średnia powierzchnia użytkowa mieszkania lub domu oddanego przez deweloperów",
+        "source": "GUS",
+        "frequency": "year",
+        "total": 22,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "2005",
+        "hint": "Pokazano ostatnie 12 z 22 okresów (dane od 2005); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-srednia-powierzchnia",
+        "periods": [
+          "2015",
+          "2016",
+          "2017",
+          "2018",
+          "2019",
+          "2020",
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025",
+          "2026"
+        ],
+        "series": [
+          {
+            "series_id": "average_area",
+            "label": "Średnia powierzchnia",
+            "unit": "m²",
+            "values": [
+              61.1,
+              60.5,
+              61.2,
+              60.8,
+              61.6,
+              61.7,
+              63.1,
+              62.4,
+              61.5,
+              61.6,
+              62.3,
+              62.5
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "polska",
+        "location_name": "Polska",
+        "dataset": "unemployment",
+        "title": "Stopa bezrobocia rejestrowanego",
+        "source": "GUS",
+        "frequency": "month",
+        "total": 188,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "2011-01",
+        "hint": "Pokazano ostatnie 12 z 188 okresów (dane od 2011-01); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-bezrobocie",
+        "periods": [
+          "2025-09",
+          "2025-10",
+          "2025-11",
+          "2025-12",
+          "2026-01",
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06",
+          "2026-07",
+          "2026-08"
+        ],
+        "series": [
+          {
+            "series_id": "rate",
+            "label": "Stopa bezrobocia",
+            "unit": "%",
+            "values": [
+              5.6,
+              5.6,
+              5.6,
+              5.7,
+              6,
+              6.1,
+              6.1,
+              6,
+              5.9,
+              5.8,
+              5.8,
+              5.8
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+  ]
+}

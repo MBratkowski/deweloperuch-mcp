@@ -1,0 +1,336 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "warszawa",
+        "dataset": "dwellings_monthly"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "warszawa",
+        "location_name": "Warszawa",
+        "dataset": "dwellings_monthly",
+        "title": "Mieszkania oddane do użytkowania i rozpoczęte (miesięcznie)",
+        "source": "GUS",
+        "frequency": "month",
+        "total": 260,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "2005-01",
+        "hint": "Pokazano ostatnie 12 z 260 okresów (dane od 2005-01); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-mieszkania",
+        "periods": [
+          "2025-09",
+          "2025-10",
+          "2025-11",
+          "2025-12",
+          "2026-01",
+          "2026-02",
+          "2026-03",
+          "2026-04",
+          "2026-05",
+          "2026-06",
+          "2026-07",
+          "2026-08"
+        ],
+        "series": [
+          {
+            "series_id": "completed_total",
+            "label": "Oddane do użytkowania: razem",
+            "unit": "mieszkania",
+            "values": [
+              1711,
+              2148,
+              1732,
+              3010,
+              881,
+              868,
+              853,
+              1078,
+              1295,
+              1871,
+              1794,
+              1817
+            ]
+          },
+          {
+            "series_id": "completed_developer",
+            "label": "Oddane: deweloperskie",
+            "unit": "mieszkania",
+            "values": [
+              1305,
+              2109,
+              1680,
+              2665,
+              832,
+              821,
+              725,
+              1033,
+              1238,
+              1627,
+              1711,
+              1712
+            ]
+          },
+          {
+            "series_id": "completed_individual",
+            "label": "Oddane: indywidualne",
+            "unit": "mieszkania",
+            "values": [
+              37,
+              39,
+              52,
+              30,
+              49,
+              47,
+              28,
+              45,
+              12,
+              39,
+              40,
+              105
+            ]
+          },
+          {
+            "series_id": "completed_cooperative",
+            "label": "Oddane: spółdzielcze",
+            "unit": "mieszkania",
+            "values": [
+              196,
+              0,
+              0,
+              315,
+              0,
+              0,
+              0,
+              0,
+              5,
+              0,
+              43,
+              0
+            ]
+          },
+          {
+            "series_id": "completed_municipal",
+            "label": "Oddane: komunalne",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "completed_social",
+            "label": "Oddane: społeczne",
+            "unit": "mieszkania",
+            "values": [
+              173,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              40,
+              205,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "completed_company",
+            "label": "Oddane: zakładowe",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              100,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "started_total",
+            "label": "Rozpoczęte budowy: razem",
+            "unit": "mieszkania",
+            "values": [
+              1575,
+              2008,
+              1105,
+              1077,
+              1477,
+              575,
+              871,
+              663,
+              1418,
+              1524,
+              1443,
+              1414
+            ]
+          },
+          {
+            "series_id": "started_developer",
+            "label": "Rozpoczęte: deweloperskie",
+            "unit": "mieszkania",
+            "values": [
+              1530,
+              1967,
+              1088,
+              1043,
+              1458,
+              555,
+              806,
+              607,
+              1357,
+              1477,
+              1414,
+              1348
+            ]
+          },
+          {
+            "series_id": "started_individual",
+            "label": "Rozpoczęte: indywidualne",
+            "unit": "mieszkania",
+            "values": [
+              45,
+              41,
+              17,
+              34,
+              19,
+              20,
+              65,
+              56,
+              61,
+              47,
+              29,
+              66
+            ]
+          },
+          {
+            "series_id": "started_cooperative",
+            "label": "Rozpoczęte: spółdzielcze",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "started_municipal",
+            "label": "Rozpoczęte: komunalne",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "started_social",
+            "label": "Rozpoczęte: społeczne",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "started_company",
+            "label": "Rozpoczęte: zakładowe",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "started_for_rent",
+            "label": "Rozpoczęte: na wynajem",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}

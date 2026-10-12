@@ -1,0 +1,44 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--price-min",
+    "500000",
+    "--price-max",
+    "700000",
+    "--area-min",
+    "40",
+    "--area-max",
+    "60",
+    "--sort",
+    "price_asc",
+    "--page",
+    "2",
+    "--per-page",
+    "50"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Pasujące oferty: 1 192 · strona 2 z 20 (po 50) · pokazano 3 · obcięte: serwis pozwala przejrzeć najwyżej 20 stron.",
+    "Wskazówka: Pasujących ofert jest 1192, a serwis pozwala przejrzeć najwyżej 20 stron po 50 (1000). Zawęź filtry (cena, metraż) albo zwiększ per_page do 100.",
+    "Ta lista na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?filterPrice=500000-700000&filterSize=40-60&sortBy=amount&sortOrder=asc&page=2&perPage=50",
+    "[120306] B29 · 530 559 PLN · 43,02 m² · 12 332,85 PLN/m² · aktywna · od pierwszej ceny +1 843 PLN (+0,35%)",
+    "    Werandowa [werandowa] · Żerański Development · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/zeranski-development/werandowa",
+    "[120307] B19 · 530 559 PLN · 43,02 m² · 12 332,85 PLN/m² · aktywna · od pierwszej ceny +1 843 PLN (+0,35%)",
+    "    Werandowa [werandowa] · Żerański Development · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/zeranski-development/werandowa",
+    "[120300] B10 · 530 938 PLN · 44,42 m² · 11 952,68 PLN/m² · aktywna · od pierwszej ceny +119 PLN (+0,02%)",
+    "    Werandowa [werandowa] · Żerański Development · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/zeranski-development/werandowa",
+    "Szczegóły oferty: deweloperuch offers get OFFER_ID --investment INVESTMENT_SLUG",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?filterPrice=500000-700000&filterSize=40-60&sortBy=amount&sortOrder=asc&page=2&perPage=50&_rsc=f100e92a [rsc: 1] [accept: */*]"
+  ]
+}

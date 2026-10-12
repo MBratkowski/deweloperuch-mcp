@@ -1,0 +1,20 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--area-min",
+    "60",
+    "--area-max",
+    "40"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: area_min (60) jest większe niż area_max (40); zamień je miejscami.",
+    ""
+  ],
+  "requests": []
+}

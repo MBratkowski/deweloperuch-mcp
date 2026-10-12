@@ -1,0 +1,49 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "polska",
+    "unemployment",
+    "--periods",
+    "1",
+    "--json"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "{",
+    "  \"location_slug\": \"polska\",",
+    "  \"location_name\": \"Polska\",",
+    "  \"dataset\": \"unemployment\",",
+    "  \"title\": \"Stopa bezrobocia rejestrowanego\",",
+    "  \"source\": \"GUS\",",
+    "  \"frequency\": \"month\",",
+    "  \"total\": 188,",
+    "  \"returned\": 1,",
+    "  \"truncated\": true,",
+    "  \"available_from\": \"2011-01\",",
+    "  \"hint\": \"Pokazano ostatnie 1 z 188 okresów (dane od 2011-01); starsze pokaże większa wartość periods.\",",
+    "  \"note\": null,",
+    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-bezrobocie\",",
+    "  \"series\": [",
+    "    {",
+    "      \"series_id\": \"rate\",",
+    "      \"label\": \"Stopa bezrobocia\",",
+    "      \"unit\": \"%\",",
+    "      \"points\": [",
+    "        {",
+    "          \"period\": \"2026-08\",",
+    "          \"value\": 5.8",
+    "        }",
+    "      ]",
+    "    }",
+    "  ]",
+    "}",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+  ]
+}

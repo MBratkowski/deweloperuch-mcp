@@ -1,0 +1,18 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--area-min",
+    "-1"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: area_min musi być liczbą całkowitą z zakresu 0–9999 (m²), podano -1.",
+    ""
+  ],
+  "requests": []
+}

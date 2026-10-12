@@ -1,0 +1,22 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "warszawa",
+    "prices"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch stats government [OPTIONS] {LOCATION} {DATASET}",
+    "Try 'deweloperuch stats government --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for 'DATASET': 'prices' is not one of 'dwellings_quarterly', 'dwellings_monthly',  │",
+    "│ 'average_area', 'demography', 'population', 'unemployment', 'wages', 'nbp_prices'.               │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

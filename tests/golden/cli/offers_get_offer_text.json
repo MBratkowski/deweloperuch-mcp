@@ -1,0 +1,22 @@
+{
+  "args": [
+    "offers",
+    "get",
+    "abc",
+    "--investment",
+    "smolna"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch offers get [OPTIONS] {OFFER_ID}",
+    "Try 'deweloperuch offers get --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for 'OFFER_ID': 'abc' is not a valid int.                                          │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

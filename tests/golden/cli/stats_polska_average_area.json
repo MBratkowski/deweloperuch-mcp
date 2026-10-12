@@ -1,0 +1,37 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "polska",
+    "average_area"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Średnia powierzchnia użytkowa mieszkania lub domu oddanego przez deweloperów · Polska [polska]",
+    "Źródło: GUS · rocznie · okresy: pokazano 12 z 22 (dane od 2005).",
+    "Wskazówka: Pokazano ostatnie 12 z 22 okresów (dane od 2005); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-srednia-powierzchnia",
+    "Kolumny:",
+    "  [1] Średnia powierzchnia (m²)",
+    "Okres   [1]",
+    "2015   61,1",
+    "2016   60,5",
+    "2017   61,2",
+    "2018   60,8",
+    "2019   61,6",
+    "2020   61,7",
+    "2021   63,1",
+    "2022   62,4",
+    "2023   61,5",
+    "2024   61,6",
+    "2025   62,3",
+    "2026   62,5",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+  ]
+}

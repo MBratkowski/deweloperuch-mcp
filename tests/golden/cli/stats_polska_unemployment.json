@@ -1,0 +1,37 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "polska",
+    "unemployment"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Stopa bezrobocia rejestrowanego · Polska [polska]",
+    "Źródło: GUS · miesięcznie · okresy: pokazano 12 z 188 (dane od 2011-01).",
+    "Wskazówka: Pokazano ostatnie 12 z 188 okresów (dane od 2011-01); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-bezrobocie",
+    "Kolumny:",
+    "  [1] Stopa bezrobocia (%)",
+    "Okres    [1]",
+    "2025-09  5,6",
+    "2025-10  5,6",
+    "2025-11  5,6",
+    "2025-12  5,7",
+    "2026-01    6",
+    "2026-02  6,1",
+    "2026-03  6,1",
+    "2026-04    6",
+    "2026-05  5,9",
+    "2026-06  5,8",
+    "2026-07  5,8",
+    "2026-08  5,8",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+  ]
+}

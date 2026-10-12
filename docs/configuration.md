@@ -62,7 +62,7 @@ Clearing: only by the user, `deweloperuch stop clear` ([description](cli/command
 
 ## Package client
 
-The client (`deweloperuch_mcp.client.transport`) is synchronous (`httpx`), with the User-Agent from `identity`. Every request, including reading the body, fits in one slot of the shared limiter.
+The client (`deweloperuch_mcp.infrastructure.deweloperuch.transport`) is synchronous (`httpx`), with the User-Agent from `identity`. Every request, including reading the body, fits in one slot of the shared limiter.
 
 | Parameter | Value | Description |
 |---|---|---|
@@ -138,4 +138,4 @@ The JS bundle scanner (detecting changes after a deploy, D7). All requests go th
 | Cache | `chunks/` | See the "Files" table. The scanner respects `XDG_CACHE_HOME`. |
 | STOP | `stop.json` | As in probe: after STOP a record with source `scan_bundles`; with an active record (from any process) the scan ends with code 3 before a request. |
 
-_Source: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `src/deweloperuch_mcp/retry_after.py`, `src/deweloperuch_mcp/http_policy.py`, `recon/config.py`, `recon/http_common.py`, `recon/probe.py`, `recon/scan_bundles.py`, `recon/allowlist.py`, `recon/flight.py`, `src/deweloperuch_mcp/client/transport.py`, `src/deweloperuch_mcp/services.py`, `src/deweloperuch_mcp/cli.py`, `src/deweloperuch_mcp/mcp_server.py`, `src/deweloperuch_mcp/allowlist.py`, `src/deweloperuch_mcp/flight.py`, `src/deweloperuch_mcp/errors.py`_
+_Source: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `src/deweloperuch_mcp/retry_after.py`, `src/deweloperuch_mcp/http_policy.py`, `recon/config.py`, `recon/http_common.py`, `recon/probe.py`, `recon/scan_bundles.py`, `recon/allowlist.py`, `recon/flight.py`, `src/deweloperuch_mcp/infrastructure/deweloperuch/transport.py`, `src/deweloperuch_mcp/application/`, `src/deweloperuch_mcp/interfaces/`, `src/deweloperuch_mcp/allowlist.py`, `src/deweloperuch_mcp/flight.py`, `src/deweloperuch_mcp/errors.py`_

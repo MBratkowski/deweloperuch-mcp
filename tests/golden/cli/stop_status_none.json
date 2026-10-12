@@ -1,0 +1,16 @@
+{
+  "args": [
+    "stop",
+    "status"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Brak STOP: zapytania do deweloperuch.pl nie są wstrzymane.",
+    "Plik: <LOCK_DIR>/stop.json",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

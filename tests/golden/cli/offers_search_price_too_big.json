@@ -1,0 +1,18 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--price-max",
+    "100000000"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: price_max musi być liczbą całkowitą z zakresu 0–99999999 (PLN), podano 100000000.",
+    ""
+  ],
+  "requests": []
+}

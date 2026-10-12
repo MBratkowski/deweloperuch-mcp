@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "warszawa"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Wyszukiwanie ofert w 'warszawa': Serwis odpowiedział błędem HTTP 503. Nic nie ponawiam; spróbuj później. Limiter wstrzyma następne zapytanie o 10 s.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "ServiceError: Wyszukiwanie ofert w 'warszawa': Serwis odpowiedział błędem HTTP 503. Nic nie ponawiam; spróbuj później. Limiter wstrzyma następne zapytanie o 10 s. Szczegóły: /ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10&_rsc=cc6e11f9: busy"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10&_rsc=cc6e11f9 [rsc: 1] [accept: */*]"
+  ]
+}

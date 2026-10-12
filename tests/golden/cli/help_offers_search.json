@@ -1,0 +1,37 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch offers search [OPTIONS] {CITY}                                                 ",
+    "                                                                                                    ",
+    " Szukaj ofert mieszkań w mieście; najwyżej 20 stron wyników.                                        ",
+    "                                                                                                    ",
+    "╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ *    CITY      <str>  Slug miasta (np. warszawa; podaje go `locations search`) albo polska.      │",
+    "│                       [required]                                                                 │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --price-min        <int>                   Najniższa cena w PLN.                                 │",
+    "│ --price-max        <int>                   Najwyższa cena w PLN.                                 │",
+    "│ --area-min         <int>                   Najmniejszy metraż w m².                              │",
+    "│ --area-max         <int>                   Największy metraż w m².                               │",
+    "│ --sort             <price_asc|price_desc>  Kolejność po cenie; bez opcji domyślna kolejność      │",
+    "│                                            serwisu.                                              │",
+    "│ --page             <int>                   Numer strony, 1–20. [default: 1]                      │",
+    "│ --per-page         <10|50|100>             Liczba ofert na stronie. [default: 10]                │",
+    "│ --json                                     Wypisz wynik jako JSON (model domenowy).              │",
+    "│ --help                                     Show this message and exit.                           │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

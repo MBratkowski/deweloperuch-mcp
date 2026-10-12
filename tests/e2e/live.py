@@ -57,8 +57,8 @@ BIN = Path(sys.executable).parent  # the scripts of the environment running the 
 # Assembled in code: the repo does not carry ready-to-paste service addresses.
 HOST = "deweloperuch" + ".pl"
 
-MAX_REQUESTS = 60
-"""Live requests one full run may send (about a minute and a half at 1 per second)."""
+MAX_REQUESTS = 70
+"""Live requests one full run may send (well within two minutes at 1 per second)."""
 
 REQUEST_LINE = "HTTP Request:"
 """How httpx logs each request it sends (INFO)."""
@@ -82,7 +82,8 @@ SERVICE_CHANGED = "Serwis mógł się zmienić"
 # D3, D12: what a model must never read. Anywhere in a result or a tool listing: paths,
 # props, Next.js internals, the service's addresses, HTML, Python and its libraries.
 TEXT_LEAKS = re.compile(
-    r"/api/|initialData|_rsc|invest_|sale_id|/ceny-|NEXT_HTTP|digest|Next-Action|buildId|"
+    r"/api/|initialData|_rsc|invest_|sale_id|/ceny-|/statystyki|tocItems|sortedLocations|"
+    r"currentSlug|NEXT_HTTP|digest|Next-Action|buildId|"
     r'Traceback|File "|httpx|pydantic\.dev|<html|<!doctype|<script|'
     + rf"{re.escape(HOST)}/|://(?:www\.)?{re.escape(HOST)}",
     re.IGNORECASE,
@@ -92,14 +93,17 @@ TEXT_LEAKS = re.compile(
 KEY_LEAKS = re.compile(r"sale|invest(?!ment)|rcn|amount|rsc", re.IGNORECASE)
 # The one exception (D12, 2026-10-11): a full address of a public page of the service,
 # as the whole value of a field named ``*_url``; never with ``_rsc`` or ``/api/``, never
-# in another field nor in an error message. Only the three routes links.py builds [P]:
-# the list of offers (with a query), a developer's profile, an investment. A segment has
-# no ``/``, ``?``, ``#``, is not ``.`` or ``..`` and holds no ``%2e`` (a browser would
-# read it as a dot).
+# in another field nor in an error message. Only the four routes links.py builds [P]:
+# the list of offers (with a query), a developer's profile, an investment, and the
+# government statistics of a location (with the id of a section as its fragment). A
+# segment has no ``/``, ``?``, ``#``, is not ``.`` or ``..`` and holds no ``%2e`` (a
+# browser would read it as a dot); a section id is lowercase letters, digits, hyphens.
 _SEGMENT = r"(?!\.\.?(?:[/?#]|$))(?:(?!%2[eE])[^/?#\s])+"
+_SECTION = r"[a-z0-9][a-z0-9-]*"
 PAGE_LINK = re.compile(
-    rf"{re.escape(BASE_URL)}/ceny-ofertowe/{_SEGMENT}/"
+    rf"{re.escape(BASE_URL)}/(?:ceny-ofertowe/{_SEGMENT}/"
     rf"(?:mieszkania(?:\?[^\s#]*)?|deweloperzy/{_SEGMENT}(?:/{_SEGMENT})?)"
+    rf"|statystyki/statystyki-rzadowe/{_SEGMENT}(?:#{_SECTION})?)"
 )
 LINK = "<link>"
 
@@ -257,6 +261,7 @@ class ServerLog:
         read_fd, write_fd = os.pipe()
         self.writer = os.fdopen(write_fd, "w", encoding="utf-8")
         self._reader = os.fdopen(read_fd, "r", encoding="utf-8", errors="replace")
+        self.path = path
         self._copy = path.open("w", encoding="utf-8")
         self._changed = threading.Condition()
         self._lines = 0
@@ -274,6 +279,12 @@ class ServerLog:
                 if REQUEST_LINE in line:
                     self.requests.append(now)
                 self._changed.notify_all()
+
+    def text(self) -> str:
+        """Every line copied so far (the details of errors are only here, D12)."""
+        self.settle()
+        self._copy.flush()
+        return self.path.read_text(encoding="utf-8")
 
     def settle(self, quiet: float = 0.25) -> int:
         """Requests logged so far, once no line has come for ``quiet`` seconds."""

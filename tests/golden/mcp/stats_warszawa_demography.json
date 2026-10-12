@@ -1,0 +1,108 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "warszawa",
+        "dataset": "demography"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "warszawa",
+        "location_name": "Warszawa",
+        "dataset": "demography",
+        "title": "Urodzenia żywe, zgony i przyrost naturalny",
+        "source": "GUS",
+        "frequency": "year",
+        "total": 24,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "2002",
+        "hint": "Pokazano ostatnie 12 z 24 okresów (dane od 2002); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-demografia",
+        "periods": [
+          "2014",
+          "2015",
+          "2016",
+          "2017",
+          "2018",
+          "2019",
+          "2020",
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025"
+        ],
+        "series": [
+          {
+            "series_id": "births",
+            "label": "Urodzenia żywe",
+            "unit": "osoby",
+            "values": [
+              19511,
+              19905,
+              20980,
+              21315,
+              21276,
+              21364,
+              20669,
+              19756,
+              18081,
+              15566,
+              14859,
+              14439
+            ]
+          },
+          {
+            "series_id": "deaths",
+            "label": "Zgony",
+            "unit": "osoby",
+            "values": [
+              17959,
+              18592,
+              18512,
+              19118,
+              19673,
+              19083,
+              22181,
+              24016,
+              20501,
+              19125,
+              17254,
+              16730
+            ]
+          },
+          {
+            "series_id": "natural_increase",
+            "label": "Przyrost naturalny",
+            "unit": "osoby",
+            "values": [
+              1552,
+              1313,
+              2468,
+              2197,
+              1603,
+              2281,
+              -1512,
+              -4260,
+              -2420,
+              -3559,
+              -2395,
+              -2291
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+  ]
+}
