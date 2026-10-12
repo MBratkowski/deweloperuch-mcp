@@ -1,7 +1,7 @@
 # `get_offer`
 > Zwraca jedną ofertę z pełną historią ceny, inwestycją i deweloperem. Użyj, gdy chcesz zobaczyć, jak zmieniała się cena mieszkania. Wymaga offer_id i investment_slug (oba podaje search_offers albo get_investment): samo offer_id nie wystarcza.
 >
-> Zwraca cenę, metraż, cenę za m², status (active albo archived), zmianę od pierwszej ceny, daty i price_history (date, kind: offer, archived albo restored, price). Do listy ofert jednej inwestycji użyj get_investment.
+> Zwraca cenę, metraż, cenę za m², status (active albo archived), zmianę od pierwszej ceny, daty i price_history (date, kind: offer, archived albo restored, price). investment_url i developer_url to strony inwestycji i dewelopera na deweloperuch.pl: podawaj je użytkownikowi jako linki. Do listy ofert jednej inwestycji użyj get_investment.
 
 Tytuł: „Oferta z historią ceny”. Adnotacje: `readOnlyHint=true`, `openWorldHint=true`. Zasady wspólne: [przegląd MCP](../README.md).
 
@@ -14,9 +14,9 @@ Tytuł: „Oferta z historią ceny”. Adnotacje: `readOnlyHint=true`, `openWorl
 ## Wynik
 Wynik strukturalny i ten sam kompaktowy JSON w treści; pola `null` są pomijane.
 
-Pola: `offer_id`, `name`, `status` (`active` albo `archived`), `investment_slug`, `investment_name`, `city`, `city_slug`, `developer` (`developer_slug`, `name`, opcjonalnie `website`, `description`), `price_history` (zawsze); `price` (PLN, cena ofertowa), `currency`, `area_m2`, `price_per_m2`, `price_change_since_start` (PLN, ujemna = tańsza), `price_change_since_start_pct`, `creation_date`, `last_event_date`, `last_change_date` (opcjonalne).
+Pola: `offer_id`, `name`, `status` (`active` albo `archived`), `investment_slug`, `investment_name`, `city`, `city_slug`, `developer` (`developer_slug`, `name`, opcjonalnie `website`, `description`), `price_history` (zawsze); `investment_url` (strona inwestycji na deweloperuch.pl: podaj ją użytkownikowi jako link), `developer_url` (profil dewelopera na deweloperuch.pl: podaj go użytkownikowi jako link) (opcjonalne, brak sluga oznacza brak pola); `price` (PLN, cena ofertowa), `currency`, `area_m2`, `price_per_m2`, `price_change_since_start` (PLN, ujemna = tańsza), `price_change_since_start_pct`, `creation_date`, `last_event_date`, `last_change_date` (opcjonalne).
 
-Zdarzenie historii (`price_history[]`): `kind` (`offer` – cena w ofercie, `archived` – wycofanie, `restored` – powrót), opcjonalnie `date` i `price`. Jedna oferta to rząd kilkuset znaków.
+Zdarzenie historii (`price_history[]`): `kind` (`offer` – cena w ofercie, `archived` – wycofanie, `restored` – powrót), opcjonalnie `date` i `price`. Jedna oferta to rząd kilkuset znaków. Linki prowadzą do stron inwestycji i dewelopera, nie do pojedynczej oferty (jej strona nie jest potwierdzona); zasady: D12 w [decisions.md](../../decisions.md).
 
 ## Ograniczenia danych
 - Serwis nie ma potwierdzonej drogi od samego `offer_id` do inwestycji, dlatego `investment_slug` jest wymagany (T1 w kodzie usługi).
@@ -57,9 +57,11 @@ Wynik z mocka testów (próbki `api.map_inv_visible`, `api.sale_events`):
   "last_change_date": "2026-10-03",
   "investment_slug": "smolna",
   "investment_name": "Smolna",
+  "investment_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna",
   "city": "Sopot",
   "city_slug": "sopot",
   "developer": {"developer_slug": "invest-komfort-spolka-akcyjna", "name": "Invest Komfort Spółka Akcyjna Sp.K."},
+  "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna",
   "price_history": [
     {"date": "2025-02-25", "kind": "offer", "price": 1620000.0},
     {"date": "2025-02-25", "kind": "archived", "price": 1620000.0},

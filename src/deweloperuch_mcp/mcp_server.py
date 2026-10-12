@@ -81,7 +81,8 @@ INSTRUCTIONS = (
     "narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, "
     "podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie "
     "odblokowuj ani nie uruchamiaj ponownie. Błędy walidacji argumentów bywają po "
-    "angielsku: popraw wskazane pole zgodnie ze schematem i ponów."
+    "angielsku: popraw wskazane pole zgodnie ze schematem i ponów. Pola kończące się na "
+    "_url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert."
 )
 
 # Read-only: nothing changes anywhere. Open world: the data comes from an outside service
@@ -170,10 +171,13 @@ metrażu i sortowaniem po cenie. Użyj, gdy szukasz mieszkań w budżecie albo o
 metrażu. Nie filtruje po dzielnicy, liczbie pokoi ani deweloperze.
 
 Zwraca jedną stronę: total (wszystkie pasujące), returned, page, per_page, \
-pages_available, truncated, hint i items (offer_id, investment_slug, name, cena w PLN, \
-metraż w m², cena za m², status, inwestycja, deweloper, ostatnia zmiana ceny i zmiana \
-od pierwszej ceny w procentach; miasto tylko przy city=polska). Pozycje są skrócone; \
-szczegóły oferty i historię ceny daje get_offer.
+pages_available, truncated, hint, list_url i items (offer_id, investment_slug, \
+investment_url (strona inwestycji, nie pojedynczej oferty), name, cena w PLN, metraż w \
+m², cena za m², status, inwestycja, deweloper, ostatnia zmiana ceny i zmiana od \
+pierwszej ceny w procentach; miasto tylko przy city=polska). Pozycje są skrócone; \
+szczegóły oferty i historię ceny daje get_offer. list_url to link „zobacz wszystkie na \
+deweloperuch.pl” z tymi samymi filtrami: przydatny, gdy truncated=true albo użytkownik \
+chce więcej ofert. Linki podawaj użytkownikowi, np. w tabeli ofert.
 
 Ograniczenia: można przejrzeć najwyżej 20 stron po per_page ofert. Gdy truncated=true, \
 zawęź filtry zamiast przeglądać kolejne strony. Wszystkie oferty jednej inwestycji daje \
@@ -185,14 +189,17 @@ zobaczyć, jak zmieniała się cena mieszkania. Wymaga offer_id i investment_slu
 podaje search_offers albo get_investment): samo offer_id nie wystarcza.
 
 Zwraca cenę, metraż, cenę za m², status (active albo archived), zmianę od pierwszej \
-ceny, daty i price_history (date, kind: offer, archived albo restored, price). Do listy \
-ofert jednej inwestycji użyj get_investment."""
+ceny, daty i price_history (date, kind: offer, archived albo restored, price). \
+investment_url i developer_url to strony inwestycji i dewelopera na deweloperuch.pl: \
+podawaj je użytkownikowi jako linki. Do listy ofert jednej inwestycji użyj \
+get_investment."""
 
 GET_INVESTMENT = """\
 Zwraca inwestycję (projekt deweloperski): miasto, ulicę, współrzędne, dewelopera, \
 średnie ceny aktywnych ofert, liczbę ofert i listę ofert (najpierw aktywne, potem \
 archiwalne). Użyj, gdy chcesz zobaczyć mieszkania jednego projektu. investment_slug \
-podaje search_offers.
+podaje search_offers. investment_url i developer_url to strony inwestycji i dewelopera \
+na deweloperuch.pl: podawaj je użytkownikowi jako linki.
 
 Ograniczenia: zwraca najwyżej limit ofert (domyślnie 20); offers_returned mówi, ile ich \
 jest na liście, truncated i offers_omitted, czy i ile pominięto. offers_total to liczba \
@@ -271,7 +278,8 @@ async def search_offers(
         Field(
             title="Ofert na stronie",
             description=(
-                "10 albo 50. Pozycja to ok. 350 znaków wyniku, więc 50 daje ok. 17 tys.; "
+                "10 albo 50. Pozycja to ok. 450 znaków wyniku (z linkiem), więc 50 daje ok. "
+                "22 tys.; "
                 "zwykle wystarcza 10."
             ),
         ),

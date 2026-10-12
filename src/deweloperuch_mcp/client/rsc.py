@@ -46,6 +46,14 @@ city has no error row. The ``notFound`` prop is on every page, so it is no marke
 """
 
 
+def offers_list_path(city: str) -> str:
+    """``/ceny-ofertowe/{city}/mieszkania`` [P]: ``city`` is a city slug or ``polska``.
+
+    Also the path of the link to this list (``deweloperuch_mcp.links``, D12).
+    """
+    return f"/ceny-ofertowe/{path_segment(city)}/mieszkania"
+
+
 def offers_list(
     http: HttpClient, city: str, params: Sequence[tuple[str, str | int]]
 ) -> OffersPageDto:
@@ -53,7 +61,7 @@ def offers_list(
 
     ``city`` is a city slug or ``polska``; ``params`` go to the query in the given order.
     """
-    path = f"/ceny-ofertowe/{path_segment(city)}/mieszkania"
+    path = offers_list_path(city)
     return page_prop(http, path, params, "initialData", OffersPageDto)
 
 

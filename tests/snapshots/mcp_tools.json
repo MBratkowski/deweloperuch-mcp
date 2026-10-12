@@ -1,7 +1,7 @@
 {
   "server": {
     "name": "deweloperuch",
-    "instructions": "Dane z deweloperuch.pl: ceny ofertowe mieszkań od deweloperów (rynek pierwotny) w Polsce, z historią zmian cen. Typowa kolejność: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Błędy walidacji argumentów bywają po angielsku: popraw wskazane pole zgodnie ze schematem i ponów."
+    "instructions": "Dane z deweloperuch.pl: ceny ofertowe mieszkań od deweloperów (rynek pierwotny) w Polsce, z historią zmian cen. Typowa kolejność: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Błędy walidacji argumentów bywają po angielsku: popraw wskazane pole zgodnie ze schematem i ponów. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert."
   },
   "tools": [
     {
@@ -173,7 +173,7 @@
     {
       "name": "search_offers",
       "title": "Szukaj ofert mieszkań",
-      "description": "Wyszukuje oferty mieszkań od deweloperów (tylko rynek pierwotny, ceny ofertowe, nie transakcyjne) w jednym mieście albo w całej Polsce (city=polska), z filtrami ceny i metrażu i sortowaniem po cenie. Użyj, gdy szukasz mieszkań w budżecie albo o danym metrażu. Nie filtruje po dzielnicy, liczbie pokoi ani deweloperze.\n\nZwraca jedną stronę: total (wszystkie pasujące), returned, page, per_page, pages_available, truncated, hint i items (offer_id, investment_slug, name, cena w PLN, metraż w m², cena za m², status, inwestycja, deweloper, ostatnia zmiana ceny i zmiana od pierwszej ceny w procentach; miasto tylko przy city=polska). Pozycje są skrócone; szczegóły oferty i historię ceny daje get_offer.\n\nOgraniczenia: można przejrzeć najwyżej 20 stron po per_page ofert. Gdy truncated=true, zawęź filtry zamiast przeglądać kolejne strony. Wszystkie oferty jednej inwestycji daje get_investment.",
+      "description": "Wyszukuje oferty mieszkań od deweloperów (tylko rynek pierwotny, ceny ofertowe, nie transakcyjne) w jednym mieście albo w całej Polsce (city=polska), z filtrami ceny i metrażu i sortowaniem po cenie. Użyj, gdy szukasz mieszkań w budżecie albo o danym metrażu. Nie filtruje po dzielnicy, liczbie pokoi ani deweloperze.\n\nZwraca jedną stronę: total (wszystkie pasujące), returned, page, per_page, pages_available, truncated, hint, list_url i items (offer_id, investment_slug, investment_url (strona inwestycji, nie pojedynczej oferty), name, cena w PLN, metraż w m², cena za m², status, inwestycja, deweloper, ostatnia zmiana ceny i zmiana od pierwszej ceny w procentach; miasto tylko przy city=polska). Pozycje są skrócone; szczegóły oferty i historię ceny daje get_offer. list_url to link „zobacz wszystkie na deweloperuch.pl” z tymi samymi filtrami: przydatny, gdy truncated=true albo użytkownik chce więcej ofert. Linki podawaj użytkownikowi, np. w tabeli ofert.\n\nOgraniczenia: można przejrzeć najwyżej 20 stron po per_page ofert. Gdy truncated=true, zawęź filtry zamiast przeglądać kolejne strony. Wszystkie oferty jednej inwestycji daje get_investment.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -269,7 +269,7 @@
           },
           "per_page": {
             "default": 10,
-            "description": "10 albo 50. Pozycja to ok. 350 znaków wyniku, więc 50 daje ok. 17 tys.; zwykle wystarcza 10.",
+            "description": "10 albo 50. Pozycja to ok. 450 znaków wyniku (z linkiem), więc 50 daje ok. 22 tys.; zwykle wystarcza 10.",
             "enum": [
               10,
               50
@@ -346,6 +346,19 @@
               "investment_name": {
                 "title": "Investment Name",
                 "type": "string"
+              },
+              "investment_url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Strona inwestycji na deweloperuch.pl: podaj ją użytkownikowi jako link.",
+                "title": "Investment Url"
               },
               "developer_name": {
                 "title": "Developer Name",
@@ -467,6 +480,19 @@
             "default": null,
             "title": "Hint"
           },
+          "list_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Ta lista ofert na deweloperuch.pl (te same filtry, sortowanie i strona): podaj ją użytkownikowi jako link.",
+            "title": "List Url"
+          },
           "items": {
             "items": {
               "$ref": "#/$defs/OfferItem"
@@ -495,7 +521,7 @@
     {
       "name": "get_offer",
       "title": "Oferta z historią ceny",
-      "description": "Zwraca jedną ofertę z pełną historią ceny, inwestycją i deweloperem. Użyj, gdy chcesz zobaczyć, jak zmieniała się cena mieszkania. Wymaga offer_id i investment_slug (oba podaje search_offers albo get_investment): samo offer_id nie wystarcza.\n\nZwraca cenę, metraż, cenę za m², status (active albo archived), zmianę od pierwszej ceny, daty i price_history (date, kind: offer, archived albo restored, price). Do listy ofert jednej inwestycji użyj get_investment.",
+      "description": "Zwraca jedną ofertę z pełną historią ceny, inwestycją i deweloperem. Użyj, gdy chcesz zobaczyć, jak zmieniała się cena mieszkania. Wymaga offer_id i investment_slug (oba podaje search_offers albo get_investment): samo offer_id nie wystarcza.\n\nZwraca cenę, metraż, cenę za m², status (active albo archived), zmianę od pierwszej ceny, daty i price_history (date, kind: offer, archived albo restored, price). investment_url i developer_url to strony inwestycji i dewelopera na deweloperuch.pl: podawaj je użytkownikowi jako linki. Do listy ofert jednej inwestycji użyj get_investment.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -740,6 +766,19 @@
             "title": "Investment Name",
             "type": "string"
           },
+          "investment_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Strona inwestycji na deweloperuch.pl: podaj ją użytkownikowi jako link.",
+            "title": "Investment Url"
+          },
           "city": {
             "title": "City",
             "type": "string"
@@ -750,6 +789,19 @@
           },
           "developer": {
             "$ref": "#/$defs/Developer"
+          },
+          "developer_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Profil dewelopera na deweloperuch.pl: podaj go użytkownikowi jako link.",
+            "title": "Developer Url"
           },
           "price_history": {
             "items": {
@@ -781,7 +833,7 @@
     {
       "name": "get_investment",
       "title": "Inwestycja z ofertami",
-      "description": "Zwraca inwestycję (projekt deweloperski): miasto, ulicę, współrzędne, dewelopera, średnie ceny aktywnych ofert, liczbę ofert i listę ofert (najpierw aktywne, potem archiwalne). Użyj, gdy chcesz zobaczyć mieszkania jednego projektu. investment_slug podaje search_offers.\n\nOgraniczenia: zwraca najwyżej limit ofert (domyślnie 20); offers_returned mówi, ile ich jest na liście, truncated i offers_omitted, czy i ile pominięto. offers_total to liczba z serwisu, a pominięte oferty liczy offers_omitted. Przy dużej inwestycji nie zwiększaj limitu bez potrzeby; offers_omitted > 0 znaczy, że lista jest niepełna. include_history=true dodaje historię ceny każdej zwróconej oferty: wynik jest dłuższy i powstaje wolniej. Dla jednej oferty lepiej użyć get_offer.",
+      "description": "Zwraca inwestycję (projekt deweloperski): miasto, ulicę, współrzędne, dewelopera, średnie ceny aktywnych ofert, liczbę ofert i listę ofert (najpierw aktywne, potem archiwalne). Użyj, gdy chcesz zobaczyć mieszkania jednego projektu. investment_slug podaje search_offers. investment_url i developer_url to strony inwestycji i dewelopera na deweloperuch.pl: podawaj je użytkownikowi jako linki.\n\nOgraniczenia: zwraca najwyżej limit ofert (domyślnie 20); offers_returned mówi, ile ich jest na liście, truncated i offers_omitted, czy i ile pominięto. offers_total to liczba z serwisu, a pominięte oferty liczy offers_omitted. Przy dużej inwestycji nie zwiększaj limitu bez potrzeby; offers_omitted > 0 znaczy, że lista jest niepełna. include_history=true dodaje historię ceny każdej zwróconej oferty: wynik jest dłuższy i powstaje wolniej. Dla jednej oferty lepiej użyć get_offer.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1064,6 +1116,19 @@
             "title": "Status",
             "type": "string"
           },
+          "investment_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Strona inwestycji na deweloperuch.pl: podaj ją użytkownikowi jako link.",
+            "title": "Investment Url"
+          },
           "city": {
             "title": "City",
             "type": "string"
@@ -1122,6 +1187,19 @@
           },
           "developer": {
             "$ref": "#/$defs/Developer"
+          },
+          "developer_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Profil dewelopera na deweloperuch.pl: podaj go użytkownikowi jako link.",
+            "title": "Developer Url"
           },
           "avg_price": {
             "anyOf": [

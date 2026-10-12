@@ -11,7 +11,7 @@ deweloperuch offers get [OPTIONS] OFFER_ID --investment SLUG
 |---|---|---|---|
 | `OFFER_ID` (argument, wymagany) | int | — | Identyfikator oferty z `offers search`. |
 | `--investment` | SLUG | — (wymagana) | Slug inwestycji oferty (investment_slug z `offers search`). |
-| `--json` | flaga | wyłączona | Wypisz wynik jako JSON (model domenowy). |
+| `--json` | flaga | wyłączona | Wypisz wynik jako JSON (model domenowy; z linkami `investment_url` i `developer_url`). |
 | `--help` | flaga | | Pokaż pomoc. |
 
 ## Kody wyjścia
@@ -30,13 +30,17 @@ Wynik tekstowy (mock testów, próbki `api.map_inv_visible`, `api.sale_events`):
 Cena: 1 620 175 PLN · 69,5 m² · 23 311,87 PLN/m²
 Od pierwszej ceny: +175 PLN (+0,01%)
 Inwestycja: Smolna [smolna] · Sopot
+Strona inwestycji: https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna
 Deweloper: Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]
+Profil dewelopera: https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna
 Daty: dodana 2025-02-25 · ostatnie zdarzenie 2026-10-03 · ostatnia zmiana 2026-10-03
 Historia ceny (3):
   2025-02-25  cena          1 620 000 PLN
   2025-02-25  wycofanie     1 620 000 PLN
   2026-10-03  przywrócenie  1 620 175 PLN
 ```
+
+Linie „Strona inwestycji” i „Profil dewelopera” (D12) prowadzą do stron inwestycji i dewelopera, nie do pojedynczej oferty; brak sluga oznacza brak linii.
 
 Z `--json` wynik ma wszystkie pola modelu domenowego, także `null` (np. `developer.website`).
 

@@ -68,3 +68,17 @@ def test_adapters_call_the_services(adapter: str) -> None:
 )
 def test_the_check_sees_every_way_to_import_the_client(source: str, found: set[str]) -> None:
     assert imported_modules(source) == found
+
+
+CLIENT = SOURCE / "client"
+
+
+@pytest.mark.parametrize("module", sorted(path.name for path in CLIENT.glob("*.py")))
+def test_the_client_imports_nothing_above_it(module: str) -> None:
+    """The client knows the service, nothing above it: not the domain, the services,
+    the adapters nor the links to public pages (links.py imports the client, D12)."""
+    modules = imported_modules((CLIENT / module).read_text(encoding="utf-8"))
+
+    above = {f"{PACKAGE}.{name}" for name in ("links", "services", "cli", "mcp_server")}
+    assert not modules & above
+    assert not any(module.startswith(f"{PACKAGE}.domain") for module in modules)

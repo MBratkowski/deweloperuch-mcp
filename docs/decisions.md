@@ -148,6 +148,14 @@ Konfiguracja: `.claude/settings.json`, `.claude/hooks/`, zasady w `CLAUDE.md`.
 - Szczegóły techniczne idą do `err.detail`, zawsze escapowane (`errors.printable`). MCP zapisuje je tylko w logu na stderr, CLI pokazuje w linii `Szczegóły:`.
 - Komunikaty STOP mówią tylko, co zatrzymało serię, i każą przerwać i zgłosić to użytkownikowi. Nie podają czasów, źródła ani sposobu zdjęcia blokady, a tekst z pliku STOP nigdy nie trafia do modelu.
 
+**Doprecyzowanie (2026-10-11, polecenie użytkownika: w tabeli wyników „powinny być linki”): linki do publicznych stron.**
+- Wyniki mogą zawierać pełne adresy publicznych stron serwisu dla człowieka, wyłącznie w dedykowanych polach `url` (np. strona inwestycji, profil dewelopera, lista ofert z tymi samymi filtrami).
+- Adresy buduje jedna funkcja z potwierdzonych [P] wzorców stron z `docs/discovery/pages-rsc.md`. Bez parametru `_rsc` i bez ścieżek `/api/*`.
+- Komunikaty błędów nadal nie zawierają żadnych adresów ani ścieżek.
+- Adresu, którego wzorzec nie jest [P], nie podajemy (dziś: strona pojedynczej oferty).
+- Link listy ofert zawiera publiczne parametry strony (np. `filterPrice`, `sortBy=amount`). To świadomy wyjątek od D3: są częścią adresu, który użytkownik otwiera, a nie nazwami pól wyniku.
+- Pola z linkami nazywają to, na co wskazują: `list_url` (lista ofert), `investment_url`, `developer_url`.
+
 ---
 
 ## Proponowany pierwszy vertical slice

@@ -29,6 +29,7 @@ from contextlib import contextmanager
 from types import TracebackType
 from typing import Literal, Self
 
+from deweloperuch_mcp import links
 from deweloperuch_mcp.client import json_api, rsc
 from deweloperuch_mcp.client.dto import InvestmentDto
 from deweloperuch_mcp.client.transport import HttpClient
@@ -234,7 +235,9 @@ def search_offers(
         ),
     ):
         page_dto = rsc.offers_list(session._http, city_slug, params)
-    return normalize.offer_search_result(page_dto, max_pages=MAX_PAGES)
+    # The link to this list: the same parameters the request carried (D12).
+    list_url = links.offers_list_url(city_slug, params)
+    return normalize.offer_search_result(page_dto, max_pages=MAX_PAGES, list_url=list_url)
 
 
 def get_investment(

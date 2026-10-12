@@ -11,7 +11,9 @@ The MCP server's representation layer over ``deweloperuch_mcp.domain.models``; t
   (``dump``) and still matches its output schema; D4 fields (``total``) stay, ``null``
   included (``keep_null``);
 - short Polish descriptions of the fields whose name is not enough (the output schema
-  is read by the model).
+  is read by the model);
+- addresses of the service's pages for people in fields named ``*_url`` after what
+  they point to (D12): the model should pass them on as links.
 
 Field names are the domain's (D3; tests/test_mcp_server.py pins it). Value sets the
 backend may extend (``status``, ``kind``) stay plain strings: the domain passes unknown
@@ -47,6 +49,13 @@ OFFER_COUNT = "Liczba ofert wg serwisu (dla dzielnic i ulic przybliżona; 0 = br
 # change is an `offer` event or a type of its own is [H], so no "first price" here.
 EVENT_KIND = "offer (cena w ofercie), archived (wycofanie), restored (powrót)."
 
+
+INVESTMENT_URL = "Strona inwestycji na deweloperuch.pl: podaj ją użytkownikowi jako link."
+DEVELOPER_URL = "Profil dewelopera na deweloperuch.pl: podaj go użytkownikowi jako link."
+LIST_URL = (
+    "Ta lista ofert na deweloperuch.pl (te same filtry, sortowanie i strona): podaj ją "
+    "użytkownikowi jako link."
+)
 
 # Class docstrings would become schema descriptions for the model: comments instead.
 
@@ -99,6 +108,7 @@ class OfferItem(McpModel):
     price_per_m2: float | None = Field(None, description=PRICE_PER_M2)
     status: str = Field(description=STATUS)
     investment_name: str
+    investment_url: str | None = Field(None, description=INVESTMENT_URL)
     developer_name: str
     last_price_change_kind: str | None = Field(None, description=LAST_CHANGE_KIND)
     last_price_change_pct: float | None = Field(None, description=LAST_CHANGE_PCT)
@@ -120,6 +130,7 @@ class OffersResult(McpModel):
     per_page: int
     pages_available: int
     hint: str | None = None
+    list_url: str | None = Field(None, description=LIST_URL)
     items: list[OfferItem]
 
 
@@ -150,9 +161,11 @@ class OfferFields(McpModel):
 class OfferResult(OfferFields):
     investment_slug: str
     investment_name: str
+    investment_url: str | None = Field(None, description=INVESTMENT_URL)
     city: str
     city_slug: str
     developer: Developer
+    developer_url: str | None = Field(None, description=DEVELOPER_URL)
     price_history: list[PriceEventItem]
 
 
@@ -164,6 +177,7 @@ class InvestmentResult(McpModel):
     investment_slug: str
     name: str
     status: str = Field(description=STATUS)
+    investment_url: str | None = Field(None, description=INVESTMENT_URL)
     city: str
     city_slug: str
     street: str | None = None
@@ -171,6 +185,7 @@ class InvestmentResult(McpModel):
     lng: float | None = None
     currency: str | None = None
     developer: Developer
+    developer_url: str | None = Field(None, description=DEVELOPER_URL)
     avg_price: float | None = Field(None, description="Średnia cena aktywnych ofert w PLN.")
     avg_area_m2: float | None = None
     avg_price_per_m2: float | None = None

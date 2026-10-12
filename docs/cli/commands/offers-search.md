@@ -17,8 +17,10 @@ deweloperuch offers search [OPTIONS] CITY
 | `--sort` | `price_asc` \| `price_desc` | brak (kolejność serwisu) | Kolejność po cenie. Sortowanie po cenie rosnąco i malejąco potwierdzone [P 2026-10-10]. |
 | `--page` | int | `1` | Numer strony, 1–20. |
 | `--per-page` | `10` \| `50` \| `100` | `10` | Liczba ofert na stronie. |
-| `--json` | flaga | wyłączona | Wypisz wynik jako JSON (model domenowy). |
+| `--json` | flaga | wyłączona | Wypisz wynik jako JSON (model domenowy; z linkami: `list_url` w wyniku i `investment_url` w każdej pozycji). |
 | `--help` | flaga | | Pokaż pomoc. |
+
+Linki do stron serwisu (D12): w trybie tekstowym linia „Ta lista na deweloperuch.pl: …” pod nagłówkiem (te same filtry, sortowanie i strona) oraz adres strony inwestycji pod każdą ofertą (nie pojedynczej oferty). Brak sluga oznacza brak linii.
 
 Zakresy filtrów to 0–99 999 999 PLN i 0–9 999 m² (wartownicy [P z kodu]); `--price-min` większe niż `--price-max` to błąd (kod 2).
 
@@ -38,10 +40,13 @@ Wynik pierwszego wywołania (domyślne `--per-page 10`) z mocka testów (`tests/
 ```
 Pasujące oferty: 13 324 · strona 1 z 20 (po 10) · pokazano 10 · obcięte: serwis pozwala przejrzeć najwyżej 20 stron.
 Wskazówka: Pasujących ofert jest 13324, a serwis pozwala przejrzeć najwyżej 20 stron po 10 (200). Zawęź filtry (cena, metraż) albo zwiększ per_page do 100.
+Ta lista na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10
 [900000] D1.1.1.4 · 994 012 PLN · 55,25 m² · 17 991,17 PLN/m² · aktywna · od pierwszej ceny -5 988 PLN (-0,6%)
     Nowy Targówek VI [nowy-targowek-vi] · ATAL S.A. · Warszawa
+    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/nowy-targowek-vi
 [900001] D1.2.0.1 · 659 315 PLN · 36,49 m² · 18 068,37 PLN/m² · aktywna · od pierwszej ceny -30 685 PLN (-4,45%)
     Nowy Targówek VI [nowy-targowek-vi] · ATAL S.A. · Warszawa
+    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/nowy-targowek-vi
 (… 8 pozostałych ofert pominięto …)
 Szczegóły oferty: deweloperuch offers get OFFER_ID --investment INVESTMENT_SLUG
 ```

@@ -1,5 +1,5 @@
 # `get_investment`
-> Zwraca inwestycję (projekt deweloperski): miasto, ulicę, współrzędne, dewelopera, średnie ceny aktywnych ofert, liczbę ofert i listę ofert (najpierw aktywne, potem archiwalne). Użyj, gdy chcesz zobaczyć mieszkania jednego projektu. investment_slug podaje search_offers.
+> Zwraca inwestycję (projekt deweloperski): miasto, ulicę, współrzędne, dewelopera, średnie ceny aktywnych ofert, liczbę ofert i listę ofert (najpierw aktywne, potem archiwalne). Użyj, gdy chcesz zobaczyć mieszkania jednego projektu. investment_slug podaje search_offers. investment_url i developer_url to strony inwestycji i dewelopera na deweloperuch.pl: podawaj je użytkownikowi jako linki.
 >
 > Ograniczenia: zwraca najwyżej limit ofert (domyślnie 20); offers_returned mówi, ile ich jest na liście, truncated i offers_omitted, czy i ile pominięto. offers_total to liczba z serwisu, a pominięte oferty liczy offers_omitted. Przy dużej inwestycji nie zwiększaj limitu bez potrzeby; offers_omitted > 0 znaczy, że lista jest niepełna. include_history=true dodaje historię ceny każdej zwróconej oferty: wynik jest dłuższy i powstaje wolniej. Dla jednej oferty lepiej użyć get_offer.
 
@@ -19,6 +19,7 @@ Wynik strukturalny i ten sam kompaktowy JSON w treści; pola `null` są pomijane
 |---|---|---|
 | `investment_slug`, `name`, `status`, `city`, `city_slug`, `developer` | | Zawsze (`developer`: `developer_slug`, `name`, opcjonalnie `website`, `description`). |
 | `street`, `lat`, `lng`, `currency` | | Opcjonalne. |
+| `investment_url`, `developer_url` | string | Strona inwestycji i profil dewelopera na deweloperuch.pl: podaj je użytkownikowi jako linki (opcjonalne; brak sluga oznacza brak pola). Pozycje `offers` nie mają linków. Zasady: D12 w [decisions.md](../../decisions.md). |
 | `avg_price`, `avg_area_m2`, `avg_price_per_m2`, `offers_active` | | Opcjonalne; średnie dotyczą aktywnych ofert (cena w PLN). |
 | `offers_total` | integer | Wszystkie oferty inwestycji wg serwisu, także archiwalne; lista `offers` jest ucięta przez `limit`. |
 | `offers` | tablica | Oferty (najpierw aktywne): `offer_id`, `name`, `status`; opcjonalnie `price`, `currency`, `area_m2`, `price_per_m2`, `price_change_since_start`, `price_change_since_start_pct`, `creation_date`, `last_event_date`, `last_change_date` i z `include_history=true` `price_history` (`kind`: `offer` – cena w ofercie, `archived`, `restored`). |
@@ -26,7 +27,7 @@ Wynik strukturalny i ten sam kompaktowy JSON w treści; pola `null` są pomijane
 | `offers_omitted` | integer | Ofert pominiętych przez `limit`. |
 | `truncated` | boolean | `true`: lista `offers` jest niepełna (`offers_omitted` > 0). |
 
-Rozmiary (kompaktowy JSON): `limit` 0 ok. 460 znaków, 20 (domyślnie) ok. 6 200, 50 ok. 14 800, 200 ok. 57 900.
+Rozmiary (kompaktowy JSON, z linkami): 20 (domyślnie) ok. 6 400 znaków, 200 ok. 58 100.
 
 ## Ograniczenia danych
 - `limit` max 200 (MCP); CLI `investments get` bez `--limit` pokazuje wszystkie oferty.
@@ -57,6 +58,7 @@ Wynik z mocka testów (próbka `api.map_inv_visible`):
   "investment_slug": "smolna",
   "name": "Smolna",
   "status": "active",
+  "investment_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna",
   "city": "Sopot",
   "city_slug": "sopot",
   "street": "Świemirowo",
@@ -64,6 +66,7 @@ Wynik z mocka testów (próbka `api.map_inv_visible`):
   "lng": 18.55839032,
   "currency": "PLN",
   "developer": {"developer_slug": "invest-komfort-spolka-akcyjna", "name": "Invest Komfort Spółka Akcyjna Sp.K."},
+  "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna",
   "avg_price": 1566392.0,
   "avg_area_m2": 63.97,
   "avg_price_per_m2": 24487.63,

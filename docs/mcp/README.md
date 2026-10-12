@@ -17,7 +17,16 @@ Wszystkie cztery mają adnotacje `readOnlyHint=true` i `openWorldHint=true`. Typ
 
 ## Instrukcje serwera (`instructions`)
 
-> Dane z deweloperuch.pl: ceny ofertowe mieszkań od deweloperów (rynek pierwotny) w Polsce, z historią zmian cen. Typowa kolejność: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Błędy walidacji argumentów bywają po angielsku: popraw wskazane pole zgodnie ze schematem i ponów.
+> Dane z deweloperuch.pl: ceny ofertowe mieszkań od deweloperów (rynek pierwotny) w Polsce, z historią zmian cen. Typowa kolejność: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Błędy walidacji argumentów bywają po angielsku: popraw wskazane pole zgodnie ze schematem i ponów. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert.
+
+### Linki do stron serwisu
+
+Wyniki `search_offers` (`list_url`, `investment_url` w pozycjach), `get_offer` i `get_investment` (`investment_url`, `developer_url`) zawierają adresy publicznych stron dla człowieka (D12 w [decisions.md](../decisions.md)):
+
+- tylko pola `*_url` i tylko trzy wzorce stron potwierdzone [P]: lista ofert (z tymi samymi filtrami, sortowaniem i stroną), profil dewelopera, inwestycja;
+- bez `_rsc` i `/api/`; bez linku do pojedynczej oferty (jej strona nie jest potwierdzona);
+- brak sluga oznacza brak linku (pole pominięte); pozycje `offers` w `get_investment` nie mają linków;
+- komunikaty błędów nie zawierają adresów.
 
 ## Konfiguracja klienta MCP
 
@@ -88,15 +97,13 @@ Kompaktowy JSON w treści (ta sama zawartość co `structuredContent`), pełne s
 | Wywołanie | Znaki |
 |---|---|
 | `search_locations` | 682 |
-| `search_offers`, 10 (domyślnie) | 3 398 |
-| `search_offers`, 50 | 16 133 |
-| `search_offers`, 50, `city=polska` | 18 183 |
-| `get_investment`, `limit` 0 | 456 |
-| `get_investment`, 20 (domyślnie) | 6 199 |
-| `get_investment`, 50 | 14 819 |
-| `get_investment`, 200 | 57 919 |
+| `search_offers`, 10 (domyślnie) | 4 487 |
+| `search_offers`, 50 | 21 222 |
+| `search_offers`, 50, `city=polska` | 23 270 |
+| `get_investment`, 20 (domyślnie) | 6 415 |
+| `get_investment`, 200 | 58 135 |
 
-Cały `tools/list` ma ok. 18,3 tys. znaków. Listy mają `total`/`returned`/`truncated`; wyniki nie zawierają pól `null`, poza `total` w `search_locations` (zawsze obecne, `null` przy obcięciu).
+Cały `tools/list` ma ok. 19,2 tys. znaków. Listy mają `total`/`returned`/`truncated`; wyniki nie zawierają pól `null`, poza `total` w `search_locations` (zawsze obecne, `null` przy obcięciu).
 
 ## Zakończenie pracy
 

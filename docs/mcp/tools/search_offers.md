@@ -1,7 +1,7 @@
 # `search_offers`
 > Wyszukuje oferty mieszkań od deweloperów (tylko rynek pierwotny, ceny ofertowe, nie transakcyjne) w jednym mieście albo w całej Polsce (city=polska), z filtrami ceny i metrażu i sortowaniem po cenie. Użyj, gdy szukasz mieszkań w budżecie albo o danym metrażu. Nie filtruje po dzielnicy, liczbie pokoi ani deweloperze.
 >
-> Zwraca jedną stronę: total (wszystkie pasujące), returned, page, per_page, pages_available, truncated, hint i items (offer_id, investment_slug, name, cena w PLN, metraż w m², cena za m², status, inwestycja, deweloper, ostatnia zmiana ceny i zmiana od pierwszej ceny w procentach; miasto tylko przy city=polska). Pozycje są skrócone; szczegóły oferty i historię ceny daje get_offer.
+> Zwraca jedną stronę: total (wszystkie pasujące), returned, page, per_page, pages_available, truncated, hint, list_url i items (offer_id, investment_slug, investment_url (strona inwestycji, nie pojedynczej oferty), name, cena w PLN, metraż w m², cena za m², status, inwestycja, deweloper, ostatnia zmiana ceny i zmiana od pierwszej ceny w procentach; miasto tylko przy city=polska). Pozycje są skrócone; szczegóły oferty i historię ceny daje get_offer. list_url to link „zobacz wszystkie na deweloperuch.pl” z tymi samymi filtrami: przydatny, gdy truncated=true albo użytkownik chce więcej ofert. Linki podawaj użytkownikowi, np. w tabeli ofert.
 >
 > Ograniczenia: można przejrzeć najwyżej 20 stron po per_page ofert. Gdy truncated=true, zawęź filtry zamiast przeglądać kolejne strony. Wszystkie oferty jednej inwestycji daje get_investment.
 
@@ -17,7 +17,7 @@ Tytuł: „Szukaj ofert mieszkań”. Adnotacje: `readOnlyHint=true`, `openWorld
 | `area_max` | integer 0–9 999 | nie | brak | Największy metraż w m². |
 | `sort` | `price_asc` \| `price_desc` | nie | brak | price_asc: od najtańszych, price_desc: od najdroższych; brak: domyślna kolejność serwisu (nie jest gwarantowana). |
 | `page` | integer 1–20 | nie | `1` | Numer strony wyników, 1–20. |
-| `per_page` | `10` \| `50` | nie | `10` | 10 albo 50. Pozycja to ok. 350 znaków wyniku, więc 50 daje ok. 17 tys.; zwykle wystarcza 10. |
+| `per_page` | `10` \| `50` | nie | `10` | 10 albo 50. Pozycja to ok. 450 znaków wyniku (z linkiem), więc 50 daje ok. 22 tys.; zwykle wystarcza 10. |
 
 Reguły argumentów (liczby jako tekst z samych cyfr, `""`/`null`, przycinanie `sort`): [przegląd MCP](../README.md#reguły-argumentów). `price_min` większe niż `price_max` (analogicznie metraż) to błąd walidacji usługi.
 
@@ -31,11 +31,14 @@ Wynik strukturalny i ten sam kompaktowy JSON w treści; pola `null` są pomijane
 | `truncated` | boolean | `true`: pasujących ofert jest więcej, niż można przejrzeć (najwyżej 20 stron); zawęź filtry. |
 | `page`, `per_page`, `pages_available` | integer | Strona, jej rozmiar i liczba stron możliwych do przejrzenia. |
 | `hint` | string | Przy obcięciu: ile ofert pasuje, ile stron po ile można przejrzeć i rada, żeby zawęzić filtry (opcjonalne). |
+| `list_url` | string | Ta lista ofert na deweloperuch.pl (te same filtry, sortowanie i strona): podaj ją użytkownikowi jako link (opcjonalne). |
 | `items` | tablica | Pozycje skrócone. |
 
-Pozycja: `offer_id`, `investment_slug`, `name`, `status` (`active` albo `archived`), `investment_name`, `developer_name` (zawsze); `price` (PLN, cena ofertowa), `area_m2`, `price_per_m2`, `last_price_change_kind` (`increase`, `decrease`, `no_change`), `last_price_change_pct`, `price_change_since_start_pct` (ujemna = tańsza) (opcjonalne); `city`, `city_slug` tylko przy `city=polska`.
+Pozycja: `offer_id`, `investment_slug`, `name`, `status` (`active` albo `archived`), `investment_name`, `developer_name` (zawsze); `investment_url` (strona inwestycji na deweloperuch.pl, nie pojedynczej oferty: podaj ją użytkownikowi jako link; brak sluga oznacza brak pola), `price` (PLN, cena ofertowa), `area_m2`, `price_per_m2`, `last_price_change_kind` (`increase`, `decrease`, `no_change`), `last_price_change_pct`, `price_change_since_start_pct` (ujemna = tańsza) (opcjonalne); `city`, `city_slug` tylko przy `city=polska`.
 
-Rozmiary (pełne strony z próbek): 10 pozycji ok. 3 400 znaków, 50 ok. 16 100, 50 przy `polska` ok. 18 200.
+Rozmiary (pełne strony z próbek, z linkami): 10 pozycji ok. 4 500 znaków, 50 ok. 21 200, 50 przy `polska` ok. 23 300.
+
+Linki (`*_url`): tylko trzy wzorce stron potwierdzone [P], bez `_rsc` i `/api/`, bez linku do pojedynczej oferty (jej strona nie jest potwierdzona). Zasady: D12 w [decisions.md](../../decisions.md).
 
 ## Ograniczenia danych
 - Można przejrzeć najwyżej 20 stron (`page` 1–20) po `per_page` ofert; reszta jest nieosiągalna, trzeba zawęzić filtry. Zob. [pages-rsc.md](../../discovery/pages-rsc.md), „Wspólne reguły list”.
@@ -72,9 +75,10 @@ Wynik z mocka testów (`tests/service_mocks.offers_page(count=10)`): pozycje są
   "per_page": 10,
   "pages_available": 20,
   "hint": "Pasujących ofert jest 13324, a można przejrzeć najwyżej 20 stron po 10 (200). Zawęź filtry (cena, metraż).",
+  "list_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10",
   "items": [
-    {"offer_id": 900000, "investment_slug": "nowy-targowek-vi", "name": "D1.1.1.4", "price": 994012.0, "area_m2": 55.25, "price_per_m2": 17991.17, "status": "active", "investment_name": "Nowy Targówek VI", "developer_name": "ATAL S.A.", "last_price_change_kind": "increase", "last_price_change_pct": 5.89, "price_change_since_start_pct": -0.6},
-    {"offer_id": 900001, "investment_slug": "nowy-targowek-vi", "name": "D1.2.0.1", "price": 659315.0, "area_m2": 36.49, "price_per_m2": 18068.37, "status": "active", "investment_name": "Nowy Targówek VI", "developer_name": "ATAL S.A.", "last_price_change_kind": "decrease", "last_price_change_pct": -3.21, "price_change_since_start_pct": -4.45}
+    {"offer_id": 900000, "investment_slug": "nowy-targowek-vi", "name": "D1.1.1.4", "price": 994012.0, "area_m2": 55.25, "price_per_m2": 17991.17, "status": "active", "investment_name": "Nowy Targówek VI", "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/nowy-targowek-vi", "developer_name": "ATAL S.A.", "last_price_change_kind": "increase", "last_price_change_pct": 5.89, "price_change_since_start_pct": -0.6},
+    {"offer_id": 900001, "investment_slug": "nowy-targowek-vi", "name": "D1.2.0.1", "price": 659315.0, "area_m2": 36.49, "price_per_m2": 18068.37, "status": "active", "investment_name": "Nowy Targówek VI", "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/nowy-targowek-vi", "developer_name": "ATAL S.A.", "last_price_change_kind": "decrease", "last_price_change_pct": -3.21, "price_change_since_start_pct": -4.45}
   ]
 }
 ```

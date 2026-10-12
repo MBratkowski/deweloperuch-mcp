@@ -14,12 +14,14 @@ run confirms them.
 import json
 import math
 import re
+import urllib.parse
 import warnings
 from collections.abc import Iterator
 from typing import Any
 
 import pytest
 
+from deweloperuch_mcp.identity import BASE_URL
 from e2e.live import (
     SERVICE_CHANGED,
     SNAPSHOT,
@@ -28,6 +30,7 @@ from e2e.live import (
     McpLive,
     assert_listing_clean,
     mcp_server,
+    run_probe,
 )
 
 pytestmark = pytest.mark.live
@@ -46,6 +49,8 @@ STREET_QUERY = "mokot"
 """Finds the district Mokotów and the street Mokotów in Warszawa ([P 2026-10-09], sample
 api.location_search, the same query and limit as search_locations sends)."""
 SLUG = re.compile(r"[a-z0-9][a-z0-9-]*")
+PAGES = BASE_URL + "/ceny-ofertowe"
+"""Public pages of the service: the only addresses a result may hold (D12, 2026-10-11)."""
 EVENT_KINDS = {"offer", "archived", "restored"}
 OFFER_ITEM = {"offer_id", "investment_slug", "name", "status", "investment_name", "developer_name"}
 
@@ -134,8 +139,50 @@ def locations(mcp: McpLive, query: str) -> dict[str, Any]:
     return result
 
 
-def check_page(result: dict[str, Any], *, per_page: int, page: int = 1) -> list[dict[str, Any]]:
-    """D4 counters consistent with each other and with the items."""
+def page_url(*slugs: str) -> str:
+    """A page address as links.py builds it: each slug one encoded segment."""
+    return "/".join([PAGES, *(urllib.parse.quote(slug, safe="") for slug in slugs)])
+
+
+def list_query(
+    *,
+    price_min: object = None,
+    price_max: object = None,
+    area_min: object = None,
+    area_max: object = None,
+    sort: object = None,
+    page: object = 1,
+    per_page: object = 10,
+) -> list[tuple[str, str]]:
+    """The query search_offers sends for these tool arguments, in its order: open ranges
+    end at the UI's sentinels (99999999 PLN, 9999 m²), null and "" mean "not given"."""
+
+    def given(value: object) -> bool:
+        return value is not None and value != ""
+
+    query: list[tuple[str, str]] = []
+    for name, low, high, top in (
+        ("filterPrice", price_min, price_max, 99_999_999),
+        ("filterSize", area_min, area_max, 9_999),
+    ):
+        if given(low) or given(high):
+            low_value = int(str(low)) if given(low) else 0
+            high_value = int(str(high)) if given(high) else top
+            query.append((name, f"{low_value}-{high_value}"))
+    if given(sort):
+        query += [
+            ("sortBy", "amount"),
+            ("sortOrder", {"price_asc": "asc", "price_desc": "desc"}[str(sort)]),
+        ]
+    query += [("page", str(int(str(page)))), ("perPage", str(int(str(per_page))))]
+    return query
+
+
+def check_page(result: dict[str, Any], city: str, **arguments: Any) -> list[dict[str, Any]]:
+    """D4 counters consistent with each other and with the items; the links (D12) of the
+    list (the arguments as the query, no _rsc) and of each item's investment."""
+    per_page = int(str(arguments.get("per_page") or 10))
+    page = int(str(arguments.get("page") or 1))
     total, items = result["total"], result["items"]
     assert (result["page"], result["per_page"]) == (page, per_page)
     assert result["returned"] == len(items)
@@ -144,12 +191,21 @@ def check_page(result: dict[str, Any], *, per_page: int, page: int = 1) -> list[
     assert result["truncated"] == (total > MAX_PAGES * per_page)
     if result["truncated"]:
         assert "Zawęź filtry" in result["hint"]
+    url = urllib.parse.urlsplit(result["list_url"])
+    assert result["list_url"].startswith(page_url(city, "mieszkania") + "?"), result["list_url"]
+    assert urllib.parse.parse_qsl(url.query) == list_query(**arguments), result["list_url"]
     ids = [item["offer_id"] for item in items]
     assert len(set(ids)) == len(ids)
     for item in items:
         assert set(item) >= OFFER_ITEM, item
         assert item["offer_id"] > 0 and SLUG.fullmatch(item["investment_slug"]), item
         assert item.get("price", 1) > 0 and item.get("area_m2", 1) > 0, item
+        # The city segment comes from the offer's own data: shown (and checked) only for
+        # city=polska; elsewhere it is not in the result, so any slug passes.
+        place = re.escape(item["city_slug"]) if "city_slug" in item else "[^/?#]+"
+        slug = re.escape(urllib.parse.quote(item["investment_slug"], safe=""))
+        link = rf"{re.escape(PAGES)}/{place}/deweloperzy/[^/?#]+/{slug}"
+        assert re.fullmatch(link, item["investment_url"]), item
     found: list[dict[str, Any]] = items
     return found
 
@@ -176,7 +232,17 @@ def from_cache(call: Call, *, sent: int = 0) -> None:
     )
 
 
+def check_page_links(result: dict[str, Any]) -> None:
+    """D12: the investment's page and the developer's profile, from the result's slugs."""
+    city, developer = result["city_slug"], result["developer"]["developer_slug"]
+    investment = page_url(city, "deweloperzy", developer, result["investment_slug"])
+    assert result["investment_url"] == investment
+    assert result["developer_url"] == page_url(city, "deweloperzy", developer)
+
+
 def check_investment(result: dict[str, Any]) -> None:
+    check_page_links(result)
+    assert all(not any(key.endswith("_url") for key in o) for o in result["offers"])
     returned, omitted = result["offers_returned"], result["offers_omitted"]
     assert returned == len(result["offers"]) and omitted >= 0
     assert result["truncated"] == (omitted > 0)
@@ -270,19 +336,19 @@ def test_locations_a_too_short_query_is_refused_without_a_request(mcp: McpLive) 
 # --- search_offers ---------------------------------------------------------------------
 
 
-def test_offers_of_a_city_with_the_defaults(first_page: Call) -> None:
+def test_offers_of_a_city_with_the_defaults(first_page: Call, city_slug: str) -> None:
     result = first_page.data
-    items = check_page(result, per_page=10)
+    items = check_page(result, city_slug)
 
     assert result["returned"] == 10
     assert all("city" not in item and "city_slug" not in item for item in items)
     assert first_page.sent == 1
 
 
-def test_offers_50_per_page(fifty: Call) -> None:
+def test_offers_50_per_page(fifty: Call, city_slug: str) -> None:
     result = fifty.data
 
-    check_page(result, per_page=50)
+    check_page(result, city_slug, per_page=50)
     assert result["returned"] == 50
     assert fifty.sent == 1
 
@@ -294,19 +360,19 @@ def test_offers_50_per_page_fit_their_size_budget(fifty: Call) -> None:
 def test_offers_page_2_has_other_offers(mcp: McpLive, city_slug: str, first_page: Call) -> None:
     result = mcp.call_network("search_offers", city=city_slug, page=2).data
 
-    second = check_page(result, per_page=10, page=2)
+    second = check_page(result, city_slug, page=2)
     first = {item["offer_id"] for item in first_page.data["items"]}
     assert second and not first & {item["offer_id"] for item in second}
 
 
-def test_offers_in_a_price_range(price_range: Call) -> None:
-    items = check_page(price_range.data, per_page=10)
+def test_offers_in_a_price_range(price_range: Call, city_slug: str) -> None:
+    items = check_page(price_range.data, city_slug, **PRICE_RANGE)
 
     assert all(400_000 <= price <= 700_000 for price in prices(items)), prices(items)
 
 
-def test_offers_in_an_area_range(area_range: Call) -> None:
-    items = check_page(area_range.data, per_page=10)
+def test_offers_in_an_area_range(area_range: Call, city_slug: str) -> None:
+    items = check_page(area_range.data, city_slug, **AREA_RANGE)
 
     areas = [item["area_m2"] for item in items if "area_m2" in item]
     assert areas and all(40 <= area <= 60 for area in areas), areas
@@ -316,7 +382,7 @@ def test_offers_in_an_area_range(area_range: Call) -> None:
 def test_offers_sorted_by_price(mcp: McpLive, city_slug: str, sort: str, descending: bool) -> None:
     result = mcp.call_network("search_offers", city=city_slug, sort=sort).data
 
-    values = prices(check_page(result, per_page=10))
+    values = prices(check_page(result, city_slug, sort=sort))
     assert values == sorted(values, reverse=descending)
 
 
@@ -331,7 +397,15 @@ def test_offers_with_filters_and_sort_together(mcp: McpLive, city_slug: str) -> 
         sort="price_asc",
     ).data
 
-    items = check_page(result, per_page=10)
+    items = check_page(
+        result,
+        city_slug,
+        price_min=300_000,
+        price_max=900_000,
+        area_min=30,
+        area_max=70,
+        sort="price_asc",
+    )
     values = prices(items)
     assert values == sorted(values)
     assert all(300_000 <= price <= 900_000 for price in values)
@@ -339,7 +413,7 @@ def test_offers_with_filters_and_sort_together(mcp: McpLive, city_slug: str) -> 
 
 
 def test_offers_in_the_whole_country_name_their_city(polska_page: Call) -> None:
-    items = check_page(polska_page.data, per_page=10)
+    items = check_page(polska_page.data, "polska")
 
     assert items and all(item["city"] and SLUG.fullmatch(item["city_slug"]) for item in items)
 
@@ -366,7 +440,7 @@ def test_offers_page_past_the_last_one(mcp: McpLive) -> None:
     total, pages = small["total"], small["pages_available"]
     if total == 0 or pages >= MAX_PAGES:
         pytest.skip(f"{SMALL_CITY!r} nie ma małej liczby ofert (total {total})")
-    check_page(small, per_page=10)
+    check_page(small, SMALL_CITY)
     page = pages + 1
 
     call = mcp.call_network("search_offers", city=SMALL_CITY, page=page)
@@ -382,7 +456,7 @@ def test_offers_page_past_the_last_one(mcp: McpLive) -> None:
         f"serwis zwrócił stronę {result['page']} zamiast {page} (przycięcie do ostatniej?): "
         "zachowanie inne niż zakładane [W]; ustal je w pages-rsc.md i w tym teście"
     )
-    check_page(result, per_page=10, page=page)
+    check_page(result, SMALL_CITY, page=page)
     assert result["items"] == []
     assert f"Strona {page} jest pusta" in result["hint"]
 
@@ -417,6 +491,7 @@ def test_offers_numbers_as_text_are_the_same_request(
 
     from_cache(call)
     assert call.data["items"] == first_page.data["items"]
+    assert call.data["list_url"] == first_page.data["list_url"]  # same request, same link
 
 
 @pytest.mark.parametrize(
@@ -439,6 +514,7 @@ def test_offers_filter_numbers_as_text_are_the_same_request(
 
     from_cache(call)
     assert call.data["items"] == earlier.data["items"]
+    assert call.data["list_url"] == earlier.data["list_url"]  # same request, same link
 
 
 @pytest.mark.parametrize("arguments", [{"price_min": None}, {"sort": ""}, {"sort": None}])
@@ -450,6 +526,7 @@ def test_offers_empty_or_null_optional_arguments_are_the_defaults(
 
     from_cache(call)
     assert call.data["items"] == first_page.data["items"]
+    assert call.data["list_url"] == first_page.data["list_url"]  # same request, same link
 
 
 def test_offers_result_of_10_fits_the_size_budget(first_page: Call) -> None:
@@ -479,6 +556,7 @@ def test_offers_city_with_spaces_around_is_trimmed(
 
     from_cache(call)
     assert call.data["items"] == first_page.data["items"]
+    assert call.data["list_url"] == first_page.data["list_url"]  # same request, same link
 
 
 def test_offers_district_slug_as_city_is_an_unknown_city(mcp: McpLive) -> None:
@@ -544,6 +622,19 @@ def test_investment_lists_the_offer_found_by_search(
     assert offer["offer_id"] in ids
 
 
+def test_the_investment_link_leads_to_its_page(budget: Budget, investment: Call) -> None:
+    """The one link the suite follows (1 request, probe): the investment's page exists
+    and holds that investment. The other links are checked for their pattern only."""
+    result = investment.data
+    path = result["investment_url"].removeprefix(BASE_URL)
+
+    run = run_probe(budget, "page", path, "--prop", "investments")
+
+    assert run.code == 0, (run.code, run.stderr)
+    listed = json.loads(run.stdout)
+    assert any(item.get("slug") == result["investment_slug"] for item in listed), listed
+
+
 def test_investment_unknown(mcp: McpLive) -> None:
     call = mcp.call_network("get_investment", investment_slug=UNKNOWN_INVESTMENT)
 
@@ -568,6 +659,8 @@ def test_offer_with_its_price_history(
     )
     assert result["price_history"]
     assert {event["kind"] for event in result["price_history"]} <= EVENT_KINDS
+    check_page_links(result)
+    assert result["investment_url"] == offer["investment_url"]  # as in the search
     if result.get("price") != offer.get("price"):
         warnings.warn(
             f"oferta {offer['offer_id']}: cena {result.get('price')} ≠ {offer.get('price')} "
@@ -633,6 +726,6 @@ def test_two_calls_at_once_go_one_by_one_through_the_limiter(mcp: McpLive, city_
     )
 
     for call in calls:
-        check_page(call.data, per_page=10, page=call.arguments["page"])
+        check_page(call.data, **call.arguments)
     assert len(logged) == 2
     assert logged[1] - logged[0] >= 0.9, logged

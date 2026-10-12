@@ -25,7 +25,7 @@ DEWELOPERUCH_LIVE=1 uv run pytest -m live tests/e2e -rs --maxfail=3
   | 1 | przekroczony budżet zapytań albo zepsuty licznik | sprawdzić zestaw |
 
   Zepsuty licznik to wywołanie, które musiało trafić do sieci, a w logu serwera nie ma żadnej linii `HTTP Request:`. Najczęściej oznacza zmianę logowania w SDK MCP.
-- **Budżet:** najwyżej 60 żywych zapytań na przebieg. Plan to 44, czyli ok. minuta przy 1 zapytaniu na sekundę. Najgorszy przypadek to 57: każde z 13 wywołań obsługiwanych z cache trafia do sieci, a te testy i tak kończą się porażką. Na końcu pytest wypisuje sekcję „żywe zapytania (e2e)” z liczbą zapytań na wywołanie.
+- **Budżet:** najwyżej 60 żywych zapytań na przebieg. Plan to 45, czyli ok. minuta przy 1 zapytaniu na sekundę. Najgorszy przypadek to 58: każde z 13 wywołań obsługiwanych z cache trafia do sieci, a te testy i tak kończą się porażką. Na końcu pytest wypisuje sekcję „żywe zapytania (e2e)” z liczbą zapytań na wywołanie.
 - **Cache:** serwer trzyma odpowiedź najwyżej 300 s. Świeżość to `s-maxage`, bez niego `max-age`, a bez obu 300 s, minus `Age` z Cloudflare; `no-store` albo `no-cache` wyłącza cache (`transport._ttl`, D2). Narzędzia korzystają tylko z endpointów z `max-age=28800` bez `s-maxage` [P 2026-10-10], więc w czasie przebiegu (ok. minuty) powtórzenie zawsze idzie z cache. Testy oznaczone „cache” wymagają dokładnie podanej liczby zapytań. Przy porażce sprawdź `Age` i `Cache-Control` tej odpowiedzi: przy `Age` ≥ `max-age` TTL 0 jest zgodny z regułą. Wyliczony TTL widać w logu na poziomie DEBUG (`TTL cache …`). Tolerancji nie ma, bo jedyny endpoint z krótką świeżością (`city-sales`, `s-maxage=300`) nie jest używany przez narzędzia.
 - **Liczenie zapytań:**
   - serwer MCP loguje każde zapytanie (`HTTP Request:`) na stderr, a zestaw czyta ten potok;
@@ -42,7 +42,7 @@ DEWELOPERUCH_LIVE=1 uv run pytest -m live tests/e2e -rs --maxfail=3
 
 Kolumna „Zapytania” podaje liczbę przy uruchomieniu całego modułu w kolejności z pliku. Fixture liczy się przy pierwszym teście, który go używa. „Cache” oznacza, że powtórzona część wywołania idzie z cache serwera.
 
-### MCP: `test_live_mcp.py` (48 testów, 32 zapytania, najwyżej 45)
+### MCP: `test_live_mcp.py` (49 testów, 33 zapytania, najwyżej 46)
 
 Jeden proces `deweloperuch-mcp` na moduł, więc powtórzone zapytania idą z cache serwera. Każdy wynik jest sprawdzany pod kątem STOP, niedostępności serwisu i szczegółów backendu:
 
@@ -50,6 +50,13 @@ Jeden proces `deweloperuch-mcp` na moduł, więc powtórzone zapytania idą z ca
 - w nazwach pól: `sale`, `invest` (poza `investment`), `rcn`, `amount`, `rsc`.
 
 Wartości (nazwy deweloperów, slugi) nie są sprawdzane pod kątem nazw backendu, bo prawdziwy deweloper nazywa się np. „Invest Komfort”. SDK sprawdza wyniki ze schematem wyjścia.
+
+Jedyny wyjątek to linki do publicznych stron serwisu (D12): `list_url`, `investment_url` i `developer_url`. Pełny adres jest dozwolony tylko jako cała wartość pola `*_url` i tylko w trzech kształtach [P]: `…/ceny-ofertowe/{miasto}/mieszkania?…`, `…/ceny-ofertowe/{miasto}/deweloperzy/{deweloper}` i `…/ceny-ofertowe/{miasto}/deweloperzy/{deweloper}/{inwestycja}`. Segment nie może zawierać `/`, `?` ani `#`, nie może być `.` ani `..` i nie może zawierać `%2e`. Adres z `_rsc` albo `/api/`, w innym polu albo w komunikacie błędu to wyciek. Testy sprawdzają wzorzec linków:
+
+- lista: ścieżka miasta, a w zapytaniu dokładnie argumenty narzędzia, w kolejności wysyłanej przez usługę;
+- inwestycja i profil dewelopera: slugi z wyniku.
+
+Tylko jeden link jest otwierany: `test_the_investment_link_leads_to_its_page`.
 
 | Test | Co sprawdza | Zapytania |
 |---|---|---|
@@ -85,6 +92,7 @@ Wartości (nazwy deweloperów, slugi) nie są sprawdzane pod kątem nazw backend
 | `test_investment_limit_0_is_the_summary` | samo podsumowanie | 0 (cache) |
 | `test_investment_with_history` | `include_history`, `limit=2`: każda oferta ma historię | 1 (inwestycja z cache) |
 | `test_investment_lists_the_offer_found_by_search` | oferta z wyszukiwania na liście (`limit=200`) | 0 (cache) |
+| `test_the_investment_link_leads_to_its_page` | `probe page <ścieżka z investment_url> --prop investments`: kod 0, strona zawiera tę inwestycję | 1 (probe) |
 | `test_investment_unknown` | „Nie znaleziono inwestycji” | 1 |
 | `test_offer_with_its_price_history` | niepusta `price_history`, znane `kind`; inna cena niż w wyszukiwaniu daje ostrzeżenie | 1 (inwestycja z cache) |
 | `test_offer_outside_its_investment` | `offer_id` spoza inwestycji: `isError` | 0 (cache) |
@@ -118,4 +126,4 @@ Każde polecenie to osobny proces, bez wspólnego cache. Kod 3 albo „Błąd: S
 
 Skaner bundli (`recon/scan_bundles.py`, ok. 140 zapytań) nie wchodzi do zestawu.
 
-**Łącznie:** 60 testów, plan 44 żywe zapytania, najwyżej 57, limit 60.
+**Łącznie:** 61 testów, plan 45 żywych zapytań, najwyżej 58, limit 60.

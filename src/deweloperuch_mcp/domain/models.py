@@ -7,6 +7,10 @@ names (``invest``, ``sale``, ``amount``) and no backend enum values: numbers are
 ``offer_id``, ``investment_slug``, ``developer_slug``, ``city_slug``
 (docs/capability-matrix.md).
 
+Fields ending in ``_url`` hold addresses of the service's public pages for people, named
+after what they point to (D12, ``deweloperuch_mcp.links``); ``None`` when a slug they need
+is missing.
+
 Value sets that the backend may extend (``kind``, ``status``) are plain strings; the
 known values are listed in the field docs. Unknown values pass through: backend enums
 (price event and price change kinds, e.g. ``PRICE_SOMETHING``) lowercased, values that
@@ -110,6 +114,8 @@ class OfferSummary(OfferBase):
     events_count: int | None = None
     investment_slug: str
     investment_name: str
+    investment_url: str | None = None
+    """The investment's page on the service."""
     city: str | None = None
     city_slug: str | None = None
     developer_slug: str
@@ -121,9 +127,13 @@ class OfferDetail(OfferBase):
 
     investment_slug: str
     investment_name: str
+    investment_url: str | None = None
+    """The investment's page on the service."""
     city: str
     city_slug: str
     developer: Developer
+    developer_url: str | None = None
+    """The developer's profile on the service."""
     price_history: list[PriceEvent]
 
 
@@ -140,6 +150,8 @@ class OfferSearchResult(DomainModel):
     pages_available: int
     """Pages that can be requested: at most 20."""
     hint: str | None = None
+    list_url: str | None = None
+    """This list on the service: the same filters, order and page."""
     items: list[OfferSummary]
 
 
@@ -153,6 +165,8 @@ class Investment(DomainModel):
     name: str
     status: str
     """``active`` or ``archived``."""
+    investment_url: str | None = None
+    """The investment's page on the service (its offers have no pages of their own)."""
     city: str
     city_slug: str
     street: str | None = None
@@ -160,6 +174,8 @@ class Investment(DomainModel):
     lng: float | None = None
     currency: str | None = None
     developer: Developer
+    developer_url: str | None = None
+    """The developer's profile on the service."""
     avg_price: float | None = None
     """Mean price of the active offers."""
     avg_area_m2: float | None = None
