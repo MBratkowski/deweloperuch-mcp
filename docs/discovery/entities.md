@@ -1,6 +1,6 @@
-# Encje, identyfikatory, relacje
+# Entities, identifiers, relations
 
-Serwis ma dwa niezależne „światy” danych, które łączą się tylko przez lokalizację:
+The service has two independent data "worlds" that connect only through location:
 
 ```
  RYNEK PIERWOTNY — OFERTY                       TRANSAKCJE — RCN (GUGiK)
@@ -31,50 +31,52 @@ Serwis ma dwa niezależne „światy” danych, które łączą się tylko przez
  Łącznik ofert z RCN: wycena / raport mieszkania (transakcje w promieniu od lat/lng inwestycji)
 ```
 
-## Identyfikatory
+(Diagram legend: left, primary market, offers: Developer → Investment (slug = global ID) → Sale = offer (unit in the price list) → SaleEvent = price event. Right, transactions, RCN (GUGiK): Powiat → SourceRcn (e.g. 9 = Warsaw) → InvestRcn = building / address → SaleRcn = unit / property (name = EGiB unit id) → SaleEventRcn = transaction (raw RCN in additionalData). Shared location: City (city_slug) ─ District (name) ─ Street (name); City → Powiat via `/api/map/city-powiats/{city}`. Link between offers and RCN: valuation / unit report (transactions within a radius of the investment's lat/lng).)
 
-| Encja | ID | Gdzie używany | Stabilność |
+## Identifiers
+
+| Entity | ID | Where used | Stability |
 |---|---|---|---|
-| City | `city_slug` (ASCII) | ścieżki stron, `citySlug`/`city` w API | [P] stabilny; `polska` = cały kraj (tylko strony) |
-| District | nazwa (`Mokotów`) | `filterDistrict`, `city-districts` | [P] brak ID, tekst |
+| City | `city_slug` (ASCII) | page paths, `citySlug`/`city` in the API | [P] stable; `polska` = whole country (pages only) |
+| District | name (`Mokotów`) | `filterDistrict`, `city-districts` | [P] no ID, text |
 | Powiat | `powiat_rcn_id` (int) | `map/powiat-*`, `powiat-price-trend`, `filterPowiat` | [P] |
-| Developer | `slug` (+ `developer_id`) | strony, `developer=`, `filterDeveloper=` | [P] slug używany wszędzie; `developer_id` pomocniczy (bywa `0` w propsach [P]) |
-| Investment | `slug` (+ `invest_id`) | `map/investments/visible/{slug}`, strony | [P] slug rozwiązuje inwestycję bez miasta/dewelopera. Starsze slugi bez sufiksu miasta (`smolna`), nowsze z sufiksem (`mokotow-sportowy-13-warszawa`) [P] |
+| Developer | `slug` (+ `developer_id`) | pages, `developer=`, `filterDeveloper=` | [P] slug used everywhere; `developer_id` auxiliary (sometimes `0` in props [P]) |
+| Investment | `slug` (+ `invest_id`) | `map/investments/visible/{slug}`, pages | [P] the slug resolves an investment without city/developer. Older slugs without a city suffix (`smolna`), newer with a suffix (`mokotow-sportowy-13-warszawa`) [P] |
 | Investment (num) | `invest_id` | `/api/investments/{id}/sale-events` | [P] |
-| Sale (oferta) | `sale_id` (int) | `/api/sale-events?saleId=`, `fetchBatchPriceChartData` | [P] |
-| Sale → strona | `raport-mieszkania-{slugify(name)}` | URL raportu | [W] ryzyko kolizji |
-| InvestRcn (budynek) | `slug` i `invest_rcn_id` | slug: strony + `map/transactions/visible/{slug}`; id: `avg-price-trend/building/{id}`, `transaction-count?investRcnId=` | [P] oba potrzebne |
-| SaleRcn (lokal) | `sale_rcn_id` | `sale-events-rcn/batch?ids=` | [P] |
-| SaleEventRcn | `sale_event_rcn_id`; zewnętrznie `additionalData.transactionId` (`PL.PZGIK.…`) | — | [P] |
+| Sale (offer) | `sale_id` (int) | `/api/sale-events?saleId=`, `fetchBatchPriceChartData` | [P] |
+| Sale → page | `raport-mieszkania-{slugify(name)}` | report URL | [W] collision risk |
+| InvestRcn (building) | `slug` and `invest_rcn_id` | slug: pages + `map/transactions/visible/{slug}`; id: `avg-price-trend/building/{id}`, `transaction-count?investRcnId=` | [P] both needed |
+| SaleRcn (unit) | `sale_rcn_id` | `sale-events-rcn/batch?ids=` | [P] |
+| SaleEventRcn | `sale_event_rcn_id`; externally `additionalData.transactionId` (`PL.PZGIK.…`) | — | [P] |
 
-**Uwaga o nazwach**: w świecie RCN backend nazywa budynek „invest”, a lokal „sale”. W propsach stron budynku pole nazywa się nawet `invest_id`, choć zawiera `invest_rcn_id` [P]. Model domenowy powinien używać nazw `Building`, `Unit`, `Transaction`.
+**Note on naming**: in the RCN world the backend calls a building "invest" and a unit "sale". In the props of building pages the field is even named `invest_id`, though it holds `invest_rcn_id` [P]. The domain model should use the names `Building`, `Unit`, `Transaction`.
 
-## Słowniki wartości (zaobserwowane)
+## Value dictionaries (observed)
 
-| Pole | Wartości | Źródło |
+| Field | Values | Source |
 |---|---|---|
 | Investment/Sale `status` | `active`, `archived` | [P] |
-| `SaleEvent.event_type` | `OFFER_EVENT`, `ARCHIVED_EVENT`, `RESTORED_EVENT` | [P]. `OFFER_EVENT` = każdy wpis ceny ofertowej w historii (także zmiany ceny), nie tylko pierwsza cena [P 2026-10-10, `api.sale_events.price_history`]; osobnego typu dla zmiany ceny nie zaobserwowano |
-| `last_event_type` (lista ofert) | `PRICE_INCREASE`, `PRICE_DECREASE`, `NO_CHANGE`, `NEW_OFFER` (nowa oferta, `total_events: 1`) | [P]; `NEW_OFFER` [P 2026-10-10, `page.offers_list.sort_desc`] |
+| `SaleEvent.event_type` | `OFFER_EVENT`, `ARCHIVED_EVENT`, `RESTORED_EVENT` | [P]. `OFFER_EVENT` = every asking-price entry in the history (price changes too), not only the first price [P 2026-10-10, `api.sale_events.price_history`]; no separate type for a price change was observed |
+| `last_event_type` (offer list) | `PRICE_INCREASE`, `PRICE_DECREASE`, `NO_CHANGE`, `NEW_OFFER` (new offer, `total_events: 1`) | [P]; `NEW_OFFER` [P 2026-10-10, `page.offers_list.sort_desc`] |
 | `kind` (`location-search`) | `city`, `district`, `street` | [P 2026-10-10] |
-| Alfabet slugów (miasto, inwestycja, deweloper) | `[a-z0-9-]`: 166 z 168 slugów w próbkach; wyjątki tylko w mapie zgłoszeń (`Metro-Art`, `Forrest`, inny typ encji) | [W] |
-| `SaleEvent.source` | `ANNOUCMENT` (sic), `ANNOUCMENT_PR`, `""`; `event_data` może zawierać `{"source":"scraper_pr"}` | [P] |
-| filtr zmian ceny (URL) | `decrease`, `increase`, `no_change` | [P z kodu] |
-| `classification` (RCN) | `transakcja`, `udzial`, `anomalia_down`, `anomalia_up`, `hurt`, `rzadowa`, `egzekucja`, `bonifikata` | [P] (Warszawa, Sopot) |
-| `filterClassification` (URL) | brak (= `transakcja`), `anomalie`, `wszystkie` | [P z kodu] |
+| Slug alphabet (city, investment, developer) | `[a-z0-9-]`: 166 of 168 slugs in the samples; exceptions only in the reports map (`Metro-Art`, `Forrest`, a different entity type) | [W] |
+| `SaleEvent.source` | `ANNOUCMENT` (sic), `ANNOUCMENT_PR`, `""`; `event_data` may contain `{"source":"scraper_pr"}` | [P] |
+| price-change filter (URL) | `decrease`, `increase`, `no_change` | [P z kodu] |
+| `classification` (RCN) | `transakcja`, `udzial`, `anomalia_down`, `anomalia_up`, `hurt`, `rzadowa`, `egzekucja`, `bonifikata` | [P] (Warsaw, Sopot) |
+| `filterClassification` (URL) | none (= `transakcja`), `anomalie`, `wszystkie` | [P z kodu] |
 | `marketType` | `pierwotny`, `wtorny` | [P] |
-| `buyerType` / `sellerType` | `osobaFizyczna`, `osobaPrawna` | [P]; inne [H] |
-| `transactionType` | `wolnyRynek` | [P]; inne [H] |
-| `type` (RCN) | `mieszkalna` (lokal), `mieszkalny` (budynek/dom) | [P] |
-| `kind` (adresy) | `flat`, `house` | [P] |
-| `is_flipped` | bool, oznacza odsprzedaż w krótkim czasie [H] | [P] |
-| `participation` | ułamek udziału, np. `1/1` | [P] |
-| `radiusLevel` (wycena) | `sasiedztwo` | [P]; inne [H] |
+| `buyerType` / `sellerType` | `osobaFizyczna`, `osobaPrawna` | [P]; others [H] |
+| `transactionType` | `wolnyRynek` | [P]; others [H] |
+| `type` (RCN) | `mieszkalna` (unit), `mieszkalny` (building/house) | [P] |
+| `kind` (addresses) | `flat`, `house` | [P] |
+| `is_flipped` | bool, marks a resale within a short time [H] | [P] |
+| `participation` | share fraction, e.g. `1/1` | [P] |
+| `radiusLevel` (valuation) | `sasiedztwo` | [P]; others [H] |
 
-## Normalizacja potrzebna w warstwie DTO → domena [P]
+## Normalization needed in the DTO → domain layer [P]
 
-- Kwoty/metraże: `number` albo `string` (`"amount": "994012"`, `"size": "55.25"`), zależnie od endpointu.
-- Współrzędne: `number` albo `string`.
-- Daty: `YYYY-MM-DD`, ISO `…T00:00:00.000Z`, `YYYY-MM`, `YYYY-Qn`, epoch ms jako string (`announcement-stats`).
-- Pola `avg_*` mogą zawierać medianę (`city-transaction-stats`) [H].
-- Puste wartości: `""` zamiast `null` (`street`, `district`, `source`, `event_data`).
+- Amounts/areas: `number` or `string` (`"amount": "994012"`, `"size": "55.25"`), depending on the endpoint.
+- Coordinates: `number` or `string`.
+- Dates: `YYYY-MM-DD`, ISO `…T00:00:00.000Z`, `YYYY-MM`, `YYYY-Qn`, epoch ms as a string (`announcement-stats`).
+- `avg_*` fields may contain a median (`city-transaction-stats`) [H].
+- Empty values: `""` instead of `null` (`street`, `district`, `source`, `event_data`).

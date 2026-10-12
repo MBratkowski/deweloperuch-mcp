@@ -1,58 +1,59 @@
 # `deweloperuch stop status`
-Pokazuje blokadę STOP wspólną dla wszystkich procesów (CLI, serwer MCP, `recon/probe.py`, `recon/scan_bundles.py`): od kiedy trwa, kto ją zapisał i kiedy wygasa. Działa offline, odpowiada od razu (nie czeka na zamek limitera) i niczego nie tworzy ani nie zmienia. Zasady STOP: [docs/cli/README.md](../README.md#stop).
+Shows the STOP lock shared by all processes (CLI, MCP server, `recon/probe.py`, `recon/scan_bundles.py`): since when it has lasted, who wrote it and when it expires. Works offline, answers immediately (does not wait for the limiter lock) and creates or changes nothing. STOP rules: [docs/cli/README.md](../README.md#stop).
 
-## Użycie
+## Usage
 ```
 Usage: deweloperuch stop status [OPTIONS]
 ```
 
-Opis z `--help`: „Pokaż blokadę STOP; kod 3, gdy wstrzymuje zapytania (także wygasająca), 0, gdy nie.”
+`--help` description: „Pokaż blokadę STOP; kod 3, gdy wstrzymuje zapytania (także wygasająca), 0, gdy nie.” (code 3 when it halts requests, also an expiring one, 0 when it does not)
 
-## Opcje
-| Flaga | Typ | Domyślna | Opis |
+## Options
+| Flag | Type | Default | Description |
 |---|---|---|---|
-| `--json` | flaga | wyłączona | Wypisuje stan blokady jako JSON zamiast tekstu. |
+| `--json` | flag | off | Print the lock state as JSON instead of text. Help text: „Wypisz stan blokady jako JSON.” |
+| `--help` | flag | | Show the help. |
 
-## Wyjście
-Tekst, linie po kolei:
+## Output
+Text, lines in order:
 
-- `STOP aktywny: <etykieta>.`, np. `HTTP 403 (odmowa dostępu)`, `HTTP 429 (limit zapytań)` albo `challenge Cloudflare (captcha/WAF)`;
-- `Od: <czas lokalny z offsetem> · źródło: <pakiet|probe|scan_bundles> (PID n)`;
-- `Wygasa: nie, trwa do zdjęcia.` albo (tylko 429) `Wygasa: <czas> (za N s).`;
-- `Blokadę zdejmuje użytkownik po sprawdzeniu przyczyny: deweloperuch stop clear` (tylko przy aktywnej blokadzie);
-- `Plik: <ścieżka do stop.json>`.
+- `STOP aktywny: <label>.`, e.g. `HTTP 403 (odmowa dostępu)`, `HTTP 429 (limit zapytań)` or `challenge Cloudflare (captcha/WAF)`;
+- `Od: <local time with offset> · źródło: <pakiet|probe|scan_bundles> (PID n)`;
+- `Wygasa: nie, trwa do zdjęcia.` or (429 only) `Wygasa: <time> (za N s).`;
+- `Blokadę zdejmuje użytkownik po sprawdzeniu przyczyny: deweloperuch stop clear` (only with an active lock);
+- `Plik: <path to stop.json>`.
 
-Pozostałe warianty:
+Other variants:
 
-- bez zapisu: `Brak STOP: zapytania do deweloperuch.pl nie są wstrzymane.` i `Plik: …`;
-- wygasły 429: `STOP wygasł <czas>: HTTP 429 (limit zapytań).`, linia `Od: …`, `Zapytania do deweloperuch.pl nie są wstrzymane.`, `Plik: …`;
-- nieczytelny zapis: `STOP aktywny bezterminowo: zapis jest nieczytelny.`, `Problem: <opis>` (bez treści pliku, najwyżej 200 znaków), linia o zdejmowaniu, `Plik: …`.
+- no record: `Brak STOP: zapytania do deweloperuch.pl nie są wstrzymane.` and `Plik: …`;
+- an expired 429: `STOP wygasł <time>: HTTP 429 (limit zapytań).`, the `Od: …` line, `Zapytania do deweloperuch.pl nie są wstrzymane.`, `Plik: …`;
+- an unreadable record: `STOP aktywny bezterminowo: zapis jest nieczytelny.`, `Problem: <description>` (without the file content, at most 200 characters), the line about clearing, `Plik: …`.
 
 `--json`:
 
-| Pole | Opis |
+| Field | Description |
 |---|---|
-| `active` | `true`, gdy blokada wstrzymuje zapytania (także nieczytelny zapis). |
-| `seconds_left` | Pozostały czas 429 w sekundach; `null` dla blokady bezterminowej lub gdy brak zapisu. |
-| `path` | Ścieżka `stop.json`. |
-| `record` | `{since, status, reason, until, source, pid}` (czasy ISO 8601 UTC; `until` to `null` poza 429) albo `null`. |
-| `unreadable` | Opis problemu przy nieczytelnym zapisie albo `null`. |
+| `active` | `true` when the lock halts requests (also an unreadable record). |
+| `seconds_left` | The remaining 429 time in seconds; `null` for an indefinite lock or when there is no record. |
+| `path` | The path of `stop.json`. |
+| `record` | `{since, status, reason, until, source, pid}` (ISO 8601 UTC times; `until` is `null` except for 429) or `null`. |
+| `unreadable` | A description of the problem for an unreadable record, or `null`. |
 
-## Kody wyjścia
-| Kod | Znaczenie |
+## Exit codes
+| Code | Meaning |
 |---|---|
-| 0 | Brak STOP albo zapis wygasły (zapytania nie są wstrzymane). |
-| 3 | STOP aktywny: także wygasający 429 i nieczytelny zapis (bezterminowy). |
+| 0 | No STOP, or the record has expired (requests are not halted). |
+| 3 | STOP active: also an expiring 429 and an unreadable record (indefinite). |
 
-Kodu 1 nie ma: nieczytelny lub niedostępny zapis to kod 3.
+There is no code 1: an unreadable or inaccessible record is code 3.
 
-## Przykłady
+## Examples
 ```
 uv run deweloperuch stop status
 uv run deweloperuch stop status --json
 ```
 
-Wynik przy aktywnej blokadzie bezterminowej (z testów `tests/test_cli.py`, kod 3):
+Output with an active indefinite lock (from the tests `tests/test_cli.py`, code 3):
 
 ```
 STOP aktywny: HTTP 403 (odmowa dostępu).
@@ -62,7 +63,7 @@ Blokadę zdejmuje użytkownik po sprawdzeniu przyczyny: deweloperuch stop clear
 Plik: <ścieżka>/deweloperuch-mcp/stop.json
 ```
 
-Wynik `--json` bez STOP (kod 0):
+`--json` output without STOP (code 0):
 
 ```json
 {
@@ -74,4 +75,4 @@ Wynik `--json` bez STOP (kod 0):
 }
 ```
 
-_Źródło: `src/deweloperuch_mcp/cli.py` (`stop_status`, `format_stop_status`), `src/deweloperuch_mcp/throttle.py`, `uv run deweloperuch stop status --help`, `tests/test_cli.py`_
+_Source: `src/deweloperuch_mcp/cli.py` (`stop_status`, `format_stop_status`), `src/deweloperuch_mcp/throttle.py`, `uv run deweloperuch stop status --help`, `tests/test_cli.py`_

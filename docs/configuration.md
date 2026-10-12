@@ -1,141 +1,141 @@
-# Konfiguracja
+# Configuration
 
-Stan po S1b. Pakiet ma wewnętrzny klient HTTP z cache w pamięci oraz dwa punkty wejścia: CLI [`deweloperuch`](cli/README.md) i serwer MCP [`deweloperuch-mcp`](mcp/README.md). Żaden z nich nie ma własnych zmiennych środowiskowych ani plików konfiguracyjnych (wartości poniżej są stałymi w kodzie).
+State after S1b. The package has an internal HTTP client with an in-memory cache and two entry points: the [`deweloperuch`](cli/README.md) CLI and the [`deweloperuch-mcp`](mcp/README.md) MCP server. Neither has its own environment variables or configuration files (the values below are constants in the code).
 
-## Zmienne środowiskowe
+## Environment variables
 
-| Nazwa | Typ | Domyślna | Opis |
+| Name | Type | Default | Description |
 |---|---|---|---|
-| `XDG_CACHE_HOME` | ścieżka bezwzględna | `~/.cache` | Standardowa zmienna XDG. Katalog zamka limitera i zapisu STOP to `$XDG_CACHE_HOME/deweloperuch-mcp`. Wartość pusta lub względna jest ignorowana (użyty zostaje `~/.cache`). Procesy z różnym `XDG_CACHE_HOME` nie widzą nawzajem swojego STOP ani zamka. |
+| `XDG_CACHE_HOME` | absolute path | `~/.cache` | The standard XDG variable. The directory of the limiter lock and the STOP record is `$XDG_CACHE_HOME/deweloperuch-mcp`. An empty or relative value is ignored (`~/.cache` is used). Processes with different `XDG_CACHE_HOME` do not see each other's STOP or lock. |
 
-Żadnych innych zmiennych środowiskowych kod nie czyta.
+The code reads no other environment variables.
 
-## Pliki
+## Files
 
-| Ścieżka | Opis |
+| Path | Description |
 |---|---|
-| `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/throttle.lock` | Zamek (`flock`) i stan wspólnego limitera zapytań. Tworzony automatycznie (katalog, plik z uprawnieniami `0600`). Wewnętrzny protokół między procesami: nie edytuj. |
-| `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/stop.json` | Zapis STOP wspólny dla wszystkich procesów (zob. [STOP](#stop-blokada-między-procesami)). Powstaje po 401/403/429/challenge; zdejmuje go użytkownik przez `deweloperuch stop clear`. Nie edytuj ręcznie. |
-| `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/chunks/` | Cache chunków JS skanera `recon/scan_bundles.py` (ścieżka po `/_next/static/chunks/`). Pliki `0600`, zapis atomowy, tylko przy pełnym 200 z niepustym ciałem. Nazwy z hashem są niezmienne, więc taki chunk nie jest pobierany ponownie; pusty plik jest pobierany ponownie, a chunki bez hasha w nazwie przy każdym skanie. Można go usunąć bez skutków ubocznych (kolejny skan pobierze chunki od nowa). |
+| `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/throttle.lock` | The lock (`flock`) and state of the shared request limiter. Created automatically (directory, file with `0600` permissions). An internal protocol between processes: do not edit. |
+| `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/stop.json` | The STOP record shared by all processes (see [STOP](#stop-shared-lock-between-processes)). Created after 401/403/429/challenge; cleared by the user with `deweloperuch stop clear`. Do not edit by hand. |
+| `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/chunks/` | The JS chunk cache of the `recon/scan_bundles.py` scanner (the path after `/_next/static/chunks/`). `0600` files, atomic write, only for a complete 200 with a non-empty body. Names with a hash are immutable, so such a chunk is not fetched again; an empty file is fetched again, and chunks without a hash in the name on every scan. It can be deleted with no side effects (the next scan fetches the chunks anew). |
 
-## Limiter zapytań
+## Request limiter
 
-Wszystkie procesy na jednej maszynie (skrypty `recon/` i klient pakietu) przechodzą przez ten sam zamek, więc razem trzymają politykę D2 ([decisions.md](decisions.md)).
+All processes on one machine (the `recon/` scripts and the package client) go through the same lock, so together they keep the D2 policy ([decisions.md](decisions.md)).
 
-| Parametr | Wartość | Opis |
+| Parameter | Value | Description |
 |---|---|---|
-| Odstęp między zapytaniami | 1 s (minimum) | Liczony od końca poprzedniego zapytania. Wolno go tylko wydłużyć. |
-| Współbieżność | 1 zapytanie naraz | Między procesami i wątkami. |
-| Maks. oczekiwanie (`max_wait`) | 60 s | Dłuższa wymagana przerwa kończy się błędem zamiast uśpienia. Nie obejmuje czekania na zamek, gdy trwa cudze zapytanie (ogranicza je timeout zapytania). |
-| Maks. przerwa z `Retry-After` | 3600 s | Dłuższa wartość jest zapisana jako 3600 s i zgłaszana jako błąd. |
+| Interval between requests | 1 s (minimum) | Counted from the end of the previous request. It may only be lengthened. |
+| Concurrency | 1 request at a time | Across processes and threads. |
+| Max wait (`max_wait`) | 60 s | A longer required pause ends with an error instead of sleeping. It does not cover waiting for the lock while another process's request is running (that is bounded by the request timeout). |
+| Max pause from `Retry-After` | 3600 s | A longer value is recorded as 3600 s and reported as an error. |
 
-Zachowanie z punktu widzenia użytkownika:
+Behavior from the user's point of view:
 
-- Proces zabity w trakcie zapytania nie blokuje zamka na stałe. Następny proces odczeka jednak standardowy odstęp.
-- Po błędzie oczekiwania (`WaitTooLongError`, komunikat „Następne zapytanie do deweloperuch.pl wolno wysłać dopiero za N s…”) odczekaj podany czas i ponów. W ostateczności (człowiek) usuń sam plik `throttle.lock`, ale tylko gdy na pewno żaden proces nie korzysta z serwisu i minął czas z `Retry-After`; zapisu STOP w ten sposób nie zdejmuj (użyj `stop clear`).
-- `Retry-After` dłuższe niż 1 h jest przycinane do 1 h i zgłaszane jako błąd, a następne zapytanie czeka tę godzinę.
-- Obsługiwane systemy: Linux i macOS. Na Windows limiter zgłasza czytelny błąd (brak `fcntl.flock`).
+- A process killed during a request does not hold the lock forever. The next process will still wait the standard interval.
+- After a wait error (`WaitTooLongError`, message „Następne zapytanie do deweloperuch.pl wolno wysłać dopiero za N s…”) wait the stated time and retry. As a last resort (a human) delete the `throttle.lock` file itself, but only when no process is using the service for certain and the `Retry-After` time has passed; do not clear a STOP record this way (use `stop clear`).
+- A `Retry-After` longer than 1 h is clipped to 1 h and reported as an error, and the next request waits that hour.
+- Supported systems: Linux and macOS. On Windows the limiter reports a readable error (no `fcntl.flock`).
 
-## STOP: blokada między procesami
+## STOP: shared lock between processes
 
-Po 401, 403, 429 albo challenge Cloudflare proces zapisuje STOP w `stop.json` obok `throttle.lock`. Dopóki zapis jest aktywny, żaden proces (CLI, serwer MCP, `recon/probe.py`, `recon/scan_bundles.py`) nie wysyła zapytań: CLI, probe i skaner kończą się kodem 3, serwer MCP zwraca `isError` z `STOP:`. Pakiet zapisuje STOP zaraz po nagłówkach odpowiedzi, recon po przeczytaniu ciała (znane ograniczenie: przerwanie w trakcie czytania ciała 401/403/429 nie zostawi zapisu).
+After 401, 403, 429 or a Cloudflare challenge a process writes STOP to `stop.json` next to `throttle.lock`. While the record is active, no process (CLI, MCP server, `recon/probe.py`, `recon/scan_bundles.py`) sends requests: the CLI, probe and the scanner end with exit code 3, and the MCP server returns `isError` with `STOP:`. The package writes STOP right after the response headers, recon after reading the body (a known limitation: an interruption while reading the body of a 401/403/429 will not leave a record).
 
-| Właściwość | Wartość |
+| Property | Value |
 |---|---|
-| Lokalizacja | `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/stop.json` |
-| Format | JSON, `"format": 1`: `{"format": 1, "since": ISO-UTC, "status": 401\|403\|429\|"challenge", "reason": tekst, "until": ISO-UTC\|null, "source": "pakiet"\|"probe"\|"scan_bundles", "pid": liczba}` |
-| Zawartość | Tylko status i kanoniczny tekst powodu (`reason`); bez celu, URL-a, nagłówków i treści odpowiedzi. |
-| Uprawnienia, zapis | `0600`; zapis atomowy (plik tymczasowy `.stop-*.tmp`, `fsync`, `os.replace`), wyłącznie pod zamkiem `throttle.lock`. |
-| Odczyt | `slot()` czyta zapis pod zamkiem, przed liczeniem czasu: przy aktywnym zapisie nic nie jest wysyłane, a stan czasowy limitera zostaje nietknięty. `stop status` czyta bez zamka. |
+| Location | `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/stop.json` |
+| Format | JSON, `"format": 1`: `{"format": 1, "since": ISO-UTC, "status": 401\|403\|429\|"challenge", "reason": text, "until": ISO-UTC\|null, "source": "pakiet"\|"probe"\|"scan_bundles", "pid": number}` |
+| Contents | Only the status and the canonical reason text (`reason`); no target, URL, headers or response content. |
+| Permissions, write | `0600`; atomic write (temporary file `.stop-*.tmp`, `fsync`, `os.replace`), only under the `throttle.lock` lock. |
+| Read | `slot()` reads the record under the lock, before counting time: with an active record nothing is sent, and the limiter's timing state stays untouched. `stop status` reads without the lock. |
 
-Reguły ważności:
+Validity rules:
 
-- **429** wygasa: `until` to czas zapisu plus pauza limitera (`max(Retry-After, 60 s)`, maks. 3600 s). 429 bez znanej pauzy jest bezterminowy.
-- **401, 403, challenge** nie wygasają (`until` to `null`; `until` w takim zapisie jest ignorowane). Challenge zawsze ma `status` `"challenge"`, także przy statusie 429 lub 403.
-- **Pierwszy aktywny zapis wygrywa**; późniejszy STOP może tylko wydłużyć koniec albo uczynić zapis bezterminowym. Wygasły zapis zastępuje nowy.
-- **Nieczytelny zapis to STOP bezterminowy** (fail-closed): zły JSON, brak klucza, `format` i `pid` inne niż liczba całkowita, czas bez strefy, `status` spoza 401/403/429/`challenge`, `reason` niezgodny ze statusem, `source` spoza `pakiet`/`probe`/`scan_bundles`, plik powyżej 64 KiB, symlink, FIFO, katalog, błąd odczytu. Treść takiego pliku nie trafia do żadnego komunikatu (`stop status` podaje tylko krótki opis problemu).
-- Pauza po 429 jest też w stanie czasowym `throttle.lock`. Zdjęcie zapisu jej nie skraca; po `stop clear` kod 5 (`LimiterWaitError`) może więc jeszcze chwilę oznaczać resztę pauzy.
+- **429** expires: `until` is the write time plus the limiter pause (`max(Retry-After, 60 s)`, at most 3600 s). A 429 without a known pause is indefinite.
+- **401, 403, challenge** do not expire (`until` is `null`; `until` in such a record is ignored). A challenge always has `status` `"challenge"`, also with a 429 or 403 status.
+- **The first active record wins**; a later STOP can only extend the end or make the record indefinite. An expired record is replaced by a new one.
+- **An unreadable record is an indefinite STOP** (fail-closed): bad JSON, a missing key, `format` and `pid` other than an integer, a time without a time zone, `status` outside 401/403/429/`challenge`, `reason` inconsistent with the status, `source` outside `pakiet`/`probe`/`scan_bundles`, a file over 64 KiB, a symlink, FIFO, directory, a read error. The content of such a file does not reach any message (`stop status` gives only a short description of the problem).
+- The pause after a 429 is also in the timing state of `throttle.lock`. Clearing the record does not shorten it; after `stop clear`, code 5 (`LimiterWaitError`) may therefore still mean the rest of the pause for a while.
 
-Zdejmowanie: wyłącznie przez użytkownika, `deweloperuch stop clear` ([opis](cli/commands/stop-clear.md)), po sprawdzeniu przyczyny (`deweloperuch stop status`, [opis](cli/commands/stop-status.md)). Komenda czeka na zamek najwyżej 300 s, usuwa też sieroty `.stop-*.tmp` i nie zdejmuje blokady, gdy nie dostanie zamka. Serwer MCP, który raz zwrócił STOP (własny albo z zapisu innego procesu, także wygasającego 429), pozostaje zatrzaśnięty do restartu.
+Clearing: only by the user, `deweloperuch stop clear` ([description](cli/commands/stop-clear.md)), after checking the cause (`deweloperuch stop status`, [description](cli/commands/stop-status.md)). The command waits for the lock at most 300 s, also removes orphaned `.stop-*.tmp` files and does not clear the lock when it cannot get the lock. An MCP server that returned STOP once (its own or from another process's record, also an expiring 429) stays latched until restart.
 
-**Nie usuwaj katalogu `~/.cache/deweloperuch-mcp` ani plików w nim.** Usunięcie katalogu zdejmuje STOP razem z pauzą 429 i zamkiem, czyli omija blokadę bez sprawdzenia przyczyny. Agentom blokuje to hook Bash; człowiek powinien użyć `stop clear`.
+**Do not delete the `~/.cache/deweloperuch-mcp` directory or the files in it.** Deleting the directory clears STOP together with the 429 pause and the lock, that is, it bypasses the block without checking the cause. The Bash hook blocks this for agents; a human should use `stop clear`.
 
-## Klient pakietu
+## Package client
 
-Klient (`deweloperuch_mcp.client.transport`) jest synchroniczny (`httpx`), z User-Agentem z `identity`. Każde żądanie razem z czytaniem ciała mieści się w jednym slocie wspólnego limitera.
+The client (`deweloperuch_mcp.client.transport`) is synchronous (`httpx`), with the User-Agent from `identity`. Every request, including reading the body, fits in one slot of the shared limiter.
 
-| Parametr | Wartość | Opis |
+| Parameter | Value | Description |
 |---|---|---|
-| `max_wait` limitera | 60 s | Jak wyżej; dłuższe oczekiwanie to `LimiterWaitError`. |
-| Timeout żądania | 30 s | |
-| Limit czytania ciała | 120 s | |
-| Limit ciała | 32 MiB | Większa odpowiedź to błąd. |
-| Przekierowania, ponowienia | brak | |
-| Pauza po 429 | co najmniej 60 s | `max(Retry-After, 60)`. |
-| Pauza po 502/503/504 | `Retry-After` albo 30 s | |
-| STOP (401/403/429/challenge) | blokada procesu do restartu i zapis dla innych procesów | Dotyczy wszystkich sesji w procesie (`ServiceBlockedError`, przy 429 `RateLimitedError`) i jest zapisany w `stop.json` ([STOP](#stop-blokada-między-procesami)); zapis innego procesu też blokuje zapytania. Odpowiedzi z cache nadal są zwracane. |
-| Cache | w pamięci procesu | Nie jest zapisywany na dysk. TTL = świeżość minus `Age`, najwyżej 300 s. Świeżość to `s-maxage`, a bez niego `max-age`, a bez obu 300 s. TTL ≤ 0 oznacza brak cache; `no-store` i `no-cache` (dowolna wielkość liter, także z wartością) też. `private` i `must-revalidate` nie zmieniają TTL. Błędy (także „nie ma takiej strony”) nie trafiają do cache. Wyliczony TTL jest logowany na DEBUG (`TTL cache …`, tylko `Cache-Control` i `Age`); żaden punkt wejścia nie włącza DEBUG domyślnie. LRU: 256 wpisów i 64 MiB. |
-| Sesja zamknięta | `SessionClosedError` | Użycie po wyjściu z `Session`. |
+| Limiter `max_wait` | 60 s | As above; a longer wait is a `LimiterWaitError`. |
+| Request timeout | 30 s | |
+| Body read limit | 120 s | |
+| Body size limit | 32 MiB | A larger response is an error. |
+| Redirects, retries | none | |
+| Pause after 429 | at least 60 s | `max(Retry-After, 60)`. |
+| Pause after 502/503/504 | `Retry-After` or 30 s | |
+| STOP (401/403/429/challenge) | process block until restart and a record for other processes | Applies to all sessions in the process (`ServiceBlockedError`, for a 429 `RateLimitedError`) and is written to `stop.json` ([STOP](#stop-shared-lock-between-processes)); another process's record also blocks requests. Responses from the cache are still returned. |
+| Cache | in process memory | Not written to disk. TTL = freshness minus `Age`, at most 300 s. Freshness is `s-maxage`, without it `max-age`, without both 300 s. TTL <= 0 means no cache; so do `no-store` and `no-cache` (any letter case, also with a value). `private` and `must-revalidate` do not change the TTL. Errors (also „no such page”) are not cached. The computed TTL is logged at DEBUG (`TTL cache …`, only `Cache-Control` and `Age`); no entry point enables DEBUG by default. LRU: 256 entries and 64 MiB. |
+| Closed session | `SessionClosedError` | Use after leaving a `Session`. |
 
-Cel żądania jest sprawdzany przed wysłaniem według allowlisty (`allowlist.py`) i reguły D5: ścieżki z `DUMP_PATHS` (`/api/map/powiat-sales/{id}`, strona `/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}` bez `/mapa`) nigdy nie są wywoływane. `valuation-pdf` i server actions są wykluczone. Naruszenie to `InvalidInputError` z prefiksem „Błąd programu”.
+The request target is checked before sending against the allowlist (`allowlist.py`) and the D5 rule: paths from `DUMP_PATHS` (`/api/map/powiat-sales/{id}`, the page `/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}` without `/mapa`) are never called. `valuation-pdf` and server actions are excluded. A violation is an `InvalidInputError` with the prefix „Błąd programu”.
 
-## Błędy pakietu
+## Package errors
 
-Wszystkie błędy zamierzone dziedziczą po `DeweloperuchError(message, detail=)` (`deweloperuch_mcp.errors`) i są wspólne dla klienta, usług, CLI i MCP.
+All intended errors inherit from `DeweloperuchError(message, detail=)` (`deweloperuch_mcp.errors`) and are shared by the client, services, CLI and MCP.
 
-| Element | Zachowanie |
+| Element | Behavior |
 |---|---|
-| `str(err)` | Komunikat domenowy po polsku: co się stało i co zrobić. Nigdy nie zawiera ścieżek serwisu, nazw propsów ani treści odpowiedzi. To jedyny tekst, który trafia do modelu (MCP) i po `Błąd:` na stderr (CLI). |
-| `err.detail` | Szczegóły techniczne: cel zapytania, status HTTP, fragment ciała odpowiedzi; `None`, gdy ich nie ma. Trafia do logu serwera MCP (stderr) i do linii `Szczegóły:` w CLI. |
-| Escapowanie | `detail` jest zawsze przepuszczany przez `errors.printable`: każdy znak niedrukowalny (sekwencje sterujące OSC/CSI, końce linii, sterowanie bidi) staje się `\xNN`, `\uNNNN` lub `\UNNNNNNNN`. Polskie litery zostają. |
-| Kontekst domenowy | Usługi dopisują przedrostek, np. `Inwestycja 'smolna': …`, `Wyszukiwanie ofert w 'warszawa': …`; `NotFoundError` ma komunikat domenowy (np. „Nie znaleziono inwestycji 'smolna'. …”). Typ błędu, `pause_seconds` i `detail` są zachowane. |
-| Dane niezgodne z kontraktem | `UnexpectedResponseError` z dopiskiem „Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.” |
-| Etykiety decyzji (np. „D5”) | Tylko w `detail`, nigdy w `str(err)`. |
+| `str(err)` | A domain-level message in Polish: what happened and what to do. It never contains service paths, prop names or response content. It is the only text that reaches the model (MCP) and follows `Błąd:` on stderr (CLI). |
+| `err.detail` | Technical details: the request target, HTTP status, a fragment of the response body; `None` when there are none. Goes to the MCP server log (stderr) and to the `Szczegóły:` line in the CLI. |
+| Escaping | `detail` always passes through `errors.printable`: every non-printable character (OSC/CSI control sequences, line endings, bidi controls) becomes `\xNN`, `\uNNNN` or `\UNNNNNNNN`. Polish letters stay. |
+| Domain context | Services prepend a prefix, e.g. `Inwestycja 'smolna': …`, `Wyszukiwanie ofert w 'warszawa': …`; `NotFoundError` has a domain message (e.g. „Nie znaleziono inwestycji 'smolna'. …”). The error type, `pause_seconds` and `detail` are preserved. |
+| Data not matching the contract | `UnexpectedResponseError` with the suffix „Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.” |
+| Decision labels (e.g. „D5”) | Only in `detail`, never in `str(err)`. |
 
-Mapowanie na kody wyjścia CLI: [docs/cli/README.md](cli/README.md#kody-wyjścia). Mapowanie na wynik MCP: [docs/mcp/README.md](mcp/README.md#błędy).
+Mapping to CLI exit codes: [docs/cli/README.md](cli/README.md#exit-codes). Mapping to the MCP result: [docs/mcp/README.md](mcp/README.md#errors).
 
-## Dla deweloperów
+## For developers
 
-`DEWELOPERUCH_UPDATE_SNAPSHOTS=1 uv run pytest tests/test_mcp_server.py` odświeża zrzut `tests/snapshots/mcp_tools.json` (pełny `tools/list`, `instructions`, `serverInfo.name`). To narzędzie testów, nie konfiguracja produktu; zwykły `uv run pytest` porównuje wynik ze zrzutem.
+`DEWELOPERUCH_UPDATE_SNAPSHOTS=1 uv run pytest tests/test_mcp_server.py` refreshes the snapshot `tests/snapshots/mcp_tools.json` (the full `tools/list`, `instructions`, `serverInfo.name`). It is a test tool, not product configuration; a regular `uv run pytest` compares the result with the snapshot.
 
-`DEWELOPERUCH_LIVE=1` (z markerem pytest `live`) włącza żywe testy e2e z `tests/e2e/`: `DEWELOPERUCH_LIVE=1 uv run pytest -m live tests/e2e -rs --maxfail=3`. Bez niej testy e2e są pomijane. To przełącznik tylko dla testów, nie konfiguracja produktu; serwer i CLI go nie czytają. Przebieg wymaga zgody (D9), więcej: [tests/e2e/README.md](../tests/e2e/README.md).
+`DEWELOPERUCH_LIVE=1` (with the pytest marker `live`) enables the live e2e tests from `tests/e2e/`: `DEWELOPERUCH_LIVE=1 uv run pytest -m live tests/e2e -rs --maxfail=3`. Without it the e2e tests are skipped. It is a switch for tests only, not product configuration; the server and CLI do not read it. A run needs consent (D9); more: [tests/e2e/README.md](../tests/e2e/README.md).
 
-## Skrypty recon
+## Recon scripts
 
-Skrypty `recon/` uruchamiane jako `python3 recon/<skrypt>.py` wymagają Pythona 3.11 lub nowszego. Systemowy `python3` z macOS to 3.9 i kończy się komunikatem o wymaganej wersji. Alternatywa: `uv run python recon/<skrypt>.py`.
+The `recon/` scripts run as `python3 recon/<script>.py` require Python 3.11 or newer. The system `python3` on macOS is 3.9 and ends with a message about the required version. Alternative: `uv run python recon/<script>.py`.
 
-`BASE_URL` i `USER_AGENT` (tymczasowy, `TODO(U1)`, do rozstrzygnięcia w U1/D9) są zdefiniowane w jednym miejscu: `src/deweloperuch_mcp/identity.py`. `recon/config.py` je reeksportuje i udostępnia skryptom razem z tym samym limiterem co pakiet.
+`BASE_URL` and `USER_AGENT` (temporary, `TODO(U1)`, to be resolved in U1/D9) are defined in one place: `src/deweloperuch_mcp/identity.py`. `recon/config.py` re-exports them and gives them to the scripts together with the same limiter as the package.
 
-`recon/flight.py` i `recon/allowlist.py` reeksportują implementacje z pakietu (`deweloperuch_mcp.flight`, `deweloperuch_mcp.allowlist`). `recon/flight.py` uruchamiany jako CLI również wymaga Pythona 3.11+ (wcześniej działał na 3.9).
+`recon/flight.py` and `recon/allowlist.py` re-export the implementations from the package (`deweloperuch_mcp.flight`, `deweloperuch_mcp.allowlist`). `recon/flight.py` run as a CLI also requires Python 3.11+ (it used to work on 3.9).
 
 ### `recon/probe.py`
 
-Pojedyncze żądanie GET na uruchomienie (bez przekierowań i ponowień), w slocie tego samego zamka `throttle.lock` i z tym samym User-Agentem co reszta. Szczegóły flag i kodów wyjścia: `python3 recon/probe.py --help` oraz [README.md](../README.md).
+A single GET request per run (no redirects or retries), in a slot of the same `throttle.lock` lock and with the same User-Agent as everything else. Flag and exit code details: `python3 recon/probe.py --help` and [README.md](../README.md).
 
-| Parametr | Wartość | Opis |
+| Parameter | Value | Description |
 |---|---|---|
-| `--max-wait` | 60 s (domyślnie) | Skończona liczba sekund. Dłuższa wymagana przerwa kończy się kodem 5, bez wysłania zapytania. |
-| Pauza po 429 | co najmniej 60 s | `max(Retry-After, 60)`. |
-| Pauza po 502/503/504 | `Retry-After` albo 30 s | `Retry-After` > 3600 s jest przycinane do 3600 s. |
-| Limit odpowiedzi | 32 MiB | Większa odpowiedź kończy się kodem 4 (D5: recon nie służy do zrzutów). |
-| Limit czytania odpowiedzi | ok. 120 s | Najgorszy przypadek ok. 120 s + 2 × 30 s. Odpowiedź krótsza niż `Content-Length` to kod 4, bez zapisu próbki. |
-| `--save` | `docs/discovery/samples/` | Jedyny katalog zapisu; istniejący plik nie jest nadpisywany. |
+| `--max-wait` | 60 s (default) | A finite number of seconds. A longer required pause ends with code 5, without sending a request. |
+| Pause after 429 | at least 60 s | `max(Retry-After, 60)`. |
+| Pause after 502/503/504 | `Retry-After` or 30 s | A `Retry-After` > 3600 s is clipped to 3600 s. |
+| Response limit | 32 MiB | A larger response ends with code 4 (D5: recon is not for dumps). |
+| Response read limit | about 120 s | Worst case about 120 s + 2 × 30 s. A response shorter than `Content-Length` is code 4, with no sample written. |
+| `--save` | `docs/discovery/samples/` | The only write directory; an existing file is not overwritten. |
 
-Po STOP w odpowiedzi probe zapisuje `stop.json` (źródło `probe`) i pisze na stderr `Zapisano STOP: inne procesy też zostały wstrzymane.` Gdy zapis jest już aktywny (z dowolnego procesu), kończy się kodem 3 bez zapytania; błędy użycia (kod 2) są sprawdzane wcześniej. Linia STOP dla challenge na statusie spoza 401/403/429 brzmi `STOP: challenge Cloudflare (captcha/WAF)`, bez „HTTP 200”.
+After a STOP in a response, probe writes `stop.json` (source `probe`) and prints `Zapisano STOP: inne procesy też zostały wstrzymane.` to stderr. When a record is already active (from any process), it ends with code 3 without a request; usage errors (code 2) are checked earlier. The STOP line for a challenge on a status other than 401/403/429 reads `STOP: challenge Cloudflare (captcha/WAF)`, without „HTTP 200”.
 
-Probe nie czyta własnych zmiennych środowiskowych. Parser `Retry-After` (sekundy albo data HTTP) jest wspólny z pakietem.
+Probe reads no environment variables of its own. The `Retry-After` parser (seconds or an HTTP date) is shared with the package.
 
 ### `recon/scan_bundles.py`
 
-Skaner bundli JS (wykrywanie zmian po deployu, D7). Wszystkie żądania idą przez ten sam zamek `throttle.lock` i z tym samym User-Agentem. Flagi, kody wyjścia i format `--json`: `python3 recon/scan_bundles.py --help` oraz [README.md](../README.md).
+The JS bundle scanner (detecting changes after a deploy, D7). All requests go through the same `throttle.lock` lock and with the same User-Agent. Flags, exit codes and the `--json` format: `python3 recon/scan_bundles.py --help` and [README.md](../README.md).
 
-| Parametr | Wartość | Opis |
+| Parameter | Value | Description |
 |---|---|---|
-| `max_wait` | 60 s (stałe) | Bez flagi. Dłuższa wymagana przerwa kończy skan kodem 5, przed wysłaniem zapytania. |
-| Pauzy, limity odpowiedzi | jak w probe | Pauza po 429 co najmniej 60 s, po 502/503/504 `Retry-After` albo 30 s; limit odpowiedzi 32 MiB i czas czytania jak wyżej. |
-| Przekierowania, ponowienia | brak | Każdy błąd (także 3xx) kończy cały skan. |
-| `MAX_CHUNKS` | 400 | Twardy limit żądań chunków na skan (także gdy pliki cache są nieczytelne); przekroczenie to kod 6. |
-| Cache | `chunks/` | Zob. tabela „Pliki”. Skaner respektuje `XDG_CACHE_HOME`. |
-| STOP | `stop.json` | Jak w probe: po STOP zapis ze źródłem `scan_bundles`; przy aktywnym zapisie (z dowolnego procesu) skan kończy się kodem 3 przed zapytaniem. |
+| `max_wait` | 60 s (fixed) | No flag. A longer required pause ends the scan with code 5, before sending a request. |
+| Pauses, response limits | as in probe | Pause after 429 at least 60 s, after 502/503/504 `Retry-After` or 30 s; response limit 32 MiB and read time as above. |
+| Redirects, retries | none | Any error (also 3xx) ends the whole scan. |
+| `MAX_CHUNKS` | 400 | Hard limit of chunk requests per scan (also when cache files are unreadable); exceeding it is code 6. |
+| Cache | `chunks/` | See the "Files" table. The scanner respects `XDG_CACHE_HOME`. |
+| STOP | `stop.json` | As in probe: after STOP a record with source `scan_bundles`; with an active record (from any process) the scan ends with code 3 before a request. |
 
-_Źródło: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `src/deweloperuch_mcp/retry_after.py`, `src/deweloperuch_mcp/http_policy.py`, `recon/config.py`, `recon/http_common.py`, `recon/probe.py`, `recon/scan_bundles.py`, `recon/allowlist.py`, `recon/flight.py`, `src/deweloperuch_mcp/client/transport.py`, `src/deweloperuch_mcp/services.py`, `src/deweloperuch_mcp/cli.py`, `src/deweloperuch_mcp/mcp_server.py`, `src/deweloperuch_mcp/allowlist.py`, `src/deweloperuch_mcp/flight.py`, `src/deweloperuch_mcp/errors.py`_
+_Source: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `src/deweloperuch_mcp/retry_after.py`, `src/deweloperuch_mcp/http_policy.py`, `recon/config.py`, `recon/http_common.py`, `recon/probe.py`, `recon/scan_bundles.py`, `recon/allowlist.py`, `recon/flight.py`, `src/deweloperuch_mcp/client/transport.py`, `src/deweloperuch_mcp/services.py`, `src/deweloperuch_mcp/cli.py`, `src/deweloperuch_mcp/mcp_server.py`, `src/deweloperuch_mcp/allowlist.py`, `src/deweloperuch_mcp/flight.py`, `src/deweloperuch_mcp/errors.py`_

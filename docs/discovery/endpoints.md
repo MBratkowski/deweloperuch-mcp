@@ -1,206 +1,206 @@
-# Katalog endpointów JSON (`/api/*`) i server actions
+# Catalog of JSON endpoints (`/api/*`) and server actions
 
-Wszystkie endpointy: `GET`, same-origin `https://deweloperuch.pl`, bez sesji/cookies, odpowiedź `application/json`. Status [P] oznacza, że endpoint został wywołany i odpowiedź zapisano w `samples/api.<plik>.json`. Parametry oznaczone (UI) są wysyłane przez kod klienta; ich efekt nie zawsze był testowany osobno.
+All endpoints: `GET`, same-origin `https://deweloperuch.pl`, no session/cookies, `application/json` response. Status [P] means the endpoint was called and the response saved in `samples/api.<file>.json`. Parameters marked (UI) are sent by the client code; their effect was not always tested separately.
 
-Konwencje wartości:
-- `citySlug`: ASCII slug miasta (`warszawa`, `krakow`, `gdansk`, …); `polska` = cały kraj (tylko w routingu stron, nie w API)
-- kwoty w PLN, powierzchnie w m²
-- `variant=transactions` przełącza słowniki z ofert na transakcje RCN; `propertyType` dla transakcji: `flat` (domyślnie) | `house` | `both`
+Value conventions:
+- `citySlug`: ASCII city slug (`warszawa`, `krakow`, `gdansk`, …); `polska` = whole country (only in page routing, not in the API)
+- amounts in PLN, areas in m²
+- `variant=transactions` switches dictionaries from offers to RCN transactions; `propertyType` for transactions: `flat` (default) | `house` | `both`
 
 ---
 
-## 1. Lokalizacje i autocomplete
+## 1. Locations and autocomplete
 
 ### `GET /api/popular-search-items` [P]
-Startowe podpowiedzi wyszukiwarki.
-- Query: `variant` (`transactions`), `propertyType` (`flat`|`house`; tylko z `variant=transactions`)
+Starting suggestions of the search box.
+- Query: `variant` (`transactions`), `propertyType` (`flat`|`house`; only with `variant=transactions`)
 - Response: `{ cities: [{name, slug, woj, offerCount}], developers: [{name, slug, offerCount}], investments: [{name, slug, offerCount}] }`
-- Przy `variant=transactions` pole `offerCount` oznacza **liczbę transakcji**, a nie ofert [P]. Nazwa pola się nie zmienia.
-- Cache: `max-age=28800`. Źródło UI: wyszukiwarka w hero (chunk `1936`, `2438`).
+- With `variant=transactions` the `offerCount` field means the **number of transactions**, not offers [P]. The field name does not change.
+- Cache: `max-age=28800`. UI source: hero search box (chunks `1936`, `2438`).
 - Sample: `api.popular.json`, `api.popular_tx.json`
 
 ### `GET /api/cities?q=&limit=` [P]
-- Query: `q` (fragment nazwy), `limit` (UI: 8), `variant`, `propertyType`
-- Response: `{ cities: [nazwa], cityMappings: [{city, city_slug, offerCount}], hasMore, total, page }`
-- Zwraca też miejscowości z 0 ofert.
-- Paginacja [P 2026-10-10]: `page` działa. `q=krak&limit=2` → `hasMore: true, total: 4, page: 1` (Kraków, Krakowiany); `&page=2` → `hasMore: false, total: 4, page: 2` (Krakulice, Krakuszowice). Czyli `total` = liczba wszystkich pasujących miejscowości, `page` = numer zwróconej strony (od 1), `hasMore` = są kolejne strony. Obserwacja bez osobnej próbki (istniejąca `api.cities_q` ma `hasMore: false`).
-- Cache-Control: `max-age=28800` (bez `s-maxage`) [P 2026-10-10].
+- Query: `q` (name fragment), `limit` (UI: 8), `variant`, `propertyType`
+- Response: `{ cities: [name], cityMappings: [{city, city_slug, offerCount}], hasMore, total, page }`
+- Also returns localities with 0 offers.
+- Pagination [P 2026-10-10]: `page` works. `q=krak&limit=2` → `hasMore: true, total: 4, page: 1` (Kraków, Krakowiany); `&page=2` → `hasMore: false, total: 4, page: 2` (Krakulice, Krakuszowice). So `total` = number of all matching localities, `page` = number of the returned page (from 1), `hasMore` = there are further pages. Observation without a separate sample (the existing `api.cities_q` has `hasMore: false`).
+- Cache-Control: `max-age=28800` (no `s-maxage`) [P 2026-10-10].
 - Sample: `api.cities_q.json`
 
 ### `GET /api/city-lookup?city=<nazwa|slug>[&source=transactions]` [P]
-- Normalizuje nazwę lub slug miasta do `{city, city_slug}`.
+- Normalizes a city name or slug to `{city, city_slug}`.
 - Sample: `api.city_lookup.json`
 
 ### `GET /api/location-search?q=&limit=` [P]
 - Query: `q`, `limit` (UI: 6), `variant`, `propertyType`
 - Response: `{ suggestions: [{kind, city, citySlug, district, street?, count, lat, lng}] }`
-- `kind` ∈ {`city`, `district`, `street`} [P 2026-10-10, `api.location_search.kinds_limit20`]. Pozycje `city` mają tylko `kind, city, citySlug?, count, lat, lng` (bez `district`/`street`, `district` bywa pominięte też dla ulic spoza dzielnic).
-- `count`: dla dzielnicy to liczba aktywnych ofert: `count` Mokotowa = 1562 = `pagination.total` listy `filterDistrict=Mokotów` [P 2026-10-10]. Dla ulic i miast (i w trybie transakcji) nadal [W].
-- `limit` jest honorowany co najmniej do 20 (`q=mo&limit=20` → 20 wyników, mieszane rodzaje, kolejność nie wg `count`); górny pułap nieznany. Brak flagi „są kolejne”; pełna strona nie dowodzi, że jest więcej [W]. `q=a` (1 znak) → pusta lista [P 2026-10-10].
+- `kind` ∈ {`city`, `district`, `street`} [P 2026-10-10, `api.location_search.kinds_limit20`]. `city` entries have only `kind, city, citySlug?, count, lat, lng` (no `district`/`street`; `district` is sometimes omitted for streets outside districts as well).
+- `count`: for a district it is the number of active offers: `count` of Mokotów = 1562 = `pagination.total` of the `filterDistrict=Mokotów` list [P 2026-10-10]. For streets and cities (and in transaction mode) still [W].
+- `limit` is honored at least up to 20 (`q=mo&limit=20` → 20 results, mixed kinds, order not by `count`); upper cap unknown. No "more available" flag; a full page does not prove there is more [W]. `q=a` (1 character) → empty list [P 2026-10-10].
 - Cache-Control: `private, max-age=28800` [P 2026-10-10].
 - Sample: `api.location_search.json`, `api.location_search.kinds_limit20.json`
 
 ### `GET /api/city-districts?citySlug=` [P]
 - Query: `citySlug`, `variant`, `propertyType`
-- Response: `{ districts: [{name, count}] }`, posortowane malejąco po `count`
+- Response: `{ districts: [{name, count}] }`, sorted descending by `count`
 - Sample: `api.city_districts.json`
 
 ### `GET /api/investment-streets?q=&limit=&citySlug=` [P]
-- Ulice z inwestycjami (w trybie transakcji: z budynkami RCN [W]).
-- Query: `q` (≥2 znaki, inaczej bez filtra), `limit` (UI: 10), `citySlug`, `variant`, `propertyType`
+- Streets with investments (in transaction mode: with RCN buildings [W]).
+- Query: `q` (≥2 characters, otherwise no filter), `limit` (UI: 10), `citySlug`, `variant`, `propertyType`
 - Response: `{ results: [{name, fullName, citySym, cityName, citySlug, investmentCount}], cityCenter: {lat, lng} }`
-- Dopasowanie po podciągu (`q=pu` zwraca „Kacpury 11”) [P]
+- Substring matching (`q=pu` returns "Kacpury 11") [P]
 - Sample: `api.investment_streets.json`
 
 ### `GET /api/map/city-powiats/{citySlug}` [P]
-- Mapuje miasto na powiaty RCN: `{ powiatIds: [int], primaryPowiatId: int }` (Warszawa → 302, Sopot → 208)
+- Maps a city to RCN counties: `{ powiatIds: [int], primaryPowiatId: int }` (Warsaw → 302, Sopot → 208)
 - Cache 24 h. Sample: `api.city_powiats_waw.json`
 
 ### `GET /api/building-outline?lat=&lng=[&street=]` [P]
-- Obrys budynku: `{ polygon: GeoJSON Polygon }`. Źródło (OSM?) [H]. Cache 30 dni.
+- Building outline: `{ polygon: GeoJSON Polygon }`. Source (OSM?) [H]. Cache 30 days.
 - Sample: `api.building_outline.json`
 
 ---
 
-## 2. Oferty deweloperów (ceny ofertowe)
+## 2. Developer offers (asking prices)
 
 ### `GET /api/developers?q=&limit=` [P]
-- Query: `q`, `limit` (UI: 5) oraz kontekst wyszukiwania: `city`, `minPrice`, `maxPrice`, `minSize`, `maxSize` (UI)
+- Query: `q`, `limit` (UI: 5) and search context: `city`, `minPrice`, `maxPrice`, `minSize`, `maxSize` (UI)
 - Response: `{ developers: [{name, slug, offerCount}], hasMore, total, page }`
 - Sample: `api.developers_q.json`
 
 ### `GET /api/investments?q=&limit=` [P]
-- Jak wyżej. Response: `{ investments: [{name, slug, offerCount}], hasMore, total, page }`
+- As above. Response: `{ investments: [{name, slug, offerCount}], hasMore, total, page }`
 - Sample: `api.investments_q.json`
 
 ### `GET /api/offers/city-sales/{citySlug}` [P]
-- **Zrzut wszystkich aktywnych ofert w mieście** w kompaktowej postaci.
+- **Dump of all active offers in a city** in compact form.
 - Response: `{ citySlug, investments: [{id, slug, developerSlug, status}], sales: [{id, investId, amount, size, priceSqm, status}] }`
-- Warszawa: 278 inwestycji, 13 351 ofert, 1,3 MB [P]. Wszystkie `status: active` [P].
-- Archiwalne nie występują: `?includeArchived=true` jest ignorowane (Sopot: 6 ofert, wszystkie `active`, identycznie z parametrem i bez) [P 2026-10-10, bez osobnej próbki]. `polska` **nie działa**: `HTTP 400 {"error":"Invalid citySlug"}` (obalono: hipoteza, że działa; `polska` jest tylko w routingu stron) [P 2026-10-10].
-- Cache-Control: `public, max-age=28800, s-maxage=300, stale-while-revalidate=3600` [P 2026-10-10]. Używany w layoutach list ofert (`ceny-ofertowe/[city]/mieszkania|inwestycje`).
+- Warsaw: 278 investments, 13,351 offers, 1.3 MB [P]. All `status: active` [P].
+- Archived ones do not appear: `?includeArchived=true` is ignored (Sopot: 6 offers, all `active`, identical with and without the parameter) [P 2026-10-10, no separate sample]. `polska` **does not work**: `HTTP 400 {"error":"Invalid citySlug"}` (refuted: hypothesis that it works; `polska` exists only in page routing) [P 2026-10-10].
+- Cache-Control: `public, max-age=28800, s-maxage=300, stale-while-revalidate=3600` [P 2026-10-10]. Used in the layouts of offer lists (`ceny-ofertowe/[city]/mieszkania|inwestycje`).
 - Sample: `api.city_sales_sopot.json`
 
 ### `GET /api/map/investments?…` [P]
-- Inwestycje z agregatami do mapy.
-- Query (UI): `citySlug`, `developer` (slug), `project` (slug inwestycji), `price`, `size`, `pricePerM2` (zakresy `min-max`), `rooms`, `floor`, `priceChange` (`decrease,increase,no_change`), `includeArchived=true`
+- Investments with aggregates for the map.
+- Query (UI): `citySlug`, `developer` (slug), `project` (investment slug), `price`, `size`, `pricePerM2` (`min-max` ranges), `rooms`, `floor`, `priceChange` (`decrease,increase,no_change`), `includeArchived=true`
 - Response: `[{invest_id, latitude, longitude, name, slug, city, city_slug, street, district, status, avg_amount, avg_size, avg_price_sqm, avg_*_archived, avg_*_total, active_offers, total_offers, developer: {developer_id, name, slug}}]`
 - Sample: `api.map_investments_sopot.json`
 
 ### `GET /api/map/investments/visible/{investmentSlug}` [P]
-- **Pełna inwestycja z wszystkimi ofertami** (aktywne i archiwalne).
-- Response: inwestycja (`invest_id, developer_id, city, city_slug, street, latitude, longitude, year_construction, name, slug, status, currency, avg_*`, `active_offers, total_offers`) + `developer {developer_id, name, description, website, slug}` + `sale: [{sale_id, invest_id, name, type, status, amount, currency, size, start_amount_difference, start_amount_difference_percent, last_event_date, last_change_event_date, creation_date}]`
-- Kwoty w `sale[]` są stringami, a lat/lng stringami [P].
-- Identyfikacja wyłącznie po slugu, bez miasta [P].
-- Nieznany slug: `HTTP 404 {"error":"Investment not found"}` [P 2026-10-10, bez próbki, bo nie-2xx]. Cache-Control `max-age=28800` także dla 404.
+- **Full investment with all offers** (active and archived).
+- Response: investment (`invest_id, developer_id, city, city_slug, street, latitude, longitude, year_construction, name, slug, status, currency, avg_*`, `active_offers, total_offers`) + `developer {developer_id, name, description, website, slug}` + `sale: [{sale_id, invest_id, name, type, status, amount, currency, size, start_amount_difference, start_amount_difference_percent, last_event_date, last_change_event_date, creation_date}]`
+- Amounts in `sale[]` are strings, and lat/lng are strings [P].
+- Identified by slug alone, no city [P].
+- Unknown slug: `HTTP 404 {"error":"Investment not found"}` [P 2026-10-10, no sample because non-2xx]. Cache-Control `max-age=28800` for the 404 as well.
 - Sample: `api.map_inv_visible.json`
 
 ### `GET /api/investments/{investId}/sale-events` [P]
-- Historia zdarzeń cenowych **wszystkich ofert inwestycji**: `{ "<sale_id>": [{sale_event_id, event_type, event_data, amount, event_date, source}] }`
-- Wolny przy cache MISS (~3 s). Sample: `api.inv_sale_events.json`
+- Price event history of **all offers of an investment**: `{ "<sale_id>": [{sale_event_id, event_type, event_data, amount, event_date, source}] }`
+- Slow on cache MISS (~3 s). Sample: `api.inv_sale_events.json`
 
 ### `GET /api/sale-events?saleId=` [P]
-- Historia jednej oferty: `{ success, saleData: {name, amount, size, currency}, events: [...] }`
-- Nieznany `saleId` (np. 999999999): `HTTP 200 {"success": true, "saleData": null, "events": []}` [P 2026-10-10, bez próbki]. `success: false` nie zaobserwowano (żaden z użytych wejść go nie wywołał); znaczenie nadal [H]. Brak oferty rozpoznaje się po `saleData: null`.
-- Zdarzenia rosnąco po `event_date`. `OFFER_EVENT` to **każdy wpis ceny ofertowej**, nie tylko pierwsza cena: oferta 4397 ma 12 zdarzeń `OFFER_EVENT` z 12 różnymi/nawracającymi kwotami (1 000 000 → 994 006 → 927 706 → … → 994 012), liczba = `total_events` z listy; pierwsze ma `source: ANNOUCMENT`, kolejne `ANNOUCMENT_PR` [P 2026-10-10, `api.sale_events.price_history`]. Zmiana ceny to nowy `OFFER_EVENT` z nową kwotą.
-- Cache-Control: `max-age=28800` (bez `s-maxage`) [P 2026-10-10].
+- History of a single offer: `{ success, saleData: {name, amount, size, currency}, events: [...] }`
+- Unknown `saleId` (e.g. 999999999): `HTTP 200 {"success": true, "saleData": null, "events": []}` [P 2026-10-10, no sample]. `success: false` was not observed (none of the inputs used triggered it); its meaning is still [H]. A missing offer is recognized by `saleData: null`.
+- Events ascending by `event_date`. `OFFER_EVENT` is **every asking-price entry**, not only the first price: offer 4397 has 12 `OFFER_EVENT` events with 12 different/recurring amounts (1,000,000 → 994,006 → 927,706 → … → 994,012), the count = `total_events` from the list; the first has `source: ANNOUCMENT`, the following `ANNOUCMENT_PR` [P 2026-10-10, `api.sale_events.price_history`]. A price change is a new `OFFER_EVENT` with a new amount.
+- Cache-Control: `max-age=28800` (no `s-maxage`) [P 2026-10-10].
 - Sample: `api.sale_events.json`, `api.sale_events.price_history.json`
 
 ### `GET /api/offer-count?…` [P]
-- Liczba ofert spełniających filtry: `{ count }`
+- Number of offers matching the filters: `{ count }`
 - Query: `city`, `minSize`, `maxSize`, `minPrice`, `maxPrice`, `minPricePerM2`, `maxPricePerM2`, `developer`, `investment`, `includeArchived=true`, `priceChanges` (csv), `filterAnomalies=false`
-- `offer-count?city=warszawa` → 13 324, a `price-distribution.total` → 13 351. Różnica wynika prawdopodobnie z domyślnego odfiltrowania anomalii [H].
+- `offer-count?city=warszawa` → 13,324, while `price-distribution.total` → 13,351. The difference probably comes from anomalies being filtered out by default [H].
 - Sample: `api.offer_count.json`
 
 ### `GET /api/price-distribution?mode=amount|perM2&…` [P] / `GET /api/size-distribution?…` [P]
 - Histogram: `{ buckets, min, max, distribution: [int], total, mode?, aligned }`
-- Query: jak `offer-count` (bez `priceChanges`/`filterAnomalies`) + `mode`
-- Granice kubełków nie są zwracane. Trzeba je odtworzyć z `min`, `max`, `buckets`, `aligned` (logika w chunku `2438`, moduł `84462`). Ostatni kubełek to „i więcej” [H].
+- Query: as for `offer-count` (without `priceChanges`/`filterAnomalies`) + `mode`
+- Bucket boundaries are not returned. They have to be reconstructed from `min`, `max`, `buckets`, `aligned` (logic in chunk `2438`, module `84462`). The last bucket is "and more" [H].
 - Sample: `api.price_dist_amount.json`, `api.size_dist.json`
 
-### `GET /api/valuation-pdf?investSlug=&saleId=&city=` [kod, nie wywoływano]
-- Generuje PDF „opinia” dla oferty. Jawny rate limit: `429` + `Retry-After`. Ciężka operacja, poza MVP.
+### `GET /api/valuation-pdf?investSlug=&saleId=&city=` [code, not called]
+- Generates an "opinion" PDF for an offer. Explicit rate limit: `429` + `Retry-After`. Heavy operation, outside the MVP.
 
 ---
 
-## 3. Transakcje RCN (ceny transakcyjne)
+## 3. RCN transactions (transaction prices)
 
 ### `GET /api/transaction-count?…` [P]
-- `{ count }`. Query: `city`, `minSize`, `maxSize`, `minPrice`, `maxPrice`, `minPricePerM2`, `maxPricePerM2`, `rooms` (csv), `floors` (csv), `investRcnId`, `powiatRcnIds` (csv), `filterPolygon`, `classifications`, `filterFlipped=true`, `propertyType` (`house`|`both`; brak = mieszkania)
+- `{ count }`. Query: `city`, `minSize`, `maxSize`, `minPrice`, `maxPrice`, `minPricePerM2`, `maxPricePerM2`, `rooms` (csv), `floors` (csv), `investRcnId`, `powiatRcnIds` (csv), `filterPolygon`, `classifications`, `filterFlipped=true`, `propertyType` (`house`|`both`; none = flats)
 - Sample: `api.tx_count.json`
 
 ### `GET /api/transaction-price-distribution?mode=…` [P] / `GET /api/transaction-size-distribution?…` [P]
-- Histogramy jak dla ofert. Bywają wolne przy MISS (2–5 s).
+- Histograms as for offers. Can be slow on MISS (2–5 s).
 
 ### `GET /api/map/powiat-stats[?type=house|both]` [P]
-- Wszystkie powiaty (369) z agregatami za cały okres: `[{powiat_rcn_id, nazwa, transaction_count, avg_price_sqm, avg_size, avg_amount}]`
+- All counties (369) with aggregates for the whole period: `[{powiat_rcn_id, nazwa, transaction_count, avg_price_sqm, avg_size, avg_amount}]`
 - Sample: `api.powiat_stats.json`
 
 ### `GET /api/map/powiat-investments/{powiatId}[?type=house]` [P]
-- Budynki RCN w powiecie z agregatami: `{powiatId, powiatName, investments: [{id, lat, lng, name, slug, city, citySlug, street, district, avgAmount, avgSize, avgPriceSqm, transactions, lastEventDate}]}`
-- Sopot: 1 404 budynki, 419 KB.
+- RCN buildings in a county with aggregates: `{powiatId, powiatName, investments: [{id, lat, lng, name, slug, city, citySlug, street, district, avgAmount, avgSize, avgPriceSqm, transactions, lastEventDate}]}`
+- Sopot: 1,404 buildings, 419 KB.
 
 ### `GET /api/map/powiat-sales/{powiatId}[?type=house]` [P]
-- **Zrzut wszystkich transakcji w powiecie**: `{powiatId, powiatName, investments: [...], sales: [{id, investId, priceSqm, amount, size, rooms, floor, type, lastEventDate, isFlipped, classification}]}`
-- Sopot: 6 636 transakcji, 1,6 MB. Warszawa szacunkowo ~80 MB [W]. **Nie używać w MCP**.
+- **Dump of all transactions in a county**: `{powiatId, powiatName, investments: [...], sales: [{id, investId, priceSqm, amount, size, rooms, floor, type, lastEventDate, isFlipped, classification}]}`
+- Sopot: 6,636 transactions, 1.6 MB. Warsaw an estimated ~80 MB [W]. **Do not use in MCP**.
 
 ### `GET /api/map/transactions/visible/{investRcnSlug}[?type=house]` [P]
-- **Budynek RCN z pełną historią transakcji**: `{invest_rcn_id, name, city, city_slug, street, slug, latitude, longitude, avg_amount, avg_size, avg_price_sqm, transactions, source_rcn, sale: [{sale_rcn_id, name, amount, amount_sqm, floor, floor_number, rooms, rooms_number, type, currency, size, start_amount_difference(_percent), total_events, creation_date, last_event_date, is_flipped, last_transaction_classification, sale_event_rcn: [{sale_event_rcn_id, amount, amount_sqm, currency, buyerType, sellerType, classification, transactionType, marketType, participation, creation_date, additionalData: {surowy rekord RCN}}]}]}`
-- 189 KB dla budynku z 86 lokalami. Sample: `api.tx_visible.json`
+- **RCN building with full transaction history**: `{invest_rcn_id, name, city, city_slug, street, slug, latitude, longitude, avg_amount, avg_size, avg_price_sqm, transactions, source_rcn, sale: [{sale_rcn_id, name, amount, amount_sqm, floor, floor_number, rooms, rooms_number, type, currency, size, start_amount_difference(_percent), total_events, creation_date, last_event_date, is_flipped, last_transaction_classification, sale_event_rcn: [{sale_event_rcn_id, amount, amount_sqm, currency, buyerType, sellerType, classification, transactionType, marketType, participation, creation_date, additionalData: {raw RCN record}}]}]}`
+- 189 KB for a building with 86 units. Sample: `api.tx_visible.json`
 
 ### `GET /api/sale-events-rcn/batch?ids=<sale_rcn_id,…>` [P]
-- Historia cen lokali: `{ "<id>": [{amount, creation_date}] }`
+- Unit price history: `{ "<id>": [{amount, creation_date}] }`
 - Sample: `api.rcn_batch.json`
 
 ---
 
-## 4. Statystyki
+## 4. Statistics
 
 ### `GET /api/monthly-transaction-stats?propertyType=&citySlug=|powiatRcnId=|street=` [P]
-- Miesięczne agregaty transakcji: `{ scope: {label}, data: [{month, transaction_count, med_price_sqm, avg_price_sqm, med_size, avg_size, med_amount, avg_amount}] }`
+- Monthly transaction aggregates: `{ scope: {label}, data: [{month, transaction_count, med_price_sqm, avg_price_sqm, med_size, avg_size, med_amount, avg_amount}] }`
 - `propertyType`: `mieszkania` [P], `domy` [H]
-- Ostatnie miesiące mają mało transakcji (opóźnienie zasilania RCN): `2026-07` ma 2 transakcje [P]
+- The latest months have few transactions (RCN feed lag): `2026-07` has 2 transactions [P]
 - Sample: `api.monthly_tx.json`
 
 ### `GET /api/statystyki/powiat-price-trend?powiatId=` [P]
-- Kwartalnie: `[{quarter, med_price_sqm, trimmed_avg_price_sqm, avg_35_60_price_sqm, transaction_count}]`
+- Quarterly: `[{quarter, med_price_sqm, trimmed_avg_price_sqm, avg_35_60_price_sqm, transaction_count}]`
 - Sample: `api.powiat_trend_208.json`
 
 ### `GET /api/avg-price-trend/city/{citySlug}[?type=house[&metric=plot]]` [P]
-- Kwartalnie: `{ data: [{period, avgPriceSqm, count}], scope: "city", scopeName }`
+- Quarterly: `{ data: [{period, avgPriceSqm, count}], scope: "city", scopeName }`
 - Sample: `api.avg_trend_city.json`
 
 ### `GET /api/avg-price-trend/building/{investRcnId}[?type=house[&metric=plot]]` [P]
-- Trend dla sąsiedztwa budynku: `{ data: [...], radiusKm: 1 }`. Wymaga **numerycznego** `invest_rcn_id`; slug daje `400 {"error":"Valid investRcnId is required"}` [P].
+- Trend for the building's neighborhood: `{ data: [...], radiusKm: 1 }`. Requires a **numeric** `invest_rcn_id`; a slug gives `400 {"error":"Valid investRcnId is required"}` [P].
 - Sample: `api.avg_trend_building.json`
 
 ### `GET /api/city-transaction-stats` [P]
-- Ranking miast (2 448): `[{city, city_slug, transaction_count, avg_price_sqm, avg_size, avg_amount, transaction_count_change, price_sqm_change, avg_size_change, amount_change}]`
-- Okres agregacji i baza `*_change` są nieznane [H]. `avg_price_sqm`=16413 dla Warszawy jest prawie równe medianie 16414 z mapy statystyk, więc pole może mimo nazwy zawierać medianę [H].
+- City ranking (2,448): `[{city, city_slug, transaction_count, avg_price_sqm, avg_size, avg_amount, transaction_count_change, price_sqm_change, avg_size_change, amount_change}]`
+- The aggregation period and the base of `*_change` are unknown [H]. `avg_price_sqm`=16413 for Warsaw is nearly equal to the median 16414 from the statistics map, so the field may contain a median despite its name [H].
 - 548 KB, cache 24 h. Sample: `api.city_tx_stats.json`
 
 ### `GET /api/announcement-stats?region=&propertyType=` [P]
-- Dzienne serie z portali ogłoszeniowych: `{ blueRent, blueSell, greenRent, greenSell: [{date: "<epoch ms jako string>", value}] }`
-- `region`: slug miasta (np. `warszawa`), `top-6` [W z linków]. `polska` zwraca puste tablice [P].
-- `propertyType`: `mieszkania` [P], `domy`, `dzialki` [W, w UI mapowane na „działki”]
-- Znaczenie „blue/green” (dwa portale?) i `value` (liczba ogłoszeń? mediana ceny?) [H]
+- Daily series from listing portals: `{ blueRent, blueSell, greenRent, greenSell: [{date: "<epoch ms as string>", value}] }`
+- `region`: city slug (e.g. `warszawa`), `top-6` [W from links]. `polska` returns empty arrays [P].
+- `propertyType`: `mieszkania` [P], `domy`, `dzialki` [W, mapped to "plots" in the UI]
+- Meaning of "blue/green" (two portals?) and `value` (number of listings? median price?) [H]
 - Sample: `api.ann_waw.json`
 
 ---
 
-## 5. Wycena
+## 5. Valuation
 
 ### `GET /api/standalone-valuation?area=&lat=&lng=[&address=]` [P]
-- Wycena porównawcza na podstawie transakcji RCN w promieniu.
+- Comparative valuation based on RCN transactions within a radius.
 - Response: `{ estimatedValue, estimatedPricePerSqm, latitude, longitude, area, generatedAt, radiusKm, periodMonths, radiusLevel, areaElasticity, trendMonthlyPct, buildingTransactionCount, stats: {averagePricePerSqm, medianPricePerSqm, minPricePerSqm, maxPricePerSqm, count}, transactions: [{address, unitNumber, area, pricePerSqm, totalPrice, date, floor, distance, latitude, longitude, marketType, isSamePrimaryInvestment, saleRcnId, investRcnSlug, investRcnCitySlug, excluded}], buildings: [...], estimationContext: {pool, …}, radiusPool: [...], radiusCeilingM }`
-- 180 KB, głównie `radiusPool` (279 pozycji). Do MCP przekazujemy tylko wynik i top porównania.
-- `radiusLevel`: `sasiedztwo` [P]; inne poziomy [H]
-- Identyczny wynik daje server action `fetchStandaloneValuation` [P]
+- 180 KB, mostly `radiusPool` (279 entries). To MCP we pass only the result and the top comparables.
+- `radiusLevel`: `sasiedztwo` [P]; other levels [H]
+- The server action `fetchStandaloneValuation` gives an identical result [P]
 - Sample: `api.standalone_val.json`
 
 ---
 
-## 6. Server actions (szczegóły wywołania)
+## 6. Server actions (call details)
 
 ```
 POST /<dowolna strona, np. /wycena>
@@ -215,4 +215,6 @@ Body: [ {argumenty} ]
 1:<wynik JSON>
 ```
 
-Aktualne ID (build `KD_IOP6Grqba7xa86pGVG`): uruchom `python3 recon/scan_bundles.py`.
+(Legend: any page, e.g. /wycena; `Next-Action` is 40+ hex characters from the JS chunks; `Next-Router-State-Tree` is the URL-encoded router tree JSON, sent by the UI, whether it is required: [H]; body is an array of arguments; the result is JSON.)
+
+Current IDs (build `KD_IOP6Grqba7xa86pGVG`): run `python3 recon/scan_bundles.py`.

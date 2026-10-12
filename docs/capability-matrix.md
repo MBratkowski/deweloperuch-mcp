@@ -1,75 +1,75 @@
 # Capability matrix (v1, 2026-10-09)
 
-Capabilities wynikają z danych faktycznie dostępnych w serwisie ([discovery/](discovery/README.md)). Każda capability to operacja domenowa. Może składać się z kilku requestów.
+The capabilities follow from the data actually available in the service ([discovery/](discovery/README.md)). Each capability is a domain operation. It may consist of several requests.
 
-Kanały: **A** = JSON `/api/*`, **B** = strona RSC, **C** = server action.
+Channels: **A** = JSON `/api/*`, **B** = RSC page, **C** = server action.
 Status:
-- ✅ gotowe do implementacji: requesty wykonane, kształt odpowiedzi znany
-- 🟡 wykonalne z zastrzeżeniami: część parametrów lub semantyki niezweryfikowana
-- 🔴 niejasne: semantyka danych nieznana
-- ⏸ odłożone: niski priorytet albo poza zakresem
+- ✅ ready to implement: requests made, response shape known
+- 🟡 feasible with caveats: some parameters or semantics unverified
+- 🔴 unclear: data semantics unknown
+- ⏸ deferred: low priority or out of scope
 
-## Lokalizacje
+## Locations
 
-| Capability | Dane | Request(y) | Input | Output | Ograniczenia | CLI | MCP tool | Status |
+| Capability | Data | Request(s) | Input | Output | Limitations | CLI | MCP tool | Status |
 |---|---|---|---|---|---|---|---|---|
-| Wyszukaj lokalizację | miasta, dzielnice, ulice z lat/lng i liczbą ofert/transakcji | A `cities?q`, `location-search?q`, opcjonalnie `city-lookup` | `query`, `market: offers\|transactions` | `[{kind: city\|district\|street, name, city_slug, lat?, lng?, count}]` | `cities` zwraca też miejscowości z 0 ofert | `locations search <q>` | `search_locations` | ✅ zaimplementowane (CLI+MCP, S1a `23cd5be`, S1b `a954994`); `kind` także `city` [P 2026-10-10], `cities` ma paginację (`page`) |
-| Dzielnice miasta | dzielnice + liczność | A `city-districts?citySlug` | `city`, `market` | `[{name, count}]` | tylko nazwy, brak ID i geometrii | `locations districts <city>` | (w `search_locations` lub osobno) | ✅ |
-| Miasto → powiat RCN | id powiatów | A `map/city-powiats/{city}` | `city` | `{powiat_ids, primary}` | — | (wewnętrzne) | (wewnętrzne) | ✅ |
+| Search locations | cities, districts, streets with lat/lng and offer/transaction count | A `cities?q`, `location-search?q`, optionally `city-lookup` | `query`, `market: offers\|transactions` | `[{kind: city\|district\|street, name, city_slug, lat?, lng?, count}]` | `cities` also returns localities with 0 offers | `locations search <q>` | `search_locations` | ✅ implemented (CLI+MCP, S1a `23cd5be`, S1b `a954994`); `kind` also `city` [P 2026-10-10], `cities` has pagination (`page`) |
+| City districts | districts + counts | A `city-districts?citySlug` | `city`, `market` | `[{name, count}]` | names only, no IDs or geometry | `locations districts <city>` | (in `search_locations` or separate) | ✅ |
+| City → RCN county | county ids | A `map/city-powiats/{city}` | `city` | `{powiat_ids, primary}` | — | (internal) | (internal) | ✅ |
 
-## Oferty deweloperów (rynek pierwotny)
+## Developer offers (primary market)
 
-| Capability | Dane | Request(y) | Input | Output | Ograniczenia | CLI | MCP tool | Status |
+| Capability | Data | Request(s) | Input | Output | Limitations | CLI | MCP tool | Status |
 |---|---|---|---|---|---|---|---|---|
-| Wyszukaj oferty (mieszkania) | lista ofert z ceną, metrażem, zmianami ceny, inwestycją, deweloperem | B `/ceny-ofertowe/{city}/mieszkania?filter…` | `city`, `price`, `price_per_m2`, `area` (min/max), `developer?`, `investment?`, `district?`, `rooms?`, `price_change?`, `include_archived?`, `sort`, `page`, `per_page` | MCP: `{total, returned, truncated, page, per_page, pages_available, hint, items}` (D11; plan pierwotny `{total, page, total_pages, items}`) | **max 20 stron × 100 = 2000**; `perPage` 10/25/50/100 [P 2026-10-10]; `sortBy` 5 wartości [P], domyślnie `sale_id`; `district`, `price_change`, `status`, `include_archived` [P 2026-10-10]; **`rooms` i `floors` nie działają na liście ofert** (obalono); reszta filtrów T33 | `offers search …` | `search_offers` | 🟡 (rdzeń ✅, zaimplementowane CLI+MCP; wystawione parametry [P] to tylko podzbiór, patrz uwagi o nowych [P] w raporcie B 2026-10-10); naprawiono parser RSC 2026-10-10 (wiersze `T<hexlen>,` bez `\n`); zestaw e2e w `tests/e2e/` |
-| Pobierz ofertę + historię ceny | dane oferty, zdarzenia cenowe | A `sale-events?saleId`, A `map/investments/visible/{slug}` (kontekst) | `offer_id`, `investment_slug` | `Offer {…, investment, developer, price_history[]}` | `sale-events` nie zwraca inwestycji; bez sluga brak kontekstu (patrz luki) | `offers get <id> --investment <slug>` | `get_offer` | ✅ zaimplementowane (CLI+MCP); `OFFER_EVENT` = każdy wpis ceny [P 2026-10-10]; nieznany `saleId` → 200 z `saleData: null` |
-| Wyszukaj inwestycje | inwestycje z agregatami | B `/ceny-ofertowe/{city}/inwestycje`; A `investments?q` (po nazwie); A `map/investments?…` (wszystkie w mieście, z lat/lng) | `city`, `name?`, `developer?`, filtry cen, `sort`, `page` | `{total, items:[InvestmentSummary]}` | B: limit 20 stron; A `map/investments` bez limitu, ale bez paginacji | `investments search …` | `search_investments` | ✅ |
-| Pobierz inwestycję | inwestycja, deweloper, wszystkie oferty (aktywne+archiwalne), opcjonalnie historia | A `map/investments/visible/{slug}`, opcjonalnie A `investments/{id}/sale-events` | `investment_slug`, `include_history?` | `Investment {…, offers[]}` | `sale-events` wolne przy MISS (~3 s) | `investments get <slug>` | `get_investment` | ✅ zaimplementowane (CLI+MCP); nieznany slug → 404 `Investment not found` [P 2026-10-10] |
-| Wyszukaj deweloperów | deweloperzy z agregatami | B `/ceny-ofertowe/{city}/deweloperzy`; A `developers?q` | `city?` (`polska`), `name?`, `sort`, `page` | `{total, items:[DeveloperSummary]}` | — | `developers search …` | `search_developers` | ✅ |
-| Pobierz dewelopera | profil, inwestycje, statystyki, oś zmian cen | B `/ceny-ofertowe/{city}/deweloperzy/{slug}` | `developer_slug`, `city?` | `Developer {…, investments[], stats}` | tylko RSC; `filteredStats`/`citiesStats` wymagają opisu pól | `developers get <slug>` | `get_developer` | 🟡 |
-| Statystyki ofert | liczba ofert, histogram cen/ceny m²/metrażu | A `offer-count`, `price-distribution`, `size-distribution` | `city`, filtry jak w wyszukiwaniu, `developer?`, `investment?` | `{count, price_histogram, price_m2_histogram, area_histogram}` | granice kubełków trzeba odtworzyć (`aligned`) | `stats offers …` | `get_offer_statistics` | 🟡 |
-| Raport oferty (porównanie z rynkiem) | wycena RCN dla oferty, konkurencyjne oferty w okolicy | B `…/{inv}/raport-mieszkania-{slug}`; B `…/{inv}/raport-inwestycji` | `investment_slug`, `offer_name` | `{offer, valuation, competitors[]}` | ryzyko kolizji slugów nazw ofert | `offers report …` | `compare_offer_to_market` | 🟡 |
+| Search offers (flats) | offer list with price, area, price changes, investment, developer | B `/ceny-ofertowe/{city}/mieszkania?filter…` | `city`, `price`, `price_per_m2`, `area` (min/max), `developer?`, `investment?`, `district?`, `rooms?`, `price_change?`, `include_archived?`, `sort`, `page`, `per_page` | MCP: `{total, returned, truncated, page, per_page, pages_available, hint, items}` (D11; original plan `{total, page, total_pages, items}`) | **max 20 pages × 100 = 2000**; `perPage` 10/25/50/100 [P 2026-10-10]; `sortBy` 5 values [P], default `sale_id`; `district`, `price_change`, `status`, `include_archived` [P 2026-10-10]; **`rooms` and `floors` do not work on the offer list** (refuted); other filters T33 | `offers search …` | `search_offers` | 🟡 (core ✅, implemented CLI+MCP; the exposed [P] parameters are only a subset, see the notes on new [P] in the report of B 2026-10-10); RSC parser fixed 2026-10-10 (rows `T<hexlen>,` without `\n`); e2e suite in `tests/e2e/` |
+| Get offer + price history | offer data, price events | A `sale-events?saleId`, A `map/investments/visible/{slug}` (context) | `offer_id`, `investment_slug` | `Offer {…, investment, developer, price_history[]}` | `sale-events` does not return the investment; without the slug there is no context (see gaps) | `offers get <id> --investment <slug>` | `get_offer` | ✅ implemented (CLI+MCP); `OFFER_EVENT` = every price entry [P 2026-10-10]; unknown `saleId` → 200 with `saleData: null` |
+| Search investments | investments with aggregates | B `/ceny-ofertowe/{city}/inwestycje`; A `investments?q` (by name); A `map/investments?…` (all in a city, with lat/lng) | `city`, `name?`, `developer?`, price filters, `sort`, `page` | `{total, items:[InvestmentSummary]}` | B: 20-page limit; A `map/investments` no limit, but no pagination | `investments search …` | `search_investments` | ✅ |
+| Get investment | investment, developer, all offers (active+archived), optionally history | A `map/investments/visible/{slug}`, optionally A `investments/{id}/sale-events` | `investment_slug`, `include_history?` | `Investment {…, offers[]}` | `sale-events` slow on MISS (~3 s) | `investments get <slug>` | `get_investment` | ✅ implemented (CLI+MCP); unknown slug → 404 `Investment not found` [P 2026-10-10] |
+| Search developers | developers with aggregates | B `/ceny-ofertowe/{city}/deweloperzy`; A `developers?q` | `city?` (`polska`), `name?`, `sort`, `page` | `{total, items:[DeveloperSummary]}` | — | `developers search …` | `search_developers` | ✅ |
+| Get developer | profile, investments, statistics, price-change axis | B `/ceny-ofertowe/{city}/deweloperzy/{slug}` | `developer_slug`, `city?` | `Developer {…, investments[], stats}` | RSC only; `filteredStats`/`citiesStats` need field descriptions | `developers get <slug>` | `get_developer` | 🟡 |
+| Offer statistics | offer count, price/price-per-m²/area histograms | A `offer-count`, `price-distribution`, `size-distribution` | `city`, filters as in search, `developer?`, `investment?` | `{count, price_histogram, price_m2_histogram, area_histogram}` | bucket boundaries must be reconstructed (`aligned`) | `stats offers …` | `get_offer_statistics` | 🟡 |
+| Offer report (market comparison) | RCN valuation for an offer, competing offers nearby | B `…/{inv}/raport-mieszkania-{slug}`; B `…/{inv}/raport-inwestycji` | `investment_slug`, `offer_name` | `{offer, valuation, competitors[]}` | risk of offer-name slug collisions | `offers report …` | `compare_offer_to_market` | 🟡 |
 
-## Transakcje (RCN)
+## Transactions (RCN)
 
-| Capability | Dane | Request(y) | Input | Output | Ograniczenia | CLI | MCP tool | Status |
+| Capability | Data | Request(s) | Input | Output | Limitations | CLI | MCP tool | Status |
 |---|---|---|---|---|---|---|---|---|
-| Wyszukaj transakcje | transakcje lokali/domów + **agregaty całego zbioru** | B `/ceny-transakcyjne/{city}/mieszkania\|domy?filter…` | `city`, `property: flat\|house`, `price`, `price_per_m2`, `area`, `rooms?`, `floor?`, `district?`, `street?`, `classification?`, `sort`, `page`, `per_page` | `{total, stats, items:[TransactionSummary]}` | limit 2000; `district` budzi wątpliwości; format `filterLastTransactionDate` nieznany | `transactions search …` | `search_transactions` | 🟡 (rdzeń ✅) |
-| Wyszukaj budynki/adresy | budynki z liczbą i średnimi transakcji | B `/ceny-transakcyjne/{city}/adresy`; A `investment-streets?variant=transactions` | `city`, `street?`, `sort`, `page` | `{total, items:[BuildingSummary]}` | — | `buildings search …` | `search_buildings` | 🟡 |
-| Pobierz budynek z transakcjami | wszystkie lokale i transakcje w budynku, szczegóły RCN | A `map/transactions/visible/{slug}`, A `avg-price-trend/building/{id}` (trend okolicy 1 km) | `building_slug`, `property?` | `Building {…, units[{transactions[]}], neighborhood_trend?}` | duże odpowiedzi (189 KB / 86 lokali) — trzeba przycinać | `buildings get <slug>` | `get_building` | ✅ |
-| Statystyki transakcji w czasie | miesięczne mediany/średnie, liczby | A `monthly-transaction-stats` (miasto/powiat/ulica), A `avg-price-trend/city/{city}` (kwartalnie), A `statystyki/powiat-price-trend` | `scope: city\|powiat\|street`, `id`, `property`, `granularity: month\|quarter` | `[{period, count, median_price_m2, avg_price_m2, median_area, median_amount, …}]` | ostatnie miesiące niekompletne (opóźnienie RCN) | `stats transactions …` | `get_transaction_statistics` | ✅ |
-| Liczba/histogram transakcji | liczba, rozkład cen i metraży | A `transaction-count`, `transaction-*-distribution` | `city`, filtry, `powiat_ids?`, `building_id?` | jak dla ofert | wolne przy MISS (2–5 s) | (w `stats transactions`) | (w `get_transaction_statistics`) | 🟡 |
-| Ranking miast / powiatów | liczba transakcji, ceny, zmiany | A `city-transaction-stats`, A `map/powiat-stats` | `property?`, `sort`, `limit` | `[{city, count, price_m2, change_pct…}]` | okres i baza zmian nieznane; `avg_` może oznaczać medianę | `stats cities` | `rank_locations` | 🟡 |
+| Search transactions | unit/house transactions + **aggregates of the whole set** | B `/ceny-transakcyjne/{city}/mieszkania\|domy?filter…` | `city`, `property: flat\|house`, `price`, `price_per_m2`, `area`, `rooms?`, `floor?`, `district?`, `street?`, `classification?`, `sort`, `page`, `per_page` | `{total, stats, items:[TransactionSummary]}` | limit 2000; `district` raises doubts; format of `filterLastTransactionDate` unknown | `transactions search …` | `search_transactions` | 🟡 (core ✅) |
+| Search buildings/addresses | buildings with transaction counts and averages | B `/ceny-transakcyjne/{city}/adresy`; A `investment-streets?variant=transactions` | `city`, `street?`, `sort`, `page` | `{total, items:[BuildingSummary]}` | — | `buildings search …` | `search_buildings` | 🟡 |
+| Get building with transactions | all units and transactions in a building, RCN details | A `map/transactions/visible/{slug}`, A `avg-price-trend/building/{id}` (1 km neighborhood trend) | `building_slug`, `property?` | `Building {…, units[{transactions[]}], neighborhood_trend?}` | large responses (189 KB / 86 units), must be trimmed | `buildings get <slug>` | `get_building` | ✅ |
+| Transaction statistics over time | monthly medians/averages, counts | A `monthly-transaction-stats` (city/county/street), A `avg-price-trend/city/{city}` (quarterly), A `statystyki/powiat-price-trend` | `scope: city\|powiat\|street`, `id`, `property`, `granularity: month\|quarter` | `[{period, count, median_price_m2, avg_price_m2, median_area, median_amount, …}]` | latest months incomplete (RCN lag) | `stats transactions …` | `get_transaction_statistics` | ✅ |
+| Transaction count/histogram | count, price and area distribution | A `transaction-count`, `transaction-*-distribution` | `city`, filters, `powiat_ids?`, `building_id?` | as for offers | slow on MISS (2–5 s) | (in `stats transactions`) | (in `get_transaction_statistics`) | 🟡 |
+| City / county ranking | transaction count, prices, changes | A `city-transaction-stats`, A `map/powiat-stats` | `property?`, `sort`, `limit` | `[{city, count, price_m2, change_pct…}]` | period and base of changes unknown; `avg_` may mean median | `stats cities` | `rank_locations` | 🟡 |
 
-## Wycena
+## Valuation
 
-| Capability | Dane | Request(y) | Input | Output | Ograniczenia | CLI | MCP tool | Status |
+| Capability | Data | Request(s) | Input | Output | Limitations | CLI | MCP tool | Status |
 |---|---|---|---|---|---|---|---|---|
-| Wyceń nieruchomość | szacowana wartość, cena/m², transakcje porównawcze, promień, trend | A `standalone-valuation?area&lat&lng&address` | `lat`, `lng`, `area_m2`, `address?` | `{estimated_value, price_per_m2, radius_m, period_months, comparables[top N], stats}` | wymaga współrzędnych: brak potwierdzonego geokodowania adres→lat/lng (patrz luki); 180 KB → przycinamy | `valuation estimate …` | `estimate_property_value` | ✅ |
+| Value a property | estimated value, price/m², comparable transactions, radius, trend | A `standalone-valuation?area&lat&lng&address` | `lat`, `lng`, `area_m2`, `address?` | `{estimated_value, price_per_m2, radius_m, period_months, comparables[top N], stats}` | needs coordinates: no confirmed address→lat/lng geocoding (see gaps); 180 KB → we trim | `valuation estimate …` | `estimate_property_value` | ✅ |
 
-## Statystyki zewnętrzne
+## External statistics
 
-| Capability | Dane | Request(y) | Input | Output | Ograniczenia | CLI | MCP tool | Status |
+| Capability | Data | Request(s) | Input | Output | Limitations | CLI | MCP tool | Status |
 |---|---|---|---|---|---|---|---|---|
-| Statystyki GUS/NBP | budownictwo (oddane/rozpoczęte), średnia powierzchnia, demografia, bezrobocie, wynagrodzenia, ceny NBP | B `/statystyki/statystyki-rzadowe/{loc}` | `location` (69 opcji), `dataset` | serie czasowe per dataset | tylko RSC; kilka propsów `data` do rozróżnienia po kształcie | `stats government <loc> <dataset>` | `get_government_statistics` | 🟡 |
-| Statystyki portali ogłoszeniowych | dzienne serie sprzedaż/wynajem × 2 źródła | A `announcement-stats` | `region`, `property` | serie | znaczenie `blue/green` i `value` nieznane; `polska` pusta | — | — | 🔴 |
+| GUS/NBP statistics | construction (completed/started), average area, demographics, unemployment, wages, NBP prices | B `/statystyki/statystyki-rzadowe/{loc}` | `location` (69 options), `dataset` | time series per dataset | RSC only; several `data` props to tell apart by shape | `stats government <loc> <dataset>` | `get_government_statistics` | 🟡 |
+| Listing portal statistics | daily sell/rent series × 2 sources | A `announcement-stats` | `region`, `property` | series | meaning of `blue/green` and `value` unknown; `polska` empty | — | — | 🔴 |
 
-## Odłożone (⏸)
+## Deferred (⏸)
 
-| Capability | Źródło | Powód |
+| Capability | Source | Reason |
 |---|---|---|
-| Zgłoszenia naruszeń jawności cen | B `/zglos-dewelopera/mapa-zgloszen` | niszowe; łatwe do dodania później |
-| Obrys budynku, warstwy powódź/Airbnb, granice powiatów | A `building-outline`, CDN pmtiles, `/geo/powiaty.geojson` | dane geometryczne mają małą wartość dla LLM |
-| Zrzuty hurtowe (`powiat-sales`, `rawTransactions`) | A / B | za duże dla MCP; ewentualnie jako źródło lokalnego indeksu |
-| PDF wyceny | A `valuation-pdf` | rate limit, binarne |
-| Kalkulatory kredytowe | logika klienta | to nie dane serwisu |
-| Zapisy (zgłoszenia, raporty błędów) | C + Turnstile | poza zakresem, tylko odczyt |
+| Price transparency violation reports | B `/zglos-dewelopera/mapa-zgloszen` | niche; easy to add later |
+| Building outline, flood/Airbnb layers, county borders | A `building-outline`, CDN pmtiles, `/geo/powiaty.geojson` | geometric data has little value for an LLM |
+| Bulk dumps (`powiat-sales`, `rawTransactions`) | A / B | too large for MCP; possibly as a source for a local index |
+| Valuation PDF | A `valuation-pdf` | rate limit, binary |
+| Loan calculators | client logic | not service data |
+| Writes (reports, error reports) | C + Turnstile | out of scope, read-only |
 
-## Proponowany zestaw narzędzi MCP (v1)
+## Proposed MCP toolset (v1)
 
-`search_locations`, `search_offers`, `get_offer`, `search_investments`, `get_investment`, `search_developers`, `get_developer`, `get_offer_statistics`, `search_transactions`, `get_building`, `get_transaction_statistics`, `estimate_property_value`, później `get_government_statistics`, `compare_offer_to_market`, `rank_locations`.
+`search_locations`, `search_offers`, `get_offer`, `search_investments`, `get_investment`, `search_developers`, `get_developer`, `get_offer_statistics`, `search_transactions`, `get_building`, `get_transaction_statistics`, `estimate_property_value`, later `get_government_statistics`, `compare_offer_to_market`, `rank_locations`.
 
-Zasady (do potwierdzenia w implementacji):
-- Wyniki list zawsze zwracają `total` i informację o obcięciu (`truncated: true`, gdy `total > 2000`), żeby model wiedział, że ma zawęzić filtry.
-- Identyfikatory w outputach to te, które przyjmują narzędzia „get”: `investment_slug`, `offer_id`, `building_slug`, `developer_slug`, `city_slug`.
-- Duże tablice (transakcje porównawcze, oferty inwestycji) są przycinane z parametrem `limit` i polem `omitted`.
+Principles (to be confirmed in implementation):
+- List results always return `total` and a truncation indicator (`truncated: true` when `total > 2000`), so the model knows to narrow the filters.
+- Identifiers in outputs are those accepted by the "get" tools: `investment_slug`, `offer_id`, `building_slug`, `developer_slug`, `city_slug`.
+- Large arrays (comparable transactions, investment offers) are trimmed with a `limit` parameter and an `omitted` field.
