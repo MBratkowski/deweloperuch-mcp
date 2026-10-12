@@ -1,6 +1,6 @@
 # CLI `deweloperuch`
 
-Wiersz poleceń nad tymi samymi usługami co [serwer MCP](../mcp/README.md). Tylko odczyt; zapytania idą przez wspólny limiter (najwyżej 1 na sekundę, 1 naraz). Skrypt: `deweloperuch` (`[project.scripts]`), czyli `uv run deweloperuch …` albo `.venv/bin/deweloperuch …`.
+A command line over the same services as the [MCP server](../mcp/README.md). Read-only; requests go through the shared limiter (at most 1 per second, 1 at a time). The script is `deweloperuch` (`[project.scripts]`), that is `uv run deweloperuch …` or `.venv/bin/deweloperuch …`.
 
 ```
 Usage: deweloperuch [OPTIONS] COMMAND [ARGS]...
@@ -13,61 +13,60 @@ Commands:
                proces (CLI, serwer MCP, recon) nie wysyła zapytań. Działa offline.
 ```
 
-`deweloperuch` bez argumentów wypisuje pomoc i kończy się kodem 2 (konwencja click). Wbudowane teksty pomocy i błędów użycia (typer/click) są po angielsku.
+`deweloperuch` without arguments prints the help and ends with exit code 2 (a click convention). The CLI's own help and output texts are Polish product texts and are quoted verbatim here; the built-in help and usage-error texts of typer/click are in English.
 
-## Komendy
+## Commands
 
-| Komenda | Do czego |
+| Command | Purpose |
 |---|---|
-| [`locations search QUERY`](commands/locations-search.md) | Znajduje miasta, dzielnice i ulice; podaje slug miasta do `offers search`. |
-| [`offers search CITY`](commands/offers-search.md) | Szuka ofert mieszkań w mieście (albo `polska`) z filtrami ceny i metrażu; najwyżej 20 stron wyników. |
-| [`offers get OFFER_ID --investment SLUG`](commands/offers-get.md) | Pokazuje ofertę z historią ceny. |
-| [`investments get SLUG`](commands/investments-get.md) | Pokazuje inwestycję z deweloperem i ofertami. |
+| [`locations search QUERY`](commands/locations-search.md) | Finds cities, districts and streets; returns the city slug for `offers search`. |
+| [`offers search CITY`](commands/offers-search.md) | Searches apartment offers in a city (or `polska`) with price and area filters; at most 20 pages of results. |
+| [`offers get OFFER_ID --investment SLUG`](commands/offers-get.md) | Shows an offer with its price history. |
+| [`investments get SLUG`](commands/investments-get.md) | Shows an investment with its developer and offers. |
+| [`stop status [--json]`](commands/stop-status.md) | Shows the STOP lock shared by all processes; offline, immediately. |
+| [`stop clear`](commands/stop-clear.md) | Clears the STOP lock. **Humans only**, after checking the cause. |
 
-| [`stop status [--json]`](commands/stop-status.md) | Pokazuje blokadę STOP wspólną dla wszystkich procesów; offline, od razu. |
-| [`stop clear`](commands/stop-clear.md) | Zdejmuje blokadę STOP. **Tylko człowiek**, po sprawdzeniu przyczyny. |
+Typical order: `locations search` → `offers search` → `investments get` or `offers get`.
 
-Typowa kolejność: `locations search` → `offers search` → `investments get` albo `offers get`.
+## Output format
 
-## Format wyjścia
-
-- **Tekst** (domyślnie, stdout): po polsku, liczby z grupowaniem cyfr i przecinkiem dziesiętnym (`1 620 175 PLN`), bez form liczby mnogiej. Dla dzielnic i ulic liczba ofert to `ofert: ok. N` (dla dzielnic to liczba aktywnych ofert [P], dla ulic nadal [W]).
-- **`--json`** (stdout): pełny model domenowy, `model_dump_json(indent=2)`, wszystkie pola łącznie z `null`. Jest to inna, bogatsza reprezentacja niż w MCP (tam pozycje są skrócone i bez `null`).
-- **Błędy** (stderr, bez tracebacka):
-  - `Błąd: <komunikat>`
-  - `Szczegóły: <detail>` (gdy jest; cel, status i fragment ciała, znaki niedrukowalne zapisane jako `\xNN`/`\uNNNN`)
-  - przy kodzie 3 dodatkowa linia (`cli.STOP_ADVICE`): `Nie uruchamiaj kolejnych poleceń deweloperuch ani pętli: przerwij i zgłoś to użytkownikowi. Blokada obejmuje też inne procesy.`
+- **Text** (default, stdout): in Polish, numbers with digit grouping and a decimal comma (`1 620 175 PLN`), without plural forms. For districts and streets the number of offers is `ofert: ok. N` (for districts it is the number of active offers [P], for streets still [W]).
+- **`--json`** (stdout): the full domain model, `model_dump_json(indent=2)`, all fields including `null`. It is a different, richer representation than in MCP (where items are shortened and have no `null`).
+- **Errors** (stderr, no traceback):
+  - `Błąd: <message>`
+  - `Szczegóły: <detail>` (when present; target, status and body fragment, non-printable characters written as `\xNN`/`\uNNNN`)
+  - with code 3 an additional line (`cli.STOP_ADVICE`): `Nie uruchamiaj kolejnych poleceń deweloperuch ani pętli: przerwij i zgłoś to użytkownikowi. Blokada obejmuje też inne procesy.`
 
 ## STOP
 
-Po 401, 403, 429 albo challenge Cloudflare proces zapisuje STOP w pliku obok `throttle.lock` ([docs/configuration.md](../configuration.md#stop-blokada-między-procesami)). Zapis jest wspólny dla wszystkich procesów na maszynie: CLI, serwera MCP, `recon/probe.py` i `recon/scan_bundles.py`. Dopóki jest aktywny, żaden z nich nie wysyła zapytań:
+After 401, 403, 429 or a Cloudflare challenge a process writes STOP to a file next to `throttle.lock` ([docs/configuration.md](../configuration.md#stop-shared-lock-between-processes)). The record is shared by all processes on the machine: the CLI, the MCP server, `recon/probe.py` and `recon/scan_bundles.py`. While it is active, none of them sends requests:
 
-- komendy danych, probe i skaner kończą się kodem 3 bez zapytania; serwer MCP zwraca `isError` z tekstem zaczynającym się od `STOP:`. Pętla w shellu zatrzymuje się więc przy pierwszej komendzie po STOP, także gdy STOP zapisał inny proces;
-- **429** wygasa sam po pauzie (`max(Retry-After, 60 s)`); w jej trakcie komendy z innego procesu dają kod 3, a nie czekanie albo kod 5 (zmiana zachowania w tej wersji);
-- **401, 403 i challenge** są bezterminowe: zdejmuje je człowiek;
-- **nieczytelny zapis** (zły JSON, inny format, symlink, FIFO, katalog, obce `source`, `reason` niezgodny ze statusem, plik powyżej 64 KiB) to STOP bezterminowy, żeby błąd pliku nie otwierał drogi do serwisu;
-- kod 5 (`LimiterWaitError`) zostaje dla pauz bez zapisu (502/503/504) i dla reszty pauzy 429 po ręcznym zdjęciu zapisu;
-- stan sprawdzisz przez [`stop status`](commands/stop-status.md) (kod 0 bez STOP lub przy wygasłym, 3 przy aktywnym). **Zdejmuje go tylko użytkownik** przez [`stop clear`](commands/stop-clear.md), po sprawdzeniu przyczyny; agentom blokuje to hook Bash i reguła w `CLAUDE.md`. Usunięcie katalogu cache też zdejmuje STOP, więc tak go nie zdejmuj.
+- the data commands, probe and the scanner end with exit code 3 without a request; the MCP server returns `isError` with a text starting with `STOP:`. A shell loop therefore stops at the first command after STOP, also when the STOP was written by another process;
+- **429** expires by itself after the pause (`max(Retry-After, 60 s)`); during it, commands from another process give code 3, not waiting or code 5 (a behavior change in this version);
+- **401, 403 and a challenge** are indefinite: a human clears them;
+- **an unreadable record** (bad JSON, another format, a symlink, FIFO, directory, foreign `source`, `reason` inconsistent with the status, a file over 64 KiB) is an indefinite STOP, so that a file error does not open the way to the service;
+- code 5 (`LimiterWaitError`) remains for pauses without a record (502/503/504) and for the rest of a 429 pause after the record is cleared by hand;
+- check the state with [`stop status`](commands/stop-status.md) (code 0 without STOP or with an expired one, 3 with an active one). **Only the user clears it**, with [`stop clear`](commands/stop-clear.md), after checking the cause; for agents the Bash hook and a rule in `CLAUDE.md` block this. Deleting the cache directory also clears STOP, so do not clear it that way.
 
-Serwer MCP, który raz zwrócił STOP (własny albo z zapisu innego procesu), pozostaje zatrzaśnięty do restartu, także po zdjęciu zapisu albo wygaśnięciu 429.
+An MCP server that returned STOP once (its own or from another process's record) stays latched until restart, also after the record is cleared or a 429 expires.
 
-## Kody wyjścia
+## Exit codes
 
-Stałe `cli.ExitCode` (publiczne):
+The `cli.ExitCode` constants (public):
 
-| Kod | Nazwa | Znaczenie |
+| Code | Name | Meaning |
 |---|---|---|
-| 0 | `OK` | Sukces. |
-| 1 | `UNEXPECTED` | Inny błąd, np. `SessionClosedError` albo błąd programu (z tracebackiem). `stop clear`: zamek nie uzyskany w 300 s albo zapisu nie da się usunąć. |
-| 2 | `INVALID_INPUT` | Zły argument (`InvalidInputError`) albo błąd użycia typer/click: zły typ, wartość spoza listy, brak wymaganej opcji, `deweloperuch` bez argumentów. |
-| 3 | `STOP` | `ServiceBlockedError` / `RateLimitedError` (401, 403, 429, challenge) albo wcześniejszy STOP zapisany przez dowolny proces (komenda nic nie wysyła); także `stop status` przy aktywnej blokadzie. Przerwij i zgłoś użytkownikowi. |
-| 4 | `SERVICE_ERROR` | Błąd serwisu: 5xx, sieć, przekierowanie, inne 4xx, odpowiedź za duża lub za wolna. |
-| 5 | `LIMITER_WAIT` | Wspólny limiter wymaga dłuższej przerwy niż dozwolona (60 s); nic nie wysłano. Dotyczy pauz bez zapisu STOP (502/503/504) i reszty pauzy 429 po ręcznym zdjęciu zapisu; w czasie aktywnego STOP jest kod 3. |
-| 6 | `UNEXPECTED_RESPONSE` | Odpowiedź 2xx niezgodna z kontraktem (serwis mógł się zmienić). |
-| 7 | `NOT_FOUND` | Brak inwestycji, oferty albo miasta. |
+| 0 | `OK` | Success. |
+| 1 | `UNEXPECTED` | Another error, e.g. `SessionClosedError` or a program error (with a traceback). `stop clear`: the lock was not obtained within 300 s or the record cannot be removed. |
+| 2 | `INVALID_INPUT` | A bad argument (`InvalidInputError`) or a typer/click usage error: wrong type, a value outside the list, a missing required option, `deweloperuch` without arguments. |
+| 3 | `STOP` | `ServiceBlockedError` / `RateLimitedError` (401, 403, 429, challenge) or an earlier STOP written by any process (the command sends nothing); also `stop status` with an active lock. Stop and report to the user. |
+| 4 | `SERVICE_ERROR` | A service error: 5xx, network, a redirect, another 4xx, a response too large or too slow. |
+| 5 | `LIMITER_WAIT` | The shared limiter requires a longer pause than allowed (60 s); nothing was sent. Applies to pauses without a STOP record (502/503/504) and the rest of a 429 pause after the record is cleared by hand; while STOP is active it is code 3. |
+| 6 | `UNEXPECTED_RESPONSE` | A 2xx response not matching the contract (the service may have changed). |
+| 7 | `NOT_FOUND` | No such investment, offer or city. |
 
-## Konfiguracja
+## Configuration
 
-Brak własnych flag środowiska. Limiter i cache: [docs/configuration.md](../configuration.md).
+No flags or environment variables of its own. The limiter and cache: [docs/configuration.md](../configuration.md).
 
-_Źródło: `src/deweloperuch_mcp/cli.py`, `src/deweloperuch_mcp/throttle.py`, `uv run deweloperuch --help`_
+_Source: `src/deweloperuch_mcp/cli.py`, `src/deweloperuch_mcp/throttle.py`, `uv run deweloperuch --help`_

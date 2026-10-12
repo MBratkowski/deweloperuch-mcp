@@ -1,33 +1,35 @@
 # `deweloperuch offers search`
-Szuka ofert mieszkań od deweloperów (ceny ofertowe, rynek pierwotny) w mieście albo w całej Polsce (`polska`), z filtrami ceny i metrażu; najwyżej 20 stron wyników. Odpowiednik narzędzia MCP [`search_offers`](../../mcp/tools/search_offers.md).
+Searches developers' apartment offers (asking prices, primary market) in a city or the whole of Poland (`polska`), with price and area filters; at most 20 pages of results. Equivalent to the MCP tool [`search_offers`](../../mcp/tools/search_offers.md).
 
-## Użycie
+## Usage
 ```
 deweloperuch offers search [OPTIONS] CITY
 ```
 
-## Opcje
-| Flaga | Typ | Domyślna | Opis |
+`--help` description: „Szukaj ofert mieszkań w mieście; najwyżej 20 stron wyników.”
+
+## Options
+| Flag | Type | Default | Description |
 |---|---|---|---|
-| `CITY` (argument, wymagany) | tekst | — | Slug miasta (np. warszawa; podaje go `locations search`) albo polska. |
-| `--price-min` | int | brak | Najniższa cena w PLN. |
-| `--price-max` | int | brak | Najwyższa cena w PLN. |
-| `--area-min` | int | brak | Najmniejszy metraż w m². |
-| `--area-max` | int | brak | Największy metraż w m². |
-| `--sort` | `price_asc` \| `price_desc` | brak (kolejność serwisu) | Kolejność po cenie. Sortowanie po cenie rosnąco i malejąco potwierdzone [P 2026-10-10]. |
-| `--page` | int | `1` | Numer strony, 1–20. |
-| `--per-page` | `10` \| `50` \| `100` | `10` | Liczba ofert na stronie. |
-| `--json` | flaga | wyłączona | Wypisz wynik jako JSON (model domenowy; z linkami: `list_url` w wyniku i `investment_url` w każdej pozycji). |
-| `--help` | flaga | | Pokaż pomoc. |
+| `CITY` (argument, required) | text | — | A city slug (e.g. warszawa; given by `locations search`) or polska. Help text: „Slug miasta (np. warszawa; podaje go `locations search`) albo polska.” |
+| `--price-min` | int | none | The lowest price in PLN. Help text: „Najniższa cena w PLN.” |
+| `--price-max` | int | none | The highest price in PLN. Help text: „Najwyższa cena w PLN.” |
+| `--area-min` | int | none | The smallest area in m². Help text: „Najmniejszy metraż w m².” |
+| `--area-max` | int | none | The largest area in m². Help text: „Największy metraż w m².” |
+| `--sort` | `price_asc` \| `price_desc` | none (the service's order) | Order by price; without the option the service's default order. Sorting by price ascending and descending is confirmed [P 2026-10-10]. Help text: „Kolejność po cenie; bez opcji domyślna kolejność serwisu.” |
+| `--page` | int | `1` | The page number, 1-20. Help text: „Numer strony, 1–20.” |
+| `--per-page` | `10` \| `50` \| `100` | `10` | The number of offers per page. Help text: „Liczba ofert na stronie.” |
+| `--json` | flag | off | Print the result as JSON (the domain model; with links: `list_url` in the result and `investment_url` in every item). Help text: „Wypisz wynik jako JSON (model domenowy).” |
+| `--help` | flag | | Show the help. |
 
-Linki do stron serwisu (D12): w trybie tekstowym linia „Ta lista na deweloperuch.pl: …” pod nagłówkiem (te same filtry, sortowanie i strona) oraz adres strony inwestycji pod każdą ofertą (nie pojedynczej oferty). Brak sluga oznacza brak linii.
+Links to service pages (D12): in text mode the line „Ta lista na deweloperuch.pl: …” (this list on deweloperuch.pl) under the header (the same filters, sorting and page) and the investment page address under each offer (not a single offer). A missing slug means no line.
 
-Zakresy filtrów to 0–99 999 999 PLN i 0–9 999 m² (wartownicy [P z kodu]); `--price-min` większe niż `--price-max` to błąd (kod 2).
+The filter ranges are 0-99 999 999 PLN and 0-9 999 m² (sentinels, [P z kodu]); `--price-min` greater than `--price-max` is an error (code 2).
 
-## Kody wyjścia
-Zob. [tabela kodów](../README.md#kody-wyjścia). Najczęstsze: 0, 2 (zły filtr, `--sort` lub `--per-page` spoza listy), 3 STOP, 4 błąd serwisu, 7 nieznane miasto (linia `Błąd:` „Serwis nie zna miasta '<slug>'…” i `Szczegóły:` z digestem odpowiedzi). `CITY` niebędące slugiem (nazwa, wielkie litery, pusty tekst) to błąd walidacji z komunikatem „city: oczekiwano slug miasta…”, zanim wyślemy zapytanie.
+## Exit codes
+See the [exit code table](../README.md#exit-codes). Most common: 0, 2 (a bad filter, `--sort` or `--per-page` outside the list), 3 STOP, 4 service error, 7 unknown city (a `Błąd:` line „Serwis nie zna miasta '<slug>'…” and `Szczegóły:` with a response digest). A `CITY` that is not a slug (a name, capital letters, an empty string) is a validation error with the message „city: oczekiwano slug miasta…”, before any request is sent.
 
-## Przykłady
+## Examples
 ```
 deweloperuch offers search warszawa
 deweloperuch offers search warszawa --price-max 1000000 --sort price_asc
@@ -35,7 +37,7 @@ deweloperuch offers search krakow --area-min 40 --area-max 60 --per-page 50 --pa
 deweloperuch offers search polska --json
 ```
 
-Wynik pierwszego wywołania (domyślne `--per-page 10`) z mocka testów (`tests/service_mocks.offers_page(count=10)`): pozycje są kopiami ofert z próbki `page.offers_list` z syntetycznymi `offer_id` (900000+), `total` pochodzi z próbki. Pokazano 2 pierwsze pozycje z 10, pozostałe 8 pominięto:
+Output of the first call (default `--per-page 10`) from the test mock (`tests/service_mocks.offers_page(count=10)`): the items are copies of offers from the `page.offers_list` sample with synthetic `offer_id` values (900000+), and `total` comes from the sample. The first 2 of 10 items are shown, the remaining 8 omitted:
 
 ```
 Pasujące oferty: 13 324 · strona 1 z 20 (po 10) · pokazano 10 · obcięte: serwis pozwala przejrzeć najwyżej 20 stron.
@@ -51,4 +53,4 @@ Ta lista na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/warszawa/mies
 Szczegóły oferty: deweloperuch offers get OFFER_ID --investment INVESTMENT_SLUG
 ```
 
-_Źródło: `src/deweloperuch_mcp/cli.py`, `uv run deweloperuch offers search --help`_
+_Source: `src/deweloperuch_mcp/cli.py`, `uv run deweloperuch offers search --help`_

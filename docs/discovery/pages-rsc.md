@@ -1,8 +1,8 @@
-# Strony SSR (RSC) jako źródło danych
+# SSR (RSC) pages as a data source
 
-Wyszukiwanie z filtrami, sortowaniem i paginacją oraz większość widoków szczegółowych istnieje **wyłącznie** jako strony renderowane serwerowo. Dane są w propsach komponentów klienckich w payloadzie RSC.
+Search with filters, sorting and pagination, and most detail views, exist **only** as server-rendered pages. The data is in the props of client components in the RSC payload.
 
-## Jak pobierać [P]
+## How to fetch [P]
 
 ```
 GET https://deweloperuch.pl<ścieżka>?<filtry>&_rsc=<losowy token>
@@ -10,49 +10,51 @@ RSC: 1
 → 200 text/x-component
 ```
 
-- Bez `_rsc` Cloudflare zwraca zcache'owany HTML, bo ignoruje `Vary: RSC` [P].
-- Alternatywa: pełny HTML i dekodowanie `self.__next_f.push([1,"…"])`. Daje te same dane, ale jest ~10× większy (942 KB vs 98 KB) [P].
-- Propsy leżą w elementach `["$","$L<id>",null,{…}]`. Referencje `"$f:props:…"` / `"$8:props:…"` wskazują na wcześniej zdefiniowane fragmenty, ale propsy z danymi list są inline [P].
-- Format flight (wiersze `<id>:<tag><dane>`) [P z kodu, chunk `1517-…js` ReactFlightClient z cache skanera]:
-  - wiersze z długością w BAJTACH, **bez `\n` po wierszu**: `<id>:T<hexlen>,<tekst>`; tagi binarne `A O o U S s L l G g M m V` (z `T`) działają tak samo. Wiersz po nich zaczyna się bezpośrednio za danymi, więc szukanie wierszy tylko na początku linii je gubi;
-  - wiersze kończone `\n`: tagi `A`–`Z` (m.in. `E` błąd), `#`, `r`, `x` oraz wiersz modelu bez tagu (`<id>:<json>`);
-  - hinty `:HL…` mają pusty id.
-  - Na liście ofert wiersz z `initialData` idzie zaraz za dwoma wierszami `T` z JSON-LD (`16:T5ed,…` WebPage, `19:T1a27,…` ItemList) [P 2026-10-10, fiks `tests/fixtures/rsc/warszawa_perPage10.rsc`]. Obalono: stary parser (`_JSON_ROW`, wiersze tylko na początku linii) widział tam brak `initialData`, przez co `search_offers` nie działał na żywym serwisie.
-- Parser referencyjny: [`src/deweloperuch_mcp/flight.py`](../../src/deweloperuch_mcp/flight.py): `rows()`, `component_props()`, `error_digests()` (RSC) oraz `flight()` dla HTML. `find_json_after(text, "initialData")` zostaje dla `probe --prop`; `recon/flight.py` tylko reeksportuje.
-- Cache-Control stron RSC: `private, max-age=28800, must-revalidate` (bez `s-maxage`; `cf-cache-status` MISS lub HIT z `age`) [P 2026-10-10, próbki z serii B; nagłówki w stderr probe'a, bez osobnej próbki].
-- **Ryzyko**: nazwy propsów (`initialData`, `serverPaginationData`, …) są detalem implementacyjnym UI i mogą się zmienić bez ostrzeżenia [W]. Adapter RSC musi być izolowany i mieć testy kontraktowe na próbkach.
+(`<ścieżka>` = path, `<filtry>` = filters, `<losowy token>` = random token.)
 
-## Wspólne reguły list [P]
+- Without `_rsc`, Cloudflare returns cached HTML because it ignores `Vary: RSC` [P].
+- Alternative: full HTML and decoding `self.__next_f.push([1,"…"])`. Gives the same data but is ~10× larger (942 KB vs 98 KB) [P].
+- Props sit in elements `["$","$L<id>",null,{…}]`. References `"$f:props:…"` / `"$8:props:…"` point to previously defined fragments, but the props with list data are inline [P].
+- Flight format (rows `<id>:<tag><data>`) [P z kodu, chunk `1517-…js` ReactFlightClient from the scanner cache]:
+  - rows with a length in BYTES, **no `\n` after the row**: `<id>:T<hexlen>,<text>`; binary tags `A O o U S s L l G g M m V` (with `T`) work the same way. The next row starts right after the data, so looking for rows only at the start of a line loses them;
+  - rows terminated by `\n`: tags `A`–`Z` (incl. `E` error), `#`, `r`, `x`, and a model row without a tag (`<id>:<json>`);
+  - hints `:HL…` have an empty id.
+  - On the offer list the row with `initialData` comes right after two `T` rows with JSON-LD (`16:T5ed,…` WebPage, `19:T1a27,…` ItemList) [P 2026-10-10, fixture `tests/fixtures/rsc/warszawa_perPage10.rsc`]. Refuted: the old parser (`_JSON_ROW`, rows only at the start of a line) saw no `initialData` there, so `search_offers` did not work on the live service.
+- Reference parser: [`src/deweloperuch_mcp/flight.py`](../../src/deweloperuch_mcp/flight.py): `rows()`, `component_props()`, `error_digests()` (RSC) and `flight()` for HTML. `find_json_after(text, "initialData")` stays for `probe --prop`; `recon/flight.py` only re-exports.
+- Cache-Control of RSC pages: `private, max-age=28800, must-revalidate` (no `s-maxage`; `cf-cache-status` MISS or HIT with `age`) [P 2026-10-10, samples from series B; headers in probe's stderr, no separate sample].
+- **Risk**: prop names (`initialData`, `serverPaginationData`, …) are a UI implementation detail and may change without warning [W]. The RSC adapter must be isolated and have contract tests on samples.
 
-- `page`: od 1. **Maksimum 20 stron**: `page>20` zwraca stronę 20 (`pagination.page: 20`) [P].
-- `perPage`: `10`, `25`, `50`, `100` zaakceptowane [P 2026-10-10: `perPage=25` → `pagination.perPage: 25`, 25 wierszy; obalono: hipoteza, że dozwolone są tylko {10, 50, 100}]. `20` i `500` dają domyślne 10 [P]. Pełna lista dozwolonych wartości nie jest znana: zaobserwowano 10, 25, 50, 100 (przyjęte) oraz 20, 500 (→ 10) [P]; inne [H] (T2 rozstrzygnięte częściowo; pełna lista: T29).
-- Pułap: **2 000 rekordów na zapytanie**. `pagination.total` podaje pełną liczbę (np. 13 324), ale `totalPages` jest obcięte do 20 [P].
+## Common list rules [P]
+
+- `page`: from 1. **Maximum 20 pages**: `page>20` returns page 20 (`pagination.page: 20`) [P].
+- `perPage`: `10`, `25`, `50`, `100` accepted [P 2026-10-10: `perPage=25` → `pagination.perPage: 25`, 25 rows; refuted: hypothesis that only {10, 50, 100} are allowed]. `20` and `500` give the default 10 [P]. The full list of allowed values is not known: observed 10, 25, 50, 100 (accepted) and 20, 500 (→ 10) [P]; others [H] (T2 partially resolved; full list: T29).
+- Ceiling: **2,000 records per query**. `pagination.total` gives the full count (e.g. 13,324), but `totalPages` is truncated to 20 [P].
 - `sortOrder` ∈ {`asc`, `desc`}.
-- Zakresy: `min-max` (np. `filterPrice=500000-700000`). Brak dolnej granicy → `0-…`; brak górnej → wartości-wartownicy UI: cena `99999999`, cena/m² `999999`, metraż `9999` [P z kodu]. Serwer traktuje `filterPrice=0-99999999&filterSize=0-9999` jak brak filtra: `pagination.total` = 13324 = wynik bez filtrów (Warszawa) [P 2026-10-10]; wartownik cena/m² (`999999`) nie był testowany osobno [W].
-- Listy: wartości po przecinku (`filterRooms=2,3`).
-- `{city}` = slug miasta albo `polska` (cały kraj) [P].
+- Ranges: `min-max` (e.g. `filterPrice=500000-700000`). No lower bound → `0-…`; no upper bound → UI sentinel values: price `99999999`, price/m² `999999`, area `9999` [P z kodu]. The server treats `filterPrice=0-99999999&filterSize=0-9999` as no filter: `pagination.total` = 13324 = result without filters (Warsaw) [P 2026-10-10]; the price/m² sentinel (`999999`) was not tested separately [W].
+- Lists: comma-separated values (`filterRooms=2,3`).
+- `{city}` = city slug or `polska` (whole country) [P].
 
 ---
 
-## Ceny ofertowe
+## Asking prices
 
-### `/ceny-ofertowe/{city}/mieszkania`: lista ofert [P]
-| Parametr | Wartości | Status |
+### `/ceny-ofertowe/{city}/mieszkania`: offer list [P]
+| Parameter | Values | Status |
 |---|---|---|
-| `sortBy` | `amount`, `price_per_sqm`, `size`, `name`, `start_amount_difference_percent` | [P 2026-10-10] `amount` (asc i desc, próbka `page.offers_list.sort_desc`), `price_per_sqm`, `size`, `name`, `start_amount_difference_percent`: kolejność zgodna z wartością |
-| `sortBy` (cd.) | `last_event_date` | [P 2026-10-10] przyjęty, ale pierwsze wiersze `asc` nie są uporządkowane po `last_event_date` widocznym w liście (np. 2026-10-03 przed 2026-09-03); faktyczny klucz nieznany [H] |
-| `sortBy` (cd.) | `investment`, `last_amount_difference`, `last_amount_difference_percent`, `start_amount_difference` | [W z kodu], nie testowano |
-| `sortBy` domyślny / nieznany | brak lub dowolny tekst (`bogus`) | [P 2026-10-10] identyczny wynik: rosnąco po `sale_id` (kolejność w bazie); nieznana wartość jest cicho ignorowana, bez błędu. Obalono: domyślne `sortBy` nie jest `amount` |
-| `filterPrice`, `filterPricePerM2`, `filterSize` | zakres `min-max` | [P] (`filterPrice`, `filterSize`) |
-| `filterDeveloper` | slug dewelopera | [W] |
-| `filterProject` | slug inwestycji | [W] |
-| `filterDistrict` | nazwa (np. `Mokotów`, URL-encoded) | [P 2026-10-10] total 1562 = `count` dzielnicy z `location-search` |
-| `filterStreet` | nazwa | [W] |
-| `filterPriceChange` | csv z `decrease`, `increase`, `no_change` | [P 2026-10-10] `decrease`: total 13324 → 2416. Dotyczy zmiany względem ceny początkowej (`start_amount_difference*`), nie ostatniego zdarzenia: wiersze z `last_event_type: PRICE_INCREASE` i ujemnym `start_amount_difference_percent` przechodzą. `increase`/`no_change`, wartości csv: [W] |
-| `filterRooms`, `filterFloors` | csv | [P 2026-10-10] **bez efektu na liście ofert**: `filterRooms=2` i `filterFloors=1` zwracają total 13324 jak bez filtra (obalono: [W], że zawężają listę ofert; oferty nie mają pól rooms/floor). Filtry działają tylko w transakcjach |
-| `filterStatus` | `archived` | [P 2026-10-10] `archived` → total 11415, same `status: archived`. `active` i inne wartości nie testowano [H] |
-| `filterAnomalies` | `false` = pokaż też anomalie | [W] |
-| `includeArchived` | `true` | [P 2026-10-10] total 13324 → 24739 (= 13324 aktywnych + 11415 archiwalnych) |
+| `sortBy` | `amount`, `price_per_sqm`, `size`, `name`, `start_amount_difference_percent` | [P 2026-10-10] `amount` (asc and desc, sample `page.offers_list.sort_desc`), `price_per_sqm`, `size`, `name`, `start_amount_difference_percent`: order matches the value |
+| `sortBy` (cont.) | `last_event_date` | [P 2026-10-10] accepted, but the first `asc` rows are not ordered by the `last_event_date` visible in the list (e.g. 2026-10-03 before 2026-09-03); actual key unknown [H] |
+| `sortBy` (cont.) | `investment`, `last_amount_difference`, `last_amount_difference_percent`, `start_amount_difference` | [W z kodu], not tested |
+| `sortBy` default / unknown | absent or any text (`bogus`) | [P 2026-10-10] identical result: ascending by `sale_id` (database order); an unknown value is silently ignored, no error. Refuted: the default `sortBy` is not `amount` |
+| `filterPrice`, `filterPricePerM2`, `filterSize` | `min-max` range | [P] (`filterPrice`, `filterSize`) |
+| `filterDeveloper` | developer slug | [W] |
+| `filterProject` | investment slug | [W] |
+| `filterDistrict` | name (e.g. `Mokotów`, URL-encoded) | [P 2026-10-10] total 1562 = district `count` from `location-search` |
+| `filterStreet` | name | [W] |
+| `filterPriceChange` | csv of `decrease`, `increase`, `no_change` | [P 2026-10-10] `decrease`: total 13324 → 2416. Refers to the change relative to the initial price (`start_amount_difference*`), not the last event: rows with `last_event_type: PRICE_INCREASE` and negative `start_amount_difference_percent` pass. `increase`/`no_change`, csv values: [W] |
+| `filterRooms`, `filterFloors` | csv | [P 2026-10-10] **no effect on the offer list**: `filterRooms=2` and `filterFloors=1` return total 13324 as without a filter (refuted: [W] that they narrow the offer list; offers have no rooms/floor fields). The filters work only in transactions |
+| `filterStatus` | `archived` | [P 2026-10-10] `archived` → total 11415, all `status: archived`. `active` and other values not tested [H] |
+| `filterAnomalies` | `false` = also show anomalies | [W] |
+| `includeArchived` | `true` | [P 2026-10-10] total 13324 → 24739 (= 13324 active + 11415 archived) |
 | `showArchivedInvestments` | `true` | [W] |
 
 Props `initialData`:
@@ -64,60 +66,60 @@ Props `initialData`:
                          "developer": { "developer_id", "name", "slug" } } }],
   "pagination": { "page", "perPage", "total", "totalPages" } }
 ```
-Nieznane miasto (`/ceny-ofertowe/nieistniejace-miasto/mieszkania`): HTTP **200** `text/x-component` bez propsa `initialData`; wskaźnikiem jest wiersz `E` z digestem `NEXT_HTTP_ERROR_FALLBACK;404` (`{"digest":"NEXT_HTTP_ERROR_FALLBACK;404"}`) [P 2026-10-10, fiks `tests/fixtures/rsc/unknown_city_perPage10.rsc`]. Obalono: segment `notFound` jako wskaźnik (`notFound` jest propem layoutu na każdej stronie). Klient musi rozpoznać digest (`error_digests()`), nie status HTTP ani sam brak `initialData`.
+Unknown city (`/ceny-ofertowe/nieistniejace-miasto/mieszkania`): HTTP **200** `text/x-component` without the `initialData` prop; the indicator is an `E` row with digest `NEXT_HTTP_ERROR_FALLBACK;404` (`{"digest":"NEXT_HTTP_ERROR_FALLBACK;404"}`) [P 2026-10-10, fixture `tests/fixtures/rsc/unknown_city_perPage10.rsc`]. Refuted: the `notFound` segment as the indicator (`notFound` is a layout prop on every page). The client must recognize the digest (`error_digests()`), not the HTTP status or the mere absence of `initialData`.
 Sample: `page.offers_list.json`, `page.offers_list.filtered.json`, `page.offers_list.sort_desc.json`
-`last_event_type` przyjmuje też `NEW_OFFER` (oferta bez zmian ceny, `total_events: 1`) [P 2026-10-10, `page.offers_list.sort_desc`].
+`last_event_type` also takes `NEW_OFFER` (an offer without price changes, `total_events: 1`) [P 2026-10-10, `page.offers_list.sort_desc`].
 
-### `/ceny-ofertowe/{city}/inwestycje`: lista inwestycji [P]
+### `/ceny-ofertowe/{city}/inwestycje`: investment list [P]
 - `sortBy`: `name`, `active_offers`, `avg_amount`, `avg_size`, `avg_price_sqm` [P], `sum_changes`
 - Props: `investments[]` (`invest_id, name, slug, city, city_slug, street, status, avg_amount, avg_size, avg_price_sqm, active_offers, total_offers, sum_start_amount_difference_plus/minus, developer{…}`), `serverPaginationData {currentPage, perPage, totalCount, totalPages, startItem, endItem}`, `initialSortBy`, `initialSortOrder`, `includeArchived`
 - Sample: `page.investments_list.json`
 
-### `/ceny-ofertowe/{city}/deweloperzy`: lista deweloperów [P]
+### `/ceny-ofertowe/{city}/deweloperzy`: developer list [P]
 - `sortBy`: `name`, `projectCount` [P], `totalSales`, `cityCount`, `avgSize`, `avgPrice`, `avgPricePerM2`, `sum_changes`
 - Props: `developers[]` (`developer_id, name, slug, projectCount, totalSales, totalOffersCount, cities, cityCount, avgSize, avgPrice, avgPricePerM2, sum_start_amount_difference_plus/minus`), `serverPaginationData`, `filterCity`, `filterName`
 - Sample: `page.developers_list.json`
 
-### `/ceny-ofertowe/{city}/deweloperzy/{developerSlug}`: profil dewelopera [P]
-- Props: `data {developer, investments[], filteredStats, allCities, allCitiesWithSlugs, citiesStats, allInvestmentNames}`, `sale[]` (lekka lista ofert), `data[]` (dzienna oś zmian cen: `discountCount, increaseCount, discountValue, increaseValue, cumulative*`)
+### `/ceny-ofertowe/{city}/deweloperzy/{developerSlug}`: developer profile [P]
+- Props: `data {developer, investments[], filteredStats, allCities, allCitiesWithSlugs, citiesStats, allInvestmentNames}`, `sale[]` (lightweight offer list), `data[]` (daily price-change axis: `discountCount, increaseCount, discountValue, increaseValue, cumulative*`)
 - Sample: `page.developer.json`
 
-### `/ceny-ofertowe/{*}/deweloperzy/{*}/{investmentSlug}`: inwestycja [P]
-- **Segmenty `{city}` i `{developer}` są ignorowane**. `/ceny-ofertowe/warszawa/deweloperzy/dom-development/nowy-targowek-vi` zwraca inwestycję ATAL [P].
-- Props: `investments[1]`, `sales[]` (wszystkie, z archiwalnymi), `stats`, `data[]` (oś zmian cen)
-- Zawiera to samo co `GET /api/map/investments/visible/{slug}` plus oś zmian. **Preferujemy JSON API**.
+### `/ceny-ofertowe/{*}/deweloperzy/{*}/{investmentSlug}`: investment [P]
+- **The `{city}` and `{developer}` segments are ignored**. `/ceny-ofertowe/warszawa/deweloperzy/dom-development/nowy-targowek-vi` returns the ATAL investment [P].
+- Props: `investments[1]`, `sales[]` (all, including archived), `stats`, `data[]` (price-change axis)
+- Contains the same as `GET /api/map/investments/visible/{slug}` plus the change axis. **We prefer the JSON API**.
 - Sample: `page.investment.json`
 
-### `…/{investmentSlug}/raport-mieszkania-{slug(nazwa)}`: raport oferty [P]
-- Slug = `slugify(sale.name)`: polskie znaki → ASCII, lowercase, usuń wszystko poza `[a-z0-9\s-]`, spacje → `-` [P z kodu]. `D1.1.1.4` → `d1114`. **Możliwe kolizje** (`D1.11.4` też da `d1114`) [W].
-- Props: `property {name, investmentName, developer, address, area, offerPrice, offerPricePerSqm, latitude, longitude}`, `priceHistory[{amount, creation_date}]`, `competitors[]` (oferty o podobnym metrażu w okolicy: `investmentName, developer, distance, investSlug, developerSlug, sales[{saleId, area, price, pricePerSqm, sizeMatch}]`), `investmentSales[]`, `data` (**wycena RCN** w formacie `standalone-valuation`)
+### `…/{investmentSlug}/raport-mieszkania-{slug(nazwa)}`: offer report [P]
+- Slug = `slugify(sale.name)`: Polish characters → ASCII, lowercase, remove everything except `[a-z0-9\s-]`, spaces → `-` [P z kodu]. `D1.1.1.4` → `d1114`. **Collisions possible** (`D1.11.4` also gives `d1114`) [W].
+- Props: `property {name, investmentName, developer, address, area, offerPrice, offerPricePerSqm, latitude, longitude}`, `priceHistory[{amount, creation_date}]`, `competitors[]` (offers of similar area nearby: `investmentName, developer, distance, investSlug, developerSlug, sales[{saleId, area, price, pricePerSqm, sizeMatch}]`), `investmentSales[]`, `data` (**RCN valuation** in the `standalone-valuation` format)
 - Sample: `page.offer_report.json`
 
-### `…/{investmentSlug}/raport-inwestycji`: raport inwestycji [P]
-- Jak raport oferty, ale `property` opisuje średnią inwestycji.
+### `…/{investmentSlug}/raport-inwestycji`: investment report [P]
+- Like the offer report, but `property` describes the investment average.
 
 ### `/ceny-ofertowe/{city}/mapa` [P]
-- Props: `initialInvestments[]` (jak `/api/map/investments`). Reszta przez JSON API.
+- Props: `initialInvestments[]` (as `/api/map/investments`). The rest through the JSON API.
 
 ---
 
-## Ceny transakcyjne (RCN)
+## Transaction prices (RCN)
 
-### `/ceny-transakcyjne/{city}/mieszkania` i `/domy`: lista transakcji [P]
-| Parametr | Wartości | Status |
+### `/ceny-transakcyjne/{city}/mieszkania` and `/domy`: transaction list [P]
+| Parameter | Values | Status |
 |---|---|---|
-| `sortBy` | `creation_date` (domyślnie, desc), `amount` [P]; pozostałe [H] | |
-| `filterPrice`, `filterPricePerM2`, `filterSize` | zakres `min-max` | `filterPrice` [P] |
+| `sortBy` | `creation_date` (default, desc), `amount` [P]; others [H] | |
+| `filterPrice`, `filterPricePerM2`, `filterSize` | `min-max` range | `filterPrice` [P] |
 | `filterRooms` | csv | [P] |
 | `filterFloor` / `filterFloors` | csv | [W] |
-| `filterDistrict`, `filterStreet` | nazwa | `filterDistrict` przyjęty [P], ale wyniki nie wyglądają na ściśle ograniczone do dzielnicy [H] |
-| `filterPowiat` | csv `powiat_rcn_id` | [W] |
-| `filterPolygon` | ? (rysowany obszar) | [H] |
+| `filterDistrict`, `filterStreet` | name | `filterDistrict` accepted [P], but the results do not look strictly limited to the district [H] |
+| `filterPowiat` | csv of `powiat_rcn_id` | [W] |
+| `filterPolygon` | ? (drawn area) | [H] |
 | `filterFlipped` | `true` | [W] |
-| `filterClassification` | brak = `transakcja`; `anomalie`, `wszystkie` | [W] |
-| `filterLastTransactionDate` | kwartał (`AQ()` w chunku `2438`) | format [H] |
+| `filterClassification` | none = `transakcja`; `anomalie`, `wszystkie` | [W] |
+| `filterLastTransactionDate` | quarter (`AQ()` in chunk `2438`) | format [H] |
 
-Props `initialData {data, pagination, stats}` + `initialApiParams` (echo filtrów po stronie serwera, przydatne do weryfikacji):
+Props `initialData {data, pagination, stats}` + `initialApiParams` (server-side echo of the filters, useful for verification):
 ```json
 { "sale_rcn_id", "name": "<id lokalu z EGiB>", "amount", "amount_sqm", "floor", "floor_number", "rooms", "rooms_number",
   "type", "currency", "size", "size_building_area", "size_plot_area", "creation_date",
@@ -127,49 +129,49 @@ Props `initialData {data, pagination, stats}` + `initialApiParams` (echo filtró
 stats: { averagePrice, averageSize, avgAmountPerM2, minPricePerSqm, maxPricePerSqm, pricePerSqmRange,
          totalTransactions, minPrice, maxPrice, minSize, maxSize }
 ```
-`stats` dotyczy **całego zbioru po filtrach**, nie tylko strony [W]. Dzięki temu da się podać agregaty bez paginowania.
+`stats` refers to the **whole filtered set**, not only the page [W]. This makes it possible to give aggregates without paginating.
 Sample: `page.transactions_list.json`, `page.transactions_list.params.json`
 
-### `/ceny-transakcyjne/{city}/adresy`: lista budynków [P]
-- `sortBy`: `name`, `transactions` (domyślnie), `avg_size`, `avg_price_sqm`, `avg_amount`
+### `/ceny-transakcyjne/{city}/adresy`: building list [P]
+- `sortBy`: `name`, `transactions` (default), `avg_size`, `avg_price_sqm`, `avg_amount`
 - Element: `{kind: "flat"|"house", invest_rcn_id, name, street, city, city_slug, avg_amount, avg_size, avg_price_sqm, transactions, slug, building_area, plot_area, source_rcn}`
 
-### `/ceny-transakcyjne/{city}/adresy/{investRcnSlug}` i `/domy/{investRcnSlug}`: budynek/dom [P]
-- Props: `investment {invest_id (= invest_rcn_id), latitude, longitude, name, slug, city, city_slug, street, avg_*, active_offers (= liczba lokali)}`, `sales[]` z `events[]` (pełne `sale_event_rcn` z `additionalData`)
-- Domy mają dodatkowo `size_usable`, `size_building`, `size_plot` [P]
-- To samo daje `GET /api/map/transactions/visible/{slug}`, które **preferujemy**.
+### `/ceny-transakcyjne/{city}/adresy/{investRcnSlug}` and `/domy/{investRcnSlug}`: building/house [P]
+- Props: `investment {invest_id (= invest_rcn_id), latitude, longitude, name, slug, city, city_slug, street, avg_*, active_offers (= number of units)}`, `sales[]` with `events[]` (full `sale_event_rcn` with `additionalData`)
+- Houses additionally have `size_usable`, `size_building`, `size_plot` [P]
+- `GET /api/map/transactions/visible/{slug}` gives the same, and we **prefer** it.
 - Sample: `page.address.json`, `page.house.json`
 
-### `/ceny-transakcyjne/polska/miasta`: ranking miast [P]
-- Props: `cities[]` (jak `/api/city-transaction-stats`), `teaserCharts[]` (miesięczne serie dla top miast)
+### `/ceny-transakcyjne/polska/miasta`: city ranking [P]
+- Props: `cities[]` (as `/api/city-transaction-stats`), `teaserCharts[]` (monthly series for top cities)
 
 ---
 
-## Statystyki
+## Statistics
 
 ### `/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}` [P]
-- Props: `rawTransactions[]` to **wszystkie transakcje miasta w skrócie** (Warszawa: 128 912 wierszy, HTML 12,9 MB): `{m: "YYYY-MM", s: metraż, a: kwota, ps: cena/m², c: klasyfikacja, rn: pokoje, fn: piętro}`. Zakres 2017-01 → bieżący miesiąc.
-- `latestSummary` (ostatni pełny miesiąc), `slices` (r/r i k/k w przekrojach: metraż, pokoje, …), `topCities`
-- Filtry w URL (`filterPrice`, `filterSize`, `filterRooms`, …) są obsługiwane po stronie klienta na `rawTransactions` [W].
-- Za ciężkie do bezpośredniego użycia. Agregaty lepiej brać z `/api/monthly-transaction-stats`.
+- Props: `rawTransactions[]` is **all of a city's transactions in short form** (Warsaw: 128,912 rows, HTML 12.9 MB): `{m: "YYYY-MM", s: area, a: amount, ps: price/m², c: classification, rn: rooms, fn: floor}`. Range 2017-01 → current month.
+- `latestSummary` (last full month), `slices` (y/y and q/q by cross-sections: area, rooms, …), `topCities`
+- URL filters (`filterPrice`, `filterSize`, `filterRooms`, …) are handled client-side on `rawTransactions` [W].
+- Too heavy for direct use. Aggregates are better taken from `/api/monthly-transaction-stats`.
 
 ### `/statystyki/ceny-transakcyjne/{type}/{city}/mapa` [P]
-- Props: `powiats[]`: `{powiat_rcn_id, powiat_name, transaction_count, med_price_sqm, med_size, med_amount, transaction_count_change, price_sqm_change, amount_change}` (okres: ostatni kwartał vs poprzedni? [H])
+- Props: `powiats[]`: `{powiat_rcn_id, powiat_name, transaction_count, med_price_sqm, med_size, med_amount, transaction_count_change, price_sqm_change, amount_change}` (period: last quarter vs previous? [H])
 
 ### `/statystyki/statystyki-rzadowe/{location}`: GUS + NBP [P]
-- **Jedyny kanał** dla tych danych (brak JSON API).
-- `location`: 69 lokalizacji: miasta oraz agregaty `polska`, `7-miast`, `10-miast`, `9-miast`, `6-miast-bez-warszawy` (prop `sortedLocations` z mapowaniem na `gus.teryt` i `nbp.dbName`)
-- Sekcje (`tocItems`): `gus-mieszkania` (kwartalnie i miesięcznie: oddane/rozpoczęte wg form budownictwa), `gus-formy-budownictwa`, `gus-srednia-powierzchnia` (rocznie), `gus-demografia` (urodzenia, zgony, przyrost), `gus-wiek` (kohorty 5-letnie K/M), `gus-bezrobocie` (miesięczna stopa), `gus-wynagrodzenia`, `nbp` (kwartalnie: `pierwotnyOfertowa`, `pierwotnyTransakcyjna`, `wtornyOfertowa`, `wtornyTransakcyjna`)
-- Kilka propsów nazywa się `data`; trzeba je rozróżniać po kształcie lub pozycji w drzewie [P]. To kruche miejsce.
+- **The only channel** for this data (no JSON API).
+- `location`: 69 locations: cities and the aggregates `polska`, `7-miast`, `10-miast`, `9-miast`, `6-miast-bez-warszawy` (prop `sortedLocations` mapped to `gus.teryt` and `nbp.dbName`)
+- Sections (`tocItems`): `gus-mieszkania` (quarterly and monthly: completed/started by construction form), `gus-formy-budownictwa`, `gus-srednia-powierzchnia` (yearly), `gus-demografia` (births, deaths, natural change), `gus-wiek` (5-year cohorts F/M), `gus-bezrobocie` (monthly rate), `gus-wynagrodzenia`, `nbp` (quarterly: `pierwotnyOfertowa`, `pierwotnyTransakcyjna`, `wtornyOfertowa`, `wtornyTransakcyjna`)
+- Several props are named `data`; they have to be told apart by shape or position in the tree [P]. A fragile spot.
 - Sample: `page.stats_gov.json`
 
 ### `/statystyki/portale-ogloszeniowe/{type}/{region}` [P]
-- Dane ładowane po stronie klienta z `/api/announcement-stats`. Strona zawiera tylko szkielet i listę regionów.
+- Data loaded client-side from `/api/announcement-stats`. The page contains only a skeleton and the region list.
 
 ---
 
-## Inne
+## Other
 
 ### `/zglos-dewelopera/mapa-zgloszen` [P]
-- Props: `developerAbuseData[]` (105): `{developer_abuse_id, name, slug, developer, website, latitude, longitude, violations[], additionalInfo}`, czyli zgłoszenia naruszeń ustawy o jawności cen.
+- Props: `developerAbuseData[]` (105): `{developer_abuse_id, name, slug, developer, website, latitude, longitude, violations[], additionalInfo}`, that is reports of violations of the price transparency act.
 - Sample: `page.developer_abuse_map.json`

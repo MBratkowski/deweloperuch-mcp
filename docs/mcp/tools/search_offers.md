@@ -5,66 +5,68 @@
 >
 > Ograniczenia: można przejrzeć najwyżej 20 stron po per_page ofert. Gdy truncated=true, zawęź filtry zamiast przeglądać kolejne strony. Wszystkie oferty jednej inwestycji daje get_investment.
 
-Tytuł: „Szukaj ofert mieszkań”. Adnotacje: `readOnlyHint=true`, `openWorldHint=true`. Zasady wspólne (reguły argumentów, błędy, rozmiary): [przegląd MCP](../README.md).
+Summary: searches developers' apartment offers (primary market only, asking prices, not transaction prices) in one city or the whole of Poland (`city=polska`), with price and area filters and price sorting; use it to find apartments within a budget or of a given area; it does not filter by district, number of rooms or developer. Returns one page: `total`, `returned`, `page`, `per_page`, `pages_available`, `truncated`, `hint`, `list_url` and `items` (shortened; details and price history come from `get_offer`); `list_url` is a "see all on deweloperuch.pl" link with the same filters. Limits: at most 20 pages of `per_page` offers can be browsed; when `truncated=true`, narrow the filters instead of paging; all offers of one investment come from `get_investment`.
 
-## Parametry
-| Nazwa | Typ | Wymagany | Domyślna | Opis |
+Title: „Szukaj ofert mieszkań”. Annotations: `readOnlyHint=true`, `openWorldHint=true`. Shared rules (argument rules, errors, sizes): [MCP overview](../README.md).
+
+## Parameters
+| Name | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `city` | string | tak | — | city_slug miasta z search_locations (np. warszawa, krakow) albo polska dla całego kraju. |
-| `price_min` | integer 0–99 999 999 | nie | brak | Najniższa cena oferty w PLN. |
-| `price_max` | integer 0–99 999 999 | nie | brak | Najwyższa cena oferty w PLN. |
-| `area_min` | integer 0–9 999 | nie | brak | Najmniejszy metraż w m². |
-| `area_max` | integer 0–9 999 | nie | brak | Największy metraż w m². |
-| `sort` | `price_asc` \| `price_desc` | nie | brak | price_asc: od najtańszych, price_desc: od najdroższych; brak: domyślna kolejność serwisu (nie jest gwarantowana). |
-| `page` | integer 1–20 | nie | `1` | Numer strony wyników, 1–20. |
-| `per_page` | `10` \| `50` | nie | `10` | 10 albo 50. Pozycja to ok. 450 znaków wyniku (z linkiem), więc 50 daje ok. 22 tys.; zwykle wystarcza 10. |
+| `city` | string | yes | — | The `city_slug` of a city from `search_locations` (e.g. warszawa, krakow) or polska for the whole country. Schema text: „city_slug miasta z search_locations (np. warszawa, krakow) albo polska dla całego kraju.” |
+| `price_min` | integer 0-99 999 999 | no | none | The lowest offer price in PLN. Schema text: „Najniższa cena oferty w PLN.” |
+| `price_max` | integer 0-99 999 999 | no | none | The highest offer price in PLN. Schema text: „Najwyższa cena oferty w PLN.” |
+| `area_min` | integer 0-9 999 | no | none | The smallest area in m². Schema text: „Najmniejszy metraż w m².” |
+| `area_max` | integer 0-9 999 | no | none | The largest area in m². Schema text: „Największy metraż w m².” |
+| `sort` | `price_asc` \| `price_desc` | no | none | `price_asc`: cheapest first, `price_desc`: most expensive first; none: the service's default order (not guaranteed). Schema text: „price_asc: od najtańszych, price_desc: od najdroższych; brak: domyślna kolejność serwisu (nie jest gwarantowana).” |
+| `page` | integer 1-20 | no | `1` | The results page number, 1-20. Schema text: „Numer strony wyników, 1–20.” |
+| `per_page` | `10` \| `50` | no | `10` | 10 or 50. An item is about 450 characters of result (with a link), so 50 gives about 22k; 10 is usually enough. Schema text: „10 albo 50. Pozycja to ok. 450 znaków wyniku (z linkiem), więc 50 daje ok. 22 tys.; zwykle wystarcza 10.” |
 
-Reguły argumentów (liczby jako tekst z samych cyfr, `""`/`null`, przycinanie `sort`): [przegląd MCP](../README.md#reguły-argumentów). `price_min` większe niż `price_max` (analogicznie metraż) to błąd walidacji usługi.
+Argument rules (numbers as a string of digits only, `""`/`null`, trimming of `sort`): [MCP overview](../README.md#argument-rules). `price_min` greater than `price_max` (likewise for area) is a service validation error.
 
-## Wynik
-Wynik strukturalny i ten sam kompaktowy JSON w treści; pola `null` są pomijane.
+## Result
+A structured result and the same compact JSON in the content; `null` fields are omitted.
 
-| Pole | Typ | Opis |
+| Field | Type | Description |
 |---|---|---|
-| `total` | integer | Wszystkie pasujące oferty. |
-| `returned` | integer | Pozycji na tej stronie. |
-| `truncated` | boolean | `true`: pasujących ofert jest więcej, niż można przejrzeć (najwyżej 20 stron); zawęź filtry. |
-| `page`, `per_page`, `pages_available` | integer | Strona, jej rozmiar i liczba stron możliwych do przejrzenia. |
-| `hint` | string | Przy obcięciu: ile ofert pasuje, ile stron po ile można przejrzeć i rada, żeby zawęzić filtry (opcjonalne). |
-| `list_url` | string | Ta lista ofert na deweloperuch.pl (te same filtry, sortowanie i strona): podaj ją użytkownikowi jako link (opcjonalne). |
-| `items` | tablica | Pozycje skrócone. |
+| `total` | integer | All matching offers. |
+| `returned` | integer | The number of items on this page. |
+| `truncated` | boolean | `true`: there are more matching offers than can be browsed (20 pages at most); narrow the filters. |
+| `page`, `per_page`, `pages_available` | integer | The page, its size and the number of pages that can be browsed. |
+| `hint` | string | When truncated: how many offers match, how many pages of what size can be browsed, and advice to narrow the filters (optional). |
+| `list_url` | string | This offer list on deweloperuch.pl (the same filters, sorting and page): give it to the user as a link (optional). |
+| `items` | array | Shortened items. |
 
-Pozycja: `offer_id`, `investment_slug`, `name`, `status` (`active` albo `archived`), `investment_name`, `developer_name` (zawsze); `investment_url` (strona inwestycji na deweloperuch.pl, nie pojedynczej oferty: podaj ją użytkownikowi jako link; brak sluga oznacza brak pola), `price` (PLN, cena ofertowa), `area_m2`, `price_per_m2`, `last_price_change_kind` (`increase`, `decrease`, `no_change`), `last_price_change_pct`, `price_change_since_start_pct` (ujemna = tańsza) (opcjonalne); `city`, `city_slug` tylko przy `city=polska`.
+An item: `offer_id`, `investment_slug`, `name`, `status` (`active` or `archived`), `investment_name`, `developer_name` (always); `investment_url` (the investment page on deweloperuch.pl, not a single offer: give it to the user as a link; a missing slug means no field), `price` (PLN, asking price), `area_m2`, `price_per_m2`, `last_price_change_kind` (`increase`, `decrease`, `no_change`), `last_price_change_pct`, `price_change_since_start_pct` (negative = cheaper) (optional); `city`, `city_slug` only with `city=polska`.
 
-Rozmiary (pełne strony z próbek, z linkami): 10 pozycji ok. 4 500 znaków, 50 ok. 21 200, 50 przy `polska` ok. 23 300.
+Sizes (full pages from samples, with links): 10 items about 4 500 characters, 50 about 21 200, 50 with `polska` about 23 300.
 
-Linki (`*_url`): tylko trzy wzorce stron potwierdzone [P], bez `_rsc` i `/api/`, bez linku do pojedynczej oferty (jej strona nie jest potwierdzona). Zasady: D12 w [decisions.md](../../decisions.md).
+Links (`*_url`): only three page patterns confirmed [P], without `_rsc` and `/api/`, no link to a single offer (its page is not confirmed). Rules: D12 in [decisions.md](../../decisions.md).
 
-## Ograniczenia danych
-- Można przejrzeć najwyżej 20 stron (`page` 1–20) po `per_page` ofert; reszta jest nieosiągalna, trzeba zawęzić filtry. Zob. [pages-rsc.md](../../discovery/pages-rsc.md), „Wspólne reguły list”.
-- `per_page` w MCP to 10 i 50 ([P] w pages-rsc.md); CLI przyjmuje także 100.
-- Maksima `price_*` (99 999 999 PLN) i `area_*` (9 999 m²) to wartownicy zakresu [P z kodu] klienta serwisu, nie dane o rynku.
-- Sortowanie po cenie (`amount`, rosnąco i malejąco) jest potwierdzone [P 2026-10-10]; bez `sort` serwis sortuje rosnąco po identyfikatorze oferty, a nieznana wartość sortowania nie daje błędu (T3 w [open-questions.md](../../open-questions.md)).
-- Ceny ofertowe z rynku pierwotnego, nie transakcyjne.
+## Data limitations
+- At most 20 pages (`page` 1-20) of `per_page` offers can be browsed; the rest is unreachable and the filters must be narrowed. See [pages-rsc.md](../../discovery/pages-rsc.md), [Common list rules](../../discovery/pages-rsc.md#common-list-rules-p).
+- `per_page` in MCP is 10 and 50 ([P] in pages-rsc.md); the CLI also accepts 100.
+- The maxima of `price_*` (99 999 999 PLN) and `area_*` (9 999 m²) are range sentinels [P z kodu] of the service's client, not market data.
+- Sorting by price (`amount`, ascending and descending) is confirmed [P 2026-10-10]; without `sort` the service sorts ascending by offer identifier, and an unknown sort value gives no error (T3 in [open-questions.md](../../open-questions.md)).
+- Primary-market asking prices, not transaction prices.
 
-## Błędy
-| Sytuacja | Komunikat |
+## Errors
+| Situation | Message |
 |---|---|
-| `price_min` > `price_max` | `price_min (7) jest większe niż price_max (5); zamień je miejscami.` (analogicznie `area_`) |
-| Liczba poza zakresem | `<pole> musi być liczbą całkowitą z zakresu <od>–<do> …, podano <wartość>.` (lub błąd schematu z SDK) |
-| Nieznane miasto (slug poprawny, ale nieznany serwisowi) | `Serwis nie zna miasta '<city>'. Podaj city_slug z search_locations albo polska (cały kraj).` |
-| Zły `city`: nazwa zamiast sluga (np. `Warszawa`, `Kraków`), wielkie litery, pusty tekst | `city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje search_locations; podano '…'.` Bez zapytania do serwisu; spacje na brzegach są przycinane, slug to małe litery ASCII, cyfry i myślniki. |
-| `sort`/`per_page` spoza listy | Błąd walidacji schematu z SDK (angielski, prefiks „Error executing tool …”) |
-| STOP, błąd serwisu | Jak w [przeglądzie MCP](../README.md#błędy); błędy serwisu z przedrostkiem `Wyszukiwanie ofert w '<city>': …` |
+| `price_min` > `price_max` | `price_min (7) jest większe niż price_max (5); zamień je miejscami.` (likewise for `area_`) |
+| A number out of range | `<pole> musi być liczbą całkowitą z zakresu <od>–<do> …, podano <wartość>.` (or an SDK schema error) |
+| Unknown city (a valid slug the service does not know) | `Serwis nie zna miasta '<city>'. Podaj city_slug z search_locations albo polska (cały kraj).` |
+| Bad `city`: a name instead of a slug (e.g. `Warszawa`, `Kraków`), capital letters, an empty string | `city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje search_locations; podano '…'.` No request to the service; surrounding spaces are trimmed, a slug is lowercase ASCII letters, digits and hyphens. |
+| `sort`/`per_page` outside the list | A schema validation error from the SDK (English, prefix „Error executing tool …”) |
+| STOP, service error | As in the [MCP overview](../README.md#errors); service errors with the prefix `Wyszukiwanie ofert w '<city>': …` |
 
-## Przykład
-Wywołanie (domyślne `per_page` 10, bez filtrów):
+## Example
+Call (default `per_page` 10, no filters):
 
 ```json
 {"name": "search_offers", "arguments": {"city": "warszawa"}}
 ```
 
-Wynik z mocka testów (`tests/service_mocks.offers_page(count=10)`): pozycje są kopiami ofert z próbki `page.offers_list` z syntetycznymi `offer_id` (900000+), a `total` pochodzi z próbki. Pokazano 2 pierwsze pozycje z 10, pozostałe 8 pominięto:
+The result from the test mock (`tests/service_mocks.offers_page(count=10)`): the items are copies of offers from the `page.offers_list` sample with synthetic `offer_id` values (900000+), and `total` comes from the sample. The first 2 of 10 items are shown, the remaining 8 omitted:
 
 ```json
 {
@@ -83,4 +85,4 @@ Wynik z mocka testów (`tests/service_mocks.offers_page(count=10)`): pozycje są
 }
 ```
 
-_Źródło: `src/deweloperuch_mcp/mcp_server.py`, `src/deweloperuch_mcp/mcp_results.py`, `src/deweloperuch_mcp/services.py`, `tests/snapshots/mcp_tools.json`_
+_Source: `src/deweloperuch_mcp/mcp_server.py`, `src/deweloperuch_mcp/mcp_results.py`, `src/deweloperuch_mcp/services.py`, `tests/snapshots/mcp_tools.json`_

@@ -1,31 +1,33 @@
 # `deweloperuch investments get`
-Pokazuje inwestycję (projekt deweloperski) z deweloperem, średnimi cenami aktywnych ofert i listą ofert (najpierw aktywne). Odpowiednik narzędzia MCP [`get_investment`](../../mcp/tools/get_investment.md).
+Shows an investment (a development project) with its developer, the average prices of active offers and a list of offers (active first). Equivalent to the MCP tool [`get_investment`](../../mcp/tools/get_investment.md).
 
-## Użycie
+## Usage
 ```
 deweloperuch investments get [OPTIONS] SLUG
 ```
 
-## Opcje
-| Flaga | Typ | Domyślna | Opis |
+`--help` description: „Pokaż inwestycję z deweloperem i ofertami.”
+
+## Options
+| Flag | Type | Default | Description |
 |---|---|---|---|
-| `SLUG` (argument, wymagany) | tekst | — | Slug inwestycji (investment_slug z `offers search`). |
-| `--history` | flaga | wyłączona | Dołącz historię ceny każdej oferty (wolniej: dodatkowe zapytanie). |
-| `--limit` | int | brak (wszystkie oferty) | Najwięcej pokazanych ofert (najpierw aktywne). W MCP `limit` ma domyślnie 20 i maks. 200; CLI bez `--limit` pokazuje wszystkie. |
-| `--json` | flaga | wyłączona | Wypisz wynik jako JSON (model domenowy; z linkami `investment_url` i `developer_url`, pozycje `offers` bez linków). |
-| `--help` | flaga | | Pokaż pomoc. |
+| `SLUG` (argument, required) | text | — | The investment slug (investment_slug from `offers search`). Help text: „Slug inwestycji (investment_slug z `offers search`).” |
+| `--history` | flag | off | Attach the price history of each offer (slower). Help text: „Dołącz historię ceny każdej oferty (wolniej).” |
+| `--limit` | int | none (all offers) | The maximum number of offers shown (active first); all by default. In MCP `limit` defaults to 20 with a maximum of 200; the CLI without `--limit` shows all offers. Help text: „Najwięcej pokazanych ofert (najpierw aktywne); domyślnie wszystkie.” |
+| `--json` | flag | off | Print the result as JSON (the domain model; with the links `investment_url` and `developer_url`, the `offers` entries without links). Help text: „Wypisz wynik jako JSON (model domenowy).” |
+| `--help` | flag | | Show the help. |
 
-## Kody wyjścia
-Zob. [tabela kodów](../README.md#kody-wyjścia). Najczęstsze: 0, 2 (zły slug lub `--limit`), 3 STOP, 7 brak inwestycji.
+## Exit codes
+See the [exit code table](../README.md#exit-codes). Most common: 0, 2 (bad slug or `--limit`), 3 STOP, 7 no such investment.
 
-## Przykłady
+## Examples
 ```
 deweloperuch investments get smolna
 deweloperuch investments get smolna --limit 2
 deweloperuch investments get smolna --history --json
 ```
 
-Wynik tekstowy z `--limit 2` (mock testów, próbka `api.map_inv_visible`):
+Text output with `--limit 2` (test mock, sample `api.map_inv_visible`):
 
 ```
 Smolna [smolna] · aktywna
@@ -39,6 +41,6 @@ Oferty: aktywne 3 z 16 · pokazano 2 · pominięto 1 (zwiększ --limit).
 [2377] C224 · 1 620 175 PLN · 69,5 m² · 23 311,87 PLN/m² · aktywna · od pierwszej ceny +175 PLN (+0,01%)
 ```
 
-Linie „Strona inwestycji” i „Profil dewelopera” (D12) są pomijane, gdy brakuje sluga.
+The lines „Strona inwestycji” (investment page) and „Profil dewelopera” (developer profile) (D12) are omitted when the slug is missing.
 
-_Źródło: `src/deweloperuch_mcp/cli.py`, `uv run deweloperuch investments get --help`_
+_Source: `src/deweloperuch_mcp/cli.py`, `uv run deweloperuch investments get --help`_

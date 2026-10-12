@@ -1,29 +1,31 @@
 # `deweloperuch offers get`
-Pokazuje jedną ofertę z pełną historią ceny, inwestycją i deweloperem. Odpowiednik narzędzia MCP [`get_offer`](../../mcp/tools/get_offer.md).
+Shows one offer with its full price history, investment and developer. Equivalent to the MCP tool [`get_offer`](../../mcp/tools/get_offer.md).
 
-## Użycie
+## Usage
 ```
 deweloperuch offers get [OPTIONS] OFFER_ID --investment SLUG
 ```
 
-## Opcje
-| Flaga | Typ | Domyślna | Opis |
+`--help` description: „Pokaż ofertę z historią ceny.”
+
+## Options
+| Flag | Type | Default | Description |
 |---|---|---|---|
-| `OFFER_ID` (argument, wymagany) | int | — | Identyfikator oferty z `offers search`. |
-| `--investment` | SLUG | — (wymagana) | Slug inwestycji oferty (investment_slug z `offers search`). |
-| `--json` | flaga | wyłączona | Wypisz wynik jako JSON (model domenowy; z linkami `investment_url` i `developer_url`). |
-| `--help` | flaga | | Pokaż pomoc. |
+| `OFFER_ID` (argument, required) | int | — | The offer identifier from `offers search`. Help text: „Identyfikator oferty z `offers search`.” |
+| `--investment` | SLUG | — (required) | The slug of the offer's investment. Help text: „Slug inwestycji oferty (investment_slug z `offers search`).” |
+| `--json` | flag | off | Print the result as JSON (the domain model; with the links `investment_url` and `developer_url`). Help text: „Wypisz wynik jako JSON (model domenowy).” |
+| `--help` | flag | | Show the help. |
 
-## Kody wyjścia
-Zob. [tabela kodów](../README.md#kody-wyjścia). Najczęstsze: 0, 2 (brak `--investment`, zły `OFFER_ID`), 3 STOP, 7 brak inwestycji lub oferty w tej inwestycji.
+## Exit codes
+See the [exit code table](../README.md#exit-codes). Most common: 0, 2 (missing `--investment`, bad `OFFER_ID`), 3 STOP, 7 no such investment, or no such offer in this investment.
 
-## Przykłady
+## Examples
 ```
 deweloperuch offers get 2377 --investment smolna
 deweloperuch offers get 2377 --investment smolna --json
 ```
 
-Wynik tekstowy (mock testów, próbki `api.map_inv_visible`, `api.sale_events`):
+Text output (test mock, samples `api.map_inv_visible`, `api.sale_events`):
 
 ```
 [2377] C224 · aktywna
@@ -40,8 +42,8 @@ Historia ceny (3):
   2026-10-03  przywrócenie  1 620 175 PLN
 ```
 
-Linie „Strona inwestycji” i „Profil dewelopera” (D12) prowadzą do stron inwestycji i dewelopera, nie do pojedynczej oferty; brak sluga oznacza brak linii.
+The lines „Strona inwestycji” (investment page) and „Profil dewelopera” (developer profile) (D12) lead to the investment and developer pages, not to a single offer; a missing slug means no line.
 
-Z `--json` wynik ma wszystkie pola modelu domenowego, także `null` (np. `developer.website`).
+With `--json` the result has all fields of the domain model, also `null` ones (e.g. `developer.website`).
 
-_Źródło: `src/deweloperuch_mcp/cli.py`, `uv run deweloperuch offers get --help`_
+_Source: `src/deweloperuch_mcp/cli.py`, `uv run deweloperuch offers get --help`_

@@ -3,43 +3,45 @@
 >
 > Zwraca cenę, metraż, cenę za m², status (active albo archived), zmianę od pierwszej ceny, daty i price_history (date, kind: offer, archived albo restored, price). investment_url i developer_url to strony inwestycji i dewelopera na deweloperuch.pl: podawaj je użytkownikowi jako linki. Do listy ofert jednej inwestycji użyj get_investment.
 
-Tytuł: „Oferta z historią ceny”. Adnotacje: `readOnlyHint=true`, `openWorldHint=true`. Zasady wspólne: [przegląd MCP](../README.md).
+Summary: returns one offer with its full price history, investment and developer; use it to see how an apartment's price changed; it needs both `offer_id` and `investment_slug` (given by `search_offers` or `get_investment`), `offer_id` alone is not enough. Returns the price, area, price per m², status, change since the first price, dates and `price_history`; `investment_url` and `developer_url` are links to be given to the user; for the list of an investment's offers use `get_investment`.
 
-## Parametry
-| Nazwa | Typ | Wymagany | Domyślna | Opis |
+Title: „Oferta z historią ceny”. Annotations: `readOnlyHint=true`, `openWorldHint=true`. Shared rules: [MCP overview](../README.md).
+
+## Parameters
+| Name | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `offer_id` | integer ≥ 1 | tak | — | offer_id z search_offers albo get_investment. Liczba może być też tekstem z samych cyfr. |
-| `investment_slug` | string | tak | — | investment_slug inwestycji tej oferty, np. smolna (z search_offers). |
+| `offer_id` | integer >= 1 | yes | — | The offer identifier from `search_offers` or `get_investment`; a number may also be a string of digits only. Schema text: „offer_id z search_offers albo get_investment. Liczba może być też tekstem z samych cyfr.” |
+| `investment_slug` | string | yes | — | The slug of the offer's investment, e.g. smolna (from `search_offers`). Schema text: „investment_slug inwestycji tej oferty, np. smolna (z search_offers).” |
 
-## Wynik
-Wynik strukturalny i ten sam kompaktowy JSON w treści; pola `null` są pomijane.
+## Result
+A structured result and the same compact JSON in the content; `null` fields are omitted.
 
-Pola: `offer_id`, `name`, `status` (`active` albo `archived`), `investment_slug`, `investment_name`, `city`, `city_slug`, `developer` (`developer_slug`, `name`, opcjonalnie `website`, `description`), `price_history` (zawsze); `investment_url` (strona inwestycji na deweloperuch.pl: podaj ją użytkownikowi jako link), `developer_url` (profil dewelopera na deweloperuch.pl: podaj go użytkownikowi jako link) (opcjonalne, brak sluga oznacza brak pola); `price` (PLN, cena ofertowa), `currency`, `area_m2`, `price_per_m2`, `price_change_since_start` (PLN, ujemna = tańsza), `price_change_since_start_pct`, `creation_date`, `last_event_date`, `last_change_date` (opcjonalne).
+Fields: `offer_id`, `name`, `status` (`active` or `archived`), `investment_slug`, `investment_name`, `city`, `city_slug`, `developer` (`developer_slug`, `name`, optionally `website`, `description`), `price_history` (always); `investment_url` (the investment page on deweloperuch.pl: give it to the user as a link), `developer_url` (the developer profile on deweloperuch.pl: give it to the user as a link) (optional, a missing slug means no field); `price` (PLN, asking price), `currency`, `area_m2`, `price_per_m2`, `price_change_since_start` (PLN, negative = cheaper), `price_change_since_start_pct`, `creation_date`, `last_event_date`, `last_change_date` (optional).
 
-Zdarzenie historii (`price_history[]`): `kind` (`offer` – cena w ofercie, `archived` – wycofanie, `restored` – powrót), opcjonalnie `date` i `price`. Jedna oferta to rząd kilkuset znaków. Linki prowadzą do stron inwestycji i dewelopera, nie do pojedynczej oferty (jej strona nie jest potwierdzona); zasady: D12 w [decisions.md](../../decisions.md).
+A history event (`price_history[]`): `kind` (`offer` - a price in the offer, `archived` - withdrawal, `restored` - return), optionally `date` and `price`. One offer is a few hundred characters. The links lead to the investment and developer pages, not to a single offer (its page is not confirmed); rules: D12 in [decisions.md](../../decisions.md).
 
-## Ograniczenia danych
-- Serwis nie ma potwierdzonej drogi od samego `offer_id` do inwestycji, dlatego `investment_slug` jest wymagany (T1 w kodzie usługi).
-- `kind: offer` to każdy wpis ceny ofertowej w historii: pierwsza cena i każda jej zmiana [P 2026-10-10]; nie jest to tylko pierwsza cena. Zob. [entities.md](../../discovery/entities.md) i [open-questions.md](../../open-questions.md).
-- Ceny ofertowe, nie transakcyjne.
+## Data limitations
+- The service has no confirmed way from `offer_id` alone to the investment, which is why `investment_slug` is required (T1 in the service code).
+- `kind: offer` is every asking-price entry in the history: the first price and each change [P 2026-10-10]; it is not only the first price. See [entities.md](../../discovery/entities.md) and [open-questions.md](../../open-questions.md).
+- Asking prices, not transaction prices.
 
-## Błędy
-| Sytuacja | Komunikat |
+## Errors
+| Situation | Message |
 |---|---|
-| Inwestycja nie istnieje | `Nie znaleziono inwestycji '<slug>'. Slug inwestycji podaje search_offers (pole investment_slug).` |
-| Inwestycja nie ma takiej oferty | `Inwestycja '<slug>' nie ma oferty <id>. Sprawdź offer_id i investment_slug (oba podaje search_offers); wszystkie oferty inwestycji zwraca get_investment.` |
-| Brak historii ceny | `Serwis nie ma historii ceny oferty <id> z inwestycji '<slug>'. Sprawdź offer_id i investment_slug (oba podaje search_offers); ofertę bez historii pokazuje get_investment.` |
-| `offer_id` < 1, nie liczba | `offer_id musi być liczbą całkowitą z zakresu 1–… (identyfikator oferty z search_offers), podano …` albo błąd schematu z SDK |
-| STOP, błąd serwisu | Jak w [przeglądzie MCP](../README.md#błędy) |
+| The investment does not exist | `Nie znaleziono inwestycji '<slug>'. Slug inwestycji podaje search_offers (pole investment_slug).` |
+| The investment has no such offer | `Inwestycja '<slug>' nie ma oferty <id>. Sprawdź offer_id i investment_slug (oba podaje search_offers); wszystkie oferty inwestycji zwraca get_investment.` |
+| No price history | `Serwis nie ma historii ceny oferty <id> z inwestycji '<slug>'. Sprawdź offer_id i investment_slug (oba podaje search_offers); ofertę bez historii pokazuje get_investment.` |
+| `offer_id` < 1, not a number | `offer_id musi być liczbą całkowitą z zakresu 1–… (identyfikator oferty z search_offers), podano …` or an SDK schema error |
+| STOP, service error | As in the [MCP overview](../README.md#errors) |
 
-## Przykład
-Wywołanie:
+## Example
+Call:
 
 ```json
 {"name": "get_offer", "arguments": {"offer_id": 2377, "investment_slug": "smolna"}}
 ```
 
-Wynik z mocka testów (próbki `api.map_inv_visible`, `api.sale_events`):
+The result from the test mock (samples `api.map_inv_visible`, `api.sale_events`):
 
 ```json
 {
@@ -70,4 +72,4 @@ Wynik z mocka testów (próbki `api.map_inv_visible`, `api.sale_events`):
 }
 ```
 
-_Źródło: `src/deweloperuch_mcp/mcp_server.py`, `src/deweloperuch_mcp/mcp_results.py`, `src/deweloperuch_mcp/services.py`, `tests/snapshots/mcp_tools.json`_
+_Source: `src/deweloperuch_mcp/mcp_server.py`, `src/deweloperuch_mcp/mcp_results.py`, `src/deweloperuch_mcp/services.py`, `tests/snapshots/mcp_tools.json`_

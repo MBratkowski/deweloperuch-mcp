@@ -1,175 +1,218 @@
-# Decyzje architektoniczne
+# Architecture decisions
 
-Format: krótkie ADR. Status: **przyjęta** (wynika wprost z discovery), **proponowana** (czeka na akceptację), **otwarta**.
+Format: short ADRs. Status: **accepted** (follows directly from discovery), **proposed** (awaiting acceptance), **open**.
 
 ---
 
-## D1. Kolejność kanałów: JSON API → RSC → server actions (przyjęta)
+## D1. Channel order: JSON API → RSC → server actions (accepted)
 
-**Kontekst.** Dane są dostępne czterema kanałami o różnej stabilności ([discovery/README.md](discovery/README.md#2-kanały-dostępu-do-danych)).
-**Decyzja.** Dla każdej capability używamy JSON `/api/*`, jeśli daje potrzebne dane. RSC tylko tam, gdzie JSON nie istnieje (wyszukiwanie z filtrami i paginacją, profil dewelopera, raporty, GUS/NBP). Server actions tylko wtedy, gdy nie ma alternatywy (na dziś: żadna capability v1).
-**Konsekwencje.** Klient ma dwa adaptery transportowe: `json` i `rsc`. Adapter RSC jest izolowany i pokryty testami kontraktowymi na zapisanych próbkach, bo nazwy propsów mogą się zmienić bez zapowiedzi.
+**Context.** The data is available through four channels of different stability ([discovery/README.md](discovery/README.md#2-data-access-channels)).
+**Decision.** For each capability we use the JSON `/api/*` channel if it provides the data. RSC only where no JSON exists (search with filters and pagination, developer profile, reports, GUS/NBP). Server actions only when there is no alternative (today: no v1 capability).
+**Consequences.** The client has two transport adapters: `json` and `rsc`. The RSC adapter is isolated and covered by contract tests on recorded samples, because prop names may change without notice.
 
-## D2. Oszczędny, przewidywalny klient HTTP (przyjęta, szczegóły otwarte, patrz U1/T11)
+## D2. A frugal, predictable HTTP client (accepted, details open, see U1/T11)
 
-**Kontekst.** `robots.txt`: `Disallow: /api/`, `Crawl-delay: 1`. Serwis jest projektem społecznym za Cloudflare. Brak auth.
-**Decyzja.**
-- Globalny limiter: domyślnie ≤1 request/s, 1 request jednocześnie (konfigurowalne w dół, nie w górę bez świadomej decyzji).
-- Cache odpowiedzi w pamięci procesu. **Doprecyzowanie (2026-10-10, polecenie użytkownika „popraw” po przebiegu e2e):**
-  - TTL = świeżość odpowiedzi minus `Age`, najwyżej 300 s; świeżość to `s-maxage`, a bez niego `max-age`, a bez obu 300 s.
-  - TTL ≤ 0 oznacza brak cache; błędy nie trafiają do cache.
-  - Odpowiedź z dyrektywą `no-store` albo `no-cache` w `Cache-Control` (dowolna wielkość liter, także z wartością) nie trafia do cache. `private` i `must-revalidate` nie zmieniają TTL, bo cache jest prywatny dla procesu.
-  - Dane lokalne nie są więc starsze niż 5 min, a powtórzenia w tym oknie nie idą do serwisu.
-  - Pierwotna reguła „TTL ≈ `s-maxage`” dawała TTL ≤ 0 dla stron i `/api/*` z `max-age=28800` przy dużym `Age` z Cloudflare, więc każde powtórzenie szło do sieci (wykrył to zestaw e2e).
-- Brak funkcji masowego crawlowania (np. „pobierz wszystkie transakcje w Polsce”).
-- Timeouty i czytelne błędy dla 4xx/429/5xx; respektowanie `Retry-After`.
-- User-Agent: do ustalenia (U1/T11). Preferowany uczciwy identyfikator klienta, o ile nie jest blokowany.
+**Context.** `robots.txt`: `Disallow: /api/`, `Crawl-delay: 1`. The service is a community project behind Cloudflare. No auth.
+**Decision.**
+- Global limiter: by default ≤1 request/s and 1 request at a time (configurable downwards, not upwards without a deliberate decision).
+- In-process response cache. **Clarification (2026-10-10, the user's instruction "popraw" (fix it) after the e2e run):**
+  - TTL = the response's freshness minus `Age`, at most 300 s; freshness is `s-maxage`, otherwise `max-age`, otherwise 300 s.
+  - TTL ≤ 0 means no caching; errors are never cached.
+  - A response with a `no-store` or `no-cache` directive in `Cache-Control` (any letter case, also with a value) is not cached. `private` and `must-revalidate` do not change the TTL, because the cache is private to the process.
+  - Local data is therefore never older than 5 minutes, and repeats within that window do not reach the service.
+  - The original rule "TTL ≈ `s-maxage`" gave TTL ≤ 0 for pages and `/api/*` with `max-age=28800` whenever Cloudflare reported a large `Age`, so every repeat went to the network (found by the e2e suite).
+- No bulk crawling features (e.g. "download all transactions in Poland").
+- Timeouts and readable errors for 4xx/429/5xx; `Retry-After` is honoured.
+- User-Agent: to be decided (U1/T11). An honest client identifier is preferred, as long as it is not blocked.
 
-**Doprecyzowanie (2026-10-10, decyzja użytkownika): trwały STOP między procesami.**
-- Po 401, 403, 429 albo challenge Cloudflare proces zapisuje STOP w `stop.json` obok zamka limitera (`${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/`). Dopóki zapis jest aktywny, żaden proces (CLI, serwer MCP, `recon/probe.py`, `recon/scan_bundles.py`) nie wysyła zapytań.
-- STOP po 429 wygasa po pauzie; 401, 403 i challenge trwają do zdjęcia. Nieczytelny zapis oznacza STOP bezterminowy (fail-closed).
-- Zdejmuje go wyłącznie użytkownik przez `deweloperuch stop clear`, bez dodatkowego potwierdzenia w terminalu. Agentów blokują hook Bash i reguła w `CLAUDE.md`; narzędzia MCP do zdejmowania nie ma.
-- Proces, który zwrócił STOP, pozostaje zatrzaśnięty do restartu. Dotyczy to też serwera MCP, nawet po zdjęciu zapisu albo wygaśnięciu 429.
-- Szczegóły: [configuration.md](configuration.md#stop-blokada-między-procesami), handoff `2026-10-10-0740-trwaly-stop-miedzy-procesami`.
+**Clarification (2026-10-10, user decision): a persistent STOP across processes.**
+- After a 401, 403, 429 or a Cloudflare challenge, the process records a STOP in `stop.json` next to the limiter lock (`${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/`). While the record is active, no process (CLI, MCP server, `recon/probe.py`, `recon/scan_bundles.py`) sends requests.
+- A STOP after a 429 expires after the pause; 401, 403 and challenges last until lifted. An unreadable record means an indefinite STOP (fail-closed).
+- Only the user lifts it, with `deweloperuch stop clear`, without an extra confirmation in the terminal. Agents are blocked by the Bash hook and the rule in `CLAUDE.md`; there is no MCP tool for lifting it.
+- A process that returned a STOP stays latched until restart. This also applies to the MCP server, even after the record is lifted or a 429 expires.
+- Details: [configuration.md](configuration.md#stop-shared-lock-between-processes), handoff `2026-10-10-0740-trwaly-stop-miedzy-procesami`.
 
-## D3. Nazewnictwo domenowe niezależne od backendu (przyjęta)
+## D3. Domain naming independent of the backend (accepted)
 
-**Kontekst.** Backend nazywa budynek RCN „invest”, lokal „sale”, a pola mają niespójne typy ([entities.md](discovery/entities.md)).
-**Decyzja.** Model domenowy: `Developer`, `Investment`, `Offer`, `PriceEvent`, `Building`, `Unit`, `Transaction`, `Location`, `Valuation`, `TimeSeries`. DTO odzwierciedlają backend 1:1 (z tolerancją typów), a mapowanie DTO→domena normalizuje liczby, daty i puste stringi.
+**Context.** The backend calls an RCN building "invest" and a unit "sale", and its fields have inconsistent types ([entities.md](discovery/entities.md)).
+**Decision.** Domain model: `Developer`, `Investment`, `Offer`, `PriceEvent`, `Building`, `Unit`, `Transaction`, `Location`, `Valuation`, `TimeSeries`. DTOs mirror the backend 1:1 (with type tolerance), and the DTO→domain mapping normalizes numbers, dates and empty strings.
 
-## D4. Limit wyszukiwania jawny w kontrakcie (przyjęta)
+## D4. The search limit is explicit in the contract (accepted)
 
-**Kontekst.** Listy RSC zwracają najwyżej 20 stron × 100 = 2000 rekordów, przy `total` sięgającym np. 351 314.
-**Decyzja.** Wyniki wyszukiwania zawierają `total`, `returned`, `truncated` i podpowiedź, by zawęzić filtry. Agregaty (np. `stats` z listy transakcji) są pokazywane zamiast żądania pełnych danych.
+**Context.** RSC lists return at most 20 pages × 100 = 2000 records, while `total` reaches e.g. 351,314.
+**Decision.** Search results contain `total`, `returned`, `truncated` and a hint to narrow the filters. Aggregates (e.g. `stats` of the transaction list) are shown instead of requesting the full data.
 
-## D5. Ciężkie zrzuty nie trafiają do MCP (przyjęta)
+## D5. Heavy dumps never reach MCP (accepted)
 
-`map/powiat-sales` (do ~80 MB), `rawTransactions` (12,9 MB HTML), pełny `radiusPool` wyceny (180 KB) nie są wystawiane bezpośrednio. Jeśli kiedyś będą potrzebne, to jako wewnętrzne źródło lokalnego indeksu z osobną decyzją.
+`map/powiat-sales` (up to ~80 MB), `rawTransactions` (12.9 MB of HTML) and the full valuation `radiusPool` (180 KB) are not exposed directly. If they are ever needed, it will be as an internal source of a local index, under a separate decision.
 
-## D6. Wspólny core, cienkie adaptery (przyjęta, zgodnie z założeniem projektu)
+## D6. A shared core with thin adapters (accepted, as the project assumed)
 
 ```
 deweloperuch client (http + json adapter + rsc adapter + DTO)
         │
         ▼
-domain / services  (capabilities z capability-matrix, model domenowy, mapowanie DTO→domena)
+domain / services  (capabilities from the capability matrix, domain model, DTO→domain mapping)
      │         │
      ▼         ▼
-    CLI       MCP     (parsowanie argumentów / schematy tooli, formatowanie outputu)
+    CLI       MCP     (argument parsing / tool schemas, output formatting)
 ```
-CLI i MCP wołają te same funkcje serwisów. CLI służy też jako narzędzie developerskie (`--json`, `--raw` dla DTO).
+The CLI and MCP call the same service functions. The CLI also serves as a developer tool (`--json`, `--raw` for DTOs).
 
-**Doprecyzowanie (2026-10-10, decyzja użytkownika):**
-- W v1 nie ma `--raw`; surowe dane daje `recon/probe.py`.
-- `services.Session` jest jedynym punktem wejścia.
-- CLI i MCP importują z pakietu tylko `services`, `errors` i `domain.models`; MCP dodatkowo własną reprezentację `mcp_results`. Pilnuje tego `tests/test_layering.py`.
+**Clarification (2026-10-10, user decision):**
+- v1 has no `--raw`; raw data comes from `recon/probe.py`.
+- `services.Session` is the only entry point.
+- The CLI and MCP import from the package only `services`, `errors` and `domain.models`; MCP additionally its own representation `mcp_results`. `tests/test_layering.py` enforces this.
 
-## D7. Wykrywanie dryfu serwisu (proponowana)
+Superseded in structure by D13 (the spirit stays: one core, thin adapters).
 
-`recon/scan_bundles.py` listuje ścieżki `/api/*` i server actions z aktualnych bundli. Testy kontraktowe na `docs/discovery/samples/` plus okresowe (ręczne) uruchomienie skanera pokażą zmiany po deployach serwisu. Bez automatycznego crawla w CI.
+## D7. Detecting service drift (proposed)
 
-## D8. Stos technologiczny (przyjęta 2026-10-09: Python)
+`recon/scan_bundles.py` lists the `/api/*` paths and server actions in the current bundles. Contract tests on `docs/discovery/samples/` plus periodic (manual) scanner runs show changes after the service deploys. No automatic crawl in CI.
 
-**Decyzja użytkownika:** Python: FastMCP, pydantic, httpx, typer; pytest + pytest-socket + respx, ruff, mypy, uv. Tabela poniżej zostaje jako uzasadnienie.
+## D8. Technology stack (accepted 2026-10-09: Python)
 
-**Doprecyzowanie (2026-10-09, decyzja użytkownika):**
-- Serwer MCP budujemy na oficjalnym SDK `mcp>=2.3`. W linii 2.x FastMCP przemianowano na `MCPServer` (`from mcp.server.mcpserver import MCPServer`), a `mcp.server.fastmcp` jest tylko shimem z błędem migracji. Odrzucono przypięcie `mcp<2`.
-- `mcp` 2.x ciągnie też pakiet `httpx2`. Klient projektu jawnie używa `httpx`, bo respx mockuje tylko `httpx`.
+**User decision:** Python: FastMCP, pydantic, httpx, typer; pytest + pytest-socket + respx, ruff, mypy, uv. The table below stays as the rationale.
+
+**Clarification (2026-10-09, user decision):**
+- The MCP server is built on the official SDK `mcp>=2.3`. In the 2.x line FastMCP was renamed to `MCPServer` (`from mcp.server.mcpserver import MCPServer`), and `mcp.server.fastmcp` is only a shim with a migration error. Pinning `mcp<2` was rejected.
+- `mcp` 2.x also pulls in the `httpx2` package. The project's client uses `httpx` explicitly, because respx mocks only `httpx`.
 
 | | Python | TypeScript |
 |---|---|---|
-| MCP | oficjalny SDK z FastMCP (dekoratory, schemat z type hints) | oficjalny `@modelcontextprotocol/sdk` (najdojrzalszy) |
-| Modele/walidacja | pydantic: tolerancyjne DTO, łatwa normalizacja | zod: schematy współdzielone z inputem tooli |
+| MCP | official SDK with FastMCP (decorators, schema from type hints) | official `@modelcontextprotocol/sdk` (the most mature) |
+| Models/validation | pydantic: tolerant DTOs, easy normalization | zod: schemas shared with tool input |
 | CLI | typer/click | commander/yargs |
-| Dystrybucja | `uvx deweloperuch-mcp` | `npx deweloperuch-mcp` |
-| Fit do projektu | narzędzia recon już w Pythonie; praca z danymi i agregatami | ekosystem MCP i Next.js w JS; jeden język z serwisem (bez praktycznego zysku) |
+| Distribution | `uvx deweloperuch-mcp` | `npx deweloperuch-mcp` |
+| Project fit | recon tools already in Python; data work and aggregates | MCP and Next.js ecosystem in JS; one language with the service (no practical gain) |
 
-Rekomendacja: **Python**. Domena to głównie normalizacja i agregacja danych, pydantic dobrze obsługuje niespójne typy z backendu, a FastMCP daje mało boilerplate'u. TypeScript też jest w pełni uzasadniony, jeśli zespół woli JS.
+Recommendation: **Python**. The domain is mostly data normalization and aggregation, pydantic handles the backend's inconsistent types well, and FastMCP needs little boilerplate. TypeScript would be fully justified too if the team preferred JS.
 
-## D9. Żywe zapytania do czasu rozstrzygnięcia U1 (przyjęta 2026-10-09, tymczasowa)
+## D9. Live requests until U1 is resolved (accepted 2026-10-09, temporary)
 
-**Kontekst.** Polityka wobec `robots.txt: Disallow: /api/` (U1) jest otwarta.
-**Decyzja użytkownika.** Dopóki U1 nie jest rozstrzygnięte, każda seria żywych zapytań (weryfikacja hipotez, skan driftu) wymaga jawnej zgody użytkownika w bieżącej rozmowie. User-Agent to jedna stała. Jej wartość wybiera użytkownik przy rozstrzyganiu U1; do tego czasu zostaje obecna wartość ze skanera, oznaczona `TODO(U1)`.
+**Context.** The policy towards `robots.txt: Disallow: /api/` (U1) is open.
+**User decision.** Until U1 is resolved, every series of live requests (hypothesis verification, drift scan) needs the user's explicit consent in the current conversation. The User-Agent is a single constant. Its value is chosen by the user when U1 is resolved; until then it keeps the scanner's current value, marked `TODO(U1)`.
 
-**Doprecyzowanie (2026-10-09, decyzja użytkownika):** stała `USER_AGENT` mieszka w module pakietu `deweloperuch_mcp` (tylko stdlib), bo zainstalowany pakiet nie widzi katalogu `recon/`. `recon/config.py` ją reeksportuje. Wykonane 2026-10-09: `BASE_URL` i `USER_AGENT` są zdefiniowane w `src/deweloperuch_mcp/identity.py`. Test w `tests/test_identity.py` pilnuje jednej definicji User-Agenta.
+**Clarification (2026-10-09, user decision):** the `USER_AGENT` constant lives in a module of the `deweloperuch_mcp` package (stdlib only), because the installed package cannot see the `recon/` directory. `recon/config.py` re-exports it. Done 2026-10-09: `BASE_URL` and `USER_AGENT` are defined in `src/deweloperuch_mcp/identity.py`. A test in `tests/test_identity.py` enforces a single User-Agent definition.
 
-## D10. Poziom wymuszania zasad przez Claude Code (przyjęta 2026-10-09)
+## D10. How strictly Claude Code enforces the rules (accepted 2026-10-09)
 
-**Decyzja użytkownika.**
-- Hooki są siatką na pomyłki, nie granicą bezpieczeństwa:
-  - własność plików per agent dla Edit/Write/NotebookEdit;
-  - blokada URL-i serwisu w Bash;
-  - przypomnienie o handoffie.
-- Testy blokują sieć przez `pytest-socket`.
-- Narzędzia przeglądarki (`mcp__claude-in-chrome`) wymagają potwierdzenia przy każdym użyciu.
-- Bez sandboxa Claude Code.
+**User decision.**
+- Hooks are a safety net against mistakes, not a security boundary:
+  - per-agent file ownership for Edit/Write/NotebookEdit;
+  - blocking service URLs in Bash;
+  - a handoff reminder.
+- Tests block the network with `pytest-socket`.
+- Browser tools (`mcp__claude-in-chrome`) need confirmation on every use.
+- No Claude Code sandbox.
 
-Konfiguracja: `.claude/settings.json`, `.claude/hooks/`, zasady w `CLAUDE.md`.
+Configuration: `.claude/settings.json`, `.claude/hooks/`, rules in `CLAUDE.md`.
 
-**Doprecyzowanie (2026-10-10, decyzja użytkownika):**
-- Testy serwera MCP dopuszczają gniazda AF_UNIX (potrzebne pętli asyncio); AF_INET, AF_INET6 i DNS są dalej zablokowane.
-- Testy uruchamiające podprocesy wstawiają w nich guard pytest-socket (`NO_NETWORK` w `tests/test_mcp_server.py`, guard w `tests/throttle_worker.py`) i nie wołają ścieżek, które mogłyby dojść do usług.
-- Hook Bash blokuje też agentom zdejmowanie STOP (D2): `deweloperuch … stop clear` oraz zmiany i usuwanie plików limitera.
+**Clarification (2026-10-10, user decision):**
+- MCP server tests allow AF_UNIX sockets (needed by the asyncio loop); AF_INET, AF_INET6 and DNS stay blocked.
+- Tests that start subprocesses install a pytest-socket guard in them (`NO_NETWORK` in `tests/test_mcp_server.py`, the guard in `tests/throttle_worker.py`) and never call paths that could reach the services.
+- The Bash hook also blocks agents from lifting a STOP (D2): `deweloperuch … stop clear` and changing or deleting the limiter's files.
 
-**Doprecyzowanie (2026-10-10, polecenie użytkownika: „pisz e2e testy”, „zrób jak najwięcej testów e2e”): wyjątek dla zestawu e2e.**
-- Opcjonalny zestaw `tests/e2e/` łączy się z żywym serwisem, ale wyłącznie przez podprocesy: serwer MCP przez stdio, CLI i `probe`. Sam proces testów nadal ma blokadę sieci (dopuszcza tylko AF_UNIX).
-- Uruchamia się tylko przy obu włącznikach naraz: `DEWELOPERUCH_LIVE=1` i `-m live`. Domyślny `uv run pytest` go pomija i nie łączy się z siecią.
-- Uruchomienie to seria żywych zapytań w rozumieniu D9: wymaga zgody użytkownika i nie może iść równolegle z recon-verifierem ani drift-checkerem.
-- Budżet zapytań na przebieg jest twardy i pilnuje go asercja w zestawie.
-- Zestaw korzysta ze wspólnego limitera i zapisu STOP (D2). STOP kończy przebieg bez ponowień.
-- Testy offline korzystają z prawdziwych odpowiedzi serwisu: próbek `docs/discovery/samples/` i surowych payloadów `tests/fixtures/`. Payloadów nie buduje się z założeń, chyba że test sprawdza sam kształt.
+**Clarification (2026-10-10, the user's instructions "pisz e2e testy" (write e2e tests) and "zrób jak najwięcej testów e2e" (make as many e2e tests as possible)): an exception for the e2e suite.**
+- The optional `tests/e2e/` suite talks to the live service, but only through subprocesses: the MCP server over stdio, the CLI and `probe`. The test process itself keeps the network blocked (AF_UNIX only).
+- It runs only with both switches at once: `DEWELOPERUCH_LIVE=1` and `-m live`. A default `uv run pytest` skips it and does not touch the network.
+- A run is a series of live requests in the sense of D9: it needs the user's consent and must not run in parallel with recon-verifier or drift-checker.
+- The request budget per run is hard and enforced by an assertion in the suite.
+- The suite uses the shared limiter and STOP record (D2). A STOP ends the run without retries.
+- Offline tests use real service responses: the samples in `docs/discovery/samples/` and the raw payloads in `tests/fixtures/`. Payloads are not built from assumptions, unless the test checks the shape itself.
 
-## D11. Interfejs MCP i CLI v1 (przyjęta 2026-10-10, decyzja użytkownika)
+## D11. The v1 MCP and CLI interface (accepted 2026-10-10, user decision)
 
-**Kontekst.** S1b dało pierwszy publiczny interfejs; rozmiar wyniku dla modelu to główne ograniczenie MCP.
-**Decyzja.**
-- **Transport MCP: tylko stdio** (rozstrzyga U3).
-  - Narzędzia mają adnotacje `readOnlyHint` i `openWorldHint`, bez `idempotentHint`.
-  - Błędy wracają jako wynik `isError` z polskim komunikatem, nie jako `ToolError`.
-- **Reprezentacja MCP** (`mcp_results.py`) jest osobna od modelu domenowego.
-  - Pozycje są skrócone, a pola `null` pomijane, z wyjątkiem `total` (D4), które jest zawsze obecne.
-  - `search_offers.per_page` ∈ {10, 50}, domyślnie 10.
-  - `get_investment.limit`: domyślnie 20, najwyżej 200.
+**Context.** S1b produced the first public interface; result size for the model is the main MCP constraint.
+**Decision.**
+- **MCP transport: stdio only** (resolves U3).
+  - Tools carry the `readOnlyHint` and `openWorldHint` annotations, without `idempotentHint`.
+  - Errors come back as an `isError` result with a Polish message, not as a `ToolError`.
+- **The MCP representation** (`mcp_results.py`) is separate from the domain model.
+  - Items are compact and `null` fields are omitted, except `total` (D4), which is always present.
+  - `search_offers.per_page` ∈ {10, 50}, default 10.
+  - `get_investment.limit`: default 20, at most 200.
 - **CLI:**
-  - `--json` daje pełny model domenowy, `offers search --per-page` przyjmuje 10/50/100, a `investments get` domyślnie pokazuje wszystkie oferty.
-  - Kody wyjścia: 0 OK, 1 inny błąd, 2 błędne wejście, 3 STOP, 4 błąd serwisu, 5 limiter, 6 nieoczekiwana odpowiedź, 7 brak zasobu.
-- **Wejście MCP:**
-  - liczby całkowite przyjmowane także jako tekst z samych cyfr; `true`/`false` w polach liczbowych odrzucane;
-  - `""` i `null` oznaczają brak wartości albo wartość domyślną; `sort` jest przycinany.
-- **Parametry:** usługi i schematy wystawiają tylko parametry `[P]`. Rozszerzenia przychodzą po weryfikacji (przepływ B).
+  - `--json` gives the full domain model, `offers search --per-page` accepts 10/50/100, and `investments get` shows all offers by default.
+  - Exit codes: 0 OK, 1 other error, 2 invalid input, 3 STOP, 4 service error, 5 limiter, 6 unexpected response, 7 not found.
+- **MCP input:**
+  - integers are also accepted as text made of digits only; `true`/`false` in numeric fields are rejected;
+  - `""` and `null` mean no value or the default value; `sort` is trimmed.
+- **Parameters:** services and schemas expose only `[P]` parameters. Extensions come after verification (flow B).
 
-**Konsekwencje.** Większe strony (100) i pełne modele są dostępne w CLI, nie w MCP. Zmiana tych limitów zmienia snapshot `tests/snapshots/mcp_tools.json`.
+**Consequences.** Larger pages (100) and full models are available in the CLI, not in MCP. Changing these limits changes the snapshot `tests/snapshots/mcp_tools.json`.
 
-## D12. Komunikaty błędów: dla modelu bez szczegółów backendu (przyjęta 2026-10-10, decyzja użytkownika)
+## D12. Error messages: no backend details for the model (accepted 2026-10-10, user decision)
 
-**Kontekst.** Ścieżki, nazwy propsów i treść odpowiedzi serwisu w komunikacie dla modelu to kanał prompt injection i szum. Sekwencje terminala w treści odpowiedzi to ryzyko dla CLI.
-**Decyzja.**
-- `str(err)` jest domenowy (co się stało z ofertą, inwestycją, wyszukiwaniem i co zrobić). Nie zawiera ścieżek, propsów, treści odpowiedzi, rozmiarów ani etykiet decyzji.
-- Szczegóły techniczne idą do `err.detail`, zawsze escapowane (`errors.printable`). MCP zapisuje je tylko w logu na stderr, CLI pokazuje w linii `Szczegóły:`.
-- Komunikaty STOP mówią tylko, co zatrzymało serię, i każą przerwać i zgłosić to użytkownikowi. Nie podają czasów, źródła ani sposobu zdjęcia blokady, a tekst z pliku STOP nigdy nie trafia do modelu.
+**Context.** Paths, prop names and response text from the service in a message for the model are a prompt-injection channel and noise. Terminal sequences in response text are a risk for the CLI.
+**Decision.**
+- `str(err)` is in domain terms (what happened to the offer, investment or search, and what to do). It contains no paths, props, response text, sizes or decision labels.
+- Technical details go to `err.detail`, always escaped (`errors.printable`). MCP writes them only to the log on stderr; the CLI shows them on a `Szczegóły:` line.
+- STOP messages only say what stopped the series and tell the model to stop and report to the user. They give no times, source or way of lifting the block, and text from the STOP file never reaches the model.
 
-**Doprecyzowanie (2026-10-11, polecenie użytkownika: w tabeli wyników „powinny być linki”): linki do publicznych stron.**
-- Wyniki mogą zawierać pełne adresy publicznych stron serwisu dla człowieka, wyłącznie w dedykowanych polach `url` (np. strona inwestycji, profil dewelopera, lista ofert z tymi samymi filtrami).
-- Adresy buduje jedna funkcja z potwierdzonych [P] wzorców stron z `docs/discovery/pages-rsc.md`. Bez parametru `_rsc` i bez ścieżek `/api/*`.
-- Komunikaty błędów nadal nie zawierają żadnych adresów ani ścieżek.
-- Adresu, którego wzorzec nie jest [P], nie podajemy (dziś: strona pojedynczej oferty).
-- Link listy ofert zawiera publiczne parametry strony (np. `filterPrice`, `sortBy=amount`). To świadomy wyjątek od D3: są częścią adresu, który użytkownik otwiera, a nie nazwami pól wyniku.
-- Pola z linkami nazywają to, na co wskazują: `list_url` (lista ofert), `investment_url`, `developer_url`.
+**Clarification (2026-10-11, the user's instruction that the results table "powinny być linki" (should have links)): links to public pages.**
+- Results may contain full addresses of the service's public pages for people, only in dedicated `url` fields (e.g. the investment page, the developer profile, the offer list with the same filters).
+- Addresses are built by one function from the confirmed [P] page patterns in `docs/discovery/pages-rsc.md`. No `_rsc` parameter and no `/api/*` paths.
+- Error messages still contain no addresses or paths.
+- An address whose pattern is not [P] is not given (today: the page of a single offer).
+- The offer list link contains the page's public parameters (e.g. `filterPrice`, `sortBy=amount`). This is a deliberate exception to D3: they are part of an address the user opens, not names of result fields.
+- Link fields are named after what they point to: `list_url` (offer list), `investment_url`, `developer_url`.
+
+## D13. Architecture: lightweight DDD with ports and adapters (accepted 2026-10-12, the user's instruction)
+
+**Context.** v1 was built as technical layers with procedures ("transaction script"). The concrete problems:
+- **An anemic domain:** `domain/models.py` is data only (pydantic); the logic sits in `normalize.py` and in helpers of `services.py`.
+- **`services.search_offers` does everything at once:** it validates input, translates it into backend parameters (`filterPrice`, `sortBy`), words the messages, calls the infrastructure through the private `session._http` and builds the link.
+- **Primitives instead of value objects:** a price range is the string `"0-99999999"`, and sorting is a tuple of backend names.
+- **No ports and fat adapters:** services call the client directly, and `cli.py` and `mcp_server.py` mix validation, formatting and descriptions.
+
+The next features (price-history flags, `market_stats`, GUS/NBP) are domain logic, so the current shape would only deepen.
+
+**Decision.**
+- **Packages and dependency direction** (enforced by an AST test, no exceptions):
+  - `interfaces` → `application` → `domain`;
+  - `infrastructure` → `domain` (implements the ports);
+  - `bootstrap` (the composition root) wires the infrastructure into the use cases for the CLI and MCP.
+- **`domain/`:** plain Python (`dataclass(frozen=True)`, `Enum`), no I/O, no pydantic, no backend names and no imports from the rest of the package. It contains:
+  - value objects: an amount in PLN, an area, price and area ranges, slugs, page and page size, sorting; validation in constructors raises domain errors;
+  - entities and aggregates: an offer with its price history, an investment, a developer, a location, a time series;
+  - search criteria and a result with the truncation rule (D4) as domain behaviour;
+  - ports (`typing.Protocol`) through which the domain and the application see the world.
+- **`application/`:** use cases, one per operation (search locations, search offers, get an offer, get an investment, government statistics, STOP status and lifting). They orchestrate ports and do not know the backend.
+- **`infrastructure/`:** deweloperuch.pl adapters implementing the ports:
+  - transport, RSC and JSON, DTOs;
+  - mapping criteria to backend parameters (this is where `filterPrice` and `sortBy` belong);
+  - mapping DTOs to the domain;
+  - page links (D12).
+  - Stdlib-only modules used by `recon/` (`identity`, `throttle`, `http_policy`, `retry_after`, `allowlist`, `flight`) stay importable at their current paths.
+- **`interfaces/mcp/` and `interfaces/cli/`:** tools and commands grouped by capability, plus presenters (MCP schemas and the compact representation; CLI text and JSON). They depend only on `application` (and domain types for input) and on `bootstrap`.
+- **The refactor does not change behaviour:**
+  - the snapshot `tests/snapshots/mcp_tools.json` stays identical;
+  - CLI output (text and `--json`) and exit codes stay identical;
+  - the live e2e suite is the acceptance test;
+  - tests may be reorganized, not weakened.
+- **New features start in the domain**, e.g. the flags are methods of the price history and `market_stats` is an aggregate over a set of offers.
+
+**Consequences.** D6 still holds in spirit (one shared core, thin adapters), but the split above replaces its diagram. The layering tests (`tests/test_layering.py`) enforce the new dependency direction. The refactor goes in steps, each reviewed: the domain with ports and use cases; the interfaces; GUS/NBP in the new shape.
+
+## D14. Documentation language: English (accepted 2026-10-12, user decision)
+
+**Decision.** Documentation and handoffs are written in English. Quotes of product text (MCP tool descriptions, messages, CLI output), which is in Polish, stay verbatim; certainty tags (`[P]`, `[P YYYY-MM-DD]`, `[P z kodu]`, `[W]`, `[H]`) stay unchanged. Agent reports and the conversation with the user may stay in Polish. The rule is in `CLAUDE.md` and in the documentation-creator and handoff-updater definitions.
 
 ---
 
-## Proponowany pierwszy vertical slice
+## Proposed first vertical slice
 
-**Cel:** przejść przez wszystkie warstwy i oba kanały transportu (JSON i RSC) na najważniejszej ścieżce użytkownika: *„znajdź mieszkania deweloperskie w X w budżecie Y, pokaż szczegóły i historię ceny”*.
+**Goal:** go through all layers and both transport channels (JSON and RSC) on the most important user path: *"find new-build apartments in X within budget Y, show the details and the price history"*.
 
-| Capability | Kanał | Dlaczego w slice |
+| Capability | Channel | Why in the slice |
 |---|---|---|
-| `search_locations` | A | model musi zamienić „Kraków, Podgórze” na `city_slug` i dzielnicę |
-| `search_offers` | **B (RSC)** | najtrudniejszy kanał; jego wczesna walidacja zdejmuje główne ryzyko architektury |
-| `get_offer` (z historią ceny) + `get_investment` | A | stabilny JSON; pokazuje mapowanie DTO→domena (typy string/number, daty, zdarzenia) |
+| `search_locations` | A | the model has to turn "Kraków, Podgórze" into a `city_slug` and a district |
+| `search_offers` | **B (RSC)** | the hardest channel; validating it early removes the main architectural risk |
+| `get_offer` (with price history) + `get_investment` | A | stable JSON; shows the DTO→domain mapping (string/number types, dates, events) |
 
-Zakres techniczny slice'a: klient HTTP z limiterem i cache (D2), adaptery JSON i RSC, DTO + domena dla Offer/Investment/Developer/PriceEvent/Location, 4 komendy CLI, 4 narzędzia MCP, testy kontraktowe na próbkach i jeden ręczny smoke test na żywo.
+Technical scope of the slice: an HTTP client with limiter and cache (D2), JSON and RSC adapters, DTOs + domain for Offer/Investment/Developer/PriceEvent/Location, 4 CLI commands, 4 MCP tools, contract tests on samples and one manual live smoke test.
 
-**Stan (2026-10-10):** slice zrobiony bez smoke testu na żywo (S1a `23cd5be`, S1b `a954994`). Smoke test czeka na zgodę na serię żywych zapytań (D9).
+**Status (2026-10-10):** the slice is done without a live smoke test (S1a `23cd5be`, S1b `a954994`). The smoke test waits for consent to a series of live requests (D9). **Update (2026-10-10/11):** the live e2e suite (`tests/e2e/`) replaced the manual smoke test; its first run found and led to fixes of `search_offers` (RSC parsing) and of the cache TTL.
 
-Poza slice'em (kolejne iteracje): transakcje RCN i budynki → wycena → statystyki → GUS/NBP.
+Beyond the slice (next iterations): RCN transactions and buildings → valuation → statistics → GUS/NBP.

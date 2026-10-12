@@ -1,51 +1,51 @@
 # `deweloperuch stop clear`
-Zdejmuje blokadę STOP (usuwa `stop.json` pod zamkiem limitera) i wypisuje, co zdjęto. Działa offline.
+Clears the STOP lock (removes `stop.json` under the limiter lock) and prints what was cleared. Works offline.
 
-> **Tylko dla człowieka, po sprawdzeniu przyczyny** (`deweloperuch stop status`). Agent (model) tej komendy nie uruchamia: blokuje ją hook Bash w Claude Code (`.claude/hooks/guard_live_calls.py`) i reguła w `CLAUDE.md`. Nie ma też narzędzia MCP do zdejmowania blokady. Po 401, 403 lub challenge nie zdejmuj blokady, dopóki nie wiesz, dlaczego serwis odmówił. Zasady STOP: [docs/cli/README.md](../README.md#stop).
+> **For humans only, after checking the cause** (`deweloperuch stop status`). An agent (model) does not run this command: the Bash hook in Claude Code (`.claude/hooks/guard_live_calls.py`) and a rule in `CLAUDE.md` block it. There is also no MCP tool for clearing the lock. After a 401, 403 or challenge do not clear the lock until you know why the service refused. STOP rules: [docs/cli/README.md](../README.md#stop).
 
-## Użycie
+## Usage
 ```
 Usage: deweloperuch stop clear [OPTIONS]
 ```
 
-Opis z `--help`: „Zdejmij blokadę STOP. Tylko człowiek, po sprawdzeniu przyczyny (`stop status`).”
+`--help` description: „Zdejmij blokadę STOP. Tylko człowiek, po sprawdzeniu przyczyny (`stop status`).”
 
-## Opcje
-| Flaga | Typ | Domyślna | Opis |
+## Options
+| Flag | Type | Default | Description |
 |---|---|---|---|
-| (brak) | | | Tylko `--help`. Bez `--json` i bez pytania o potwierdzenie. |
+| (none) | | | Only `--help`. No `--json` and no confirmation prompt. |
 
-## Zachowanie
-- Czeka na zamek limitera najwyżej 300 s. Po 2 s oczekiwania pisze na stderr: `Czekam na zamek limitera: inny proces wysyła zapytanie albo czeka na swoją kolej.` Po 300 s kończy się kodem 1 i niczego nie zdejmuje (`Błąd: Nie udało się uzyskać zamka limitera w ciągu 300 s: … Nic nie zostało zdjęte.`).
-- Usuwa też osierocone pliki `.stop-*.tmp` (po przerwanym zapisie). Innych plików nie rusza.
-- **Nie skraca pauzy po 429** zapisanej w limiterze: `Retry-After` serwisu nadal obowiązuje. Dlatego zaraz po zdjęciu zapisu 429 komendy danych mogą jeszcze skończyć się kodem 5 (limiter wymaga czekania).
-- Nie tworzy katalogu, gdy go nie ma.
-- **Po zdjęciu zrestartuj serwer MCP.** Serwer, który raz zwrócił STOP (własny albo z zapisu innego procesu), pozostaje zatrzaśnięty do restartu i po `stop clear` nadal niczego nie wyśle. Komendy CLI i recon (nowe procesy) działają od razu.
+## Behavior
+- Waits for the limiter lock at most 300 s. After 2 s of waiting it writes to stderr: `Czekam na zamek limitera: inny proces wysyła zapytanie albo czeka na swoją kolej.` After 300 s it ends with code 1 and clears nothing (`Błąd: Nie udało się uzyskać zamka limitera w ciągu 300 s: … Nic nie zostało zdjęte.`).
+- Also removes orphaned `.stop-*.tmp` files (after an interrupted write). It touches no other files.
+- **It does not shorten the pause after a 429** recorded in the limiter: the service's `Retry-After` still applies. Therefore right after clearing a 429 record the data commands may still end with code 5 (the limiter requires waiting).
+- It does not create the directory when it does not exist.
+- **Restart the MCP server after clearing.** A server that returned STOP once (its own or from another process's record) stays latched until restart and will still send nothing after `stop clear`. CLI commands and recon (new processes) work immediately.
 
-## Wyjście
-- `Zdjęto STOP: <etykieta>, <czas>, źródło: <źródło>.` (dla wygasłego: `Zdjęto STOP (już wygasł): …`);
-- dla aktywnego 429: `Pauza po 429 zapisana w limiterze nadal obowiązuje.`;
+## Output
+- `Zdjęto STOP: <label>, <time>, źródło: <source>.` (for an expired one: `Zdjęto STOP (już wygasł): …`);
+- for an active 429: `Pauza po 429 zapisana w limiterze nadal obowiązuje.`;
 - `Działający serwer MCP, który trafił na STOP, wyśle zapytania dopiero po ponownym uruchomieniu.`;
-- nieczytelny zapis: `Zdjęto nieczytelny zapis STOP (<problem>).` i ta sama informacja o MCP;
-- bez zapisu: `Brak STOP: nie było czego zdejmować.`
+- an unreadable record: `Zdjęto nieczytelny zapis STOP (<problem>).` and the same information about MCP;
+- no record: `Brak STOP: nie było czego zdejmować.`
 
-## Kody wyjścia
-| Kod | Znaczenie |
+## Exit codes
+| Code | Meaning |
 |---|---|
-| 0 | Zdjęto zapis albo go nie było. |
-| 1 | Zamek nie został uzyskany w 300 s albo zapisu nie da się usunąć (`Błąd: nie udało się zdjąć zapisu STOP: …`); nic nie zdjęto. |
+| 0 | The record was cleared or there was none. |
+| 1 | The lock was not obtained within 300 s or the record cannot be removed (`Błąd: nie udało się zdjąć zapisu STOP: …`); nothing was cleared. |
 
-## Przykłady
+## Examples
 ```
-uv run deweloperuch stop status     # najpierw sprawdź przyczynę i źródło
-uv run deweloperuch stop clear      # dopiero potem zdejmij blokadę (człowiek)
+uv run deweloperuch stop status     # first check the cause and the source
+uv run deweloperuch stop clear      # only then clear the lock (a human)
 ```
 
-Wynik po zapisie 403 z `probe` (z testów `tests/test_cli.py`):
+Output after a 403 record from `probe` (from the tests `tests/test_cli.py`):
 
 ```
 Zdjęto STOP: HTTP 403 (odmowa dostępu), <czas>, źródło: probe.
 Działający serwer MCP, który trafił na STOP, wyśle zapytania dopiero po ponownym uruchomieniu.
 ```
 
-_Źródło: `src/deweloperuch_mcp/cli.py` (`stop_clear`, `format_stop_clear`), `src/deweloperuch_mcp/throttle.py` (`clear_stop`), `uv run deweloperuch stop clear --help`, `tests/test_cli.py`_
+_Source: `src/deweloperuch_mcp/cli.py` (`stop_clear`, `format_stop_clear`), `src/deweloperuch_mcp/throttle.py` (`clear_stop`), `uv run deweloperuch stop clear --help`, `tests/test_cli.py`_
