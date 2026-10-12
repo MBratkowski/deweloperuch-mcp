@@ -8,6 +8,7 @@ import datetime as dt
 import math
 from collections.abc import Mapping, Sequence
 
+from deweloperuch_mcp import links
 from deweloperuch_mcp.client.dto import (
     CityMappingDto,
     DeveloperDto,
@@ -191,6 +192,9 @@ def offer_summary(item: SaleListItemDto) -> OfferSummary:
             "events_count": item.total_events,
             "investment_slug": item.invest.slug,
             "investment_name": item.invest.name,
+            "investment_url": links.investment_url(
+                text(item.invest.city_slug), item.invest.developer.slug, item.invest.slug
+            ),
             "city": text(item.invest.city),
             "city_slug": text(item.invest.city_slug),
             "developer_slug": item.invest.developer.slug,
@@ -207,16 +211,23 @@ def offer_detail(
             **_offer_fields(sale),
             "investment_slug": investment.slug,
             "investment_name": investment.name,
+            "investment_url": _investment_url(investment),
             "city": investment.city,
             "city_slug": investment.city_slug,
             "developer": developer(investment.developer),
+            "developer_url": links.developer_url(investment.city_slug, investment.developer.slug),
             "price_history": price_history(events),
         }
     )
 
 
-def offer_search_result(page: OffersPageDto, *, max_pages: int) -> OfferSearchResult:
-    """D4: the page plus what can be browsed at all (``max_pages`` x ``per_page``)."""
+def offer_search_result(
+    page: OffersPageDto, *, max_pages: int, list_url: str | None = None
+) -> OfferSearchResult:
+    """D4: the page plus what can be browsed at all (``max_pages`` x ``per_page``).
+
+    ``list_url``: this list on the service (``links.offers_list_url`` of the request).
+    """
     pagination = page.pagination
     total, per_page = pagination.total, pagination.perPage
     pages_available = min(max_pages, math.ceil(total / per_page)) if per_page > 0 else 0
@@ -244,6 +255,7 @@ def offer_search_result(page: OffersPageDto, *, max_pages: int) -> OfferSearchRe
         per_page=per_page,
         pages_available=pages_available,
         hint=hint,
+        list_url=list_url,
         items=items,
     )
 
@@ -271,6 +283,7 @@ def investment(
         investment_slug=dto.slug,
         name=dto.name,
         status=dto.status,
+        investment_url=_investment_url(dto),
         city=dto.city,
         city_slug=dto.city_slug,
         street=text(dto.street),
@@ -278,6 +291,7 @@ def investment(
         lng=number(dto.longitude),
         currency=text(dto.currency),
         developer=developer(dto.developer),
+        developer_url=links.developer_url(dto.city_slug, dto.developer.slug),
         avg_price=number(dto.avg_amount),
         avg_area_m2=number(dto.avg_size),
         avg_price_per_m2=number(dto.avg_price_sqm),
@@ -286,3 +300,7 @@ def investment(
         offers=offers,
         offers_omitted=len(ordered) - len(kept),
     )
+
+
+def _investment_url(dto: InvestmentDto) -> str | None:
+    return links.investment_url(dto.city_slug, dto.developer.slug, dto.slug)

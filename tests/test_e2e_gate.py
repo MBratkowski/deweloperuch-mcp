@@ -23,7 +23,7 @@ from mcp import Client
 from mcp.types import CallToolResult
 from pydantic import BaseModel
 
-from deweloperuch_mcp import mcp_results, mcp_server, services
+from deweloperuch_mcp import identity, mcp_results, mcp_server, services
 from deweloperuch_mcp.throttle import RequestLimiter
 from e2e import live, test_live_cli, test_live_mcp, test_live_recon
 from rsc_fixtures import UNKNOWN_CITY
@@ -232,6 +232,67 @@ def test_values_are_not_checked_for_backend_names(text: str) -> None:
     assert live.leaks(text, {"developer_name": text, "name": text}) == []
 
 
+# --- links to public pages (D12, 2026-10-11) ------------------------------------------------
+
+PAGES = identity.BASE_URL + "/ceny-ofertowe"
+SMOLNA = PAGES + "/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna"
+LIST = PAGES + "/krakow/mieszkania?filterPrice=0-700000&sortBy=amount&sortOrder=asc&page=1"
+
+
+def as_result(value: dict[str, Any]) -> list[str]:
+    """``live.leaks`` of a tool result: its text is its structured content as JSON."""
+    return live.leaks(json.dumps(value, ensure_ascii=False, separators=(",", ":")), value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        {"investment_url": SMOLNA},
+        {"list_url": LIST, "items": [{"investment_url": SMOLNA}]},
+        {"investment_url": SMOLNA, "developer_url": PAGES + "/sopot/deweloperzy/invest-komfort"},
+        {"investment_url": PAGES + "/krak%C3%B3w/deweloperzy/a%2Fb/x"},
+    ],
+)
+def test_page_links_in_link_fields_pass(value: dict[str, Any]) -> None:
+    assert as_result(value) == []
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        {"name": SMOLNA},  # a link in another field
+        {"hint": f"Zobacz {LIST}"},
+        {"investment_url": SMOLNA, "name": SMOLNA},  # the same link outside its field too
+        {"curl": SMOLNA},  # a name that merely ends in "url"
+        {"list_url": PAGES + "/warszawa/mieszkania?page=1&_rsc=abcd1234"},
+        {"list_url": identity.BASE_URL + "/api/cities?q=krak"},
+        {"list_url": identity.BASE_URL + "/ceny-ofertowe/../api/cities"},
+        {"list_url": identity.BASE_URL + "/statystyki/ceny-transakcyjne/mieszkania/krakow"},
+        {"investment_url": "https://example.com/ceny-ofertowe/sopot/deweloperzy/x/smolna"},
+        {"investment_url": "/ceny-ofertowe/sopot/deweloperzy/x/smolna"},
+        {"investment_url": SMOLNA + " " + SMOLNA},
+        {"url": SMOLNA},  # fields are named after what they point to: *_url only
+        # only the three routes links.py builds [P], each segment a plain slug
+        {"list_url": identity.BASE_URL + "/ceny-ofertowe/../statystyki/x"},
+        {"investment_url": identity.BASE_URL + "/ceny-ofertowe/%2e%2e/statystyki"},
+        {"investment_url": PAGES + "/%2E%2E/deweloperzy/atal/smolna"},
+        {"investment_url": PAGES + "/sopot/deweloperzy/atal/smolna%2e"},
+        {"investment_url": PAGES + "/./deweloperzy/atal/smolna"},
+        {"investment_url": PAGES + "/sopot/deweloperzy/atal/smolna/raport-inwestycji"},
+        {"list_url": PAGES + "/x/y/z/w/v?q=1"},
+        {"list_url": PAGES + "/warszawa/inwestycje"},
+        {"developer_url": PAGES + "/sopot/deweloperzy"},
+        {"developer_url": PAGES + "/sopot/deweloperzy/"},
+    ],
+)
+def test_links_elsewhere_or_of_another_kind_are_leaks(value: dict[str, Any]) -> None:
+    assert as_result(value)
+
+
+def test_a_link_in_an_error_message_is_a_leak() -> None:
+    assert live.leaks(f"Nie znaleziono inwestycji 'smolna'. Zobacz {SMOLNA}")
+
+
 def test_the_tool_listing_has_no_leaks() -> None:
     snapshot = json.loads((TESTS / "snapshots" / "mcp_tools.json").read_text(encoding="utf-8"))
 
@@ -285,6 +346,10 @@ def test_real_results_pass_the_leak_check(tmp_path: Path, unix_sockets: None) ->
         True,
     ]
     assert "Invest Komfort" in calls[6].text
+    # Links (D12) in their fields pass: the list, its investments, the offer's pages.
+    assert calls[1].text.count('"investment_url":"' + PAGES) == 10
+    assert '"list_url":"' + PAGES + "/warszawa/mieszkania?" in calls[1].text
+    assert '"developer_url":"' + PAGES in calls[7].text
     # The SDK's validation error: the field and the rule, no link to pydantic's docs.
     assert "per_page" in calls[5].text and "Input should be 10 or 50" in calls[5].text
 

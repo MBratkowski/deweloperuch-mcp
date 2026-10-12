@@ -360,10 +360,14 @@ def format_offer_search(result: OfferSearchResult) -> str:
     lines = [" · ".join(head) + "."]
     if result.hint:
         lines.append(f"Wskazówka: {result.hint}")
+    if result.list_url:
+        lines.append(f"Ta lista na deweloperuch.pl: {result.list_url}")
     for item in result.items:
         lines.append(_offer_line(item))
         where = f"    {item.investment_name} [{item.investment_slug}] · {item.developer_name}"
         lines.append(where + (f" · {item.city}" if item.city else ""))
+        if item.investment_url:
+            lines.append(f"    {item.investment_url}")
     if result.items:
         lines.append(
             "Szczegóły oferty: deweloperuch offers get OFFER_ID --investment INVESTMENT_SLUG"
@@ -379,10 +383,12 @@ def format_offer(offer: OfferDetail) -> str:
     ]
     if offer.price_change_since_start is not None:
         lines.append(f"Od pierwszej ceny: {_change(offer)}")
-    lines += [
-        f"Inwestycja: {offer.investment_name} [{offer.investment_slug}] · {offer.city}",
-        f"Deweloper: {offer.developer.name} [{offer.developer.developer_slug}]",
-    ]
+    lines.append(f"Inwestycja: {offer.investment_name} [{offer.investment_slug}] · {offer.city}")
+    if offer.investment_url:
+        lines.append(f"Strona inwestycji: {offer.investment_url}")
+    lines.append(f"Deweloper: {offer.developer.name} [{offer.developer.developer_slug}]")
+    if offer.developer_url:
+        lines.append(f"Profil dewelopera: {offer.developer_url}")
     dates = [
         f"{label} {value.isoformat()}"
         for label, value in (
@@ -417,13 +423,16 @@ def format_investment(investment: Investment) -> str:
     )
     if investment.offers_omitted:
         count += f" · pominięto {investment.offers_omitted} (zwiększ --limit)"
-    lines = [
-        f"{investment.name} [{investment.investment_slug}] · {_status(investment.status)}",
+    lines = [f"{investment.name} [{investment.investment_slug}] · {_status(investment.status)}"]
+    if investment.investment_url:
+        lines.append(f"Strona inwestycji: {investment.investment_url}")
+    lines += [
         place,
         f"Deweloper: {investment.developer.name} [{investment.developer.developer_slug}]",
-        "Średnio (aktywne oferty): " + " · ".join(averages),
-        count + ".",
     ]
+    if investment.developer_url:
+        lines.append(f"Profil dewelopera: {investment.developer_url}")
+    lines += ["Średnio (aktywne oferty): " + " · ".join(averages), count + "."]
     for offer in investment.offers:
         lines.append(_offer_line(offer))
         if offer.price_history is not None:

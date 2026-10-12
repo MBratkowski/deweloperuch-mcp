@@ -13,11 +13,13 @@ from typing import Any
 
 import pytest
 
+from deweloperuch_mcp.identity import BASE_URL
 from e2e.live import SERVICE_CHANGED, Budget, Run, run_cli, run_script
 
 pytestmark = pytest.mark.live
 
 UNKNOWN_CITY = "nieistniejace-miasto"
+PAGES = BASE_URL + "/ceny-ofertowe"
 FILTERS = ("--price-max", "900000", "--area-min", "30", "--sort", "price_asc")
 
 Cli = Callable[..., Run]
@@ -82,6 +84,16 @@ def test_offers_search_with_filters_as_json(offers: dict[str, Any]) -> None:
     assert values == sorted(values) and all(price <= 900_000 for price in values)
     assert all(item["area_m2"] >= 30 for item in items if item["area_m2"] is not None)
     assert all(item["offer_id"] > 0 and item["investment_slug"] for item in items)
+    # Links (D12): the list with the filters as sent, each offer's investment page.
+    assert offers["list_url"] == (
+        f"{PAGES}/krakow/mieszkania?filterPrice=0-900000&filterSize=30-9999"
+        "&sortBy=amount&sortOrder=asc&page=1&perPage=10"
+    )
+    for item in items:
+        assert item["investment_url"] == (
+            f"{PAGES}/{item['city_slug']}/deweloperzy/{item['developer_slug']}/"
+            f"{item['investment_slug']}"
+        )
 
 
 def test_offers_search_with_filters_as_text(cli: Cli) -> None:
@@ -90,6 +102,8 @@ def test_offers_search_with_filters_as_text(cli: Cli) -> None:
     lines = ok(run).splitlines()
     assert lines[0].startswith("Pasujące oferty: ")
     assert any(line.startswith("[") and " PLN" in line for line in lines)
+    assert f"Ta lista na deweloperuch.pl: {PAGES}/krakow/mieszkania?" in run.stdout
+    assert any(line.startswith(f"    {PAGES}/") and "/deweloperzy/" in line for line in lines)
     assert lines[-1] == (
         "Szczegóły oferty: deweloperuch offers get OFFER_ID --investment INVESTMENT_SLUG"
     )
@@ -102,6 +116,8 @@ def test_offers_get(cli: Cli, offer: dict[str, Any]) -> None:
     lines = ok(run).splitlines()
     assert lines[0].startswith(f"[{offer['offer_id']}] ")
     assert any(line.startswith("Historia ceny (") for line in lines)
+    assert f"Strona inwestycji: {offer['investment_url']}" in lines
+    assert any(line.startswith(f"Profil dewelopera: {PAGES}/") for line in lines)
     assert run.sent == 2  # the investment and the price history
 
 
@@ -110,6 +126,7 @@ def test_investments_get_with_a_limit(cli: Cli, offer: dict[str, Any]) -> None:
 
     lines = ok(run).splitlines()
     assert f"[{offer['investment_slug']}]" in lines[0]
+    assert lines[1] == f"Strona inwestycji: {offer['investment_url']}"
     assert any(line.startswith("Oferty: aktywne ") for line in lines)
     assert sum(line.startswith("[") for line in lines) <= 2
     assert run.sent == 1

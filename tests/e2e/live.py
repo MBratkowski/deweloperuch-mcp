@@ -41,6 +41,8 @@ from anyio.from_thread import BlockingPortal, start_blocking_portal
 from mcp import ClientSession, StdioServerParameters, stdio_client
 from mcp.types import CallToolResult, InitializeResult, TextContent, Tool
 
+from deweloperuch_mcp.identity import BASE_URL
+
 LIVE_ENV = "DEWELOPERUCH_LIVE"
 SKIP_REASON = (
     "e2e na żywym serwisie: seria żywych zapytań, tylko za zgodą użytkownika (D9). "
@@ -88,6 +90,18 @@ TEXT_LEAKS = re.compile(
 # Backend names (D3) in field names only: values are the service's data, and real
 # developers are called e.g. "Invest Komfort" (tests/test_e2e_gate.py).
 KEY_LEAKS = re.compile(r"sale|invest(?!ment)|rcn|amount|rsc", re.IGNORECASE)
+# The one exception (D12, 2026-10-11): a full address of a public page of the service,
+# as the whole value of a field named ``*_url``; never with ``_rsc`` or ``/api/``, never
+# in another field nor in an error message. Only the three routes links.py builds [P]:
+# the list of offers (with a query), a developer's profile, an investment. A segment has
+# no ``/``, ``?``, ``#``, is not ``.`` or ``..`` and holds no ``%2e`` (a browser would
+# read it as a dot).
+_SEGMENT = r"(?!\.\.?(?:[/?#]|$))(?:(?!%2[eE])[^/?#\s])+"
+PAGE_LINK = re.compile(
+    rf"{re.escape(BASE_URL)}/ceny-ofertowe/{_SEGMENT}/"
+    rf"(?:mieszkania(?:\?[^\s#]*)?|deweloperzy/{_SEGMENT}(?:/{_SEGMENT})?)"
+)
+LINK = "<link>"
 
 STOP_ADVICE = (
     "Zestaw e2e przerwany bez dalszych zapytań. Niczego nie ponawiaj i zgłoś to "
@@ -187,10 +201,45 @@ def keys(value: Any) -> set[str]:
     return set()
 
 
+def is_link_field(key: object) -> bool:
+    return isinstance(key, str) and key.endswith("_url")
+
+
+def page_link(value: str) -> bool:
+    """A full address of a public page of the service (D12), as links.py builds them."""
+    return bool(PAGE_LINK.fullmatch(value)) and "_rsc" not in value and "/api/" not in value
+
+
 def leaks(text: str, value: Any = None) -> list[str]:
-    """Backend details in ``text`` and ``value`` (anywhere) and in the keys of ``value``."""
-    shown = text + json.dumps(value, ensure_ascii=False)
-    return TEXT_LEAKS.findall(shown) + sorted(k for k in keys(value) if KEY_LEAKS.search(k))
+    """Backend details in ``text`` and ``value`` (anywhere) and in the keys of ``value``.
+
+    Page links are let through only as the values of link fields (``is_link_field``);
+    a link field with anything else is a leak itself. ``text`` may repeat ``value`` as
+    JSON (a tool result): the links of ``value``'s link fields are taken out of it too.
+    """
+    links: list[str] = []
+    bad: list[str] = []
+
+    def without_links(node: Any) -> Any:
+        if isinstance(node, list):
+            return [without_links(item) for item in node]
+        if not isinstance(node, dict):
+            return node
+        kept: dict[Any, Any] = {}
+        for key, item in node.items():
+            if is_link_field(key) and isinstance(item, str):
+                (links if page_link(item) else bad).append(item)
+                kept[key] = LINK
+            else:
+                kept[key] = without_links(item)
+        return kept
+
+    clean = without_links(value)
+    for link in sorted(set(links), key=len, reverse=True):
+        text = text.replace(link, LINK)
+    shown = text + json.dumps(clean, ensure_ascii=False)
+    found = [f"zły link: {link!r}" for link in bad] + TEXT_LEAKS.findall(shown)
+    return found + sorted(k for k in keys(value) if KEY_LEAKS.search(k))
 
 
 # --- the MCP server ------------------------------------------------------------------------

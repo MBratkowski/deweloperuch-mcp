@@ -21,7 +21,7 @@ import pytest
 import respx
 from typer.testing import CliRunner
 
-from deweloperuch_mcp import cli, services
+from deweloperuch_mcp import cli, identity, services
 from deweloperuch_mcp.client import transport
 from deweloperuch_mcp.errors import (
     DeweloperuchError,
@@ -54,6 +54,9 @@ from service_mocks import (
 )
 
 ROOT = Path(__file__).resolve().parent.parent
+PAGES = identity.BASE_URL + "/ceny-ofertowe"
+SMOLNA = PAGES + "/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna"
+DEVELOPER = PAGES + "/sopot/deweloperzy/invest-komfort-spolka-akcyjna"
 
 
 class Cli:
@@ -161,6 +164,11 @@ def test_offers_search_prints_the_page_with_the_limits_of_d4(
         "od pierwszej ceny -5 988 PLN (-0,6%)"
     ) in lines
     assert "    Nowy Targówek VI [nowy-targowek-vi] · ATAL S.A. · Warszawa" in lines
+    # Links (D12): the list as requested, then each offer's investment under it.
+    assert lines[2] == f"Ta lista na deweloperuch.pl: {PAGES}/warszawa/mieszkania?page=1&perPage=10"
+    where = lines.index("    Nowy Targówek VI [nowy-targowek-vi] · ATAL S.A. · Warszawa")
+    assert lines[where + 1] == f"    {PAGES}/warszawa/deweloperzy/atal/nowy-targowek-vi"
+    assert sum(line.startswith(f"    {PAGES}/") for line in lines) == 10
     assert lines[-1] == (
         "Szczegóły oferty: deweloperuch offers get OFFER_ID --investment INVESTMENT_SLUG"
     )
@@ -208,6 +216,10 @@ def test_offers_search_json_is_the_domain_model(run: Cli, service: respx.MockRou
     assert data["items"][0]["offer_id"] == 4397
     assert data["items"][0]["investment_slug"] == "nowy-targowek-vi"
     assert data["items"][0]["last_price_change_kind"] == "increase"
+    assert data["list_url"] == f"{PAGES}/warszawa/mieszkania?page=1&perPage=10"
+    assert (
+        data["items"][0]["investment_url"] == f"{PAGES}/warszawa/deweloperzy/atal/nowy-targowek-vi"
+    )
 
 
 def test_offers_search_with_an_empty_page(run: Cli, service: respx.MockRouter) -> None:
@@ -257,7 +269,9 @@ def test_offers_get_prints_the_offer_with_its_price_history(
         "Cena: 1 620 175 PLN · 69,5 m² · 23 311,87 PLN/m²",
         "Od pierwszej ceny: +175 PLN (+0,01%)",
         "Inwestycja: Smolna [smolna] · Sopot",
+        f"Strona inwestycji: {SMOLNA}",
         "Deweloper: Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]",
+        f"Profil dewelopera: {DEVELOPER}",
         "Daty: dodana 2025-02-25 · ostatnie zdarzenie 2026-10-03 · ostatnia zmiana 2026-10-03",
         "Historia ceny (3):",
         "  2025-02-25  cena          1 620 000 PLN",
@@ -297,8 +311,10 @@ def test_investments_get_prints_the_investment_and_its_offers(
 
     assert out.splitlines() == [
         "Smolna [smolna] · aktywna",
+        f"Strona inwestycji: {SMOLNA}",
         "Miejsce: Sopot [sopot], Świemirowo · 54.42736, 18.55839",
         "Deweloper: Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]",
+        f"Profil dewelopera: {DEVELOPER}",
         "Średnio (aktywne oferty): 1 566 392 PLN · 63,97 m² · 24 487,63 PLN/m²",
         "Oferty: aktywne 3 z 16 · pokazano 3.",
         "[206087] C234 · 1 679 796 PLN · 65,9 m² · 25 490,08 PLN/m² · aktywna",

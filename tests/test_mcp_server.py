@@ -34,7 +34,7 @@ from mcp.types import CallToolResult, TextContent
 from mcp.types.version import LATEST_HANDSHAKE_VERSION
 from pydantic import BaseModel
 
-from deweloperuch_mcp import mcp_results, mcp_server, services
+from deweloperuch_mcp import identity, mcp_results, mcp_server, services
 from deweloperuch_mcp.domain.models import (
     Investment,
     Location,
@@ -69,12 +69,16 @@ TOOLS = ("search_locations", "search_offers", "get_offer", "get_investment")
 BACKEND_NAMES = re.compile(r"sale|invest(?!ment)|amount|_rsc|\brsc\b|/api/|initialData", re.I)
 # Error results: no paths, prop names or text of the service's answer either.
 LEAKS = re.compile(r"/api|/ceny-|initialData|invest(?!ment)|sale|Ignore previous|<html", re.I)
+PAGES = identity.BASE_URL + "/ceny-ofertowe"
 SIZE_BUDGET = 8_000
 """Characters of a result that fit the model's context comfortably (S1b)."""
+SIZE_BUDGET_50 = 25_000
+"""Characters of a page of 50 offers: the per_page description promises about 22k."""
 
 COMPACT_OFFER = {
     "offer_id",
     "investment_slug",
+    "investment_url",
     "name",
     "price",
     "area_m2",
@@ -471,13 +475,31 @@ def test_search_offers_with_defaults_lists_compact_offers(
         "price_per_m2": 17991.17,
         "status": "active",
         "investment_name": "Nowy Targówek VI",
+        "investment_url": PAGES + "/warszawa/deweloperzy/atal/nowy-targowek-vi",
         "developer_name": "ATAL S.A.",
         "last_price_change_kind": "increase",
         "last_price_change_pct": 5.89,
         "price_change_since_start_pct": -0.6,
     }
+    assert result["list_url"] == PAGES + "/warszawa/mieszkania?page=1&perPage=10"
     assert all(set(item) <= COMPACT_OFFER for item in result["items"])
     assert not has_null(result)
+
+
+def test_offer_and_investment_carry_the_links_of_their_pages(
+    server: MCPServer[services.Session], service: respx.MockRouter
+) -> None:
+    """D12: the investment's page and the developer's profile, from the result's slugs."""
+    investment_routes(service)
+    smolna = PAGES + "/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna"
+    developer = PAGES + "/sopot/deweloperzy/invest-komfort-spolka-akcyjna"
+
+    offer = data(call(server, "get_offer", offer_id=2377, investment_slug="smolna"))
+    investment = data(call(server, "get_investment", investment_slug="smolna"))
+
+    assert (offer["investment_url"], offer["developer_url"]) == (smolna, developer)
+    assert (investment["investment_url"], investment["developer_url"]) == (smolna, developer)
+    assert all(not any(key.endswith("_url") for key in item) for item in investment["offers"])
 
 
 def test_search_offers_in_the_whole_country_keeps_the_city(
@@ -564,9 +586,11 @@ def test_search_offers_trims_spaces_around_the_city(
 ) -> None:
     route = offers_route(service)
 
-    data(call(server, "search_offers", city=" warszawa "))
+    result = data(call(server, "search_offers", city=" warszawa "))
 
     assert route.calls.last.request.url.path == "/ceny-ofertowe/warszawa/mieszkania"
+    # The link is built from the slug as normalized, like the request: no %20.
+    assert result["list_url"] == PAGES + "/warszawa/mieszkania?page=1&perPage=10"
 
 
 def test_search_offers_of_an_unknown_city_is_an_error_that_says_so(
@@ -1265,7 +1289,9 @@ def test_result_sizes_on_the_samples(
     """Sizes of the text content (compact JSON) on full pages built from the samples.
 
     The defaults fit the budget; the per-item sizes in the descriptions of per_page and
-    limit hold ("ok. 350" and "ok. 300" characters), so results do not grow unnoticed."""
+    limit hold ("ok. 450" and "ok. 300" characters), so results do not grow unnoticed.
+    With the links (D12, 2026-10-11) an offer of a page is about 425 characters, 465 with
+    its city: 10 offers about 4.5k, 50 about 21-23k."""
 
     def full_page(request: httpx.Request) -> httpx.Response:
         page = offers_page(count=int(request.url.params["perPage"]))
@@ -1295,8 +1321,8 @@ def test_result_sizes_on_the_samples(
 
     assert measured["page_10"] <= SIZE_BUDGET
     assert measured["investment_20"] <= SIZE_BUDGET
-    assert measured["page_50"] <= 50 * 350
-    assert measured["page_50_country"] <= 50 * 400
+    assert measured["page_50"] <= 50 * 450 < SIZE_BUDGET_50
+    assert measured["page_50_country"] <= 50 * 480 < SIZE_BUDGET_50
     assert measured["investment_200"] <= 200 * 320
 
 

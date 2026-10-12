@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
+from deweloperuch_mcp import identity
 from deweloperuch_mcp.client import dto
 from deweloperuch_mcp.domain import normalize
 from deweloperuch_mcp.domain.models import (
@@ -19,6 +20,10 @@ from deweloperuch_mcp.domain.models import (
     PriceEvent,
 )
 from discovery_samples import body
+
+PAGES = identity.BASE_URL + "/ceny-ofertowe"
+SMOLNA = PAGES + "/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna"
+DEVELOPER = PAGES + "/sopot/deweloperzy/invest-komfort-spolka-akcyjna"
 
 
 def investment_dto(**changes: Any) -> dto.InvestmentDto:
@@ -189,11 +194,23 @@ def test_offer_summary_from_the_list_page() -> None:
         events_count=12,
         investment_slug="nowy-targowek-vi",
         investment_name="Nowy Targówek VI",
+        investment_url=PAGES + "/warszawa/deweloperzy/atal/nowy-targowek-vi",
         city="Warszawa",
         city_slug="warszawa",
         developer_slug="atal",
         developer_name="ATAL S.A.",
     )
+
+
+@pytest.mark.parametrize("city_slug", ["", None])
+def test_offer_summary_without_its_city_slug_has_no_investment_url(city_slug: str | None) -> None:
+    """D12: an address is built from the item's own slugs or not at all, never guessed."""
+    item = body("page.offers_list")["data"][0]
+    item["invest"]["city_slug"] = city_slug
+
+    summary = normalize.offer_summary(dto.SaleListItemDto.model_validate(item))
+
+    assert (summary.city_slug, summary.investment_url) == (None, None)
 
 
 @pytest.mark.parametrize(("price", "area"), [("", "55.25"), ("994012", ""), ("994012", "0")])
@@ -248,6 +265,7 @@ def test_offer_detail_combines_investment_offer_and_history() -> None:
     )
     assert detail.developer.developer_slug == "invest-komfort-spolka-akcyjna"
     assert [e.kind for e in detail.price_history] == ["offer", "archived", "restored"]
+    assert (detail.investment_url, detail.developer_url) == (SMOLNA, DEVELOPER)
 
 
 # --- investments -------------------------------------------------------------------------
@@ -277,6 +295,16 @@ def test_investment_values_are_normalized() -> None:
     assert (investment.offers_active, investment.offers_total) == (3, 16)
     assert investment.offers_omitted == 0
     assert all(offer.price_history is None for offer in investment.offers)
+    assert (investment.investment_url, investment.developer_url) == (SMOLNA, DEVELOPER)
+
+
+def test_investment_without_a_developer_slug_has_no_links() -> None:
+    sample = body("api.map_inv_visible")
+    sample["developer"]["slug"] = ""
+
+    investment = normalize.investment(dto.InvestmentDto.model_validate(sample))
+
+    assert (investment.investment_url, investment.developer_url) == (None, None)
 
 
 def test_investment_averages_are_those_of_its_active_offers() -> None:

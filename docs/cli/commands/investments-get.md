@@ -12,7 +12,7 @@ deweloperuch investments get [OPTIONS] SLUG
 | `SLUG` (argument, wymagany) | tekst | — | Slug inwestycji (investment_slug z `offers search`). |
 | `--history` | flaga | wyłączona | Dołącz historię ceny każdej oferty (wolniej: dodatkowe zapytanie). |
 | `--limit` | int | brak (wszystkie oferty) | Najwięcej pokazanych ofert (najpierw aktywne). W MCP `limit` ma domyślnie 20 i maks. 200; CLI bez `--limit` pokazuje wszystkie. |
-| `--json` | flaga | wyłączona | Wypisz wynik jako JSON (model domenowy). |
+| `--json` | flaga | wyłączona | Wypisz wynik jako JSON (model domenowy; z linkami `investment_url` i `developer_url`, pozycje `offers` bez linków). |
 | `--help` | flaga | | Pokaż pomoc. |
 
 ## Kody wyjścia
@@ -29,12 +29,16 @@ Wynik tekstowy z `--limit 2` (mock testów, próbka `api.map_inv_visible`):
 
 ```
 Smolna [smolna] · aktywna
+Strona inwestycji: https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna
 Miejsce: Sopot [sopot], Świemirowo · 54.42736, 18.55839
 Deweloper: Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]
+Profil dewelopera: https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna
 Średnio (aktywne oferty): 1 566 392 PLN · 63,97 m² · 24 487,63 PLN/m²
 Oferty: aktywne 3 z 16 · pokazano 2 · pominięto 1 (zwiększ --limit).
 [206087] C234 · 1 679 796 PLN · 65,9 m² · 25 490,08 PLN/m² · aktywna
 [2377] C224 · 1 620 175 PLN · 69,5 m² · 23 311,87 PLN/m² · aktywna · od pierwszej ceny +175 PLN (+0,01%)
 ```
+
+Linie „Strona inwestycji” i „Profil dewelopera” (D12) są pomijane, gdy brakuje sluga.
 
 _Źródło: `src/deweloperuch_mcp/cli.py`, `uv run deweloperuch investments get --help`_
