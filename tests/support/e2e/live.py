@@ -4,7 +4,7 @@ Nothing here runs at import time. Every live call goes through ``McpLive.call``,
 ``run_cli`` or ``run_probe``, which count the requests it sent (``Budget``) and never
 retry. The whole session ends at once:
 
-- on a STOP (``stop_exit``, exit code 3): stop and report (CLAUDE.md);
+- on a STOP (``stop_exit``, exit code 3): stop and report (CONTRIBUTING.md);
 - when the service is unavailable (``unavailable_exit``, exit code 4): a 5xx or a
   network error, so no further request goes out;
 - past the budget, or when the request counter turns out not to work (exit code 1).
@@ -156,7 +156,7 @@ def stop_exit(reason: str) -> NoReturn:
 
 
 def stop_on(text: str, where: str) -> None:
-    """A result that says ``STOP:`` ends the session (CLAUDE.md: stop and report)."""
+    """A result that says ``STOP:`` ends the session (CONTRIBUTING.md: stop and report)."""
     if "STOP:" in text:
         stop_exit(f"{where}: {text.strip()}")
 

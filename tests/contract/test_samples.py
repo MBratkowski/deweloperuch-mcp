@@ -1,4 +1,7 @@
-"""The samples' trimming markers (CLAUDE.md, "Próbki") and the helper that removes them."""
+"""The samples' trimming markers and the helper that removes them.
+
+The format is described in docs/discovery/README.md, "Sample format".
+"""
 
 from support.providers.samples import untrimmed
 

@@ -123,3 +123,14 @@ Entity and ID model: [entities.md](entities.md).
 5. **The investment slug is effectively a global ID.** The investment page ignores the city and developer segments in the URL [P], and `map/investments/visible/{slug}` takes the slug alone [P].
 6. **Backend naming is misleading**: in RCN, "invest" means a building/address (`invest_rcn_id`) and "sale" means a unit. The domain should rename this (Building/Unit/Transaction).
 7. **Numeric types are inconsistent**: amounts sometimes as `number`, sometimes as `string` (`"amount": "994012"`). Dates are sometimes `YYYY-MM-DD`, sometimes ISO with `T00:00:00.000Z`. The DTO→domain layer has to normalize this.
+
+## 5. Sample format
+
+Samples in [samples/](samples/) are saved by `python3 recon/probe.py … --save` as `api.<name>[.<variant>].json` or `page.<name>[.<variant>].json`:
+
+- an envelope with `_request` (the request), `_captured` (the date) and the data: `response` (JSON API), `props` or `_prop` + `value` (RSC page);
+- arrays trimmed to 3 elements followed by the string `"... (N more, M total)"`; maps with numeric keys and more than 40 keys trimmed to 2 keys plus `"...": "N more keys"`;
+- personal data (e.g. `additionalInfo`, `email`, `phone`, `telefon`) replaced with `"[usunięte]"`;
+- existing samples are never overwritten; a new observation becomes a new variant.
+
+Raw, untrimmed responses used by tests live in `tests/fixtures/` (see the README files there).

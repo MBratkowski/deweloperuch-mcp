@@ -16,7 +16,7 @@ and every call that is not served from the cache:
 - stops on 401, 403, 429 and Cloudflare challenges (``http_policy.stop_reason``), and
   then for good: the process remembers the first STOP (one latch for every client in
   it) and every later call that would need the network raises it again without
-  sending anything (CLAUDE.md: stop and report); only a new process may try again.
+  sending anything (CONTRIBUTING.md: stop and report); only a new process may try again.
   The STOP is latched before the limiter slot is released and checked again inside
   the slot, so a thread waiting for its turn never sends after another one's STOP;
 - records that STOP for every other process too (``Slot.stop``, source ``pakiet``),
@@ -241,7 +241,7 @@ class HttpClient:
     @staticmethod
     def testing_only_reset_stop() -> None:
         """Forget the process's STOP. Tests only: in production a STOP lasts until the process
-        ends (CLAUDE.md: stop and report, never retry)."""
+        ends (CONTRIBUTING.md: stop and report, never retry)."""
         global _stop
         with _stop_lock:
             _stop = None
@@ -445,7 +445,7 @@ _PROGRAM_BUG = "Błąd programu (zgłoś go autorom, to nie błąd danych wejśc
 
 
 def _check_target(target: str) -> None:
-    """A documented read channel, checked as the server will see it (D1, D5, CLAUDE.md).
+    """A documented read channel, checked as the server will see it (D1, D5, CONTRIBUTING.md).
 
     The adapters build every target, so a violation is a bug in the program; the
     message says so (``InvalidInputError`` without a type of its own).

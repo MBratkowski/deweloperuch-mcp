@@ -2,7 +2,7 @@
 
 Used by ``recon/probe.py`` (through ``recon/config.py``; ``recon/allowlist.py``
 re-exports it) and by the package's HTTP transport, which also refuses ``DUMP_PATHS``.
-Every entry comes from the discovery docs; change the docs first (recon-verifier), then
+Every entry comes from the discovery docs; change the docs first, then
 this file. tests/recon_scripts/test_probe_allowlist.py keeps both in sync.
 
 - ``API_PATHS``: each ``GET /api/...`` heading of docs/discovery/endpoints.md except
@@ -64,7 +64,7 @@ API_PATHS = (
 )
 
 EXCLUDED_API_PATHS = (
-    # Generates a PDF with its own rate limit; out of the project's scope (CLAUDE.md).
+    # Generates a PDF with its own rate limit; out of the project's scope (CONTRIBUTING.md).
     "/api/valuation-pdf",
 )
 

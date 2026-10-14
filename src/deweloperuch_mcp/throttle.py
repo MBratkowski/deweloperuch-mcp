@@ -28,7 +28,7 @@ Usage::
 
 Backoff for 5xx is the HTTP client's policy; the limiter only offers ``defer``.
 
-STOP for every process (CLAUDE.md: after 401, 403, 429, captcha or WAF stop and report).
+STOP for every process (CONTRIBUTING.md: after 401, 403, 429, captcha or WAF stop and report).
 Code that sees such an answer records it with ``Slot.stop`` before leaving the slot::
 
     with limiter.slot() as slot:
