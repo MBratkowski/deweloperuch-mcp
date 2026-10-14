@@ -1350,7 +1350,18 @@ def test_save_redacts_free_text_in_rcn_records(env: ProbeEnv) -> None:
 
 
 def test_save_redacts_reports_on_the_abuse_map(env: ProbeEnv) -> None:
-    data = untrim(load_sample("page.developer_abuse_map.json")["props"]["developerAbuseData"])
+    # A shape-only payload (the real reports name companies, so no sample of them is
+    # kept): 105 reports, each with the free-text field the probe must redact.
+    data = [
+        {
+            "developer_abuse_id": n,
+            "name": f"Inwestycja {n}",
+            "slug": f"inwestycja-{n}",
+            "violations": ["Brak historii zmian cen"],
+            "additionalInfo": f"Tekst zgłoszenia {n}, tel. 600 000 000",
+        }
+        for n in range(105)
+    ]
     service = FakeProbeService([rsc_response({"developerAbuseData": data})])
 
     env.run(
