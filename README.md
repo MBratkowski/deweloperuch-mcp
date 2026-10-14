@@ -1,4 +1,6 @@
-# deweloperuch-mcp
+<p align="center"><img src="assets/icon.svg" alt="deweloperuch-mcp icon" width="160"></p>
+
+<h1 align="center">deweloperuch-mcp</h1>
 
 Ask an AI assistant about new-build apartments in Poland: asking prices with their history, real transaction prices and official statistics.
 
@@ -70,7 +72,7 @@ Overview, output format and exit codes: [docs/cli/README.md](docs/cli/README.md)
 Requirements: Python 3.11 or newer and [uv](https://docs.astral.sh/uv/).
 
 ```
-git clone <repository-url> deweloperuch-mcp
+git clone https://github.com/MBratkowski/deweloperuch-mcp.git
 cd deweloperuch-mcp
 uv sync
 uv run deweloperuch --help                  # sends no requests
