@@ -1,0 +1,40 @@
+{
+  "args": [
+    "buildings",
+    "get",
+    "23-marca-79c-sopot",
+    "--limit",
+    "0",
+    "--json"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "{",
+    "  \"building_slug\": \"23-marca-79c-sopot\",",
+    "  \"name\": \"23 Marca 79C\",",
+    "  \"building_url\": \"https://deweloperuch.pl/ceny-transakcyjne/sopot/adresy/23-marca-79c-sopot\",",
+    "  \"city\": \"Sopot\",",
+    "  \"city_slug\": \"sopot\",",
+    "  \"street\": \"23 Marca 79C\",",
+    "  \"lat\": 54.44705851,",
+    "  \"lng\": 18.54342128,",
+    "  \"avg_price\": 1324114.66,",
+    "  \"avg_area_m2\": 61.6,",
+    "  \"avg_price_per_m2\": 21494.72,",
+    "  \"units_total\": 3,",
+    "  \"transactions_total\": 3,",
+    "  \"first_transaction_date\": \"2025-09-12\",",
+    "  \"last_transaction_date\": \"2025-11-17\",",
+    "  \"units\": [],",
+    "  \"units_omitted\": 3,",
+    "  \"neighbourhood_trend\": null",
+    "}",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/transactions/visible/23-marca-79c-sopot [accept: application/json]"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "--name",
+    "kolibki",
+    "--developer",
+    "atal"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: developer_slug działa tylko razem z city: podaj slug miasta (search_locations), w którym szukać inwestycji dewelopera.",
+    ""
+  ],
+  "requests": []
+}

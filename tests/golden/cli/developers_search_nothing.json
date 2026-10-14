@@ -1,0 +1,19 @@
+{
+  "args": [
+    "developers",
+    "search",
+    "xyzzy"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Deweloperzy: 0.",
+    "Wskazówka: Żaden deweloper nie pasuje do 'xyzzy'. Sprawdź pisownię albo podaj krótszy fragment nazwy, np. jej pierwsze słowo.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/developers?q=xyzzy&limit=5 [accept: application/json]"
+  ]
+}

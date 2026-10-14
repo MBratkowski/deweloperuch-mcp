@@ -1,0 +1,16 @@
+{
+  "args": [
+    "developers",
+    "get",
+    "ATAL"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: developer_slug: oczekiwano slug dewelopera, np. atal; podają go search_developers, search_offers i search_investments (developer_slug); podano 'ATAL'.",
+    ""
+  ],
+  "requests": []
+}

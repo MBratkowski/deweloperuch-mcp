@@ -1,0 +1,39 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch investments search [OPTIONS] [CITY]                                            ",
+    "                                                                                                    ",
+    " Szukaj inwestycji w mieście albo po nazwie (w całej Polsce).                                       ",
+    "                                                                                                    ",
+    "╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮",
+    "│   [CITY]      <str>  Slug miasta (np. sopot; podaje go `locations search`). Bez CITY podaj       │",
+    "│                      --name.                                                                     │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --name             <str>                                  Fragment nazwy inwestycji (2–100       │",
+    "│                                                           znaków); bez CITY w całej Polsce.      │",
+    "│ --developer        SLUG                                   Slug dewelopera; tylko z CITY.         │",
+    "│ --sort             <active_offers|price_per_m2_asc|price  Kolejność; tylko z CITY. Domyślnie     │",
+    "│                    _per_m2_desc|price_asc|price_desc|nam  najwięcej aktywnych ofert.             │",
+    "│                    e>                                                                            │",
+    "│ --limit            <int>                                  Najwięcej pokazanych inwestycji, 1–500 │",
+    "│                                                           (po samej nazwie do 50).               │",
+    "│                                                           [default: 10]                          │",
+    "│ --json                                                    Wypisz wynik jako JSON (model          │",
+    "│                                                           domenowy).                             │",
+    "│ --help                                                    Show this message and exit.            │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

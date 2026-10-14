@@ -1,0 +1,29 @@
+{
+  "args": [
+    "developers",
+    "search",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch developers search [OPTIONS] {NAME}                                             ",
+    "                                                                                                    ",
+    " Znajdź deweloperów po nazwie; podaje slug dewelopera do `developers get`.                          ",
+    "                                                                                                    ",
+    "╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ *    NAME      <str>  Fragment nazwy dewelopera (2–100 znaków), np. atal. [required]             │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --limit        <int>  Najwięcej pokazanych deweloperów (1–20). [default: 5]                      │",
+    "│ --json                Wypisz wynik jako JSON (model domenowy).                                   │",
+    "│ --help                Show this message and exit.                                                │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

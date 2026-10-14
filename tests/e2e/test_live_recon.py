@@ -8,7 +8,7 @@ import json
 
 import pytest
 
-from e2e.live import Budget, run_probe
+from support.e2e.live import Budget, run_probe
 
 pytestmark = pytest.mark.live
 

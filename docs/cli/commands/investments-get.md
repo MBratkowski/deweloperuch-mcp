@@ -18,7 +18,7 @@ deweloperuch investments get [OPTIONS] SLUG
 | `--help` | flag | | Show the help. |
 
 ## Exit codes
-See the [exit code table](../README.md#exit-codes). Most common: 0, 2 (bad slug or `--limit`), 3 STOP, 7 no such investment.
+See the [exit code table](../README.md#exit-codes). Most common: 0, 2 (bad slug or `--limit` outside 0–100000), 3 STOP, 7 no such investment.
 
 ## Examples
 ```
@@ -27,7 +27,7 @@ deweloperuch investments get smolna --limit 2
 deweloperuch investments get smolna --history --json
 ```
 
-Text output with `--limit 2` (test mock, sample `api.map_inv_visible`):
+Text output with `--limit 2` (derived from `tests/golden/cli/investments_get.json`, sample `api.map_inv_visible`):
 
 ```
 Smolna [smolna] · aktywna
@@ -41,6 +41,6 @@ Oferty: aktywne 3 z 16 · pokazano 2 · pominięto 1 (zwiększ --limit).
 [2377] C224 · 1 620 175 PLN · 69,5 m² · 23 311,87 PLN/m² · aktywna · od pierwszej ceny +175 PLN (+0,01%)
 ```
 
-The lines „Strona inwestycji” (investment page) and „Profil dewelopera” (developer profile) (D12) are omitted when the slug is missing.
+The lines „Strona inwestycji” (investment page) and „Profil dewelopera” (developer profile) are omitted when the slug is missing.
 
-_Source: `src/deweloperuch_mcp/interfaces/cli/`, `uv run deweloperuch investments get --help`_
+_Source: `src/deweloperuch_mcp/consumers/cli/commands/investments_commands.py`, `src/deweloperuch_mcp/consumers/cli/presenters/get_investment_cli_presenter.py`, `uv run deweloperuch investments get --help`_

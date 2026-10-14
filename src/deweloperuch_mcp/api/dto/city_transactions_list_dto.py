@@ -1,0 +1,44 @@
+"""``CityTransactionsListDto``: ``GET /api/city-transaction-stats`` [P] (sample
+``api.city_tx_stats``), the transactions of every city, towns and villages included.
+
+Only what the ranking uses is read. ``*_change`` (``transaction_count_change``,
+``price_sqm_change``...) is never read: its period and base are [H] (open question T10),
+and so is the period of the counts. ``avg_price_sqm``, ``avg_size`` and ``avg_amount`` may
+hold medians ([H], T10): the model calls them the price per m², area and price as the
+service gives them.
+"""
+
+from pydantic import ConfigDict, RootModel
+
+from deweloperuch_mcp.api.dto.dto import Dto, Number
+from deweloperuch_mcp.models.location_ranking import LocationTransactions
+
+
+class CityTransactionsDto(Dto):
+    """One city of ``CityTransactionsListDto`` [P]."""
+
+    city: str
+    city_slug: str | None
+    transaction_count: int
+    avg_price_sqm: Number | None
+    avg_size: Number | None
+    avg_amount: Number | None
+
+    def to_model(self) -> LocationTransactions:
+        return LocationTransactions(
+            name=self.city,
+            city_slug=self._text(self.city_slug),
+            transaction_count=self.transaction_count,
+            price_per_m2=self._number(self.avg_price_sqm),
+            area_m2=self._number(self.avg_size),
+            price=self._number(self.avg_amount),
+        )
+
+
+class CityTransactionsListDto(RootModel[list[CityTransactionsDto]]):
+    """Every city (2 448 in the sample ``api.city_tx_stats``, 548 KB)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    def to_model(self) -> tuple[LocationTransactions, ...]:
+        return tuple(row.to_model() for row in self.root)

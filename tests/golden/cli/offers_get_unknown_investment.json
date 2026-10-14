@@ -11,7 +11,7 @@
     ""
   ],
   "stderr": [
-    "Błąd: Nie znaleziono inwestycji 'smolna'. Slug inwestycji podaje search_offers (pole investment_slug).",
+    "Błąd: Nie znaleziono inwestycji 'smolna'. Slug inwestycji podaje search_investments, search_offers albo get_developer (pole investment_slug).",
     "Szczegóły: /api/map/investments/visible/smolna",
     ""
   ],

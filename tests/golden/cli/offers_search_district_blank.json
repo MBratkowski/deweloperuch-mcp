@@ -1,0 +1,18 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--district",
+    " "
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: district: podaj nazwę dzielnicy (od 2 do 100 znaków) tak, jak zwraca ją search_locations (kind=district), np. Mokotów; podano ' '.",
+    ""
+  ],
+  "requests": []
+}

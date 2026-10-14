@@ -32,18 +32,17 @@ __all__ = ["component_props", "find_json_after", "flight", "flight_from_html"]
 
 def _main(page: str, key: str) -> None:
     for value in find_json_after(flight(page), key):
-        if isinstance(value, dict):
-            print(
-                {
-                    k: (f"{type(x).__name__}[{len(x)}]" if isinstance(x, list | dict) else x)
-                    for k, x in value.items()
-                }
-            )
-            for k, x in value.items():
-                if isinstance(x, list) and x:
-                    print("  ", k, "[0]=", json.dumps(x[0], ensure_ascii=False)[:1500])
-        else:
+        if not isinstance(value, dict):
             print(type(value).__name__, str(value)[:300])
+            continue
+        print(
+            {
+                k: (f"{type(x).__name__}[{len(x)}]" if isinstance(x, list | dict) else x)
+                for k, x in value.items()
+            }
+        )
+        for k, x in ((k, x) for k, x in value.items() if isinstance(x, list) and x):
+            print("  ", k, "[0]=", json.dumps(x[0], ensure_ascii=False)[:1500])
 
 
 if __name__ == "__main__":

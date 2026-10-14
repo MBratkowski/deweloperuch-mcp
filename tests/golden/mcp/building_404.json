@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "get_building",
+      "arguments": {
+        "building_slug": "23-marca-79c-sopot"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Nie znaleziono budynku '23-marca-79c-sopot'. Slug budynku to ostatni człon adresu jego strony z cenami transakcyjnymi na deweloperuch.pl, np. 23-marca-79c-sopot albo aleja-krakowska-279-warszawa.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Nie znaleziono budynku '23-marca-79c-sopot'. Slug budynku to ostatni człon adresu jego strony z cenami transakcyjnymi na deweloperuch.pl, np. 23-marca-79c-sopot albo aleja-krakowska-279-warszawa. Szczegóły: /api/map/transactions/visible/23-marca-79c-sopot"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/transactions/visible/23-marca-79c-sopot [accept: application/json]"
+  ]
+}

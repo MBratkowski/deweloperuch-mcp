@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 
 from deweloperuch_mcp.identity import BASE_URL
-from e2e.live import SERVICE_CHANGED, Budget, Run, run_cli, run_script
+from support.e2e.live import SERVICE_CHANGED, Budget, Run, run_cli, run_script
 
 pytestmark = pytest.mark.live
 
@@ -185,3 +185,30 @@ def test_the_installed_script_runs_offline() -> None:
 
     assert run.code == 0, (run.code, run.stderr)
     run.readable()
+
+
+def test_stats_market_as_text(cli: Cli) -> None:
+    """`stats market sopot`: a small city (6 offers [P 2026-10-13]), 1 request."""
+    run = cli("stats", "market", "sopot")
+
+    lines = ok(run).splitlines()
+    assert lines[0].startswith("Rynek ofert [sopot] · aktywne oferty: ")
+    assert lines[1] == f"Te oferty na deweloperuch.pl: {PAGES}/sopot/mieszkania?page=1&perPage=10"
+    assert lines[2].split() == ["min", "p25", "mediana", "p75", "max"]
+    assert lines[3].startswith("Cena (PLN)")
+    assert any(line.startswith("Najwięcej ofert (pokazano ") for line in lines)
+    assert run.sent == 1
+
+
+def test_developers_get_in_a_city_as_json(cli: Cli, offer: dict[str, Any]) -> None:
+    """The developer of the first offer in Kraków, `--json`: 1 request."""
+    slug = offer["developer_slug"]
+
+    run = cli("developers", "get", slug, "--city", "krakow", "--json")
+
+    data = json.loads(ok(run))
+    assert (data["developer"]["developer_slug"], data["city_slug"]) == (slug, "krakow")
+    assert data["developer_url"] == f"{PAGES}/krakow/deweloperzy/{slug}"
+    assert data["investments"] and {i["city_slug"] for i in data["investments"]} == {"krakow"}
+    assert data["cities"]
+    assert run.sent == 1

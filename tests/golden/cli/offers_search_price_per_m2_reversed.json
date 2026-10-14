@@ -1,0 +1,20 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--price-per-m2-min",
+    "15000",
+    "--price-per-m2-max",
+    "9000"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: price_per_m2_min (15000) jest większe niż price_per_m2_max (9000); zamień je miejscami.",
+    ""
+  ],
+  "requests": []
+}

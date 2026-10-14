@@ -11,7 +11,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool search_offers: 1 validation error for search_offersArguments\npage\n  Value error, oczekiwano liczby całkowitej, a nie true/false [type=value_error, input_value=True, input_type=bool]",
+      "text": "Błędny argument narzędzia search_offers: page musi być liczbą całkowitą z zakresu 1–20, podano true. Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

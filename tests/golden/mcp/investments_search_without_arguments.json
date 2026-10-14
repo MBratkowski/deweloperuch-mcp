@@ -1,0 +1,22 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {}
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Podaj city (slug miasta z search_locations, np. sopot) albo name (fragment nazwy inwestycji, np. Kolibki); można oba.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: Podaj city (slug miasta z search_locations, np. sopot) albo name (fragment nazwy inwestycji, np. Kolibki); można oba. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

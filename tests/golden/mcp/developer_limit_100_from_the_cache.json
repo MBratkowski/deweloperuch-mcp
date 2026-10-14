@@ -1,0 +1,1110 @@
+{
+  "calls": [
+    {
+      "tool": "get_developer",
+      "arguments": {
+        "developer_slug": "atal",
+        "city": null,
+        "limit": null
+      }
+    },
+    {
+      "tool": "get_developer",
+      "arguments": {
+        "developer_slug": "atal",
+        "limit": 100
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "developer": {
+          "developer_slug": "atal",
+          "name": "ATAL S.A."
+        },
+        "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal",
+        "city_slug": "polska",
+        "summary": {
+          "active_offers": 4078,
+          "cities": 14,
+          "avg_price": 714902.0,
+          "avg_area_m2": 58.34,
+          "avg_price_per_m2": 12274.0
+        },
+        "investments_total": 42,
+        "investments_returned": 20,
+        "investments_omitted": 22,
+        "truncated": true,
+        "hint": "Pokazano 20 z 42 inwestycji (najwięcej aktywnych ofert); pozostałe pokaże większy limit (najwyżej 100).",
+        "investments": [
+          {
+            "investment_slug": "heyki-city",
+            "name": "Heyki City",
+            "city": "Szczecin",
+            "city_slug": "szczecin",
+            "status": "active",
+            "active_offers": 338,
+            "total_offers": 397,
+            "avg_price": 738606.75,
+            "avg_area_m2": 56.12,
+            "avg_price_per_m2": 13161.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/szczecin/deweloperzy/atal/heyki-city"
+          },
+          {
+            "investment_slug": "atal-unii-lubelskiej-poznan",
+            "name": "ATAL Unii Lubelskiej",
+            "city": "Poznań",
+            "city_slug": "poznan",
+            "status": "active",
+            "active_offers": 316,
+            "total_offers": 319,
+            "avg_price": 672738.31,
+            "avg_area_m2": 55.95,
+            "avg_price_per_m2": 12023.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/poznan/deweloperzy/atal/atal-unii-lubelskiej-poznan"
+          },
+          {
+            "investment_slug": "ogrody-geyera-apartamenty",
+            "name": "Ogrody Geyera Apartamenty",
+            "city": "Łódź",
+            "city_slug": "lodz",
+            "status": "active",
+            "active_offers": 286,
+            "total_offers": 361,
+            "avg_price": 576411.44,
+            "avg_area_m2": 53.64,
+            "avg_price_per_m2": 10745.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/lodz/deweloperzy/atal/ogrody-geyera-apartamenty"
+          },
+          {
+            "investment_slug": "atal-olimpijska",
+            "name": "ATAL Olimpijska",
+            "city": "Katowice",
+            "city_slug": "katowice",
+            "status": "active",
+            "active_offers": 267,
+            "total_offers": 507,
+            "avg_price": 861321.75,
+            "avg_area_m2": 63.77,
+            "avg_price_per_m2": 13507.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/katowice/deweloperzy/atal/atal-olimpijska"
+          },
+          {
+            "investment_slug": "atal-parkowa",
+            "name": "ATAL Parkowa",
+            "city": "Poznań",
+            "city_slug": "poznan",
+            "status": "active",
+            "active_offers": 201,
+            "total_offers": 239,
+            "avg_price": 714742.63,
+            "avg_area_m2": 58.46,
+            "avg_price_per_m2": 12225.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/poznan/deweloperzy/atal/atal-parkowa"
+          },
+          {
+            "investment_slug": "skwer-harmonia-ii",
+            "name": "Skwer Harmonia II",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "status": "active",
+            "active_offers": 194,
+            "total_offers": 251,
+            "avg_price": 762932.8,
+            "avg_area_m2": 65.88,
+            "avg_price_per_m2": 11581.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal/skwer-harmonia-ii"
+          },
+          {
+            "investment_slug": "atal-floriana-szczecin",
+            "name": "ATAL Floriana",
+            "city": "Szczecin",
+            "city_slug": "szczecin",
+            "status": "active",
+            "active_offers": 191,
+            "total_offers": 215,
+            "avg_price": 522370.34,
+            "avg_area_m2": 44.45,
+            "avg_price_per_m2": 11751.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/szczecin/deweloperzy/atal/atal-floriana-szczecin"
+          },
+          {
+            "investment_slug": "modern-helenow",
+            "name": "Modern Helenów",
+            "city": "Łódź",
+            "city_slug": "lodz",
+            "status": "active",
+            "active_offers": 189,
+            "total_offers": 233,
+            "avg_price": 493703.5,
+            "avg_area_m2": 49.86,
+            "avg_price_per_m2": 9901.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/lodz/deweloperzy/atal/modern-helenow"
+          },
+          {
+            "investment_slug": "atal-bronowice-krakow",
+            "name": "ATAL Bronowice",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "status": "active",
+            "active_offers": 176,
+            "total_offers": 179,
+            "avg_price": 797406.11,
+            "avg_area_m2": 51.03,
+            "avg_price_per_m2": 15627.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal/atal-bronowice-krakow"
+          },
+          {
+            "investment_slug": "hipoteczna-park",
+            "name": "Hipoteczna Park",
+            "city": "Łódź",
+            "city_slug": "lodz",
+            "status": "active",
+            "active_offers": 172,
+            "total_offers": 204,
+            "avg_price": 561067.4,
+            "avg_area_m2": 60.43,
+            "avg_price_per_m2": 9284.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/lodz/deweloperzy/atal/hipoteczna-park"
+          },
+          {
+            "investment_slug": "naramowice-odnova",
+            "name": "Naramowice Odnova",
+            "city": "Poznań",
+            "city_slug": "poznan",
+            "status": "active",
+            "active_offers": 170,
+            "total_offers": 415,
+            "avg_price": 687499.08,
+            "avg_area_m2": 65.28,
+            "avg_price_per_m2": 10532.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/poznan/deweloperzy/atal/naramowice-odnova"
+          },
+          {
+            "investment_slug": "atal-ruczaj-krakow",
+            "name": "ATAL Ruczaj",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "status": "active",
+            "active_offers": 127,
+            "total_offers": 149,
+            "avg_price": 811035.98,
+            "avg_area_m2": 55.09,
+            "avg_price_per_m2": 14723.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal/atal-ruczaj-krakow"
+          },
+          {
+            "investment_slug": "skwer-witosa-piastow",
+            "name": "Skwer Witosa",
+            "city": "Piastów",
+            "city_slug": "piastow",
+            "status": "active",
+            "active_offers": 124,
+            "total_offers": 145,
+            "avg_price": 891840.09,
+            "avg_area_m2": 66.53,
+            "avg_price_per_m2": 13405.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/piastow/deweloperzy/atal/skwer-witosa-piastow"
+          },
+          {
+            "investment_slug": "wzgorze-oruni-gdansk",
+            "name": "Wzgórze Oruni",
+            "city": "Gdańsk",
+            "city_slug": "gdansk",
+            "status": "active",
+            "active_offers": 111,
+            "total_offers": 111,
+            "avg_price": 735735.49,
+            "avg_area_m2": 52.53,
+            "avg_price_per_m2": 14006.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/gdansk/deweloperzy/atal/wzgorze-oruni-gdansk"
+          },
+          {
+            "investment_slug": "ogrody-andersa-ii",
+            "name": "Ogrody Andersa II",
+            "city": "Gliwice",
+            "city_slug": "gliwice",
+            "status": "active",
+            "active_offers": 96,
+            "total_offers": 180,
+            "avg_price": 581921.85,
+            "avg_area_m2": 60.87,
+            "avg_price_per_m2": 9560.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/gliwice/deweloperzy/atal/ogrody-andersa-ii"
+          },
+          {
+            "investment_slug": "atal-strachowicka-ii",
+            "name": "ATAL Strachowicka II",
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "status": "active",
+            "active_offers": 96,
+            "total_offers": 270,
+            "avg_price": 667681.32,
+            "avg_area_m2": 56.26,
+            "avg_price_per_m2": 11867.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/atal/atal-strachowicka-ii"
+          },
+          {
+            "investment_slug": "zakole-wisly-krakow",
+            "name": "Zakole Wisły",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "status": "active",
+            "active_offers": 94,
+            "total_offers": 113,
+            "avg_price": 837626.32,
+            "avg_area_m2": 53.63,
+            "avg_price_per_m2": 15620.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal/zakole-wisly-krakow"
+          },
+          {
+            "investment_slug": "francuska-park-ix",
+            "name": "Francuska Park IX",
+            "city": "Katowice",
+            "city_slug": "katowice",
+            "status": "active",
+            "active_offers": 88,
+            "total_offers": 157,
+            "avg_price": 600297.64,
+            "avg_area_m2": 54.02,
+            "avg_price_per_m2": 11112.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/katowice/deweloperzy/atal/francuska-park-ix"
+          },
+          {
+            "investment_slug": "strefa-cegielnia-3",
+            "name": "Strefa Cegielnia 3",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "status": "active",
+            "active_offers": 88,
+            "total_offers": 127,
+            "avg_price": 633201.64,
+            "avg_area_m2": 54.0,
+            "avg_price_per_m2": 11727.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal/strefa-cegielnia-3"
+          },
+          {
+            "investment_slug": "atal-symbioza-ib",
+            "name": "ATAL Symbioza IB",
+            "city": "Gdynia",
+            "city_slug": "gdynia",
+            "status": "active",
+            "active_offers": 74,
+            "total_offers": 117,
+            "avg_price": 785458.76,
+            "avg_area_m2": 64.29,
+            "avg_price_per_m2": 12217.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/gdynia/deweloperzy/atal/atal-symbioza-ib"
+          }
+        ],
+        "cities": [
+          {
+            "city": "Poznań",
+            "city_slug": "poznan",
+            "investments": 4,
+            "active_offers": 736,
+            "avg_price": 709389.0,
+            "avg_price_per_m2": 11823.0
+          },
+          {
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "investments": 7,
+            "active_offers": 736,
+            "avg_price": 779580.0,
+            "avg_price_per_m2": 13950.0
+          },
+          {
+            "city": "Łódź",
+            "city_slug": "lodz",
+            "investments": 5,
+            "active_offers": 698,
+            "avg_price": 555358.0,
+            "avg_price_per_m2": 10059.0
+          },
+          {
+            "city": "Szczecin",
+            "city_slug": "szczecin",
+            "investments": 2,
+            "active_offers": 529,
+            "avg_price": 660533.0,
+            "avg_price_per_m2": 12652.0
+          },
+          {
+            "city": "Katowice",
+            "city_slug": "katowice",
+            "investments": 3,
+            "active_offers": 390,
+            "avg_price": 800020.0,
+            "avg_price_per_m2": 12603.0
+          },
+          {
+            "city": "Gdańsk",
+            "city_slug": "gdansk",
+            "investments": 6,
+            "active_offers": 282,
+            "avg_price": 807056.0,
+            "avg_price_per_m2": 13683.0
+          },
+          {
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "investments": 5,
+            "active_offers": 221,
+            "avg_price": 787421.0,
+            "avg_price_per_m2": 12644.0
+          },
+          {
+            "city": "Piastów",
+            "city_slug": "piastow",
+            "investments": 1,
+            "active_offers": 124,
+            "avg_price": 891840.0,
+            "avg_price_per_m2": 13405.0
+          },
+          {
+            "city": "Gliwice",
+            "city_slug": "gliwice",
+            "investments": 1,
+            "active_offers": 96,
+            "avg_price": 581922.0,
+            "avg_price_per_m2": 9560.0
+          },
+          {
+            "city": "Gdynia",
+            "city_slug": "gdynia",
+            "investments": 1,
+            "active_offers": 74,
+            "avg_price": 785459.0,
+            "avg_price_per_m2": 12217.0
+          },
+          {
+            "city": "Warszawa",
+            "city_slug": "warszawa",
+            "investments": 4,
+            "active_offers": 69,
+            "avg_price": 1001962.0,
+            "avg_price_per_m2": 16111.0
+          },
+          {
+            "city": "Kowale",
+            "city_slug": "kowale",
+            "investments": 1,
+            "active_offers": 66,
+            "avg_price": 674962.0,
+            "avg_price_per_m2": 10496.0
+          },
+          {
+            "city": "Swarzędz",
+            "city_slug": "swarzedz",
+            "investments": 1,
+            "active_offers": 36,
+            "avg_price": 550909.0,
+            "avg_price_per_m2": 8590.0
+          },
+          {
+            "city": "Reda",
+            "city_slug": "reda",
+            "investments": 1,
+            "active_offers": 21,
+            "avg_price": 510349.0,
+            "avg_price_per_m2": 9652.0
+          }
+        ]
+      }
+    },
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "developer": {
+          "developer_slug": "atal",
+          "name": "ATAL S.A."
+        },
+        "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal",
+        "city_slug": "polska",
+        "summary": {
+          "active_offers": 4078,
+          "cities": 14,
+          "avg_price": 714902.0,
+          "avg_area_m2": 58.34,
+          "avg_price_per_m2": 12274.0
+        },
+        "investments_total": 42,
+        "investments_returned": 42,
+        "investments_omitted": 0,
+        "truncated": false,
+        "investments": [
+          {
+            "investment_slug": "heyki-city",
+            "name": "Heyki City",
+            "city": "Szczecin",
+            "city_slug": "szczecin",
+            "status": "active",
+            "active_offers": 338,
+            "total_offers": 397,
+            "avg_price": 738606.75,
+            "avg_area_m2": 56.12,
+            "avg_price_per_m2": 13161.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/szczecin/deweloperzy/atal/heyki-city"
+          },
+          {
+            "investment_slug": "atal-unii-lubelskiej-poznan",
+            "name": "ATAL Unii Lubelskiej",
+            "city": "Poznań",
+            "city_slug": "poznan",
+            "status": "active",
+            "active_offers": 316,
+            "total_offers": 319,
+            "avg_price": 672738.31,
+            "avg_area_m2": 55.95,
+            "avg_price_per_m2": 12023.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/poznan/deweloperzy/atal/atal-unii-lubelskiej-poznan"
+          },
+          {
+            "investment_slug": "ogrody-geyera-apartamenty",
+            "name": "Ogrody Geyera Apartamenty",
+            "city": "Łódź",
+            "city_slug": "lodz",
+            "status": "active",
+            "active_offers": 286,
+            "total_offers": 361,
+            "avg_price": 576411.44,
+            "avg_area_m2": 53.64,
+            "avg_price_per_m2": 10745.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/lodz/deweloperzy/atal/ogrody-geyera-apartamenty"
+          },
+          {
+            "investment_slug": "atal-olimpijska",
+            "name": "ATAL Olimpijska",
+            "city": "Katowice",
+            "city_slug": "katowice",
+            "status": "active",
+            "active_offers": 267,
+            "total_offers": 507,
+            "avg_price": 861321.75,
+            "avg_area_m2": 63.77,
+            "avg_price_per_m2": 13507.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/katowice/deweloperzy/atal/atal-olimpijska"
+          },
+          {
+            "investment_slug": "atal-parkowa",
+            "name": "ATAL Parkowa",
+            "city": "Poznań",
+            "city_slug": "poznan",
+            "status": "active",
+            "active_offers": 201,
+            "total_offers": 239,
+            "avg_price": 714742.63,
+            "avg_area_m2": 58.46,
+            "avg_price_per_m2": 12225.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/poznan/deweloperzy/atal/atal-parkowa"
+          },
+          {
+            "investment_slug": "skwer-harmonia-ii",
+            "name": "Skwer Harmonia II",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "status": "active",
+            "active_offers": 194,
+            "total_offers": 251,
+            "avg_price": 762932.8,
+            "avg_area_m2": 65.88,
+            "avg_price_per_m2": 11581.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal/skwer-harmonia-ii"
+          },
+          {
+            "investment_slug": "atal-floriana-szczecin",
+            "name": "ATAL Floriana",
+            "city": "Szczecin",
+            "city_slug": "szczecin",
+            "status": "active",
+            "active_offers": 191,
+            "total_offers": 215,
+            "avg_price": 522370.34,
+            "avg_area_m2": 44.45,
+            "avg_price_per_m2": 11751.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/szczecin/deweloperzy/atal/atal-floriana-szczecin"
+          },
+          {
+            "investment_slug": "modern-helenow",
+            "name": "Modern Helenów",
+            "city": "Łódź",
+            "city_slug": "lodz",
+            "status": "active",
+            "active_offers": 189,
+            "total_offers": 233,
+            "avg_price": 493703.5,
+            "avg_area_m2": 49.86,
+            "avg_price_per_m2": 9901.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/lodz/deweloperzy/atal/modern-helenow"
+          },
+          {
+            "investment_slug": "atal-bronowice-krakow",
+            "name": "ATAL Bronowice",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "status": "active",
+            "active_offers": 176,
+            "total_offers": 179,
+            "avg_price": 797406.11,
+            "avg_area_m2": 51.03,
+            "avg_price_per_m2": 15627.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal/atal-bronowice-krakow"
+          },
+          {
+            "investment_slug": "hipoteczna-park",
+            "name": "Hipoteczna Park",
+            "city": "Łódź",
+            "city_slug": "lodz",
+            "status": "active",
+            "active_offers": 172,
+            "total_offers": 204,
+            "avg_price": 561067.4,
+            "avg_area_m2": 60.43,
+            "avg_price_per_m2": 9284.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/lodz/deweloperzy/atal/hipoteczna-park"
+          },
+          {
+            "investment_slug": "naramowice-odnova",
+            "name": "Naramowice Odnova",
+            "city": "Poznań",
+            "city_slug": "poznan",
+            "status": "active",
+            "active_offers": 170,
+            "total_offers": 415,
+            "avg_price": 687499.08,
+            "avg_area_m2": 65.28,
+            "avg_price_per_m2": 10532.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/poznan/deweloperzy/atal/naramowice-odnova"
+          },
+          {
+            "investment_slug": "atal-ruczaj-krakow",
+            "name": "ATAL Ruczaj",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "status": "active",
+            "active_offers": 127,
+            "total_offers": 149,
+            "avg_price": 811035.98,
+            "avg_area_m2": 55.09,
+            "avg_price_per_m2": 14723.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal/atal-ruczaj-krakow"
+          },
+          {
+            "investment_slug": "skwer-witosa-piastow",
+            "name": "Skwer Witosa",
+            "city": "Piastów",
+            "city_slug": "piastow",
+            "status": "active",
+            "active_offers": 124,
+            "total_offers": 145,
+            "avg_price": 891840.09,
+            "avg_area_m2": 66.53,
+            "avg_price_per_m2": 13405.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/piastow/deweloperzy/atal/skwer-witosa-piastow"
+          },
+          {
+            "investment_slug": "wzgorze-oruni-gdansk",
+            "name": "Wzgórze Oruni",
+            "city": "Gdańsk",
+            "city_slug": "gdansk",
+            "status": "active",
+            "active_offers": 111,
+            "total_offers": 111,
+            "avg_price": 735735.49,
+            "avg_area_m2": 52.53,
+            "avg_price_per_m2": 14006.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/gdansk/deweloperzy/atal/wzgorze-oruni-gdansk"
+          },
+          {
+            "investment_slug": "ogrody-andersa-ii",
+            "name": "Ogrody Andersa II",
+            "city": "Gliwice",
+            "city_slug": "gliwice",
+            "status": "active",
+            "active_offers": 96,
+            "total_offers": 180,
+            "avg_price": 581921.85,
+            "avg_area_m2": 60.87,
+            "avg_price_per_m2": 9560.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/gliwice/deweloperzy/atal/ogrody-andersa-ii"
+          },
+          {
+            "investment_slug": "atal-strachowicka-ii",
+            "name": "ATAL Strachowicka II",
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "status": "active",
+            "active_offers": 96,
+            "total_offers": 270,
+            "avg_price": 667681.32,
+            "avg_area_m2": 56.26,
+            "avg_price_per_m2": 11867.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/atal/atal-strachowicka-ii"
+          },
+          {
+            "investment_slug": "zakole-wisly-krakow",
+            "name": "Zakole Wisły",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "status": "active",
+            "active_offers": 94,
+            "total_offers": 113,
+            "avg_price": 837626.32,
+            "avg_area_m2": 53.63,
+            "avg_price_per_m2": 15620.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal/zakole-wisly-krakow"
+          },
+          {
+            "investment_slug": "francuska-park-ix",
+            "name": "Francuska Park IX",
+            "city": "Katowice",
+            "city_slug": "katowice",
+            "status": "active",
+            "active_offers": 88,
+            "total_offers": 157,
+            "avg_price": 600297.64,
+            "avg_area_m2": 54.02,
+            "avg_price_per_m2": 11112.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/katowice/deweloperzy/atal/francuska-park-ix"
+          },
+          {
+            "investment_slug": "strefa-cegielnia-3",
+            "name": "Strefa Cegielnia 3",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "status": "active",
+            "active_offers": 88,
+            "total_offers": 127,
+            "avg_price": 633201.64,
+            "avg_area_m2": 54.0,
+            "avg_price_per_m2": 11727.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal/strefa-cegielnia-3"
+          },
+          {
+            "investment_slug": "atal-symbioza-ib",
+            "name": "ATAL Symbioza IB",
+            "city": "Gdynia",
+            "city_slug": "gdynia",
+            "status": "active",
+            "active_offers": 74,
+            "total_offers": 117,
+            "avg_price": 785458.76,
+            "avg_area_m2": 64.29,
+            "avg_price_per_m2": 12217.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/gdynia/deweloperzy/atal/atal-symbioza-ib"
+          },
+          {
+            "investment_slug": "atal-apollina-ii",
+            "name": "ATAL Apollina II",
+            "city": "Kowale",
+            "city_slug": "kowale",
+            "status": "active",
+            "active_offers": 66,
+            "total_offers": 175,
+            "avg_price": 674961.5,
+            "avg_area_m2": 64.3,
+            "avg_price_per_m2": 10496.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/kowale/deweloperzy/atal/atal-apollina-ii"
+          },
+          {
+            "investment_slug": "atal-zawislanska-wille-miejskie",
+            "name": "ATAL Zawiślańska Wille Miejskie",
+            "city": "Gdańsk",
+            "city_slug": "gdansk",
+            "status": "active",
+            "active_offers": 58,
+            "total_offers": 60,
+            "avg_price": 1106383.0,
+            "avg_area_m2": 67.7,
+            "avg_price_per_m2": 16343.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/gdansk/deweloperzy/atal/atal-zawislanska-wille-miejskie"
+          },
+          {
+            "investment_slug": "zacisze-marcelin-iiia-poznan",
+            "name": "Zacisze Marcelin IIIa",
+            "city": "Poznań",
+            "city_slug": "poznan",
+            "status": "active",
+            "active_offers": 49,
+            "total_offers": 67,
+            "avg_price": 999733.57,
+            "avg_area_m2": 74.85,
+            "avg_price_per_m2": 13356.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/poznan/deweloperzy/atal/zacisze-marcelin-iiia-poznan"
+          },
+          {
+            "investment_slug": "atal-grabiszyn",
+            "name": "ATAL Grabiszyn",
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "status": "active",
+            "active_offers": 48,
+            "total_offers": 51,
+            "avg_price": 745551.31,
+            "avg_area_m2": 49.97,
+            "avg_price_per_m2": 14920.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/atal/atal-grabiszyn"
+          },
+          {
+            "investment_slug": "atal-aura-ii",
+            "name": "ATAL Aura II",
+            "city": "Łódź",
+            "city_slug": "lodz",
+            "status": "active",
+            "active_offers": 45,
+            "total_offers": 138,
+            "avg_price": 657974.38,
+            "avg_area_m2": 69.69,
+            "avg_price_per_m2": 9442.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/lodz/deweloperzy/atal/atal-aura-ii"
+          },
+          {
+            "investment_slug": "zerniki-na-novo",
+            "name": "Żerniki Na Novo",
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "status": "active",
+            "active_offers": 44,
+            "total_offers": 213,
+            "avg_price": 725120.55,
+            "avg_area_m2": 59.53,
+            "avg_price_per_m2": 12180.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/atal/zerniki-na-novo"
+          },
+          {
+            "investment_slug": "akacjowa-wita",
+            "name": "Akacjowa Wita",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "status": "active",
+            "active_offers": 42,
+            "total_offers": 86,
+            "avg_price": 869376.26,
+            "avg_area_m2": 54.08,
+            "avg_price_per_m2": 16074.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal/akacjowa-wita"
+          },
+          {
+            "investment_slug": "osiedle-przyjemne-iv",
+            "name": "Osiedle Przyjemne IV",
+            "city": "Gdańsk",
+            "city_slug": "gdansk",
+            "status": "active",
+            "active_offers": 40,
+            "total_offers": 109,
+            "avg_price": 641142.18,
+            "avg_area_m2": 58.28,
+            "avg_price_per_m2": 11001.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/gdansk/deweloperzy/atal/osiedle-przyjemne-iv"
+          },
+          {
+            "investment_slug": "warszawska-58a",
+            "name": "Warszawska 58A",
+            "city": "Warszawa",
+            "city_slug": "warszawa",
+            "status": "active",
+            "active_offers": 36,
+            "total_offers": 73,
+            "avg_price": 958592.58,
+            "avg_area_m2": 59.67,
+            "avg_price_per_m2": 16064.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/warszawska-58a"
+          },
+          {
+            "investment_slug": "atal-idea-swarzedz",
+            "name": "ATAL Idea Swarzędz",
+            "city": "Swarzędz",
+            "city_slug": "swarzedz",
+            "status": "active",
+            "active_offers": 36,
+            "total_offers": 98,
+            "avg_price": 550909.44,
+            "avg_area_m2": 64.13,
+            "avg_price_per_m2": 8590.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/swarzedz/deweloperzy/atal/atal-idea-swarzedz"
+          },
+          {
+            "investment_slug": "jasieny-gdansk",
+            "name": "Jasieny",
+            "city": "Gdańsk",
+            "city_slug": "gdansk",
+            "status": "active",
+            "active_offers": 36,
+            "total_offers": 43,
+            "avg_price": 658644.5,
+            "avg_area_m2": 59.86,
+            "avg_price_per_m2": 11003.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/gdansk/deweloperzy/atal/jasieny-gdansk"
+          },
+          {
+            "investment_slug": "atal-sky-bud-d-f",
+            "name": "ATAL SKY+ bud. D-F",
+            "city": "Katowice",
+            "city_slug": "katowice",
+            "status": "active",
+            "active_offers": 35,
+            "total_offers": 68,
+            "avg_price": 834530.83,
+            "avg_area_m2": 88.25,
+            "avg_price_per_m2": 9456.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/katowice/deweloperzy/atal/atal-sky-bud-d-f"
+          },
+          {
+            "investment_slug": "nowy-targowek-vi",
+            "name": "Nowy Targówek VI",
+            "city": "Warszawa",
+            "city_slug": "warszawa",
+            "status": "active",
+            "active_offers": 24,
+            "total_offers": 75,
+            "avg_price": 1098682.92,
+            "avg_area_m2": 62.31,
+            "avg_price_per_m2": 17631.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/nowy-targowek-vi"
+          },
+          {
+            "investment_slug": "przystan-sobieszewo-gdansk",
+            "name": "Przystań Sobieszewo",
+            "city": "Gdańsk",
+            "city_slug": "gdansk",
+            "status": "active",
+            "active_offers": 23,
+            "total_offers": 23,
+            "avg_price": 1009801.3,
+            "avg_area_m2": 64.61,
+            "avg_price_per_m2": 15630.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/gdansk/deweloperzy/atal/przystan-sobieszewo-gdansk"
+          },
+          {
+            "investment_slug": "niebieski-bursztyn-1",
+            "name": "Niebieski Bursztyn",
+            "city": "Reda",
+            "city_slug": "reda",
+            "status": "active",
+            "active_offers": 21,
+            "total_offers": 67,
+            "avg_price": 510349.43,
+            "avg_area_m2": 52.87,
+            "avg_price_per_m2": 9652.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/reda/deweloperzy/atal/niebieski-bursztyn-1"
+          },
+          {
+            "investment_slug": "ville-przy-bialej-wroclaw",
+            "name": "Ville Przy Białej",
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "status": "active",
+            "active_offers": 19,
+            "total_offers": 20,
+            "avg_price": 1701277.0,
+            "avg_area_m2": 125.5,
+            "avg_price_per_m2": 13556.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/atal/ville-przy-bialej-wroclaw"
+          },
+          {
+            "investment_slug": "przewoz-42-atal-ii",
+            "name": "Przewóz 42 ATAL II",
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "status": "active",
+            "active_offers": 15,
+            "total_offers": 91,
+            "avg_price": 762976.93,
+            "avg_area_m2": 50.82,
+            "avg_price_per_m2": 15013.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal/przewoz-42-atal-ii"
+          },
+          {
+            "investment_slug": "na-opoczynskiej",
+            "name": "Na Opoczyńskiej",
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "status": "active",
+            "active_offers": 14,
+            "total_offers": 60,
+            "avg_price": 707609.29,
+            "avg_area_m2": 68.07,
+            "avg_price_per_m2": 10395.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/atal/na-opoczynskiej"
+          },
+          {
+            "investment_slug": "galaktyczna",
+            "name": "Galaktyczna",
+            "city": "Gdańsk",
+            "city_slug": "gdansk",
+            "status": "active",
+            "active_offers": 14,
+            "total_offers": 136,
+            "avg_price": 655040.43,
+            "avg_area_m2": 57.15,
+            "avg_price_per_m2": 11462.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/gdansk/deweloperzy/atal/galaktyczna"
+          },
+          {
+            "investment_slug": "osiedle-poematu-ii",
+            "name": "Osiedle Poematu II",
+            "city": "Warszawa",
+            "city_slug": "warszawa",
+            "status": "active",
+            "active_offers": 7,
+            "total_offers": 49,
+            "avg_price": 932481.57,
+            "avg_area_m2": 71.64,
+            "avg_price_per_m2": 13016.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/osiedle-poematu-ii"
+          },
+          {
+            "investment_slug": "nowe-miasto-polesie-iv-b",
+            "name": "Nowe Miasto Polesie IV B",
+            "city": "Łódź",
+            "city_slug": "lodz",
+            "status": "active",
+            "active_offers": 6,
+            "total_offers": 166,
+            "avg_price": 560665.67,
+            "avg_area_m2": 61.09,
+            "avg_price_per_m2": 9178.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/lodz/deweloperzy/atal/nowe-miasto-polesie-iv-b"
+          },
+          {
+            "investment_slug": "zakatek-harmonia-ii",
+            "name": "Zakątek Harmonia II",
+            "city": "Warszawa",
+            "city_slug": "warszawa",
+            "status": "active",
+            "active_offers": 2,
+            "total_offers": 30,
+            "avg_price": 865126.0,
+            "avg_area_m2": 90.73,
+            "avg_price_per_m2": 9536.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/zakatek-harmonia-ii"
+          }
+        ],
+        "cities": [
+          {
+            "city": "Poznań",
+            "city_slug": "poznan",
+            "investments": 4,
+            "active_offers": 736,
+            "avg_price": 709389.0,
+            "avg_price_per_m2": 11823.0
+          },
+          {
+            "city": "Kraków",
+            "city_slug": "krakow",
+            "investments": 7,
+            "active_offers": 736,
+            "avg_price": 779580.0,
+            "avg_price_per_m2": 13950.0
+          },
+          {
+            "city": "Łódź",
+            "city_slug": "lodz",
+            "investments": 5,
+            "active_offers": 698,
+            "avg_price": 555358.0,
+            "avg_price_per_m2": 10059.0
+          },
+          {
+            "city": "Szczecin",
+            "city_slug": "szczecin",
+            "investments": 2,
+            "active_offers": 529,
+            "avg_price": 660533.0,
+            "avg_price_per_m2": 12652.0
+          },
+          {
+            "city": "Katowice",
+            "city_slug": "katowice",
+            "investments": 3,
+            "active_offers": 390,
+            "avg_price": 800020.0,
+            "avg_price_per_m2": 12603.0
+          },
+          {
+            "city": "Gdańsk",
+            "city_slug": "gdansk",
+            "investments": 6,
+            "active_offers": 282,
+            "avg_price": 807056.0,
+            "avg_price_per_m2": 13683.0
+          },
+          {
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "investments": 5,
+            "active_offers": 221,
+            "avg_price": 787421.0,
+            "avg_price_per_m2": 12644.0
+          },
+          {
+            "city": "Piastów",
+            "city_slug": "piastow",
+            "investments": 1,
+            "active_offers": 124,
+            "avg_price": 891840.0,
+            "avg_price_per_m2": 13405.0
+          },
+          {
+            "city": "Gliwice",
+            "city_slug": "gliwice",
+            "investments": 1,
+            "active_offers": 96,
+            "avg_price": 581922.0,
+            "avg_price_per_m2": 9560.0
+          },
+          {
+            "city": "Gdynia",
+            "city_slug": "gdynia",
+            "investments": 1,
+            "active_offers": 74,
+            "avg_price": 785459.0,
+            "avg_price_per_m2": 12217.0
+          },
+          {
+            "city": "Warszawa",
+            "city_slug": "warszawa",
+            "investments": 4,
+            "active_offers": 69,
+            "avg_price": 1001962.0,
+            "avg_price_per_m2": 16111.0
+          },
+          {
+            "city": "Kowale",
+            "city_slug": "kowale",
+            "investments": 1,
+            "active_offers": 66,
+            "avg_price": 674962.0,
+            "avg_price_per_m2": 10496.0
+          },
+          {
+            "city": "Swarzędz",
+            "city_slug": "swarzedz",
+            "investments": 1,
+            "active_offers": 36,
+            "avg_price": 550909.0,
+            "avg_price_per_m2": 8590.0
+          },
+          {
+            "city": "Reda",
+            "city_slug": "reda",
+            "investments": 1,
+            "active_offers": 21,
+            "avg_price": 510349.0,
+            "avg_price_per_m2": 9652.0
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal?_rsc=b92176ca [rsc: 1] [accept: */*]"
+  ]
+}

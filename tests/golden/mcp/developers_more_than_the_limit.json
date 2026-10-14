@@ -1,0 +1,47 @@
+{
+  "calls": [
+    {
+      "tool": "search_developers",
+      "arguments": {
+        "name": "dom",
+        "limit": 3
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 7,
+        "returned": 3,
+        "truncated": true,
+        "hint": "Pokazano 3 z 7 pasujących deweloperów. Doprecyzuj nazwę albo zwiększ limit (najwyżej 20).",
+        "items": [
+          {
+            "developer_slug": "atal-0",
+            "name": "ATAL S.A. 0",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-0"
+          },
+          {
+            "developer_slug": "atal-1",
+            "name": "ATAL S.A. 1",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-1"
+          },
+          {
+            "developer_slug": "atal-2",
+            "name": "ATAL S.A. 2",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-2"
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/developers?q=dom&limit=3 [accept: application/json]"
+  ]
+}

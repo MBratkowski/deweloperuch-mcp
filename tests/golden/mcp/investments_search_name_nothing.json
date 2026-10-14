@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "name": "zzqxv"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false,
+        "hint": "Nic nie pasuje do 'zzqxv'. Sprawdź pisownię albo podaj krótszy fragment nazwy; z city przeszukasz inwestycje jednego miasta.",
+        "items": []
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/investments?q=zzqxv&limit=10 [accept: application/json]"
+  ]
+}

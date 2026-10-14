@@ -1,0 +1,16 @@
+{
+  "args": [
+    "stats",
+    "market",
+    "polska"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: city: statystyki rynku są tylko dla jednego miasta; podaj city_slug miasta z search_locations (np. warszawa), a nie polska; podano 'polska'.",
+    ""
+  ],
+  "requests": []
+}

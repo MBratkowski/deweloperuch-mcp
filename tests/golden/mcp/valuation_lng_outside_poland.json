@@ -1,0 +1,21 @@
+{
+  "calls": [
+    {
+      "tool": "estimate_property_value",
+      "arguments": {
+        "lat": 52.2297,
+        "lng": 10,
+        "area_m2": 50
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Błędny argument narzędzia estimate_property_value: lng musi być liczbą z zakresu 14.1–24.2 (z kropką dziesiętną), podano 10. Popraw i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

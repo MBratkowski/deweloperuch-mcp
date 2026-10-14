@@ -1,0 +1,22 @@
+{
+  "args": [
+    "stats",
+    "cities"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Ranking miejscowości wg liczby transakcji: pokazano 3 z 3.",
+    "Ranking miast na deweloperuch.pl: https://deweloperuch.pl/ceny-transakcyjne/polska/miasta",
+    "1. Warszawa [warszawa] · transakcji: 3 606 · 16 413 PLN/m² · 48,8 m² · 780 000 PLN",
+    "2. Kraków [krakow] · transakcji: 1 492 · 14 606 PLN/m² · 47,4 m² · 675 000 PLN",
+    "3. Wrocław [wroclaw] · transakcji: 1 443 · 12 437 PLN/m² · 50,3 m² · 617 000 PLN",
+    "Serwis nie podaje okresu ani tego, czy ceny i metraż to średnie, czy mediany.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/city-transaction-stats [accept: application/json]"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "city": "Sopot"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "city: oczekiwano slug jednego miasta (np. warszawa, sopot; nie polska); slug podaje search_locations; podano 'Sopot'.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: city: oczekiwano slug jednego miasta (np. warszawa, sopot; nie polska); slug podaje search_locations; podano 'Sopot'. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

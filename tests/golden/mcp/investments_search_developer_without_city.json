@@ -1,0 +1,25 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "name": "kolibki",
+        "developer_slug": "atal"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "developer_slug działa tylko razem z city: podaj slug miasta (search_locations), w którym szukać inwestycji dewelopera.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: developer_slug działa tylko razem z city: podaj slug miasta (search_locations), w którym szukać inwestycji dewelopera. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

@@ -24,7 +24,7 @@ deweloperuch locations search krak
 deweloperuch locations search "Mokotów" --json
 ```
 
-Text output (from the test mock on samples; the mock does not filter by `QUERY`, so the Mokotów entries are not a match for "krak"; `[ ]` is the city slug):
+Text output (`tests/golden/cli/locations_search.json`, mocked samples; the mock does not filter by `QUERY`, so the Mokotów entries are not a match for "krak"; `[ ]` is the city slug):
 
 ```
 Lokalizacje: 5.
@@ -38,4 +38,4 @@ W nawiasach [] slug miasta dla: deweloperuch offers search CITY_SLUG
 
 When there are more results than shown, the header reads `Lokalizacje: pokazano N, może być więcej.` (shown N, there may be more).
 
-_Source: `src/deweloperuch_mcp/interfaces/cli/`, `uv run deweloperuch locations search --help`_
+_Source: `src/deweloperuch_mcp/consumers/cli/commands/locations_commands.py`, `src/deweloperuch_mcp/consumers/cli/presenters/search_locations_cli_presenter.py`, `uv run deweloperuch locations search --help`_

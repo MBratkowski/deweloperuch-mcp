@@ -43,7 +43,7 @@ import urllib.request
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from email.message import Message
-from typing import IO, Literal, Protocol
+from typing import Literal, Protocol
 
 TIMEOUT = 30.0
 """Seconds for connecting and for each read from the socket."""
@@ -111,16 +111,9 @@ class ReplyError(Exception):
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
     """Hands a 3xx back to the caller: one call is exactly one request."""
 
-    def redirect_request(
-        self,
-        req: urllib.request.Request,
-        fp: IO[bytes],
-        code: int,
-        msg: str,
-        headers: Message,
-        newurl: str,
-    ) -> None:
-        return None
+    def redirect_request(self, *_args: object, **_kwargs: object) -> None:
+        """No new request for any redirect (urllib's signature: req, fp, code, msg, headers,
+        newurl)."""
 
 
 def urllib_fetch(url: str, headers: Mapping[str, str], timeout: float) -> Response:
@@ -202,7 +195,7 @@ def _header_map(message: Message) -> dict[str, str]:
 # --- one request in the limiter -------------------------------------------------------
 
 
-def get_once(
+def get_once(  # noqa: PLR0913 - keyword-only transport, limiter and clock (test seams)
     url: str,
     headers: Mapping[str, str],
     *,
@@ -309,7 +302,9 @@ def status_line(reply: Response) -> str:
     """``HTTP 200, text/html, 1234 B, cache-control: …`` for stderr."""
     parts = [f"HTTP {reply.status}", content_type(reply.headers) or "bez content-type"]
     parts.append(f"{len(reply.body)} B")
-    for name in ("cache-control", "cf-cache-status", "age"):
-        if name in reply.headers:
-            parts.append(f"{name}: {reply.headers[name]}")
+    parts.extend(
+        f"{name}: {reply.headers[name]}"
+        for name in ("cache-control", "cf-cache-status", "age")
+        if name in reply.headers
+    )
     return ", ".join(parts)

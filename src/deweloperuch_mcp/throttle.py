@@ -99,7 +99,7 @@ STOP_SOURCES = frozenset({"pakiet", "probe", "scan_bundles"})
 """Programs that record a STOP; a record naming any other is unreadable (a STOP)."""
 
 CLEAR_WAIT_LIMIT = 300.0
-"""Longest wait of ``clear_stop`` for the lock before it gives up (``LockWaitTimeout``)."""
+"""Longest wait of ``clear_stop`` for the lock before it gives up (``LockWaitTimeoutError``)."""
 
 CLEAR_NOTICE_AFTER = 2.0
 """Wait of ``clear_stop`` for the lock after which it calls ``on_wait`` once."""
@@ -192,7 +192,8 @@ class UnreadableStop:
     problem: str
     until: None = None
 
-    def active(self, now: float) -> bool:
+    def active(self, _now: float) -> bool:
+        """Always: an unreadable record has no end to compare ``_now`` with."""
         return True
 
 
@@ -299,7 +300,7 @@ def _iso_utc(seconds: float) -> str:
         return f"{seconds!r} s (epoch)"
 
 
-class LockWaitTimeout(TimeoutError):
+class LockWaitTimeoutError(TimeoutError):
     """``clear_stop`` did not get the limiter's lock within its limit; nothing was removed."""
 
     def __init__(self, waited: float) -> None:
@@ -369,6 +370,14 @@ class Slot:
             )
         self._deferred = max(self._deferred, float(seconds))
 
+    def finish(self) -> float:
+        """End the slot (``stop`` refuses from now on); the pause asked with ``defer``.
+
+        Called by ``RequestLimiter.slot`` as the request leaves it.
+        """
+        self._open = False
+        return self._deferred
+
 
 class RequestLimiter:
     """Shared limit for requests to deweloperuch.pl across threads and processes.
@@ -382,7 +391,7 @@ class RequestLimiter:
     ``clock``, ``monotonic`` and ``sleep`` are injectable for unit tests.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 - keyword-only clocks and sleep, injected by tests
         self,
         lock_dir: str | os.PathLike[str] | None = None,
         *,
@@ -461,9 +470,9 @@ class RequestLimiter:
             try:
                 yield slot
             finally:
-                slot._open = False
+                deferred = slot.finish()
                 end = self._clock()
-                gap = max(self._min_interval, slot._deferred)
+                gap = max(self._min_interval, deferred)
                 _write_json(fd, {"last_end": end, "next_start": end + gap})
 
     def stop_status(self) -> StopStatus:
@@ -492,7 +501,7 @@ class RequestLimiter:
 
         The lock is polled: ``on_wait`` is called once after ``notice_after`` seconds
         (another process sends a request or waits for its turn); after ``wait_limit``
-        seconds ``LockWaitTimeout`` is raised and nothing is removed. Raises ``OSError``
+        seconds ``LockWaitTimeoutError`` is raised and nothing is removed. Raises ``OSError``
         when the record exists but cannot be removed. Creates nothing without the lock
         directory.
         """
@@ -551,7 +560,7 @@ class RequestLimiter:
                 pass
             waited = self._monotonic() - start
             if waited >= wait.limit:
-                raise LockWaitTimeout(wait.limit)
+                raise LockWaitTimeoutError(wait.limit)
             if not noticed and waited >= wait.notice_after and wait.on_wait is not None:
                 noticed = True
                 wait.on_wait()
@@ -678,6 +687,21 @@ def _read_stop(path: Path) -> Stop | None:
     except OSError as err:
         return _unreadable(f"nie można otworzyć pliku: {err.strerror or err}")
     try:
+        content = _stop_content(fd)
+    finally:
+        os.close(fd)
+    if isinstance(content, UnreadableStop):
+        return content
+    try:
+        return _parse_stop(content)
+    except (ValueError, TypeError, KeyError, RecursionError) as err:
+        return _unreadable(f"niepoprawna treść: {err}")
+
+
+def _stop_content(fd: int) -> bytes | UnreadableStop:
+    """The bytes of the open record ``fd``; a STOP without an end when it is no regular
+    file, cannot be read or is larger than ``_STOP_MAX_BYTES``."""
+    try:
         if not stat.S_ISREG(os.fstat(fd).st_mode):
             return _unreadable("to nie jest zwykły plik")
         chunks: list[bytes] = []
@@ -687,14 +711,9 @@ def _read_stop(path: Path) -> Stop | None:
             size += len(chunk)
     except OSError as err:
         return _unreadable(f"nie można odczytać pliku: {err.strerror or err}")
-    finally:
-        os.close(fd)
     if size > _STOP_MAX_BYTES:
         return _unreadable(f"plik większy niż {_STOP_MAX_BYTES} B")
-    try:
-        return _parse_stop(b"".join(chunks))
-    except (ValueError, TypeError, KeyError, RecursionError) as err:
-        return _unreadable(f"niepoprawna treść: {err}")
+    return b"".join(chunks)
 
 
 def _unreadable(problem: str) -> UnreadableStop:

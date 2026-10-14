@@ -1,0 +1,24 @@
+{
+  "calls": [
+    {
+      "tool": "get_developer",
+      "arguments": {
+        "developer_slug": "ATAL"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "developer_slug: oczekiwano slug dewelopera, np. atal; podają go search_developers, search_offers i search_investments (developer_slug); podano 'ATAL'.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: developer_slug: oczekiwano slug dewelopera, np. atal; podają go search_developers, search_offers i search_investments (developer_slug); podano 'ATAL'. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

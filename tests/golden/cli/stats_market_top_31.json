@@ -1,0 +1,18 @@
+{
+  "args": [
+    "stats",
+    "market",
+    "sopot",
+    "--top",
+    "31"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: top_developers musi być liczbą całkowitą z zakresu 1–30 (liczba deweloperów w wyniku), podano 31.",
+    ""
+  ],
+  "requests": []
+}

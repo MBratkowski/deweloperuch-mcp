@@ -1,21 +1,31 @@
-# Golden outputs (characterization tests)
+# Golden outputs
 
-What the CLI and the MCP tools answered on the code before the D13 refactor, one JSON file per case. The refactor must not change any of them: not a text, a message, an exit code, a log line or a request URL.
+Characterization tests pin what the CLI and the MCP tools return, one JSON file per case: texts, error messages, exit codes, log lines and the exact requests sent to the mocked service. A refactor must leave every file unchanged.
 
-- `cli/<case>.json`: the arguments, the exit code, stdout and stderr as lists of lines, and the requests the mocked service got. Cases: `tests/test_golden_cli.py`.
-- `mcp/<case>.json`: the tool calls, each result (`is_error`, the text, `structured_content`), the server's log lines at INFO and above, and the requests. A text that is exactly the structured content as compact JSON is recorded as `"<the structured content as compact JSON>"`. Cases: `tests/test_golden_mcp.py`.
-- Requests are `GET <url> [rsc: 1] [accept: …]`: the full URL with its query in the order sent, so a changed mapping of search criteria to the service's parameters fails here.
+## Layout
 
-The service is mocked by respx with the samples in `docs/discovery/samples/` and the real RSC pages in `tests/fixtures/rsc/` (`tests/service_mocks.py`); no test opens a network socket. Times, PIDs, seconds left of a pause and temporary paths are replaced by placeholders (`tests/golden_support.py`, `scrub`); nothing else is.
+- `cli/<case>.json`: the arguments, the exit code, stdout and stderr as lists of lines, and the requests the mocked service received. Cases are defined in `tests/support/golden/cli_cases/` (one module per operation) and run by `tests/characterization/cli/`.
+- `mcp/<case>.json`: the tool calls; for each result `is_error`, the text and `structured_content`; the server's log lines at INFO and above; and the requests. A text that is exactly the structured content as compact JSON is stored as the placeholder `"<the structured content as compact JSON>"`. Cases are defined in `tests/support/golden/mcp_cases/` (one module per tool) and run by `tests/characterization/mcp/`.
+- Each request is recorded as `GET <url> [rsc: 1] [accept: …]`: the full URL with its query parameters in the order sent, so any change in how search criteria map to the service's parameters fails here.
 
-## After an intended change
+## How the service is mocked
+
+respx serves the samples from `docs/discovery/samples/` and the raw payloads from `tests/fixtures/` (`tests/support/providers/network.py` and the routes in `tests/support/providers/routes/`). No test opens a network socket.
+
+Only volatile values are replaced by placeholders: timestamps, PIDs, the seconds left of a pause and temporary paths (`scrub` in `tests/support/checks/golden.py`). Nothing else is normalised.
+
+## Updating after an intended change
 
 Only when the output is meant to change:
 
-```
-DEWELOPERUCH_UPDATE_GOLDEN=1 uv run pytest tests/test_golden_cli.py tests/test_golden_mcp.py
+```sh
+DEWELOPERUCH_UPDATE_GOLDEN=1 uv run pytest tests/characterization
 ```
 
-The switch rewrites the files of the cases that ran. `git diff --stat tests/golden` lists the cases that moved; review each diff. A case removed from the matrix leaves its file behind and fails `test_every_recorded_*_case_is_still_a_case`: delete the file on purpose.
+The switch rewrites the files of the cases that ran. `git diff --stat tests/golden` then lists the cases that changed; review every diff before committing. A case removed from the matrix leaves its file behind, and `test_every_recorded_cli_case_is_still_a_case` (or its MCP twin) fails until you delete that file deliberately.
 
-The tool listing (names, descriptions, schemas) is not here: it is pinned by `tests/snapshots/mcp_tools.json` (`DEWELOPERUCH_UPDATE_SNAPSHOTS=1`, `tests/test_mcp_server.py`).
+The MCP tool listing (names, descriptions, schemas, annotations) is not stored here. It is pinned by `tests/snapshots/mcp_tools.json`:
+
+```sh
+DEWELOPERUCH_UPDATE_SNAPSHOTS=1 uv run pytest tests/unit/consumers/mcp/test_server.py
+```

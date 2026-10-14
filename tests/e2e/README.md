@@ -1,66 +1,90 @@
-# End-to-end tests on the live service
+# Live end-to-end tests
 
-The suite checks the installed package against the real deweloperuch.pl: the MCP server over stdio with the official SDK client, the CLI and `recon/probe.py`. It is **off** by default.
+This suite runs the installed package against the real deweloperuch.pl: the MCP server over stdio (driven by the official MCP SDK client), the `deweloperuch` CLI and `recon/probe.py`. It is **off by default**: a plain `uv run pytest` skips it.
 
 ## Before you run it
 
-- A run is a series of live requests. Until U1 is resolved it needs the user's explicit consent in the current conversation (D9; the exception for this suite is described in D10). Do not run it in parallel with `recon-verifier` or `drift-checker`.
-- The suite does not set a private `XDG_CACHE_HOME`, so it uses the limiter and the STOP record of your environment (`${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/`). It shares them with Claude Desktop and other processes only when they see the same `XDG_CACHE_HOME`. A shell with a different value than the Desktop environment has a separate limiter.
-- An active STOP before the start ends the run without any request. Only the user lifts a STOP, after checking its cause ([configuration.md](../../docs/configuration.md#stop-shared-lock-between-processes)).
+- Live runs are opt-in and should be rare. deweloperuch.pl is a community project, and one run sends up to 115 requests. Do not run the suite alongside other live tools such as the recon scripts.
+- The suite does not set a private `XDG_CACHE_HOME`, so it uses the limiter and the STOP record of your environment (`${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/`). It shares them with every process that sees the same `XDG_CACHE_HOME`, e.g. an MCP client running the server; a shell with a different value gets a separate limiter.
+- An active STOP ends the run before any request. Check it with `deweloperuch stop status`, and lift it only after you have found its cause (see [Configuration](../../docs/configuration.md#stop-shared-lock-between-processes)).
 
 ## Running
 
-```
+```sh
 DEWELOPERUCH_LIVE=1 uv run pytest -m live tests/e2e -rs --maxfail=3
 ```
 
-- Both switches are needed: the variable and `-m live`. Without either, every test is skipped with the reason „e2e na żywym serwisie…” before any fixture starts, so no process is launched. `tests/test_e2e_gate.py` checks this in the default `uv run pytest`.
+- Both switches are required: the variable and `-m live`. Without either, every test is skipped with the reason „e2e na żywym serwisie…” before any fixture starts, so no process is launched. `tests/safeguards/test_e2e_gate.py` checks this in the default run.
 - `--maxfail=3` stops the run after three failures instead of sending more requests.
-- The run ends at once, without further requests and without retries:
+- The run ends at once, without further requests or retries, when:
 
-  | pytest code | Reason | What to do |
+  | Exit code | Cause | What to do |
   |---|---|---|
-  | 3 | STOP: 401, 403, 429 or a challenge | report it to the user |
-  | 4 | service unavailable: 5xx or network | try later |
-  | 1 | request budget exceeded or a broken counter | check the suite |
+  | 3 | STOP: 401, 403, 429 or a challenge | stop, run `deweloperuch stop status` and find the cause before anything else |
+  | 4 | service unavailable: 5xx or a network error | try later |
+  | 1 | request budget exceeded, or a broken request counter | check the suite |
 
-  A broken counter is a call that had to reach the network while the server log has no `HTTP Request:` line at all. Most often it means a change of logging in the MCP SDK.
-- **Budget:** at most 70 live requests per run. The plan is 51, a little under a minute at 1 request per second. The worst case is 67: each of the 16 calls served from the cache goes to the network, and those tests fail anyway. At the end pytest prints the section „żywe zapytania (e2e)” with the number of requests per call.
-- **Cache:** the server keeps a response for at most 300 s. Freshness is `s-maxage`, without it `max-age`, without both 300 s, minus `Age` from Cloudflare; `no-store` or `no-cache` turns the cache off (`deweloperuch_mcp.infrastructure.deweloperuch.transport._ttl`, D2). The tools use only endpoints with `max-age=28800` and no `s-maxage` [P 2026-10-10; for the government statistics page [W]: like the other RSC pages], so during a run (about a minute) a repeat always comes from the cache. Tests marked "cache" require exactly the stated number of requests. On a failure, check `Age` and `Cache-Control` of that response: with `Age` ≥ `max-age` a TTL of 0 follows the rule. The computed TTL is in the log at DEBUG level (`TTL cache …`). There is no tolerance, because the only endpoint with a short freshness (`city-sales`, `s-maxage=300`) is not used by the tools.
-- **Counting requests:**
-  - the MCP server logs every request (`HTTP Request:`) on stderr, and the suite reads that stream;
-  - the CLI runs through its entry point (`deweloperuch_mcp.cli:main`) with the httpx log in a file;
-  - probe counts as 1 request unless it ended with code 2 or 5.
+  A broken counter means that a call which had to reach the network left no `HTTP Request:` line in the server log. Most often the MCP SDK has changed its logging.
+- Logs go to pytest's temporary directory (choose it with `--basetemp`): `mcp*/server-stderr.log` and `cli*/cli-N.log`.
 
-  Requests that got a response are counted.
-- **Logs:** in pytest's temporary directory (`--basetemp`, if you want to choose it): `mcp*/server-stderr.log` and `cli*/cli-N.log`.
-- **Warnings** (`UserWarning`) are not errors. They concern data that may change between calls: the price of an offer, or `offers_total` not matching the list.
-- **xfail** marks a known problem, described in the test's reason, not a failure.
-- Assertions check structure, ranges and consistency, not specific numbers. Behaviour marked [W] in the code is confirmed only by a live run.
+### Request budget
 
-## Scenarios
+- **Limit:** at most 115 live requests per run (`MAX_REQUESTS` in `tests/support/e2e/live.py`). The plan is 84, about a minute and a half at 1 request per second.
+- **Worst case:** 110. Every call meant to be served from the cache goes to the network (26 more requests), and those tests fail anyway, except the two repeats allowed to send 1 request: `get_market_statistics` with filters and the filtered list of `search_investments`.
+- **Report:** at the end pytest prints the section „żywe zapytania (e2e)” with the number of requests per call.
+- **Counting:** only requests that got a response are counted.
+  - The MCP server logs every request (`HTTP Request:`) on stderr, and the suite reads that stream.
+  - The CLI runs through its entry point (`deweloperuch_mcp.cli:main`) with the httpx log written to a file.
+  - A probe run counts as 1 request unless it exited with code 2 or 5.
 
-The "Requests" column gives the count when the whole module runs in file order. A fixture counts at the first test that uses it. "Cache" means the repeated part of the call comes from the server's cache.
+### Cache
 
-### MCP: `test_live_mcp.py` (60 tests, 38 requests, at most 54)
+Each MCP module starts its own server, so repeated requests within a module come from that server's cache, which keeps a response for at most 300 s:
 
-One `deweloperuch-mcp` process per module, so repeated requests come from the server's cache. Every result is checked for a STOP, an unavailable service and backend details:
+- Freshness is `s-maxage`, else `max-age`, else 300 s, minus Cloudflare's `Age`.
+- When `Age` already exceeds the freshness (Cloudflare serving its copy past `max-age`, e.g. the GUS page `polska` with `age: 69574` [P 2026-10-13]), the reply is kept for 300 s.
+- `no-store`, `no-cache` or `max-age=0` turn the cache off.
+
+See `_ttl` in `deweloperuch_mcp.api.http.transport`. Most pages and endpoints the tools read send `max-age=28800` without `s-maxage` [P 2026-10-10; [W] for the government statistics page and the developer profile]. During a run (minutes), a repeat of those always comes from the cache, so tests marked "cache" require exactly the stated number of requests. Two repeats are tolerated: `city-sales` (`s-maxage=300` [P 2026-10-10]) behind `test_market_with_filters`, and the city's investment list behind `search_investments`, whose `Cache-Control` is unknown. Each may send 1 request.
+
+If a cache test fails, check `Age` and `Cache-Control` of that response. The computed TTL is logged at DEBUG level (`TTL cache …`).
+
+### Reading the results
+
+- **Warnings** (`UserWarning`) are not errors. They flag data that may change between calls, such as the price of an offer or `offers_total` not matching the list.
+- **xfail** marks a known problem described in the test's reason, not a failure.
+- Assertions check structure, ranges and consistency, never specific numbers. Behaviour marked [W] in the code is confirmed only by a live run.
+
+## What every MCP result is checked for
+
+Every tool call, in every module, is checked for a STOP, an unavailable service and backend details (`leaks` in `tests/support/e2e/live.py`):
 
 - in text and values: `/api/`, `initialData`, `_rsc`, `invest_`, `sale_id`, `/ceny-`, `/statystyki`, `tocItems`, `sortedLocations`, `currentSlug`, `NEXT_HTTP`, `digest`, `Next-Action`, `buildId`, `Traceback`, `File "`, `httpx`, `pydantic.dev`, addresses of the service, HTML;
 - in field names: `sale`, `invest` (except `investment`), `rcn`, `amount`, `rsc`.
 
-Values (developer names, slugs) are not checked for backend names, because a real developer is called e.g. „Invest Komfort”. The SDK checks results against the output schema.
+Values such as developer names or slugs are not checked for backend words, because a real developer may be called e.g. „Invest Komfort”. The SDK checks every result against the tool's output schema.
 
-The only exception are links to the service's public pages (D12): `list_url`, `investment_url`, `developer_url` and `stats_url`. A full address is allowed only as the whole value of a `*_url` field and only in four shapes [P]:
+Links to the service's public pages are the one exception. A full address is allowed only as the whole value of a `*_url` field (`list_url`, `investment_url`, `developer_url`, `stats_url`, `ranking_url`, `building_url`), and only in these shapes [P]:
 
-- `…/ceny-ofertowe/{city}/mieszkania?…`;
-- `…/ceny-ofertowe/{city}/deweloperzy/{developer}`;
-- `…/ceny-ofertowe/{city}/deweloperzy/{developer}/{investment}`;
-- `…/statystyki/statystyki-rzadowe/{location}`, optionally with `#{section}` (an id of the page's table of contents: lowercase letters, digits, hyphens).
+- `…/ceny-ofertowe/{city}/mieszkania?…`
+- `…/ceny-ofertowe/{city}/deweloperzy/{developer}`
+- `…/ceny-ofertowe/{city}/deweloperzy/{developer}/{investment}`
+- `…/statystyki/statystyki-rzadowe/{location}`, optionally with `#{section}` (an id from the page's table of contents: lowercase letters, digits, hyphens)
+- `…/statystyki/ceny-transakcyjne/mieszkania/{city}`
+- `…/ceny-transakcyjne/polska/miasta`
+- `…/ceny-transakcyjne/{city}/adresy/{building}`
 
-A segment may not contain `/`, `?` or `#`, may not be `.` or `..` and may not contain `%2e`. An address with `_rsc` or `/api/`, in another field or in an error message, is a leak. The tests check the pattern of the links:
+A segment may not contain `/`, `?` or `#`, may not be `.` or `..` and may not contain `%2e`. An address with `_rsc` or `/api/`, in any other field or in an error message is a leak.
 
-- list: the city's path, and in the query exactly the tool's arguments, in the order the service is sent them;
+## Scenarios
+
+The "Requests" column gives the count when the whole module runs in file order. A fixture counts at the first test that uses it. "Cache" means the repeated part of the call comes from the server's cache. Tags: [P] confirmed by a captured response, [W] inferred, [H] an open hypothesis that the test confirms or refutes. T-numbers refer to `docs/open-questions.md`.
+
+### MCP: `test_live_mcp.py` (74 tests, 48 requests, at most 67)
+
+One `deweloperuch-mcp` process for the module, so repeated requests come from the server's cache. The tests check the pattern of the links:
+
+- list: the city's path, and in the query exactly the tool's arguments, in the order they are sent to the service;
 - investment and developer profile: the slugs of the result;
 - statistics: the page of the location from the argument and the section of the dataset.
 
@@ -68,7 +92,7 @@ Only two links are opened, through `probe`: `test_the_investment_link_leads_to_i
 
 | Test | What it checks | Requests |
 |---|---|---|
-| `test_tools_list_matches_the_snapshot` | 5 tools; names, descriptions, schemas, annotations, `serverInfo` and instructions match `tests/snapshots/mcp_tools.json` | 0 |
+| `test_tools_list_matches_the_snapshot` | 13 tools; names, descriptions, schemas, annotations, `serverInfo` and instructions match `tests/snapshots/mcp_tools.json` | 0 |
 | `test_tools_list_has_no_backend_details` | the leak filter on descriptions and schemas | 0 |
 | `test_locations_a_city_gives_its_slug` | „Kraków”: `kind=city`, `city_slug` krakow (fixture) | 2 |
 | `test_locations_a_district_gives_the_slug_of_its_city` | „mokot”: the district Mokotów, `city_slug` warszawa (fixture; the query of the sample `api.location_search`) | 2 |
@@ -85,10 +109,10 @@ Only two links are opened, through `probe`: `test_the_investment_link_leads_to_i
 | `test_offers_sorted_by_price` ×2 | `price_asc` and `price_desc` | 2 |
 | `test_offers_with_filters_and_sort_together` | price, area and order together | 1 |
 | `test_offers_in_the_whole_country_name_their_city` | `city=polska`: items have `city` (fixture) | 1 |
-| `test_offers_of_an_unknown_city_say_so` | „nie zna miasta”, `search_locations`, `polska`, without „Serwis mógł się zmienić” | 1 |
-| `test_offers_page_past_the_last_one` | [W] `sopot` (few offers, T12), then a page past the last one: an empty page with a hint; „nie zna miasta” is an xfail (a known problem, T34) | 2 |
+| `test_offers_of_an_unknown_city_say_so` | „nie zna miasta”, pointing to `search_locations` and `polska`, never „Serwis mógł się zmienić” | 1 |
+| `test_offers_page_past_the_last_one` | [W] `sopot` (few offers, T12), then a page past the last one: an empty page with a hint; „nie zna miasta” is an xfail (T34) | 2 |
 | `test_offers_price_min_above_price_max_is_refused_without_a_request` | `isError` | 0 |
-| `test_offers_arguments_off_the_schema_are_refused_without_a_request` ×3 | `per_page=100`, `page=21`, `sort="area_asc"`: a schema error with the field and the rule, without a link to pydantic.dev | 0 |
+| `test_offers_arguments_off_the_schema_are_refused_without_a_request` ×3 | `per_page=100`, `page=21`, `sort="rooms_asc"`: an error in Polish naming the field and what it allows, without a link to pydantic.dev | 0 |
 | `test_offers_numbers_as_text_are_the_same_request` | „10” and „1” as text | 0 (cache) |
 | `test_offers_filter_numbers_as_text_are_the_same_request` ×2 | `price_min="400000"`, `area_min="40"` | 0 (cache) |
 | `test_offers_empty_or_null_optional_arguments_are_the_defaults` ×3 | `price_min=None`, `sort=""`, `sort=None` | 0 (cache) |
@@ -106,20 +130,34 @@ Only two links are opened, through `probe`: `test_the_investment_link_leads_to_i
 | `test_offer_outside_its_investment` | an `offer_id` outside the investment: `isError` | 0 (cache) |
 | `test_offer_of_an_unknown_investment` | `isError` | 1 |
 | `test_offer_from_another_city_found_in_the_whole_country` | an offer from `city=polska` in another city, then `get_investment` and `get_offer` | 2 (investment from the cache) |
-| `test_government_average_area_of_poland` | `polska` + `average_area` (the page the user showed): D4 counters, yearly periods ascending, 30–150 m², `stats_url` with `#gus-srednia-powierzchnia` (fixture) | 1 |
+| `test_government_average_area_of_poland` | `polska` + `average_area`: D4 counters, yearly periods ascending, 30–150 m², `stats_url` with `#gus-srednia-powierzchnia` (fixture) | 1 |
 | `test_government_nbp_prices_of_a_city` | `warszawa` + `nbp_prices`: 4 NBP series in PLN/m², quarters, `#nbp` (fixture) | 1 |
-| `test_government_average_area_of_an_aggregate` | [H] `7-miast` + `average_area`: an aggregate's page; its `currentSlug` is unconfirmed, and a mismatch would make every aggregate a "service changed" error: the failure then quotes the server log line with `currentSlug` | 1 |
+| `test_government_average_area_of_an_aggregate` | [H] `7-miast` + `average_area`: an aggregate's page. Its `currentSlug` is unconfirmed, and a mismatch would turn every aggregate into a "service changed" error, so the failure quotes the server log line with `currentSlug` | 1 |
 | `test_government_another_dataset_of_the_same_location_comes_from_the_cache` | `polska` + `unemployment`: the same page, a rate of 0–40% | 0 (cache) |
-| `test_government_nbp_prices_of_poland_point_to_cities` | `polska` + `nbp_prices`: `isError`, the list of locations with NBP prices [P 2026-10-11] | 0 (cache) |
+| `test_government_nbp_prices_of_poland_point_to_cities` | `polska` + `nbp_prices`: `isError` with the list of locations that have NBP prices [P 2026-10-11] | 0 (cache) |
 | `test_government_dwellings_fit_the_size_budget` | `polska` + `dwellings_quarterly` (15 series, 12 periods) < 8000 characters | 0 (cache) |
-| `test_government_unknown_location` | [H] an unknown location: „nie ma statystyk rządowych”, i.e. Next.js's 404 marker; the message „Serwis mógł się zmienić” (no marker) is an xfail with a finding for `docs/open-questions.md` | 1 |
+| `test_government_unknown_location` | [H] an unknown location: „nie ma statystyk rządowych”, i.e. Next.js's 404 marker; „Serwis mógł się zmienić” (no marker) is an xfail whose reason records the finding | 1 |
 | `test_government_location_that_is_not_a_slug_is_refused_without_a_request` ×3 | „Kraków”, „kraków”, „”: `isError` saying what to give (capitals alone are lowercased, so „Warszawa” would be a valid location) | 0 |
-| `test_the_statistics_link_leads_to_its_section` | `probe page <path of stats_url without the anchor> --prop tocItems`: code 0, the table of contents contains the section of the anchor | 1 (probe) |
+| `test_the_statistics_link_leads_to_its_section` | `probe page <path of stats_url without the anchor> --prop tocItems --full` (untrimmed): code 0, the table of contents contains the section of the anchor | 1 (probe) |
 | `test_two_calls_at_once_go_one_by_one_through_the_limiter` | two calls at once: both correct, requests in the log ≥ 0.9 s apart | 2 |
+| `test_offers_unknown_argument_is_refused_without_a_request` | `max_price`: `isError` naming the argument and the allowed ones (`price_max`) | 0 |
+| `test_offers_in_a_district_cheaper_than_their_first_price` | [P 2026-10-10] `district` „Mokotów” (from the `mokot` search) and `price_dropped`: the query in `list_url`, every `price_change_since_start_pct` < 0, `total` ≤ the district's `offer_count` | 1 |
+| `test_offers_archived` | [P] `status=archived`: every item archived | 1 |
+| `test_offers_in_a_price_per_m2_range_by_price_per_m2_descending` | [W] `price_per_m2_min`/`max` 12,000–16,000 and `price_per_m2_desc`: every `price_per_m2` in the range (±1 PLN), `total` below the first page's, the order descending; a failure quotes the finding | 1 |
+| `test_offers_by_area_descending` | [W] `area_desc`: areas descending | 1 |
+| `test_offer_price_flags_agree_with_its_history` | `price_flags` of the offer from the search: the lowest prices are prices from its history, 90 days ≤ 30 days, the change count fits the history | 0 (cache) |
+| `test_market_of_a_city` | `get_market_statistics` of Kraków (fixture): counts, spreads in order, plausible medians, the top developers in order with their links, `list_url`, no single offers, < 8000 characters; a total more than 2% off `search_offers` is a warning | 1 |
+| `test_market_with_filters` | `price_max=700000`, `area_min=40`: fewer offers, spreads within the filters, `list_url` with them | 0 (cache; 1 if the 300 s of `city-sales` ran out) |
+| `test_market_of_the_whole_country_is_refused_without_a_request` | `city=polska`: `isError` „tylko dla jednego miasta” | 0 |
+| `test_market_of_an_unknown_city` | [H] an unknown city: „Serwis nie zna miasta” (400/404) or an empty summary with a hint; anything else is an xfail whose reason records the finding | 1 |
+| `test_developer_of_the_whole_country` | `get_developer` of the first offer's developer (`city` defaults to `polska`): counters, investments by active offers, links, < 15,000 characters | 1 |
+| `test_developer_in_a_city` | the same developer, `city=krakow`, `limit=100`: only investments in Kraków; the offer's investment missing is a warning | 1 |
+| `test_developer_unknown` | [P 2026-10-13] „Nie znaleziono dewelopera” (the page's heading), not „Serwis mógł się zmienić” | 1 |
+| `test_developer_in_an_unknown_city` | [H] a known developer in an unknown city: „Nie znaleziono dewelopera” or a profile without investments with a hint; anything else is an xfail whose reason records the finding | 1 |
 
-### CLI: `test_live_cli.py` (11 tests, 11 requests)
+### CLI: `test_live_cli.py` (13 tests, 13 requests)
 
-Each command is a separate process, without a shared cache. Code 3 or „Błąd: STOP:” ends the run with code 3, and code 4 (a service error) with code 4.
+Each command is a separate process, without a shared cache. Exit code 3 or „Błąd: STOP:” ends the run with code 3; exit code 4 (a service error) ends it with code 4.
 
 | Test | What it checks | Requests |
 |---|---|---|
@@ -129,19 +167,34 @@ Each command is a separate process, without a shared cache. Code 3 or „Błąd:
 | `test_offers_search_with_filters_as_text` | the same as text | 1 |
 | `test_offers_get` | `offers get <id> --investment <slug>`: the price history | 2 |
 | `test_investments_get_with_a_limit` | `investments get <slug> --limit 2` | 1 |
-| `test_offers_search_of_an_unknown_city` | code 7, a message with `search_locations` and `polska`, `Szczegóły:` without HTML | 1 |
-| `test_stats_government_as_text` | `stats government warszawa unemployment`: the head, a link to `#gus-bezrobocie`, a table of 12 months | 1 |
-| `test_offers_search_with_a_wrong_page_size_sends_nothing` | `--per-page 7`: code 2 | 0 |
-| `test_stop_status_is_offline` | `stop status`: code 0 | 0 |
-| `test_the_installed_script_runs_offline` | the installed script `deweloperuch stop status`: code 0 | 0 |
+| `test_offers_search_of_an_unknown_city` | exit code 7, a message with `search_locations` and `polska`, `Szczegóły:` without HTML | 1 |
+| `test_stats_government_as_text` | `stats government warszawa unemployment`: the header, a link to `#gus-bezrobocie`, a table of 12 months | 1 |
+| `test_offers_search_with_a_wrong_page_size_sends_nothing` | `--per-page 7`: exit code 2 | 0 |
+| `test_stop_status_is_offline` | `stop status`: exit code 0 | 0 |
+| `test_the_installed_script_runs_offline` | the installed script `deweloperuch stop status`: exit code 0 | 0 |
+| `test_stats_market_as_text` | `stats market sopot`: the header, the link to the list, the table of spreads, the largest developers | 1 |
+| `test_developers_get_in_a_city_as_json` | `developers get <developer of the first offer> --city krakow --json`: investments in Kraków only, the profile link | 1 |
 
 ### Recon: `test_live_recon.py` (2 tests, 2 requests)
 
 | Test | What it checks | Requests |
 |---|---|---|
-| `test_probe_api` | `probe.py api "/api/cities?q=krak"`: code 0, JSON with krakow | 1 |
+| `test_probe_api` | `probe.py api "/api/cities?q=krak"`: exit code 0, JSON with krakow | 1 |
 | `test_probe_page_lists_the_data_props` | `probe.py page "/ceny-ofertowe/warszawa/mieszkania?perPage=10"` without `--prop`: the list of props contains `initialData` | 1 |
 
 The bundle scanner (`recon/scan_bundles.py`, about 140 requests) is not part of the suite.
 
-**In total:** 73 tests, a plan of 51 live requests, at most 67, a limit of 70.
+### Other tools: one module each
+
+Each module starts its own `deweloperuch-mcp` (with its own cache); the CLI runs are separate processes. "Plan / at most" counts the module's requests in file order.
+
+| Module | Tool, command | Tests | Plan / at most | What it checks |
+|---|---|---|---|---|
+| `test_live_developer_search.py` | `search_developers`, `developers search` | 8 | 4 / 8 | a known developer (slug, profile link for `polska`), the repeat from the cache, the largest limit (20), nothing found with a hint, 3 refusals without a request, the CLI with `--json` |
+| `test_live_investment_search.py` | `search_investments` | 4 | 3 / 4 | the investments of Sopot ordered by active offers, the same list filtered and ordered (cache, at most 1), a search by name honouring its limit and `total` [W], the match's active offers equal to those of `get_investment` [W] |
+| `test_live_transactions.py` | `get_transaction_statistics`, `stats transactions` | 5 | 3 / 4 | months of Warsaw, more months from the cache, fewer transactions in the latest months (the RCN reporting lag), quarters, the CLI for another city |
+| `test_live_rankings.py` | `rank_locations`, `stats cities` | 4 | 3 / 4 | cities by transactions, by price from the cache, powiats, the CLI as text |
+| `test_live_buildings.py` | `get_building`, `buildings get` | 5 | 4 / 4 | the building of the sample with its units, transactions and trend (2), the repeat from the cache, the CLI with `--json`, [H] an unknown slug (last, since a 5xx ends the run) |
+| `test_live_valuation.py` | `estimate_property_value`, `valuation estimate` | 4 | 4 / 4 | `search_locations` for a street's coordinates (2), a valuation there, a point outside Poland refused without a request, the CLI with `--json` at the sample's point |
+
+**In total:** 119 tests, a plan of 84 live requests, at most 110, a hard limit of 115.

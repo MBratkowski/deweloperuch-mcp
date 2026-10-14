@@ -1,0 +1,24 @@
+{
+  "calls": [
+    {
+      "tool": "get_building",
+      "arguments": {
+        "building_slug": "23-marca-79c-sopot"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "STOP: seria zapytań do deweloperuch.pl jest wstrzymana po wcześniejszym STOP (HTTP 403, odmowa dostępu). Zapytanie nie zostało wysłane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "WARNING",
+      "STOP: seria zapytań do deweloperuch.pl jest wstrzymana po wcześniejszym STOP (HTTP 403, odmowa dostępu). Zapytanie nie zostało wysłane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi. Szczegóły: zapis STOP: HTTP 403 (odmowa dostępu), <TIME>, źródło: probe, PID <PID>"
+    ]
+  ],
+  "requests": []
+}

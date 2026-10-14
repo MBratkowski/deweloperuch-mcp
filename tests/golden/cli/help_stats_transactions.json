@@ -1,0 +1,35 @@
+{
+  "args": [
+    "stats",
+    "transactions",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch stats transactions [OPTIONS] {CITY}                                            ",
+    "                                                                                                    ",
+    " Pokaż ceny transakcyjne mieszkań (RCN) w mieście, miesiąc po miesiącu albo kwartałami.             ",
+    "                                                                                                    ",
+    "╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ *    CITY      <str>  Slug miasta bez polskich znaków, np. warszawa, krakow (podaje go           │",
+    "│                       deweloperuch locations search). Bez dzielnic, ulic i całej Polski.         │",
+    "│                       [required]                                                                 │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --granularity        <month|quarter>  month: miesiące (mediany i średnie); quarter: kwartały     │",
+    "│                                       (średnia cena za m², dłuższa historia).                    │",
+    "│                                       [default: month]                                           │",
+    "│ --periods            <int>            Ile ostatnich okresów pokazać (miesięcy, kwartałów).       │",
+    "│                                       [default: 12]                                              │",
+    "│ --json                                Wypisz wynik jako JSON (model domenowy).                   │",
+    "│ --help                                Show this message and exit.                                │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

@@ -1,0 +1,48 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "sort": "price_per_m2_desc",
+        "min_transactions": 1450
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "level": "city",
+        "sort": "price_per_m2_desc",
+        "min_transactions": 1450,
+        "total": 2,
+        "returned": 2,
+        "truncated": false,
+        "ranking_url": "https://deweloperuch.pl/ceny-transakcyjne/polska/miasta",
+        "items": [
+          {
+            "name": "Warszawa",
+            "city_slug": "warszawa",
+            "transaction_count": 3606,
+            "price_per_m2": 16413.0,
+            "area_m2": 48.8,
+            "price": 780000.0
+          },
+          {
+            "name": "Kraków",
+            "city_slug": "krakow",
+            "transaction_count": 1492,
+            "price_per_m2": 14606.0,
+            "area_m2": 47.4,
+            "price": 675000.0
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/city-transaction-stats [accept: application/json]"
+  ]
+}

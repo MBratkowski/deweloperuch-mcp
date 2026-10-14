@@ -21,3 +21,6 @@ node_modules/
 # Claude Code (local only)
 .claude/settings.local.json
 .claude/agent-memory-local/
+
+# Claude Code agent worktrees (local copies of the repo)
+.claude/worktrees/

@@ -1,0 +1,19 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "level": "gmina"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Błędny argument narzędzia rank_locations: level musi być jedną z wartości city, powiat, podano \"gmina\". Popraw i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

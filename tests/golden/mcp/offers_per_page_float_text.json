@@ -11,7 +11,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool search_offers: 1 validation error for search_offersArguments\nper_page\n  Value error, oczekiwano liczby całkowitej zapisanej cyframi, podano '10.0' [type=value_error, input_value='10.0', input_type=str]",
+      "text": "Błędny argument narzędzia search_offers: per_page musi być jedną z wartości 10, 50, podano \"10.0\". Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

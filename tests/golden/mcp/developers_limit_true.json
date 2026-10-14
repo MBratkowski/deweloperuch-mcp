@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "search_developers",
+      "arguments": {
+        "name": "atal",
+        "limit": true
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Błędny argument narzędzia search_developers: limit musi być liczbą całkowitą z zakresu 1–20, podano true. Popraw i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

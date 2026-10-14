@@ -1,0 +1,19 @@
+{
+  "args": [
+    "developers",
+    "search"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch developers search [OPTIONS] {NAME}",
+    "Try 'deweloperuch developers search --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Missing argument 'NAME'.                                                                         │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

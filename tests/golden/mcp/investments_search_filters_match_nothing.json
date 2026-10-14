@@ -1,0 +1,28 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "city": "sopot",
+        "developer_slug": "atal"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false,
+        "hint": "Żadna inwestycja w 'sopot' nie pasuje do name i developer_slug. Sprawdź pisownię albo pomiń te filtry, żeby zobaczyć wszystkie inwestycje miasta.",
+        "items": []
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

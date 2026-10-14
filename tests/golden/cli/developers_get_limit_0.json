@@ -1,0 +1,18 @@
+{
+  "args": [
+    "developers",
+    "get",
+    "atal",
+    "--limit",
+    "0"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: limit musi być liczbą całkowitą z zakresu 1–1000 (liczba inwestycji w wyniku), podano 0.",
+    ""
+  ],
+  "requests": []
+}

@@ -1,0 +1,21 @@
+{
+  "calls": [
+    {
+      "tool": "estimate_property_value",
+      "arguments": {
+        "lat": true,
+        "lng": 21.0122,
+        "area_m2": 50
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Błędny argument narzędzia estimate_property_value: lat musi być liczbą z zakresu 49–54.9 (z kropką dziesiętną), podano true. Popraw i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

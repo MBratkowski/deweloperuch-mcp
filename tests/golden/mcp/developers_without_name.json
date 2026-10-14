@@ -1,0 +1,17 @@
+{
+  "calls": [
+    {
+      "tool": "search_developers",
+      "arguments": {}
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Błędny argument narzędzia search_developers: name: brak wymaganego argumentu. Popraw i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

@@ -1,0 +1,25 @@
+{
+  "calls": [
+    {
+      "tool": "get_developer",
+      "arguments": {
+        "developer_slug": "atal",
+        "city": "Kraków"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje search_locations; podano 'Kraków'.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje search_locations; podano 'Kraków'. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

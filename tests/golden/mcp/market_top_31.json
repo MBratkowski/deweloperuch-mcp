@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "get_market_statistics",
+      "arguments": {
+        "city": "sopot",
+        "top_developers": 31
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Błędny argument narzędzia get_market_statistics: top_developers musi być liczbą całkowitą z zakresu 1–30, podano 31. Popraw i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

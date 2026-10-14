@@ -1,0 +1,23 @@
+{
+  "args": [
+    "valuation",
+    "estimate",
+    "--lat",
+    "52.2297",
+    "--lng",
+    "21.0122",
+    "--area",
+    "50",
+    "--area",
+    "501"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: area_m2 musi być liczbą z zakresu 10–500 m², podano 501.0.",
+    ""
+  ],
+  "requests": []
+}

@@ -11,7 +11,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool search_offers: 1 validation error for search_offersArguments\nper_page\n  Input should be 10 or 50 [type=literal_error, input_value=20, input_type=int]",
+      "text": "Błędny argument narzędzia search_offers: per_page musi być jedną z wartości 10, 50, podano 20. Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

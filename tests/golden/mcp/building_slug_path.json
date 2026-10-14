@@ -1,0 +1,24 @@
+{
+  "calls": [
+    {
+      "tool": "get_building",
+      "arguments": {
+        "building_slug": "sopot/../x"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "building_slug: oczekiwano slug budynku: małe litery bez polskich znaków, cyfry i myślniki, np. 23-marca-79c-sopot; podano 'sopot/../x'.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: building_slug: oczekiwano slug budynku: małe litery bez polskich znaków, cyfry i myślniki, np. 23-marca-79c-sopot; podano 'sopot/../x'. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

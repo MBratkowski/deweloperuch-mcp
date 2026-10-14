@@ -1,0 +1,57 @@
+{
+  "args": [
+    "stats",
+    "market",
+    "sopot",
+    "--json"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "{",
+    "  \"city_slug\": \"sopot\",",
+    "  \"offers\": 6,",
+    "  \"investments\": 2,",
+    "  \"developers\": 1,",
+    "  \"price\": {",
+    "    \"min\": 1399205,",
+    "    \"p25\": 1588164,",
+    "    \"median\": 1616463,",
+    "    \"p75\": 1646230,",
+    "    \"max\": 1679796",
+    "  },",
+    "  \"price_per_m2\": {",
+    "    \"min\": 22931,",
+    "    \"p25\": 23559,",
+    "    \"median\": 24533,",
+    "    \"p75\": 25309,",
+    "    \"max\": 27037",
+    "  },",
+    "  \"area_m2\": {",
+    "    \"min\": 56.5,",
+    "    \"p25\": 61.21,",
+    "    \"median\": 67.0,",
+    "    \"p75\": 68.7,",
+    "    \"max\": 69.5",
+    "  },",
+    "  \"top_developers\": [",
+    "    {",
+    "      \"developer_slug\": \"invest-komfort-spolka-akcyjna\",",
+    "      \"offers\": 6,",
+    "      \"investments\": 2,",
+    "      \"median_price_per_m2\": 24533,",
+    "      \"developer_url\": \"https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna\"",
+    "    }",
+    "  ],",
+    "  \"developers_omitted\": 0,",
+    "  \"hint\": null,",
+    "  \"list_url\": \"https://deweloperuch.pl/ceny-ofertowe/sopot/mieszkania?page=1&perPage=10\"",
+    "}",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/offers/city-sales/sopot [accept: application/json]"
+  ]
+}

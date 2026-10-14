@@ -1,0 +1,27 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "sopot"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Inwestycje: 2 · pokazano 2.",
+    "Nowe Kolibki etap 4 [nowe-kolibki-etap-4] · aktywna · Sopot",
+    "    oferty: aktywne 3 z 27 · średnio 1 615 878 PLN · 65,55 m² · 24 756,49 PLN/m²",
+    "    Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]",
+    "    https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/nowe-kolibki-etap-4",
+    "Smolna [smolna] · aktywna · Sopot, Świemirowo",
+    "    oferty: aktywne 3 z 16 · średnio 1 566 392 PLN · 63,97 m² · 24 522,21 PLN/m²",
+    "    Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]",
+    "    https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna",
+    "Oferty inwestycji: deweloperuch investments get INVESTMENT_SLUG",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

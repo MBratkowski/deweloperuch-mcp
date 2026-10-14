@@ -1,0 +1,19 @@
+{
+  "calls": [
+    {
+      "tool": "search_developers",
+      "arguments": {
+        "name": 42
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Błędny argument narzędzia search_developers: name musi być tekstem, podano 42. Popraw i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

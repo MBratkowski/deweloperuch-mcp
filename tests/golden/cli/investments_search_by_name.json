@@ -1,0 +1,24 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "--name",
+    "nowy targ"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Inwestycje: 2 · pokazano 2.",
+    "Nowy Targówek VI [nowy-targowek-vi]",
+    "    oferty: aktywne 27",
+    "Apartamenty Nowy Targ [apartamenty-nowy-targ]",
+    "    oferty: aktywne 0",
+    "Oferty inwestycji: deweloperuch investments get INVESTMENT_SLUG",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/investments?q=nowy%20targ&limit=10 [accept: application/json]"
+  ]
+}

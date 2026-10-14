@@ -1,11 +1,12 @@
-"""The package's errors, re-exported from the domain (``deweloperuch_mcp.domain.errors``),
-and ``printable`` (``deweloperuch_mcp.interfaces.text``).
+"""The package's errors, re-exported from the models (``deweloperuch_mcp.models.errors``),
+and ``printable`` (``deweloperuch_mcp.consumers.shared.text``).
 
-D13 moved the hierarchy into the domain; this module keeps the import path that the CLI,
-the MCP server, the tests and the documentation use.
+D13 moved the hierarchy into the domain (D16: ``models``); this module keeps the import
+path that the CLI, the MCP server, the tests and the documentation use.
 """
 
-from deweloperuch_mcp.domain.errors import (
+from deweloperuch_mcp.consumers.shared.text import printable
+from deweloperuch_mcp.models.errors import (
     SERVICE_CHANGED,
     DeweloperuchError,
     InvalidInputError,
@@ -17,7 +18,6 @@ from deweloperuch_mcp.domain.errors import (
     SessionClosedError,
     UnexpectedResponseError,
 )
-from deweloperuch_mcp.interfaces.text import printable
 
 __all__ = [
     "SERVICE_CHANGED",

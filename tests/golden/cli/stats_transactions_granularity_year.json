@@ -1,0 +1,22 @@
+{
+  "args": [
+    "stats",
+    "transactions",
+    "warszawa",
+    "--granularity",
+    "year"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch stats transactions [OPTIONS] {CITY}",
+    "Try 'deweloperuch stats transactions --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for '--granularity': 'year' is not one of 'month', 'quarter'.                      │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

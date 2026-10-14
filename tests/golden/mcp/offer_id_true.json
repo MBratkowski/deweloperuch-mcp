@@ -11,7 +11,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool get_offer: 1 validation error for get_offerArguments\noffer_id\n  Value error, oczekiwano liczby całkowitej, a nie true/false [type=value_error, input_value=True, input_type=bool]",
+      "text": "Błędny argument narzędzia get_offer: offer_id musi być liczbą całkowitą nie mniejszą niż 1, podano true. Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

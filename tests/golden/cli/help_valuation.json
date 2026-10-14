@@ -1,0 +1,26 @@
+{
+  "args": [
+    "valuation",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch valuation [OPTIONS] COMMAND [ARGS]...                                          ",
+    "                                                                                                    ",
+    " Wycena mieszkania z cen transakcyjnych (RCN) w okolicy.                                            ",
+    "                                                                                                    ",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --help          Show this message and exit.                                                      │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ estimate  Oszacuj wartość mieszkania z transakcji w okolicy punktu (przybliżenie, nie operat).   │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

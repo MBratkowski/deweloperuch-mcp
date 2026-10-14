@@ -1,0 +1,18 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "sopot",
+    "--limit",
+    "0"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: limit musi być liczbą całkowitą z zakresu 1–500 (liczba inwestycji w wyniku), podano 0.",
+    ""
+  ],
+  "requests": []
+}

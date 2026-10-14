@@ -1,0 +1,20 @@
+{
+  "args": [
+    "developers",
+    "search",
+    "atal"
+  ],
+  "exit_code": 3,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: STOP: HTTP 429 (limit zapytań). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.",
+    "Szczegóły: /api/developers?q=atal&limit=5: HTTP 429, pauza limitera 300 s",
+    "Nie uruchamiaj kolejnych poleceń deweloperuch ani pętli: przerwij i zgłoś to użytkownikowi. Blokada obejmuje też inne procesy.",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/developers?q=atal&limit=5 [accept: application/json]"
+  ]
+}

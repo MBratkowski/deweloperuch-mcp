@@ -1,0 +1,16 @@
+{
+  "args": [
+    "stats",
+    "transactions",
+    "polska"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: city: oczekiwano slug miasta bez polskich znaków, np. warszawa, krakow (nie polska: cała Polska nie jest obsługiwana); slug podaje search_locations (city_slug); podano 'polska'.",
+    ""
+  ],
+  "requests": []
+}

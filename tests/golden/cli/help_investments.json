@@ -14,7 +14,8 @@
     "│ --help          Show this message and exit.                                                      │",
     "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
     "╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮",
-    "│ get  Pokaż inwestycję z deweloperem i ofertami.                                                  │",
+    "│ get     Pokaż inwestycję z deweloperem i ofertami.                                               │",
+    "│ search  Szukaj inwestycji w mieście albo po nazwie (w całej Polsce).                             │",
     "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
     "",
     ""

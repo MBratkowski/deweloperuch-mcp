@@ -1,0 +1,34 @@
+{
+  "args": [
+    "buildings",
+    "get",
+    "23-marca-79c-sopot",
+    "--trend"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "23 Marca 79C [23-marca-79c-sopot]",
+    "Strona budynku: https://deweloperuch.pl/ceny-transakcyjne/sopot/adresy/23-marca-79c-sopot",
+    "Miejsce: Sopot [sopot] · 54.44706, 18.54342",
+    "Średnio (wg serwisu): 1 324 115 PLN · 61,6 m² · 21 494,72 PLN/m²",
+    "Lokale: 3 · transakcje: 3 (od 2025-09-12 do 2025-11-17) · pokazano 3.",
+    "piętro 1 · 5 pok. · 122,01 m² · 226401_1.0018.6977_BUD.3_LOK",
+    "  2025-11-17  1 900 000,47 PLN · 15 572,5 PLN/m² · rynek pierwotny · zwykła · kupujący: osoba fizyczna · sprzedający: osoba prawna",
+    "piętro 8 · 3 pok. · 68,42 m² · 226401_1.0018.6977_BUD.111_LOK",
+    "  2025-09-22  1 842 931 PLN · 26 935,56 PLN/m² · rynek pierwotny · zwykła · kupujący: osoba fizyczna · sprzedający: osoba prawna",
+    "piętro 1 · 2 pok. · 44,1 m² · 226401_1.0018.6977_BUD.1_LOK",
+    "  2025-09-12  783 105 PLN · 17 757,48 PLN/m² · rynek pierwotny · zwykła · kupujący: osoba fizyczna · sprzedający: osoba prawna",
+    "Trend w okolicy (promień 1 km): średnia cena za m² i liczba transakcji.",
+    "  2006-Q2  5 706 PLN/m² · transakcji: 25",
+    "  2006-Q3  6 188 PLN/m² · transakcji: 38",
+    "  2006-Q4  6 668 PLN/m² · transakcji: 38",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/transactions/visible/23-marca-79c-sopot [accept: application/json]",
+    "GET https://deweloperuch.pl/api/avg-price-trend/building/1354 [accept: application/json]"
+  ]
+}

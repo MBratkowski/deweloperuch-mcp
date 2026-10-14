@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "estimate_property_value",
+      "arguments": {
+        "lat": 52.2297,
+        "lng": 21.0122,
+        "area_m2": 50
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "STOP: seria zapytań do deweloperuch.pl jest wstrzymana po wcześniejszym STOP (HTTP 403, odmowa dostępu). Zapytanie nie zostało wysłane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "WARNING",
+      "STOP: seria zapytań do deweloperuch.pl jest wstrzymana po wcześniejszym STOP (HTTP 403, odmowa dostępu). Zapytanie nie zostało wysłane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi. Szczegóły: zapis STOP: HTTP 403 (odmowa dostępu), <TIME>, źródło: probe, PID <PID>"
+    ]
+  ],
+  "requests": []
+}

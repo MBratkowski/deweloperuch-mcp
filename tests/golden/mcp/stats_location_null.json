@@ -11,7 +11,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool get_government_statistics: 1 validation error for get_government_statisticsArguments\nlocation\n  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]",
+      "text": "Błędny argument narzędzia get_government_statistics: location musi być tekstem, podano null. Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

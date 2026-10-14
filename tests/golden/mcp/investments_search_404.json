@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "city": "sopot"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Serwis nie zna miasta 'sopot'. Podaj city_slug z search_locations.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Serwis nie zna miasta 'sopot'. Podaj city_slug z search_locations. Szczegóły: /api/map/investments?citySlug=sopot"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

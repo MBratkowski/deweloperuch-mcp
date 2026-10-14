@@ -11,7 +11,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool search_offers: 1 validation error for search_offersArguments\nprice_min\n  Value error, oczekiwano liczby całkowitej zapisanej cyframi, podano '500000.0' [type=value_error, input_value='500000.0', input_type=str]",
+      "text": "Błędny argument narzędzia search_offers: price_min musi być liczbą całkowitą z zakresu 0–99999999 albo pusty, podano \"500000.0\". Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

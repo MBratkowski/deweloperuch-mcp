@@ -1,0 +1,21 @@
+{
+  "args": [
+    "developers",
+    "search",
+    "atal"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Deweloperzy: 1.",
+    "ATAL S.A. [atal] · ofert: 4 265",
+    "    https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal",
+    "W nawiasach [] slug dewelopera dla: deweloperuch developers get SLUG",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/developers?q=atal&limit=5 [accept: application/json]"
+  ]
+}

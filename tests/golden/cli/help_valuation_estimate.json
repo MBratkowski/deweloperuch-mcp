@@ -1,0 +1,31 @@
+{
+  "args": [
+    "valuation",
+    "estimate",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch valuation estimate [OPTIONS]                                                   ",
+    "                                                                                                    ",
+    " Oszacuj wartość mieszkania z transakcji w okolicy punktu (przybliżenie, nie operat).               ",
+    "                                                                                                    ",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ *  --lat            <float>  Szerokość geograficzna punktu w Polsce, np. 52.2297. [required]     │",
+    "│ *  --lng            <float>  Długość geograficzna punktu w Polsce, np. 21.0122. [required]       │",
+    "│ *  --area           <float>  Metraż mieszkania w m², 10–500, np. 48.5. [required]                │",
+    "│    --address        <str>    Opcjonalny opis adresu; położenie wyznaczają --lat i --lng.         │",
+    "│    --limit          <int>    Najwięcej pokazanych transakcji porównawczych (najbliższe);         │",
+    "│                              domyślnie wszystkie.                                                │",
+    "│    --json                    Wypisz wynik jako JSON (model domenowy).                            │",
+    "│    --help                    Show this message and exit.                                         │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

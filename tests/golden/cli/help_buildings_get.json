@@ -1,0 +1,36 @@
+{
+  "args": [
+    "buildings",
+    "get",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch buildings get [OPTIONS] {SLUG}                                                 ",
+    "                                                                                                    ",
+    " Pokaż budynek z lokalami i ich transakcjami (ceny transakcyjne, nie ofertowe).                     ",
+    "                                                                                                    ",
+    " Lokale od tego z najnowszą transakcją, transakcje każdego lokalu od najstarszej.                   ",
+    "                                                                                                    ",
+    "╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ *    SLUG      <str>  Slug budynku, np. 23-marca-79c-sopot: ostatni człon adresu strony budynku  │",
+    "│                       z cenami transakcyjnymi na deweloperuch.pl.                                │",
+    "│                       [required]                                                                 │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --limit        <int>  Najwięcej pokazanych lokali (tych z najnowszymi transakcjami); domyślnie   │",
+    "│                       wszystkie.                                                                 │",
+    "│ --trend               Dołącz średnią cenę za m² transakcji w okolicy budynku, kwartał po         │",
+    "│                       kwartale (jedno zapytanie więcej).                                         │",
+    "│ --json                Wypisz wynik jako JSON (model domenowy).                                   │",
+    "│ --help                Show this message and exit.                                                │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

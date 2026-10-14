@@ -1,0 +1,19 @@
+{
+  "calls": [
+    {
+      "tool": "get_developer",
+      "arguments": {
+        "slug": "atal"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Nieznany argument narzędzia get_developer: 'slug'. Dozwolone argumenty: developer_slug, city, limit. Popraw nazwy i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

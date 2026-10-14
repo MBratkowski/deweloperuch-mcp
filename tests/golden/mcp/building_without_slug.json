@@ -1,0 +1,19 @@
+{
+  "calls": [
+    {
+      "tool": "get_building",
+      "arguments": {
+        "limit": 1
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Błędny argument narzędzia get_building: building_slug: brak wymaganego argumentu. Popraw i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

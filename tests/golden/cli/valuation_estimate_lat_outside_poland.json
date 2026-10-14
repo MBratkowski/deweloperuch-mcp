@@ -1,0 +1,23 @@
+{
+  "args": [
+    "valuation",
+    "estimate",
+    "--lat",
+    "52.2297",
+    "--lng",
+    "21.0122",
+    "--area",
+    "50",
+    "--lat",
+    "60"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: lat musi być liczbą z zakresu 49–54.9 (stopnie; tylko punkty w Polsce, współrzędne ulicy lub dzielnicy podaje search_locations), podano 60.0.",
+    ""
+  ],
+  "requests": []
+}

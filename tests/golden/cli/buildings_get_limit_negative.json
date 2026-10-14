@@ -1,0 +1,18 @@
+{
+  "args": [
+    "buildings",
+    "get",
+    "23-marca-79c-sopot",
+    "--limit",
+    "-1"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: limit musi być liczbą całkowitą z zakresu 0–100000 (liczba lokali w wyniku), podano -1.",
+    ""
+  ],
+  "requests": []
+}

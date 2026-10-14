@@ -1,0 +1,92 @@
+{
+  "calls": [
+    {
+      "tool": "get_market_statistics",
+      "arguments": {
+        "city": "krakow",
+        "price_min": "400000",
+        "price_max": 700000,
+        "area_max": 60,
+        "top_developers": 5
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "city_slug": "krakow",
+        "offers": 2006,
+        "investments": 95,
+        "developers": 49,
+        "price": {
+          "min": 420090,
+          "p25": 574638,
+          "median": 617338,
+          "p75": 658702,
+          "max": 699706
+        },
+        "price_per_m2": {
+          "min": 10907,
+          "p25": 14750,
+          "median": 15700,
+          "p75": 16900,
+          "max": 26253
+        },
+        "area_m2": {
+          "min": 25.31,
+          "p25": 34.53,
+          "median": 39.12,
+          "p75": 42.12,
+          "max": 59.12
+        },
+        "top_developers": [
+          {
+            "developer_slug": "develia",
+            "offers": 257,
+            "investments": 4,
+            "median_price_per_m2": 14750,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/develia"
+          },
+          {
+            "developer_slug": "atal",
+            "offers": 249,
+            "investments": 6,
+            "median_price_per_m2": 12561,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal"
+          },
+          {
+            "developer_slug": "dom-development",
+            "offers": 232,
+            "investments": 9,
+            "median_price_per_m2": 15500,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/dom-development"
+          },
+          {
+            "developer_slug": "spravia",
+            "offers": 159,
+            "investments": 3,
+            "median_price_per_m2": 16200,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/spravia"
+          },
+          {
+            "developer_slug": "tdj-estate",
+            "offers": 132,
+            "investments": 2,
+            "median_price_per_m2": 15250,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/tdj-estate"
+          }
+        ],
+        "developers_returned": 5,
+        "developers_omitted": 44,
+        "truncated": true,
+        "list_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/mieszkania?filterPrice=400000-700000&filterSize=0-60&page=1&perPage=10"
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/offers/city-sales/krakow [accept: application/json]"
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "city": "sopot",
+        "sort": "price_per_m2_asc",
+        "limit": 3
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 60,
+        "returned": 3,
+        "truncated": true,
+        "hint": "Pasujących inwestycji jest 60, pokazano pierwsze 3 (sort=price_per_m2_asc). Zawęź wyniki przez name lub developer_slug albo zmień sort.",
+        "items": [
+          {
+            "investment_slug": "smolna-0",
+            "name": "Smolna 0",
+            "city_slug": "sopot",
+            "street": "Świemirowo",
+            "status": "active",
+            "offers_active": 0,
+            "offers_total": 16,
+            "avg_price": 1566392.0,
+            "avg_area_m2": 63.97,
+            "avg_price_per_m2": 20000.0,
+            "developer_slug": "invest-komfort-spolka-akcyjna",
+            "developer_name": "Invest Komfort Spółka Akcyjna Sp.K.",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna-0",
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna"
+          },
+          {
+            "investment_slug": "nowe-kolibki-etap-4-1",
+            "name": "Nowe Kolibki etap 4 1",
+            "city_slug": "sopot",
+            "status": "active",
+            "offers_active": 1,
+            "offers_total": 27,
+            "avg_price": 1615878.0,
+            "avg_area_m2": 65.55,
+            "avg_price_per_m2": 20037.0,
+            "developer_slug": "invest-komfort-spolka-akcyjna",
+            "developer_name": "Invest Komfort Spółka Akcyjna Sp.K.",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/nowe-kolibki-etap-4-1",
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna"
+          },
+          {
+            "investment_slug": "smolna-2",
+            "name": "Smolna 2",
+            "city_slug": "sopot",
+            "street": "Świemirowo",
+            "status": "active",
+            "offers_active": 2,
+            "offers_total": 16,
+            "avg_price": 1566392.0,
+            "avg_area_m2": 63.97,
+            "avg_price_per_m2": 20074.0,
+            "developer_slug": "invest-komfort-spolka-akcyjna",
+            "developer_name": "Invest Komfort Spółka Akcyjna Sp.K.",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna-2",
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna"
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

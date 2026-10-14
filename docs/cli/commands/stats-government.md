@@ -1,7 +1,7 @@
 # `deweloperuch stats government`
 Shows GUS and NBP statistics of a location (`polska`, an aggregate or a city with county rights) as a table of periods and values. The same data as the MCP tool [`get_government_statistics`](../../mcp/tools/get_government_statistics.md).
 
-## Użycie
+## Usage
 ```
 Usage: deweloperuch stats government [OPTIONS] {LOCATION} {DATASET}
 
@@ -20,18 +20,18 @@ Options:
  --json            Wypisz wynik jako JSON (model domenowy).
  --help            Show this message and exit.
 ```
-(Layout condensed from the boxed `--help` output; texts verbatim. The group help `stats` is „Statystyki rządowe: GUS i NBP.”)
+(Layout condensed from the boxed `--help` output; texts verbatim.) The command belongs to the `stats` group: „Statystyki: rynek ofert miasta, ceny transakcyjne (RCN) miasta, ranking miast i powiatów oraz statystyki rządowe GUS i NBP.”
 
-## Opcje
-| Flaga | Typ | Domyślna | Opis |
+## Options
+| Flag | Type | Default | Description |
 |---|---|---|---|
 | `LOCATION` | argument | | See above; capitals are accepted. |
 | `DATASET` | argument, enum | | `dwellings_quarterly`, `dwellings_monthly`, `average_area`, `demography`, `population`, `unemployment`, `wages`, `nbp_prices`. |
 | `--periods` | int | 12 | 1–1000 (MCP: 1–120). |
 | `--json` | flag | off | The domain dataclasses as JSON. |
 
-## Kody wyjścia
-| Kod | Znaczenie |
+## Exit codes
+| Code | Meaning |
 |---|---|
 | 0 | Success. |
 | 2 | Bad argument: `periods` outside 1–1000 (`Błąd: periods musi być liczbą całkowitą z zakresu 1–1000 (liczba ostatnich okresów), podano 0.`), unknown `DATASET`, missing argument. |
@@ -43,7 +43,7 @@ Options:
 
 Details: [exit codes](../README.md#exit-codes).
 
-## Przykłady
+## Examples
 ```
 uv run deweloperuch stats government polska unemployment
 uv run deweloperuch stats government warszawa nbp_prices --periods 8
@@ -63,4 +63,4 @@ Okres    [1]
 2026-08  5,8
 ```
 
-_Źródło: `src/deweloperuch_mcp/interfaces/cli/statistics.py`, `uv run deweloperuch stats government --help`, `tests/golden/cli/stats_*.json`_
+_Source: `src/deweloperuch_mcp/consumers/cli/commands/stats_commands.py`, `src/deweloperuch_mcp/consumers/cli/presenters/get_government_statistics_cli_presenter.py`, `uv run deweloperuch stats government --help`, `tests/golden/cli/stats_*.json`_

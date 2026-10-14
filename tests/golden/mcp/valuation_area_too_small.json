@@ -1,0 +1,21 @@
+{
+  "calls": [
+    {
+      "tool": "estimate_property_value",
+      "arguments": {
+        "lat": 52.2297,
+        "lng": 21.0122,
+        "area_m2": 5
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Błędny argument narzędzia estimate_property_value: area_m2 musi być liczbą z zakresu 10–500 (z kropką dziesiętną), podano 5. Popraw i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

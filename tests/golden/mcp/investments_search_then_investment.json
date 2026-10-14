@@ -1,0 +1,138 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "city": "sopot"
+      }
+    },
+    {
+      "tool": "get_investment",
+      "arguments": {
+        "investment_slug": "smolna"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 2,
+        "returned": 2,
+        "truncated": false,
+        "items": [
+          {
+            "investment_slug": "nowe-kolibki-etap-4",
+            "name": "Nowe Kolibki etap 4",
+            "city_slug": "sopot",
+            "status": "active",
+            "offers_active": 3,
+            "offers_total": 27,
+            "avg_price": 1615878.0,
+            "avg_area_m2": 65.55,
+            "avg_price_per_m2": 24756.49,
+            "developer_slug": "invest-komfort-spolka-akcyjna",
+            "developer_name": "Invest Komfort Spółka Akcyjna Sp.K.",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/nowe-kolibki-etap-4",
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna"
+          },
+          {
+            "investment_slug": "smolna",
+            "name": "Smolna",
+            "city_slug": "sopot",
+            "street": "Świemirowo",
+            "status": "active",
+            "offers_active": 3,
+            "offers_total": 16,
+            "avg_price": 1566392.0,
+            "avg_area_m2": 63.97,
+            "avg_price_per_m2": 24522.21,
+            "developer_slug": "invest-komfort-spolka-akcyjna",
+            "developer_name": "Invest Komfort Spółka Akcyjna Sp.K.",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna",
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna"
+          }
+        ]
+      }
+    },
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "investment_slug": "smolna",
+        "name": "Smolna",
+        "status": "active",
+        "investment_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna",
+        "city": "Sopot",
+        "city_slug": "sopot",
+        "street": "Świemirowo",
+        "lat": 54.42735985,
+        "lng": 18.55839032,
+        "currency": "PLN",
+        "developer": {
+          "developer_slug": "invest-komfort-spolka-akcyjna",
+          "name": "Invest Komfort Spółka Akcyjna Sp.K."
+        },
+        "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna",
+        "avg_price": 1566392.0,
+        "avg_area_m2": 63.97,
+        "avg_price_per_m2": 24487.63,
+        "offers_active": 3,
+        "offers_total": 16,
+        "offers": [
+          {
+            "offer_id": 206087,
+            "name": "C234",
+            "status": "active",
+            "price": 1679796.0,
+            "currency": "PLN",
+            "area_m2": 65.9,
+            "price_per_m2": 25490.08,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2026-10-03",
+            "last_event_date": "2026-10-03",
+            "last_change_date": "2026-10-03"
+          },
+          {
+            "offer_id": 2377,
+            "name": "C224",
+            "status": "active",
+            "price": 1620175.0,
+            "currency": "PLN",
+            "area_m2": 69.5,
+            "price_per_m2": 23311.87,
+            "price_change_since_start": 175.0,
+            "price_change_since_start_pct": 0.01,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2026-10-03",
+            "last_change_date": "2026-10-03"
+          },
+          {
+            "offer_id": 2386,
+            "name": "C213",
+            "status": "active",
+            "price": 1399205.0,
+            "currency": "PLN",
+            "area_m2": 56.5,
+            "price_per_m2": 24764.69,
+            "price_change_since_start": -10795.0,
+            "price_change_since_start_pct": -0.77,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2026-10-03",
+            "last_change_date": "2026-10-03"
+          }
+        ],
+        "offers_returned": 3,
+        "offers_omitted": 0,
+        "truncated": false
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]",
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

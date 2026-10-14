@@ -53,7 +53,7 @@ uv run deweloperuch stop status
 uv run deweloperuch stop status --json
 ```
 
-Output with an active indefinite lock (from the tests `tests/test_cli.py`, code 3):
+Output with an active indefinite lock (`tests/golden/cli/stop_status_403.json`, code 3):
 
 ```
 STOP aktywny: HTTP 403 (odmowa dostępu).
@@ -75,4 +75,4 @@ Plik: <ścieżka>/deweloperuch-mcp/stop.json
 }
 ```
 
-_Source: `src/deweloperuch_mcp/interfaces/cli/` (`stop_status`, `format_stop_status`), `src/deweloperuch_mcp/throttle.py`, `uv run deweloperuch stop status --help`, `tests/test_cli.py`_
+_Source: `src/deweloperuch_mcp/consumers/cli/commands/stop_commands.py`, `src/deweloperuch_mcp/consumers/cli/presenters/get_stop_status_cli_presenter.py`, `src/deweloperuch_mcp/usecases/get_stop_status.py`, `src/deweloperuch_mcp/throttle.py`, `uv run deweloperuch stop status --help`, `tests/golden/cli/stop_status_*.json`_

@@ -22,16 +22,18 @@ from typing import Any
 import pytest
 
 from deweloperuch_mcp.identity import BASE_URL
-from e2e.live import (
+from support.e2e.live import (
     SERVICE_CHANGED,
-    SNAPSHOT,
     Budget,
     Call,
     McpLive,
     assert_listing_clean,
+    keys,
     mcp_server,
+    page_url,
     run_probe,
 )
+from support.paths import SNAPSHOT
 
 pytestmark = pytest.mark.live
 
@@ -39,7 +41,15 @@ TOOLS = [
     "search_locations",
     "search_offers",
     "get_offer",
+    "search_investments",
     "get_investment",
+    "search_developers",
+    "get_developer",
+    "get_market_statistics",
+    "get_transaction_statistics",
+    "rank_locations",
+    "get_building",
+    "estimate_property_value",
     "get_government_statistics",
 ]
 UNKNOWN_CITY = "nieistniejace-miasto"
@@ -47,7 +57,11 @@ UNKNOWN_INVESTMENT = "nieistniejaca-inwestycja-e2e"
 UNKNOWN_LOCATION = "nieistniejaca-lokalizacja-e2e"
 MAX_PAGES = 20
 SIZE_BUDGET = 8_000
-SIZE_BUDGET_50 = 25_000
+SIZE_BUDGET_50 = 27_500
+"""A page of 50 offers: about 25k with the developer's slug (2026-10-13)."""
+SIZE_BUDGET_DEVELOPER = 15_000
+"""get_developer with the default limit: about 9.5k for 20 investments [P 2026-10-13]."""
+UNKNOWN_DEVELOPER = "nieistniejacy-deweloper-e2e"
 PRICE_RANGE = {"price_min": 400_000, "price_max": 700_000}
 AREA_RANGE = {"area_min": 40, "area_max": 60}
 SMALL_CITY = "sopot"
@@ -67,7 +81,25 @@ PERIOD = {
     "month": re.compile(r"\d{4}-(?:0[1-9]|1[0-2])"),
 }
 NBP_SERIES = ["primary_asking", "primary_transaction", "secondary_asking", "secondary_transaction"]
-OFFER_ITEM = {"offer_id", "investment_slug", "name", "status", "investment_name", "developer_name"}
+OFFER_ITEM = {
+    "offer_id",
+    "investment_slug",
+    "name",
+    "status",
+    "investment_name",
+    "developer_name",
+    "developer_slug",
+}
+SORTS = {
+    "price_asc": ("amount", "asc"),
+    "price_desc": ("amount", "desc"),
+    "price_per_m2_asc": ("price_per_sqm", "asc"),
+    "price_per_m2_desc": ("price_per_sqm", "desc"),
+    "area_asc": ("size", "asc"),
+    "area_desc": ("size", "desc"),
+    "biggest_drop": ("start_amount_difference_percent", "asc"),
+}
+"""The ``sortBy`` and ``sortOrder`` search_offers sends for each order."""
 
 
 # --- the server and what the first calls found ------------------------------------------
@@ -164,23 +196,24 @@ def locations(mcp: McpLive, query: str) -> dict[str, Any]:
     return result
 
 
-def page_url(*slugs: str) -> str:
-    """A page address as links.py builds it: each slug one encoded segment."""
-    return "/".join([PAGES, *(urllib.parse.quote(slug, safe="") for slug in slugs)])
-
-
 def list_query(
     *,
     price_min: object = None,
     price_max: object = None,
     area_min: object = None,
     area_max: object = None,
+    price_per_m2_min: object = None,
+    price_per_m2_max: object = None,
+    district: object = None,
+    price_dropped: object = False,
+    status: object = None,
     sort: object = None,
     page: object = 1,
     per_page: object = 10,
 ) -> list[tuple[str, str]]:
     """The query search_offers sends for these tool arguments, in its order: open ranges
-    end at the UI's sentinels (99999999 PLN, 9999 m²), null and "" mean "not given"."""
+    end at the UI's sentinels (99999999 PLN, 9999 m², 999999 PLN/m²), null and "" mean
+    "not given"."""
 
     def given(value: object) -> bool:
         return value is not None and value != ""
@@ -189,16 +222,23 @@ def list_query(
     for name, low, high, top in (
         ("filterPrice", price_min, price_max, 99_999_999),
         ("filterSize", area_min, area_max, 9_999),
+        ("filterPricePerM2", price_per_m2_min, price_per_m2_max, 999_999),
     ):
         if given(low) or given(high):
             low_value = int(str(low)) if given(low) else 0
             high_value = int(str(high)) if given(high) else top
             query.append((name, f"{low_value}-{high_value}"))
+    if given(district):
+        query.append(("filterDistrict", str(district).strip()))
+    if price_dropped:
+        query.append(("filterPriceChange", "decrease"))
+    if status == "archived":
+        query.append(("filterStatus", "archived"))
+    elif status == "all":
+        query.append(("includeArchived", "true"))
     if given(sort):
-        query += [
-            ("sortBy", "amount"),
-            ("sortOrder", {"price_asc": "asc", "price_desc": "desc"}[str(sort)]),
-        ]
+        sort_by, sort_order = SORTS[str(sort)]
+        query += [("sortBy", sort_by), ("sortOrder", sort_order)]
     query += [("page", str(int(str(page)))), ("perPage", str(int(str(per_page))))]
     return query
 
@@ -244,16 +284,18 @@ def prices(items: list[dict[str, Any]]) -> list[float]:
 def from_cache(call: Call, *, sent: int = 0) -> None:
     """The server's cache answered what ``call`` repeats: it sent only ``sent`` requests.
 
-    Every endpoint the tools use sends ``max-age=28800`` without ``s-maxage``
+    Every endpoint these calls repeat sends ``max-age=28800`` without ``s-maxage``
     [P 2026-10-10], so the server keeps a reply ``DEFAULT_TTL`` (300 s) unless
-    Cloudflare's ``Age`` is within 300 s of 28800 (``transport._ttl``); this module takes
-    about a minute. No tolerance, then: only an endpoint with ``s-maxage=300`` (city-sales,
-    which no tool uses) could expire during a run.
+    Cloudflare's ``Age`` is within 300 s below 28800; an ``Age`` at or above 28800 (the
+    GUS page ``polska``: ``age: 69574`` [P 2026-10-13]) gives ``DEFAULT_TTL`` too (D2,
+    clarification of 2026-10-13; ``transport._ttl``). This module takes about two
+    minutes. No tolerance, then. ``city-sales`` (``get_market_statistics``) has
+    ``s-maxage=300``: its repeat is not checked with this (``Age`` may use up its TTL).
     """
     assert call.sent == sent, (
         f"{call.tool} {call.arguments}: {call.sent} zapytań zamiast {sent}; odpowiedź nie "
         "przyszła z cache serwera. Sprawdź Age i Cache-Control tej odpowiedzi (log serwera "
-        "na DEBUG: 'TTL cache'): przy Age ≥ max-age TTL 0 jest zgodny z regułą D2"
+        "na DEBUG: 'TTL cache'): TTL 0 daje tylko no-store, no-cache albo max-age=0 (D2)"
     )
 
 
@@ -497,14 +539,15 @@ def test_offers_price_min_above_price_max_is_refused_without_a_request(
 
 @pytest.mark.parametrize(
     ("arguments", "field"),
-    [({"per_page": 100}, "per_page"), ({"page": 21}, "page"), ({"sort": "area_asc"}, "sort")],
+    [({"per_page": 100}, "per_page"), ({"page": 21}, "page"), ({"sort": "rooms_asc"}, "sort")],
 )
 def test_offers_arguments_off_the_schema_are_refused_without_a_request(
     mcp: McpLive, city_slug: str, arguments: dict[str, Any], field: str
 ) -> None:
     call = mcp.call("search_offers", city=city_slug, **arguments)
 
-    assert call.error and field in call.text and "Input should" in call.text
+    assert call.error and call.text.startswith("Błędny argument narzędzia search_offers: ")
+    assert f"{field} musi być " in call.text
     assert call.sent == 0  # the leak check of every call also refuses pydantic's docs links
 
 
@@ -656,7 +699,7 @@ def test_the_investment_link_leads_to_its_page(budget: Budget, investment: Call)
     run = run_probe(budget, "page", path, "--prop", "investments")
 
     assert run.code == 0, (run.code, run.stderr)
-    listed = json.loads(run.stdout)
+    listed = [item for item in json.loads(run.stdout) if isinstance(item, dict)]
     assert any(item.get("slug") == result["investment_slug"] for item in listed), listed
 
 
@@ -874,13 +917,15 @@ def test_government_location_that_is_not_a_slug_is_refused_without_a_request(
 
 def test_the_statistics_link_leads_to_its_section(budget: Budget, polska_area: Call) -> None:
     """1 request (probe): the page of stats_url, without its fragment, lists the section
-    the fragment names in its table of contents."""
+    the fragment names in its table of contents. --full: probe trims lists on stdout
+    (3 items and a marker string), and the section may be past them."""
     page, section = polska_area.data["stats_url"].removeprefix(BASE_URL).split("#")
 
-    run = run_probe(budget, "page", page, "--prop", "tocItems")
+    run = run_probe(budget, "page", page, "--prop", "tocItems", "--full")
 
     assert run.code == 0, (run.code, run.stderr)
-    assert section in [item.get("id") for item in json.loads(run.stdout)]
+    items = [item for item in json.loads(run.stdout) if isinstance(item, dict)]
+    assert section in [item.get("id") for item in items], items
 
 
 # --- two calls at once -----------------------------------------------------------------
@@ -897,3 +942,293 @@ def test_two_calls_at_once_go_one_by_one_through_the_limiter(mcp: McpLive, city_
         check_page(call.data, **call.arguments)
     assert len(logged) == 2
     assert logged[1] - logged[0] >= 0.9, logged
+
+
+# --- 2026-10-13: unknown arguments, new filters and orders, price flags ----------------------
+
+
+def test_offers_unknown_argument_is_refused_without_a_request(mcp: McpLive, city_slug: str) -> None:
+    """A model's typo is refused, naming the argument and the allowed ones (no silent
+    search without the limit)."""
+    call = mcp.call("search_offers", city=city_slug, max_price=500_000)
+
+    assert call.error
+    assert call.text.startswith("Nieznany argument narzędzia search_offers: 'max_price'.")
+    assert "price_max" in call.text
+    assert call.sent == 0
+
+
+def mokotow(mokot: dict[str, Any]) -> dict[str, Any]:
+    found = [
+        item
+        for item in mokot["items"]
+        if item["kind"] == "district"
+        and item["name"] == "Mokotów"
+        and item["city_slug"] == "warszawa"
+    ]
+    assert found, mokot["items"]
+    district: dict[str, Any] = found[0]
+    return district
+
+
+def test_offers_in_a_district_cheaper_than_their_first_price(
+    mcp: McpLive, mokot: dict[str, Any]
+) -> None:
+    """[P 2026-10-10] filterDistrict (the name search_locations gives, Polish letters
+    encoded) and filterPriceChange=decrease (below the first price): 1 request. The
+    district alone has `offer_count` offers [P], so with the second filter at most that."""
+    district = mokotow(mokot)
+    arguments = {"district": district["name"], "price_dropped": True}
+
+    call = mcp.call_network("search_offers", city="warszawa", **arguments)
+
+    items = check_page(call.data, "warszawa", **arguments)
+    assert call.data["total"] > 0, "brak przecenionych ofert na Mokotowie"
+    if "offer_count" in district:
+        assert call.data["total"] <= district["offer_count"], (call.data["total"], district)
+    changes = [
+        i["price_change_since_start_pct"] for i in items if "price_change_since_start_pct" in i
+    ]
+    assert changes and all(change < 0 for change in changes), changes
+    assert call.sent == 1
+
+
+def test_offers_archived(mcp: McpLive, city_slug: str) -> None:
+    """[P] filterStatus=archived: only withdrawn offers: 1 request."""
+    call = mcp.call_network("search_offers", city=city_slug, status="archived")
+
+    items = check_page(call.data, city_slug, status="archived")
+    assert items and all(item["status"] == "archived" for item in items), items[:2]
+
+
+def test_offers_in_a_price_per_m2_range_by_price_per_m2_descending(
+    mcp: McpLive, city_slug: str, first_page: Call
+) -> None:
+    """[W] filterPricePerM2 narrows the list and sortBy=price_per_sqm&sortOrder=desc
+    orders it (both from the UI's code, untested on the server): 1 request. The result's
+    price per m² is price / area (to 0.01), the service's to 0.01 too: 1 PLN of slack."""
+    arguments = {
+        "price_per_m2_min": 12_000,
+        "price_per_m2_max": 16_000,
+        "sort": "price_per_m2_desc",
+    }
+
+    call = mcp.call_network("search_offers", city=city_slug, **arguments)
+
+    result = call.data
+    items = check_page(result, city_slug, **arguments)
+    values = [item["price_per_m2"] for item in items if "price_per_m2" in item]
+    assert values, "brak ofert z ceną za m²"
+    assert all(12_000 - 1 <= value <= 16_000 + 1 for value in values), (
+        f"Ustalenie [W]: filterPricePerM2 nie zawęża listy (ceny za m²: {values}); "
+        "do docs/discovery/pages-rsc.md"
+    )
+    assert result["total"] < first_page.data["total"], "filtr nie zmniejszył total [W]"
+    assert values == sorted(values, reverse=True), (
+        f"Ustalenie [W]: sortBy=price_per_sqm&sortOrder=desc nie sortuje malejąco: {values}"
+    )
+
+
+def test_offers_by_area_descending(mcp: McpLive, city_slug: str) -> None:
+    """[W] sortBy=size&sortOrder=desc (only ascending is [P]): 1 request."""
+    call = mcp.call_network("search_offers", city=city_slug, sort="area_desc")
+
+    areas = [
+        i["area_m2"] for i in check_page(call.data, city_slug, sort="area_desc") if "area_m2" in i
+    ]
+    assert areas and areas == sorted(areas, reverse=True), (
+        f"Ustalenie [W]: sortBy=size&sortOrder=desc nie sortuje malejąco: {areas}"
+    )
+
+
+def test_offer_price_flags_agree_with_its_history(
+    mcp: McpLive, investment: Call, offer: dict[str, Any]
+) -> None:
+    """The flags of today from the history shown with them; the call repeats the earlier
+    get_offer, so it comes from the cache."""
+    call = mcp.call(
+        "get_offer", offer_id=offer["offer_id"], investment_slug=offer["investment_slug"]
+    )
+
+    result = call.data
+    flags = result["price_flags"]
+    points = [e["price"] for e in result["price_history"] if e["kind"] == "offer" and "price" in e]
+    assert isinstance(flags["suspicious_reduction"], bool)
+    assert 0 <= flags["price_changes"] <= max(0, len(points) - 1)
+    for window in ("lowest_price_30d", "lowest_price_90d"):
+        if window in flags:
+            assert flags[window] in points, (window, flags, points)
+    if "lowest_price_30d" in flags and "lowest_price_90d" in flags:
+        assert flags["lowest_price_90d"] <= flags["lowest_price_30d"]
+    for pct in ("largest_drop_pct", "largest_rise_pct"):
+        assert flags.get(pct, 1) > 0, flags
+    from_cache(call)
+
+
+# --- get_market_statistics (D15) --------------------------------------------------------
+
+
+@pytest.fixture(scope="module")
+def market(mcp: McpLive, city_slug: str) -> Call:
+    return mcp.call_network("get_market_statistics", city=city_slug)
+
+
+def check_spread(spread: dict[str, Any]) -> None:
+    values = [spread[key] for key in ("min", "p25", "median", "p75", "max")]
+    assert values == sorted(values), spread
+
+
+def test_market_of_a_city(market: Call, city_slug: str, first_page: Call) -> None:
+    """Every active offer of the city in one request, only aggregates in the result."""
+    result = market.data
+
+    assert result["city_slug"] == city_slug
+    assert 0 < result["investments"] <= result["offers"]
+    assert 0 < result["developers"] <= result["investments"]
+    for name in ("price", "price_per_m2", "area_m2"):
+        check_spread(result[name])
+    assert 100_000 < result["price"]["median"] < 5_000_000
+    assert 5_000 < result["price_per_m2"]["median"] < 60_000
+    assert 20 < result["area_m2"]["median"] < 150
+    top = result["top_developers"]
+    assert result["developers_returned"] == len(top) == min(10, result["developers"])
+    assert result["truncated"] == (result["developers"] > len(top))
+    offers = [d["offers"] for d in top]
+    assert offers == sorted(offers, reverse=True) and sum(offers) <= result["offers"]
+    for share in top:
+        assert share["developer_url"] == page_url(city_slug, "deweloperzy", share["developer_slug"])
+    assert result["list_url"] == page_url(city_slug, "mieszkania") + "?page=1&perPage=10"
+    assert not {"offer_id", "items", "investment_slug"} & keys(result)
+    assert len(market.text) < SIZE_BUDGET
+    assert market.sent == 1
+    total = first_page.data["total"]
+    if abs(result["offers"] - total) > 0.02 * total:
+        warnings.warn(
+            f"{city_slug}: {result['offers']} ofert w statystykach ≠ {total} w search_offers "
+            "(o więcej niż 2%)",
+            stacklevel=1,
+        )
+
+
+def test_market_with_filters(mcp: McpLive, city_slug: str, market: Call) -> None:
+    """The same dump, narrowed: from the cache, unless its 300 s (s-maxage minus Age) ran
+    out (then 1 request)."""
+    call = mcp.call("get_market_statistics", city=city_slug, price_max=700_000, area_min=40)
+
+    result = call.data
+    assert result["offers"] <= market.data["offers"]
+    if result["offers"]:
+        assert result["price"]["max"] <= 700_000 and result["area_m2"]["min"] >= 40
+    assert result["list_url"].endswith("?filterPrice=0-700000&filterSize=40-9999&page=1&perPage=10")
+    assert call.sent <= 1
+
+
+def test_market_of_the_whole_country_is_refused_without_a_request(mcp: McpLive) -> None:
+    call = mcp.call("get_market_statistics", city="polska")
+
+    assert call.error and "tylko dla jednego miasta" in call.text
+    assert call.sent == 0
+
+
+def test_market_of_an_unknown_city(mcp: McpLive) -> None:
+    """[H] an unknown city: a 400 like polska or a 404 (the model reads "no such city"),
+    or a 200 without offers (an empty summary with a hint). Anything else is a finding."""
+    call = mcp.call_network("get_market_statistics", city=UNKNOWN_CITY)
+
+    if call.error and "Serwis nie zna miasta" in call.text:
+        assert "search_locations" in call.text
+    elif not call.error and call.data["offers"] == 0:
+        assert "Brak aktywnych ofert" in call.data["hint"]
+    else:
+        pytest.xfail(
+            f"Ustalenie: city-sales nieznanego miasta odpowiada inaczej niż 400/404/pusty 200 "
+            f"(komunikat: {call.text[:160]!r}). Pozycja do docs/open-questions.md."
+        )
+    assert call.sent == 1
+
+
+# --- get_developer -----------------------------------------------------------------------
+
+
+def check_developer(result: dict[str, Any], slug: str, city: str, limit: int = 20) -> None:
+    assert result["developer"]["developer_slug"] == slug and result["developer"]["name"]
+    assert result["developer_url"] == page_url(city, "deweloperzy", slug)
+    assert result["city_slug"] == city
+    investments = result["investments"]
+    returned, omitted = result["investments_returned"], result["investments_omitted"]
+    assert returned == len(investments) == min(limit, result["investments_total"])
+    assert omitted == result["investments_total"] - returned
+    assert result["truncated"] == (omitted > 0)
+    active = [item.get("active_offers", 0) for item in investments]
+    assert active == sorted(active, reverse=True)
+    for item in investments:
+        assert item["investment_url"] == page_url(
+            item["city_slug"], "deweloperzy", slug, item["investment_slug"]
+        )
+        assert item.get("active_offers", 0) <= item.get("total_offers", 10**9)
+    if not result["truncated"] and "active_offers" in result["summary"]:
+        # [P 2026-10-13] totalSales is the sum of the investments' active offers
+        assert result["summary"]["active_offers"] == sum(active)
+    assert result["cities"] and all(SLUG.fullmatch(c["city_slug"]) for c in result["cities"])
+
+
+def test_developer_of_the_whole_country(
+    mcp: McpLive, offer: dict[str, Any], city_slug: str
+) -> None:
+    """The developer of the first offer, city=polska by default: 1 request."""
+    call = mcp.call_network("get_developer", developer_slug=offer["developer_slug"])
+
+    result = call.data
+    check_developer(result, offer["developer_slug"], "polska")
+    if city_slug not in {c["city_slug"] for c in result["cities"]}:
+        warnings.warn(f"{city_slug!r} nie jest wśród miast dewelopera", stacklevel=1)
+    assert len(call.text) < SIZE_BUDGET_DEVELOPER
+    assert call.sent == 1
+
+
+def test_developer_in_a_city(mcp: McpLive, offer: dict[str, Any], city_slug: str) -> None:
+    """city=<the offer's city>: its investments only, the offer's among them: 1 request."""
+    slug = offer["developer_slug"]
+
+    call = mcp.call_network("get_developer", developer_slug=slug, city=city_slug, limit=100)
+
+    result = call.data
+    check_developer(result, slug, city_slug, limit=100)
+    assert {item["city_slug"] for item in result["investments"]} == {city_slug}
+    if offer["investment_slug"] not in {i["investment_slug"] for i in result["investments"]}:
+        warnings.warn(
+            f"inwestycji {offer['investment_slug']!r} z wyszukiwania nie ma w profilu "
+            f"dewelopera w {city_slug!r}",
+            stacklevel=1,
+        )
+    assert call.sent == 1
+
+
+def test_developer_unknown(mcp: McpLive) -> None:
+    """[P 2026-10-13] the page of an unknown developer has the heading „Deweloper nie
+    znaleziony” (no 404 marker): the model reads where slugs come from."""
+    call = mcp.call_network("get_developer", developer_slug=UNKNOWN_DEVELOPER)
+
+    assert call.error and "Nie znaleziono dewelopera" in call.text, call.text[:200]
+    assert "search_offers" in call.text and SERVICE_CHANGED not in call.text
+    assert call.sent == 1
+
+
+def test_developer_in_an_unknown_city(mcp: McpLive, offer: dict[str, Any]) -> None:
+    """[H] a known developer in an unknown city: "not found" (the heading or the 404
+    marker) or a profile without investments (with a hint). Anything else is a finding."""
+    call = mcp.call_network(
+        "get_developer", developer_slug=offer["developer_slug"], city=UNKNOWN_CITY
+    )
+
+    if call.error and "Nie znaleziono dewelopera" in call.text:
+        pass
+    elif not call.error and call.data["investments_total"] == 0:
+        assert "Spróbuj city=polska" in call.data["hint"]
+    else:
+        pytest.xfail(
+            "Ustalenie: profil dewelopera w nieznanym mieście odpowiada inaczej niż "
+            f"„nie znaleziono” albo pusty profil (komunikat: {call.text[:160]!r}). Pozycja do "
+            "docs/open-questions.md."
+        )
+    assert call.sent == 1

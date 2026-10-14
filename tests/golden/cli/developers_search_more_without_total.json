@@ -1,0 +1,30 @@
+{
+  "args": [
+    "developers",
+    "search",
+    "dom"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Deweloperzy: pokazano 5, może być więcej.",
+    "ATAL S.A. 0 [atal-0] · ofert: 4 265",
+    "    https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-0",
+    "ATAL S.A. 1 [atal-1] · ofert: 4 265",
+    "    https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-1",
+    "ATAL S.A. 2 [atal-2] · ofert: 4 265",
+    "    https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-2",
+    "ATAL S.A. 3 [atal-3] · ofert: 4 265",
+    "    https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-3",
+    "ATAL S.A. 4 [atal-4] · ofert: 4 265",
+    "    https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-4",
+    "Wskazówka: Pokazano 5 pasujących deweloperów, a może ich być więcej. Doprecyzuj nazwę albo zwiększ limit (najwyżej 20).",
+    "W nawiasach [] slug dewelopera dla: deweloperuch developers get SLUG",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/developers?q=dom&limit=5 [accept: application/json]"
+  ]
+}

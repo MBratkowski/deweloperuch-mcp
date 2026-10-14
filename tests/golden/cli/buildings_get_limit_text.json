@@ -1,0 +1,22 @@
+{
+  "args": [
+    "buildings",
+    "get",
+    "23-marca-79c-sopot",
+    "--limit",
+    "x"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch buildings get [OPTIONS] {SLUG}",
+    "Try 'deweloperuch buildings get --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for '--limit': 'x' is not a valid int.                                             │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}
