@@ -8,13 +8,13 @@
     "source": "github"
   },
   "websiteUrl": "https://github.com/MBratkowski/deweloperuch-mcp/blob/main/docs/mcp/README.md",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "deweloperuch-mcp",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
@@ -22,7 +22,7 @@
     },
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/MBratkowski/deweloperuch-mcp/releases/download/v0.1.1/deweloperuch-mcp-0.1.1.mcpb",
+      "identifier": "https://github.com/MBratkowski/deweloperuch-mcp/releases/download/v0.1.2/deweloperuch-mcp-0.1.2.mcpb",
       "fileSha256": "set by packaging/mcpb/build.py in dist/server.json; publish that copy from the GitHub Release",
       "transport": {
         "type": "stdio"

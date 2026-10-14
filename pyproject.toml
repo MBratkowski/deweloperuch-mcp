@@ -1,6 +1,6 @@
 [project]
 name = "deweloperuch-mcp"
-version = "0.1.1"
+version = "0.1.2"
 description = "MCP server and CLI over deweloperuch.pl data (developer offer prices, RCN transactions, market statistics)"
 readme = "README.md"
 license = "MIT"
@@ -48,8 +48,24 @@ deweloperuch = "deweloperuch_mcp.cli:main"
 deweloperuch-mcp = "deweloperuch_mcp.mcp_server:main"
 
 [build-system]
-requires = ["uv_build>=0.12.23,<0.13.0"]
-build-backend = "uv_build"
+# hatchling, not uv_build: the wheel must carry the repository's skills/deweloperuch-cli/
+# (the agent skill's one source, which `npx skills add` installs from GitHub) inside the
+# package, and only hatchling maps a folder outside src/ into it.
+requires = ["hatchling>=1.27.0,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+only-include = ["src", "skills", "README.md", "LICENSE", "NOTICE"]
+core-metadata-version = "2.4"
+
+[tool.hatch.build.targets.wheel]
+# skills/deweloperuch-cli -> deweloperuch_mcp/skills/deweloperuch-cli (read by
+# deweloperuch_mcp.tooling.agent_skill_installer). An editable install maps only src/, so a checkout reads
+# the repository's copy and never a stale one.
+only-include = ["src/deweloperuch_mcp", "skills/deweloperuch-cli"]
+sources = { "src" = "", "skills" = "deweloperuch_mcp/skills" }
+# Metadata 2.4, as the uv_build releases had (PEP 639 licence fields).
+core-metadata-version = "2.4"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -172,14 +188,15 @@ include_external_packages = true
 
 [[tool.importlinter.contracts]]
 id = "d16-layers"
-name = "D16: entry shims > consumers > bootstrap > api > recon-shared stdlib > usecases > models"
+name = "D16: entry shims > consumers > bootstrap > api | tooling > recon-shared stdlib > usecases > models"
 type = "layers"
 containers = ["deweloperuch_mcp"]
 layers = [
     "cli | mcp_server | errors",
     "consumers",
     "bootstrap",
-    "api",
+    # tooling: the CLI's agent skill installer, apart from the business layers (below).
+    "api | tooling",
     "identity : throttle : http_policy : retry_after : allowlist : flight",
     "usecases",
     "models",
@@ -212,6 +229,42 @@ forbidden_modules = [
     "httpx",
 ]
 allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+id = "tooling-apart"
+# The gate for the standard library is tests/architecture/test_layering.py (TOOLING_STDLIB);
+# this contract names the business layers, the frameworks and the network modules.
+name = "Tooling stands apart: no business layer, no framework, no network"
+type = "forbidden"
+source_modules = ["deweloperuch_mcp.tooling"]
+forbidden_modules = [
+    "deweloperuch_mcp.api",
+    "deweloperuch_mcp.models",
+    "deweloperuch_mcp.usecases",
+    "deweloperuch_mcp.consumers",
+    "deweloperuch_mcp.bootstrap",
+    "deweloperuch_mcp.identity",
+    "deweloperuch_mcp.throttle",
+    "deweloperuch_mcp.http_policy",
+    "deweloperuch_mcp.retry_after",
+    "deweloperuch_mcp.allowlist",
+    "deweloperuch_mcp.flight",
+    "httpx", "pydantic", "mcp", "typer", "rich",
+    "urllib", "http", "socket", "ssl", "subprocess",
+]
+
+[[tool.importlinter.contracts]]
+id = "tooling-cli-only"
+name = "Only the CLI uses tooling; the MCP server never does"
+type = "forbidden"
+source_modules = [
+    "deweloperuch_mcp.consumers.mcp",
+    "deweloperuch_mcp.consumers.shared",
+    "deweloperuch_mcp.mcp_server",
+    "deweloperuch_mcp.bootstrap",
+    "deweloperuch_mcp.errors",
+]
+forbidden_modules = ["deweloperuch_mcp.tooling"]
 
 [[tool.importlinter.contracts]]
 id = "d13-pure-core"

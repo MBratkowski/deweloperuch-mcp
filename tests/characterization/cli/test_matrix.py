@@ -29,5 +29,8 @@ def test_the_matrix_covers_every_command() -> None:
         ("valuation", "estimate"),
         ("stop", "status"),
         ("stop", "clear"),
+        ("skill", "install"),
+        ("skill", "show"),
+        ("skill", "path"),
     ]:
         assert command in commands

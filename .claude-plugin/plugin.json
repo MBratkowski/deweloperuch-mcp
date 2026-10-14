@@ -1,0 +1,11 @@
+{
+  "name": "deweloperuch",
+  "description": "The deweloperuch-cli skill: how to use the read-only deweloperuch CLI for Polish new-build apartment data (asking prices with price history, RCN transaction prices, valuations, GUS and NBP statistics).",
+  "author": {
+    "name": "deweloperuch-mcp contributors"
+  },
+  "homepage": "https://github.com/MBratkowski/deweloperuch-mcp",
+  "repository": "https://github.com/MBratkowski/deweloperuch-mcp",
+  "license": "MIT",
+  "keywords": ["real-estate", "poland", "apartments", "mieszkania", "deweloperuch", "rcn", "gus", "nbp"]
+}

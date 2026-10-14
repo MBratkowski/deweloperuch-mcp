@@ -8,7 +8,7 @@ Priority: **P1** blocks a core capability, **P2** needed for a complete v1, **P3
 
 | # | Question | Why it matters |
 |---|---|---|
-| U1 | **Policy on `robots.txt: Disallow: /api/`.** The client calls the same endpoints as the browser, but `robots.txt` excludes `/api/` for automated clients. The maintainer is contacting the service authors to obtain permission or official access. Until then the client stays minimal: read-only, at most 1 request per second, cached, and identifiable by its User-Agent | Risk of being blocked; affects how the client identifies itself |
+| U1 | ~~Policy on `robots.txt: Disallow: /api/`~~: **resolved 2026-10-14** — the service authors agreed to the project's use of the service, with no conditions. The client keeps its polite rules (read-only, at most 1 request per second, cache, STOP) and identifies itself honestly (`deweloperuch-mcp/<version> (+repository URL)`); see [decisions.md](decisions.md) D9 and D18 | — |
 | U2 | ~~Technology stack~~: **resolved 2026-10-09: Python** (decisions.md D8) | Repo foundation |
 | U3 | ~~MCP operating mode~~: **resolved 2026-10-10: stdio only** (decisions.md D11) | Affects caching and rate limiting (shared vs per-user) |
 

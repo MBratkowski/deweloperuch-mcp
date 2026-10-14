@@ -1,0 +1,30 @@
+{
+  "args": [
+    "skill",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch skill [OPTIONS] COMMAND [ARGS]...                                              ",
+    "                                                                                                    ",
+    " Skill deweloperuch-cli dla agentów AI (Claude Code, Codex, Cursor i innych): jak używać tego CLI.  ",
+    " Zalecana instalacja: npx skills add MBratkowski/deweloperuch-mcp (wybierasz agenta); bez Node.js:  ",
+    " deweloperuch skill install. Działa offline.                                                        ",
+    "                                                                                                    ",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --help          Show this message and exit.                                                      │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ install  Zainstaluj skill deweloperuch-cli w katalogu skilli agenta (bez Node.js).               │",
+    "│ show     Wypisz SKILL.md: instrukcje skilla dla agenta.                                          │",
+    "│ path     Pokaż katalog skilla w zainstalowanym pakiecie.                                         │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

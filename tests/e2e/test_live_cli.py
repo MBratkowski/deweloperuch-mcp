@@ -9,6 +9,7 @@ characters.
 
 import json
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -185,6 +186,21 @@ def test_the_installed_script_runs_offline() -> None:
 
     assert run.code == 0, (run.code, run.stderr)
     run.readable()
+
+
+def test_skill_install_is_offline(cli: Cli, tmp_path: Path) -> None:
+    """`skill install --dir`: the package's agent skill into a folder, 0 requests; the
+    copy is the one `skill path` names, and `skill show` prints its SKILL.md."""
+    run = cli("skill", "install", "--dir", str(tmp_path))
+
+    folder = tmp_path / "deweloperuch-cli"
+    assert ok(run).startswith(f"Zainstalowano skill deweloperuch-cli w {folder} ")
+    assert run.sent == 0
+    packaged = Path(ok(run_script("deweloperuch", "skill", "path")).strip())
+    for name in ("SKILL.md", "REFERENCE.md", "EXAMPLES.md"):
+        assert (folder / name).read_bytes() == (packaged / name).read_bytes()
+    shown = ok(run_script("deweloperuch", "skill", "show"))
+    assert shown == (packaged / "SKILL.md").read_text(encoding="utf-8")
 
 
 def test_stats_market_as_text(cli: Cli) -> None:

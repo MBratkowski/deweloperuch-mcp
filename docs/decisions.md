@@ -10,7 +10,7 @@ Short architecture decision records (ADRs), newest last. Status: **accepted**, *
 **Decision.** For each capability we use the JSON `/api/*` channel if it provides the data. RSC pages only where no JSON exists (search with filters and pagination, developer profile, reports, GUS/NBP). Server actions only when there is no alternative (today: no capability uses them).
 **Consequences.** The client has two transport adapters, JSON and RSC. The RSC adapter is isolated and covered by contract tests on recorded responses, because prop names may change without notice.
 
-## D2. A frugal, predictable HTTP client (accepted; identification open, see U1/T11)
+## D2. A frugal, predictable HTTP client (accepted)
 
 **Context.** `robots.txt`: `Disallow: /api/`, `Crawl-delay: 1`. The service is a community project behind Cloudflare. No authentication.
 **Decision.**
@@ -22,7 +22,7 @@ Short architecture decision records (ADRs), newest last. Status: **accepted**, *
   - local data is therefore never older than 5 minutes, and repeats within that window do not reach the service.
 - No bulk crawling features (e.g. "download all transactions in Poland").
 - Timeouts and readable errors for 4xx/429/5xx; `Retry-After` is honoured.
-- Identification (User-Agent): a single constant; an honest client identifier is the goal (U1).
+- Identification (User-Agent): one honest identifier, `deweloperuch-mcp/<version> (+https://github.com/MBratkowski/deweloperuch-mcp)` (since 0.1.2, after U1).
 
 **A persistent STOP shared by all processes.**
 - After a 401, 403, 429 or a Cloudflare challenge, the process records a STOP in `stop.json` next to the limiter lock (`${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/`). While the record is active, no process (CLI, MCP server, `recon/probe.py`, `recon/scan_bundles.py`) sends requests.
@@ -58,10 +58,10 @@ Python with the official MCP SDK (`mcp>=2.3`, `MCPServer`), pydantic, httpx and 
 
 Rationale: the domain is mostly normalisation and aggregation of inconsistent backend data, pydantic handles that well at the edges, the recon tools were already in Python, and distribution via `uvx` is simple. TypeScript (official SDK, zod, commander, `npx`) would have been a reasonable alternative.
 
-## D9. Live requests are rare and deliberate (accepted 2026-10-09)
+## D9. Live requests are rare and deliberate (accepted 2026-10-09; updated 2026-10-14)
 
-**Context.** The service's policy towards automated access to `/api/` (U1) is not settled yet; the maintainer is contacting its authors.
-**Decision.** Development never crawls the service. Checking a hypothesis or scanning bundles is a short, deliberate series of requests through the shared limiter, run by a person on purpose. The User-Agent is one constant in `src/deweloperuch_mcp/identity.py` (re-exported by `recon/config.py`); a test enforces a single definition.
+**Context.** `robots.txt` excludes `/api/` for automated clients. On 2026-10-14 the authors of deweloperuch.pl agreed to the project's use of the service, with no conditions (U1 resolved).
+**Decision.** Development never crawls the service. Live requests — the e2e suite after changes, checking a hypothesis, a bundle scan — are sent only when a change needs them, always through the shared limiter and STOP record. The User-Agent is one constant in `src/deweloperuch_mcp/identity.py` (re-exported by `recon/config.py`); a test enforces a single definition.
 
 ## D10. Safeguards in development (accepted 2026-10-09)
 
@@ -130,6 +130,7 @@ Documentation is written in English. Product text (tool descriptions, messages, 
 - `usecases/`: one use case per operation, the ports they depend on, the argument contract shared by the CLI and MCP;
 - `consumers/mcp/` and `consumers/cli/`: tools and commands with their presenters; `consumers/shared/`: views shared by both;
 - `bootstrap.py`: wiring of `api` into `usecases` for the consumers.
+- `tooling/` (since 0.1.2): non-business helpers outside the layers, e.g. the agent skill installer; standard library only, called only by `consumers/cli` (D17, "Tooling is not business").
 - Dependency direction: `consumers` → `usecases` → `models`; `api` → `usecases.ports` and `models`; `models` imports nothing from the package. Enforced by `tests/architecture/test_layering.py` and import-linter (`make fast`).
 - Stdlib-only modules used by `recon/` (`identity`, `throttle`, `http_policy`, `retry_after`, `allowlist`, `flight`) keep their import paths.
 
@@ -151,12 +152,13 @@ Documentation is written in English. Product text (tool descriptions, messages, 
   - `usecases/`: one module per operation, `ports.py`, `support/`;
   - `models/`: one module per concept.
   Support folders hold capability-agnostic code; the one explicit exception is `usecases/support/investment_lookup.py` (`InvestmentLookup`), shared by `GetOffer` and `GetInvestment`.
+- **Tooling is not business:** code that serves the project's packaging and agents rather than apartment data — e.g. installing the agent skill for the CLI — lives in `tooling/`, outside `api/`, `models/`, `usecases/` and `consumers/`. It has no ports or use cases, imports nothing from the business layers, and only `consumers/cli` may call it; the MCP server never does.
 - **Enforcement:** `tests/architecture/test_conventions.py` (AST: shapes, names, folders, no exceptions) and the D17 folder contracts of import-linter.
 
 ## D18. Public release (accepted 2026-10-13)
 
 - **Licence:** MIT for the code. Data in samples and fixtures is not covered by it; `NOTICE` names its sources (deweloperuch.pl, and through it RCN, GUS and NBP).
-- **U1:** the maintainer is contacting the authors of deweloperuch.pl about automated access to `/api/` and the preferred client identification. The User-Agent becomes an honest project identifier as part of resolving U1.
+- **U1 (resolved 2026-10-14):** the authors of deweloperuch.pl agreed to the project's use of the service, with no conditions; the client identifies itself with an honest project User-Agent (D2).
 - **Repository content before publication:** internal working material (development handoffs, agent memory, prompts) is removed from the published tree; samples are reviewed for personal data (RCN unit identifiers get pseudonymised) and for content outside the project's scope.
 
 ---

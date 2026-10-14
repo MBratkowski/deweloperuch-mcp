@@ -16,7 +16,7 @@ Ask an AI assistant about new-build apartments in Poland: asking prices with the
 
 An unofficial [MCP](https://modelcontextprotocol.io) server and command-line tool over the public data of [deweloperuch.pl](https://deweloperuch.pl): developers' asking prices (with price history), transaction prices from the Real Estate Price Register (RCN) and statistics of GUS and NBP. Thirteen read-only tools, usable from an MCP client such as Claude Desktop or Claude Code, or from the `deweloperuch` CLI.
 
-> **Disclaimer.** This is an independent project. It is **not affiliated with, endorsed by or sponsored by** deweloperuch.pl, GUS, NBP or the Register's publishers.
+> **Disclaimer.** This is an independent project. It is **not affiliated with, endorsed by or sponsored by** deweloperuch.pl, GUS, NBP or the Register's publishers. The authors of deweloperuch.pl have agreed to the project's use of their service; the client identifies itself as `deweloperuch-mcp/<version>` with a link to this repository.
 >
 > - It is **read-only**: it never creates or changes anything on the service.
 > - It is a **polite client**: at most 1 request per second, one at a time, shared by all processes on your machine; responses are cached; after a 401, 403, 429 or a captcha/WAF challenge it stops sending requests until you clear the lock yourself.
@@ -35,20 +35,32 @@ An unofficial [MCP](https://modelcontextprotocol.io) server and command-line too
 
 ## Install
 
-Pick the option that fits you. Supported systems: macOS and Linux. **Windows is not supported** (the shared request limiter uses `fcntl` file locks).
+Pick the first option that fits you; they go from no terminal to expert. Supported systems: macOS and Linux. **Windows is not supported** (the shared request limiter uses `fcntl` file locks).
 
-### 1. Claude Desktop, one click
+### 1. Claude Desktop, no terminal
 
 1. Download `deweloperuch-mcp-<version>.mcpb` from the [latest release](https://github.com/MBratkowski/deweloperuch-mcp/releases/latest).
-2. Double-click it, or drag it into Claude Desktop → Settings → Extensions → Install.
+2. Double-click it, or drag it into Claude Desktop → Settings → Extensions → Install, then restart Claude Desktop.
 
-The first start installs Python and the dependencies with [uv](https://docs.astral.sh/uv/) and takes about a minute. The extension has no command-line tool; if the server is ever stopped (STOP), see [lifting a STOP without a checkout](docs/configuration.md#lifting-a-stop-without-a-checkout).
+You get: the 13 tools and 4 prompts in Claude Desktop. The extension uses the `uv` runtime (`server.type` is `uv` in its manifest), so the first start fetches Python and the dependencies and takes about a minute; you install nothing yourself. It has no command-line tool; if the server is ever stopped (STOP), see [lifting a STOP without a checkout](docs/configuration.md#lifting-a-stop-without-a-checkout).
 
-### 2. With uv, from PyPI
+### 2. Any MCP client, with uv
 
-Requires [uv](https://docs.astral.sh/uv/). Nothing to clone. (`pip install deweloperuch-mcp` works too.)
+You get: the same tools in Claude Desktop, Claude Code or any client that starts a stdio server. Nothing to clone.
 
-**Claude Desktop** (`claude_desktop_config.json`; any MCP client that starts a stdio server works the same way). If Claude Desktop reports `spawn uvx ENOENT`, put the full path from `which uvx` in `command`:
+Install [uv](https://docs.astral.sh/uv/) once (macOS and Linux):
+
+```
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Claude Code:**
+
+```
+claude mcp add deweloperuch -- uvx deweloperuch-mcp
+```
+
+**Claude Desktop** (`claude_desktop_config.json`; other clients use the same `command` and `args`):
 
 ```json
 {
@@ -61,30 +73,42 @@ Requires [uv](https://docs.astral.sh/uv/). Nothing to clone. (`pip install dewel
 }
 ```
 
-**Claude Code:**
+To run straight from GitHub instead of PyPI, use `uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp@v0.1.2 deweloperuch-mcp` (`@v0.1.2` pins the release; drop it to follow `main`). `pip install deweloperuch-mcp` works too.
+
+### 3. Agent skill for the CLI
+
+You get: an AI coding agent that knows how to use the `deweloperuch` CLI (which command to call, how to read the output, what to do on STOP), without an MCP server. The skill is called `deweloperuch-cli`; a new agent session loads it by itself.
 
 ```
-claude mcp add deweloperuch -- uvx deweloperuch-mcp
+npx skills add MBratkowski/deweloperuch-mcp
 ```
 
-**CLI:**
+This uses the [skills](https://github.com/vercel-labs/skills) CLI (needs Node.js) and works with any agent it supports; you choose the agent. Without Node.js:
 
 ```
-uvx --from deweloperuch-mcp deweloperuch --help
+uvx --from deweloperuch-mcp deweloperuch skill install
 ```
 
-### 3. With uv, straight from GitHub
+It writes to `~/.claude/skills/deweloperuch-cli` (Claude Code, for the user). Options: `--project` (this project's `./.claude/skills`), `--agent codex|cursor|gemini-cli|github-copilot`, `--dir PATH` (writes `PATH/deweloperuch-cli`), `--force` (replace a different copy; without it a changed copy is never overwritten, and the installer never writes through symlinks). `deweloperuch skill show` prints the skill, `deweloperuch skill path` its folder. Details: [docs/cli/commands/skill.md](docs/cli/commands/skill.md).
 
-The same as option 2 with `--from git+https://github.com/MBratkowski/deweloperuch-mcp@v0.1.1` (`@v0.1.1` pins the release; drop it to follow `main`):
+Claude Code plugin marketplace:
 
 ```
-claude mcp add deweloperuch -- uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp@v0.1.1 deweloperuch-mcp
-uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp@v0.1.1 deweloperuch --help
+/plugin marketplace add MBratkowski/deweloperuch-mcp
+/plugin install deweloperuch@deweloperuch-mcp
 ```
 
-In `claude_desktop_config.json` use `"args": ["--from", "git+https://github.com/MBratkowski/deweloperuch-mcp@v0.1.1", "deweloperuch-mcp"]`.
+### 4. The CLI on its own
 
-### 4. From source (developers)
+You get: the `deweloperuch` command for your terminal and scripts; see [docs/cli/README.md](docs/cli/README.md).
+
+```
+uvx --from deweloperuch-mcp deweloperuch --help    # one-off, nothing installed
+uv tool install deweloperuch-mcp                   # installs deweloperuch and deweloperuch-mcp
+deweloperuch locations search krak
+```
+
+### 5. From source (contributors)
 
 Requirements: Python 3.11 or newer and [uv](https://docs.astral.sh/uv/).
 
@@ -93,10 +117,17 @@ git clone https://github.com/MBratkowski/deweloperuch-mcp.git
 cd deweloperuch-mcp
 uv sync
 uv run deweloperuch --help                  # sends no requests
-uv run deweloperuch locations search krak   # first real request
 ```
 
-As the client command use `uv run --directory /path/to/deweloperuch-mcp deweloperuch-mcp` (Claude Code: `claude mcp add deweloperuch -- uv run --directory /path/to/deweloperuch-mcp deweloperuch-mcp`). The server speaks stdio and logs to stderr. More: [docs/mcp/README.md](docs/mcp/README.md#mcp-client-configuration).
+As the client command use `uv run --directory /path/to/deweloperuch-mcp deweloperuch-mcp` (Claude Code: `claude mcp add deweloperuch -- uv run --directory /path/to/deweloperuch-mcp deweloperuch-mcp`). More: [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/mcp/README.md](docs/mcp/README.md#mcp-client-configuration).
+
+### Troubleshooting
+
+- **`uvx: command not found` or `spawn uvx ENOENT`**: install uv (option 2). Claude Desktop may not see your shell `PATH`, so put the full path from `which uvx` in `command`.
+- **The server does not appear in Claude Desktop**: quit and restart Claude Desktop after installing the extension or editing the config.
+- **Windows**: not supported; use macOS or Linux.
+- **STOP / exit code 3**: after a 401, 403, 429 or a captcha/WAF challenge the client stops sending requests in every process, so as not to burden the service. A **429** expires by itself after the pause (at least 60 s). The other causes last until **you** lift them, after checking the cause (`deweloperuch stop status` shows the state; an AI agent must not lift it). The MCP server stays halted until you restart it. Details and the command: [docs/configuration.md](docs/configuration.md#stop-shared-lock-between-processes).
+- **Where is the cache?** Responses are cached in memory only. The limiter lock and the STOP record live in `~/.cache/deweloperuch-mcp` (`$XDG_CACHE_HOME/deweloperuch-mcp`). Do not delete that directory: it would also lift a STOP.
 
 ## Tools
 
@@ -152,6 +183,7 @@ Overview, output format and exit codes: [docs/cli/README.md](docs/cli/README.md)
 | [`deweloperuch stats government LOCATION DATASET`](docs/cli/commands/stats-government.md) | Shows GUS and NBP statistics of a location as a table of periods. |
 | [`deweloperuch stop status [--json]`](docs/cli/commands/stop-status.md) | Shows the STOP lock shared by all processes (offline; exit code 3 when active). |
 | [`deweloperuch stop clear`](docs/cli/commands/stop-clear.md) | Clears the STOP lock, after you have checked the cause. |
+| [`deweloperuch skill install\|show\|path`](docs/cli/commands/skill.md) | Installs, prints or locates the `deweloperuch-cli` agent skill (offline). |
 
 ## How it works
 
@@ -166,7 +198,7 @@ deweloperuch.pl  →  api  →  models  →  usecases  →  consumers (CLI, MCP 
 | `usecases/` | One module per operation (for example `SearchOffers`), written against ports that `api/` implements. |
 | `consumers/` | The CLI and the MCP server, both thin: they parse arguments, call a use case and present the result. |
 
-The layers are wired in `bootstrap.py`, and import-linter enforces the direction of imports. Design decisions and their reasons: [docs/decisions.md](docs/decisions.md). The service's data, endpoints and limits: [docs/discovery/README.md](docs/discovery/README.md). Configuration, the limiter and the STOP lock: [docs/configuration.md](docs/configuration.md).
+The layers are wired in `bootstrap.py`; `tooling/` holds non-business helpers (the skill installer) that only the CLI uses. Import-linter enforces the direction of imports. Design decisions and their reasons: [docs/decisions.md](docs/decisions.md). The service's data, endpoints and limits: [docs/discovery/README.md](docs/discovery/README.md). Configuration, the limiter and the STOP lock: [docs/configuration.md](docs/configuration.md).
 
 ## Development
 

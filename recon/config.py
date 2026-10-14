@@ -40,7 +40,7 @@ _SRC = str(Path(__file__).resolve().parent.parent / "src")
 if _SRC not in sys.path:
     sys.path.insert(0, _SRC)
 
-# These imports need the sys.path entry above. BASE_URL and USER_AGENT (TODO(U1)) are
+# These imports need the sys.path entry above. BASE_URL and USER_AGENT are
 # defined only in deweloperuch_mcp.identity; do not redefine them here.
 from deweloperuch_mcp.allowlist import (  # noqa: E402
     API_PATHS,

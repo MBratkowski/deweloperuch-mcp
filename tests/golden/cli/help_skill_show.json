@@ -1,0 +1,24 @@
+{
+  "args": [
+    "skill",
+    "show",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch skill show [OPTIONS]                                                           ",
+    "                                                                                                    ",
+    " Wypisz SKILL.md: instrukcje skilla dla agenta.                                                     ",
+    "                                                                                                    ",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --help          Show this message and exit.                                                      │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

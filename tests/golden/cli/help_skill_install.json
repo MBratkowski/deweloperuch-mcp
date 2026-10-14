@@ -1,0 +1,37 @@
+{
+  "args": [
+    "skill",
+    "install",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch skill install [OPTIONS]                                                        ",
+    "                                                                                                    ",
+    " Zainstaluj skill deweloperuch-cli w katalogu skilli agenta (bez Node.js).                          ",
+    "                                                                                                    ",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --agent                <claude-code|codex|cursor|gemini-cl  Agent, w którego katalogu skilli     │",
+    "│                        i|github-copilot>                    zapisać (nazwy jak w npx skills add  │",
+    "│                                                             --agent); domyślnie claude-code.     │",
+    "│ --project    --user                                         --project: skille bieżącego projektu │",
+    "│                                                             (np. ./.claude/skills); --user:      │",
+    "│                                                             skille użytkownika (np.              │",
+    "│                                                             ~/.claude/skills).                   │",
+    "│                                                             [default: user]                      │",
+    "│ --dir                  PATH                                 Inny katalog skilli: zapisz do       │",
+    "│                                                             PATH/deweloperuch-cli (bez --agent i │",
+    "│                                                             --project).                          │",
+    "│ --force                                                     Zastąp kopię skilla, która różni się │",
+    "│                                                             od tej z pakietu.                    │",
+    "│ --help                                                      Show this message and exit.          │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

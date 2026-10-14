@@ -24,6 +24,9 @@
     "│              powiatów oraz statystyki rządowe GUS i NBP.                                         │",
     "│ stop         Blokada STOP: po 401, 403, 429 albo challenge Cloudflare żaden proces (CLI, serwer  │",
     "│              MCP, recon) nie wysyła zapytań. Działa offline.                                     │",
+    "│ skill        Skill deweloperuch-cli dla agentów AI (Claude Code, Codex, Cursor i innych): jak    │",
+    "│              używać tego CLI. Zalecana instalacja: npx skills add MBratkowski/deweloperuch-mcp   │",
+    "│              (wybierasz agenta); bez Node.js: deweloperuch skill install. Działa offline.        │",
     "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
     "",
     ""

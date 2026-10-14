@@ -4,6 +4,7 @@ the source (AST).
     consumers  ->  usecases  ->  models
     api        ->  usecases.ports, models
     bootstrap  ->  api, usecases, models
+    consumers.cli  ->  tooling  (files only: ``TOOLING_STDLIB``)
 
 - ``models``: the standard library (``MODELS_STDLIB``) and ``models`` only (no pydantic,
   no I/O libraries, nothing else of the package);
@@ -12,7 +13,10 @@ the source (AST).
 - ``api``: ``models``, the ports it implements (``usecases.ports``), ``api``, the stdlib
   modules shared with ``recon/`` (``SHARED``) and third-party libraries; never the rest
   of ``usecases``, the composition root nor the consumers;
-- ``bootstrap``: anything below the consumers;
+- ``bootstrap``: anything below the consumers but ``tooling``;
+- ``tooling`` (the CLI's agent skill installer, apart from the business layers): itself
+  and the standard library's files and types (``TOOLING_STDLIB``: no network, no
+  processes); only ``consumers.cli`` imports it;
 - the stdlib modules shared with ``recon/``: only each other
   (tests/recon_scripts/test_recon_config.py checks they stay stdlib-only);
 - ``consumers`` (``CONSUMER_RULES``), never ``api`` nor the modules shared with
@@ -58,13 +62,23 @@ MODELS, USECASES, API = (f"{PACKAGE}.models", f"{PACKAGE}.usecases", f"{PACKAGE}
 PORTS = f"{USECASES}.ports"
 """The part of ``usecases`` that ``api`` implements."""
 BOOTSTRAP = f"{PACKAGE}.bootstrap"
+TOOLING = f"{PACKAGE}.tooling"
+"""Tooling of the CLI that is not about the service (the agent skill installer)."""
+TOOLING_STDLIB = MODELS_STDLIB | {"os", "pathlib", "secrets"}
+"""What the tooling may use of the standard library: files, names and types. No network
+(``urllib``, ``http``, ``socket``, ``ssl``) and no processes (``subprocess``)."""
+SELF_CONTAINED = {"models": (MODELS, MODELS_STDLIB), "tooling": (TOOLING, TOOLING_STDLIB)}
+"""The layers that import only themselves and an allowlist of the standard library."""
 CONSUMERS = f"{PACKAGE}.consumers"
 SHIMS = frozenset({f"{PACKAGE}.cli", f"{PACKAGE}.mcp_server"})
 """The modules ``[project.scripts]`` names: they only hand over to the consumers."""
 PRESENTATION, CLI, MCP = f"{CONSUMERS}.shared", f"{CONSUMERS}.cli", f"{CONSUMERS}.mcp"
 CONSUMER_RULES: dict[str, tuple[tuple[str, ...], frozenset[str]]] = {
     PRESENTATION: ((USECASES, MODELS, PRESENTATION), frozenset({"pydantic"})),
-    CLI: ((USECASES, MODELS, BOOTSTRAP, PRESENTATION, CLI), frozenset({"typer", "pydantic"})),
+    CLI: (
+        (USECASES, MODELS, BOOTSTRAP, PRESENTATION, CLI, TOOLING),
+        frozenset({"typer", "pydantic"}),
+    ),
     MCP: ((USECASES, MODELS, BOOTSTRAP, PRESENTATION, MCP), frozenset({"mcp", "pydantic"})),
     CONSUMERS: ((), frozenset()),
 }
@@ -119,7 +133,12 @@ def module_name(path: Path) -> str:
 
 
 def layer(module: str) -> str:
-    for prefix, name in ((MODELS, "models"), (USECASES, "usecases"), (API, "api")):
+    for prefix, name in (
+        (MODELS, "models"),
+        (USECASES, "usecases"),
+        (API, "api"),
+        (TOOLING, "tooling"),
+    ):
         if within(module, prefix):
             return name
     if module in SHARED:
@@ -150,8 +169,9 @@ def violations(module: str, source: str) -> set[str]:
     mine = own(modules)
     others = modules - mine - {PACKAGE}
     match layer(module):
-        case "models":
-            return {m for m in mine if not within(m, MODELS)} | (others - MODELS_STDLIB)
+        case "models" | "tooling" as kind:
+            itself, library = SELF_CONTAINED[kind]
+            return {m for m in mine if not within(m, itself)} | (others - library)
         case "usecases":
             bad = {m for m in mine if not within(m, MODELS, USECASES)}
             return bad | (others - USECASES_STDLIB)
@@ -180,7 +200,7 @@ MODULES = sorted(module_name(path) for path in SOURCE.rglob("*.py"))
 
 def test_every_module_has_a_layer() -> None:
     assert {module: layer(module) for module in MODULES if layer(module) == "?"} == {}
-    assert {"models", "usecases", "api", "bootstrap", "shared", "consumers"} <= {
+    assert {"models", "usecases", "api", "tooling", "bootstrap", "shared", "consumers"} <= {
         layer(module) for module in MODULES
     }
 
@@ -319,6 +339,28 @@ def test_the_cli_and_the_mcp_server_never_import_each_other(consumer: str, other
         (BOOTSTRAP, "from deweloperuch_mcp import cli", {f"{PACKAGE}.cli"}),
         (BOOTSTRAP, "from deweloperuch_mcp.consumers import mcp", {CONSUMERS, f"{CONSUMERS}.mcp"}),
         (f"{PACKAGE}.throttle", "import httpx", {"httpx"}),
+        (f"{TOOLING}.agent_skill_installer", "import typer", {"typer"}),
+        (f"{TOOLING}.agent_skill_installer", "import urllib.request", {"urllib.request"}),
+        (f"{TOOLING}.agent_skill_installer", "import subprocess", {"subprocess"}),
+        (f"{TOOLING}.agent_skill_installer", "from http import client", {"http"}),
+        (f"{TOOLING}.agent_skill_installer", "import socket", {"socket"}),
+        (f"{TOOLING}.agent_skill_installer", "import rich", {"rich"}),
+        (
+            f"{TOOLING}.agent_skill_installer",
+            "from deweloperuch_mcp.models.errors import InvalidInputError",
+            {f"{MODELS}.errors"},
+        ),
+        (f"{TOOLING}.agent_skill_installer", "from deweloperuch_mcp import bootstrap", {BOOTSTRAP}),
+        (
+            f"{MCP}.server",
+            "from deweloperuch_mcp.tooling import agent_skill_installer",
+            {TOOLING, f"{TOOLING}.agent_skill_installer"},
+        ),
+        (
+            BOOTSTRAP,
+            "from deweloperuch_mcp.tooling.agent_skill_installer import AgentSkillInstaller",
+            {f"{TOOLING}.agent_skill_installer"},
+        ),
         (
             f"{PACKAGE}.cli",
             "from deweloperuch_mcp.api.http import transport",
@@ -369,6 +411,11 @@ def test_the_check_catches_each_wrong_direction(module: str, source: str, found:
         (f"{API}.adapters.offers_api", "from deweloperuch_mcp.models.offer import Offer"),
         (BOOTSTRAP, "from deweloperuch_mcp.usecases.search_offers import SearchOffers"),
         (BOOTSTRAP, "from deweloperuch_mcp.api.http.transport import HttpClient"),
+        (
+            f"{CLI}.commands.skill_commands",
+            "from deweloperuch_mcp.tooling.agent_skill_installer import AgentSkillInstaller",
+        ),
+        (f"{TOOLING}.agent_skill_installer", "from pathlib import Path\nimport os, secrets"),
         (
             f"{CONSUMERS}.mcp.server",
             "import asyncio\nfrom mcp.server.mcpserver import MCPServer\n"

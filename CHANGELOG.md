@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-14
+
+### Added
+- Agent skill `deweloperuch-cli`, which teaches AI coding agents (Claude Code, Codex, Cursor and others) to use the `deweloperuch` CLI. Source in `skills/deweloperuch-cli/` (`SKILL.md`, `EXAMPLES.md`; `REFERENCE.md` is generated from the CLI by `make skill`). Install with `npx skills add MBratkowski/deweloperuch-mcp`, with the Claude Code plugin marketplace (`/plugin marketplace add MBratkowski/deweloperuch-mcp`, then `/plugin install deweloperuch@deweloperuch-mcp`), or without Node.js with `deweloperuch skill install`. See [README](README.md#3-agent-skill-for-the-cli).
+- New offline command group `deweloperuch skill`: `install` (`--agent`, `--project` / `--user`, `--dir PATH`, `--force`; never writes through symlinks and does not overwrite a different copy without `--force`), `show` and `path`. See [docs/cli/commands/skill.md](docs/cli/commands/skill.md).
+- Package `tooling/` for non-business helpers outside the layers (standard library only, imported only by the CLI); it holds the skill installer. See [CONTRIBUTING.md](CONTRIBUTING.md#architecture-rules).
+- README install guide from no terminal to expert, with troubleshooting.
+
+### Changed
+- The client identifies itself honestly: User-Agent `deweloperuch-mcp/<version> (+https://github.com/MBratkowski/deweloperuch-mcp)` instead of a browser-like one. The authors of deweloperuch.pl agreed to the project's use of the service on 2026-10-14, with no conditions; the client stays frugal (at most 1 request per second, cache, STOP). See [docs/configuration.md](docs/configuration.md).
+- The build backend is hatchling; the wheel ships the skill. `make smoke` also installs the skill from the wheel and compares it with `skills/`.
+
 ## [0.1.1] - 2026-10-14
 
 ### Added

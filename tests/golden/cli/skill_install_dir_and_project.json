@@ -1,0 +1,18 @@
+{
+  "args": [
+    "skill",
+    "install",
+    "--dir",
+    "x",
+    "--project"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Podaj --dir albo --agent/--project, nie razem: --dir to już katalog skilli.",
+    ""
+  ],
+  "requests": []
+}

@@ -22,14 +22,17 @@
     deweloperuch stats government LOCATION DATASET [--periods N] [--json]
     deweloperuch stop status [--json]
     deweloperuch stop clear
+    deweloperuch skill install [--agent AGENT] [--project | --user] [--dir PATH] [--force]
+    deweloperuch skill show
+    deweloperuch skill path
 
 A thin layer: typer checks types and enums, the application checks everything else
 (``<Op>Request.parse`` with ``usecases.support.arguments``: its messages say what to fix).
 Each run opens one session (``bootstrap.new_session``) and closes it. Text for people by
 default (Polish); ``--json`` prints the result's view (``consumers/shared/*_views``).
 Errors of the package go to stderr without a traceback and end the run with the codes of
-``ExitCode``. Commands live in one module per command group (``commands/``); ``stop``
-works offline and opens no session.
+``ExitCode``. Commands live in one module per command group (``commands/``); ``stop`` and
+``skill`` work offline and open no session.
 """
 
 import typer
@@ -39,6 +42,7 @@ from deweloperuch_mcp.consumers.cli.commands.developers_commands import develope
 from deweloperuch_mcp.consumers.cli.commands.investments_commands import investments_app
 from deweloperuch_mcp.consumers.cli.commands.locations_commands import locations_app
 from deweloperuch_mcp.consumers.cli.commands.offers_commands import offers_app
+from deweloperuch_mcp.consumers.cli.commands.skill_commands import skill_app
 from deweloperuch_mcp.consumers.cli.commands.stats_cities_commands import stats_cities
 from deweloperuch_mcp.consumers.cli.commands.stats_commands import stats_app
 from deweloperuch_mcp.consumers.cli.commands.stats_transactions_commands import stats_transactions
@@ -65,6 +69,7 @@ app.add_typer(buildings_app, name="buildings")
 app.add_typer(valuation_app, name="valuation")
 app.add_typer(stats_app, name="stats")
 app.add_typer(stop_app, name="stop")
+app.add_typer(skill_app, name="skill")
 
 
 def main() -> None:

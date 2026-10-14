@@ -15,6 +15,7 @@ CASES: dict[str, Case] = {
     "help_stats": case("stats", "--help"),
     "help_stop": case("stop", "--help"),
     "help_valuation": case("valuation", "--help"),
+    "help_skill": case("skill", "--help"),
     "unknown_command": case("transactions", "search"),
     # buildings get
     "help_buildings": case("buildings", "--help"),

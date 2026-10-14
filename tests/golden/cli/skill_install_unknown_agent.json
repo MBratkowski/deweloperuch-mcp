@@ -1,0 +1,22 @@
+{
+  "args": [
+    "skill",
+    "install",
+    "--agent",
+    "vim"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch skill install [OPTIONS]",
+    "Try 'deweloperuch skill install --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for '--agent': 'vim' is not one of 'claude-code', 'codex', 'cursor', 'gemini-cli', │",
+    "│ 'github-copilot'.                                                                                │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

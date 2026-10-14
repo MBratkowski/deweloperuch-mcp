@@ -1,0 +1,24 @@
+{
+  "args": [
+    "skill",
+    "path",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch skill path [OPTIONS]                                                           ",
+    "                                                                                                    ",
+    " Pokaż katalog skilla w zainstalowanym pakiecie.                                                    ",
+    "                                                                                                    ",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --help          Show this message and exit.                                                      │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}
