@@ -18,7 +18,7 @@ where they came from::
     │                            nothing was sent
     └── SessionClosedError       the session was closed; nothing was sent
 
-Nothing is retried automatically (CLAUDE.md): after ``ServiceBlockedError`` stop and
+Nothing is retried automatically (CONTRIBUTING.md): after ``ServiceBlockedError`` stop and
 report it to the user; after ``ServiceError`` with ``pause_seconds`` wait at least that
 long.
 

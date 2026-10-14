@@ -238,7 +238,7 @@ def record_stop(slot: Slot, reply: Response, source: str) -> str | None:
         slot.stop(status, reason, source=source)
     except (OSError, ValueError) as err:
         return f"Uwaga: STOP nie został zapisany dla innych procesów: {err}"
-    # Read by recon-verifier, a model too: say that, not when it ends or how to lift it.
+    # Also read by AI assistants running probe: say that, not when it ends or how to lift it.
     return "Zapisano STOP: inne procesy też zostały wstrzymane."
 
 
@@ -281,7 +281,7 @@ def check_reply(reply: Response) -> None:
         raise ReplyError(
             "stop",
             f"STOP: {why}. Przerwij serię zapytań, niczego nie ponawiaj i zgłoś to "
-            "użytkownikowi (CLAUDE.md: 401, 403, 429, captcha, WAF).",
+            "użytkownikowi (CONTRIBUTING.md: 401, 403, 429, captcha, WAF).",
         )
     if reply.body_error is not None:
         raise ReplyError("http", f"HTTP {status}. {reply.body_error}")

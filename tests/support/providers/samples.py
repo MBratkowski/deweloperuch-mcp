@@ -1,6 +1,6 @@
 """Samples from docs/discovery/samples/ as test data, without their trimming markers.
 
-The samples are trimmed (CLAUDE.md, "Próbki"): a list ends with the string
+The samples are trimmed (docs/discovery/README.md, "Sample format"): a list ends with the string
 ``"... (N more, M total)"`` and a big id-keyed map has the key ``"..."``. DTOs do not
 tolerate these markers, so tests remove them before validating. ``rsc_payload`` builds a
 synthetic RSC response around props, for tests that need a particular shape; payloads

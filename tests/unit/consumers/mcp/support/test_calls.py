@@ -154,7 +154,7 @@ def test_error_results_carry_no_backend_details(
     caplog: pytest.LogCaptureFixture,
     case: str,
 ) -> None:
-    """D3 and CLAUDE.md: no paths, prop names or text of the service's answer reach the
+    """D3 and CONTRIBUTING.md: no paths, prop names or text of the service's answer reach the
     model; the details go to the server log only."""
     caplog.set_level(logging.INFO, logger=calls.LOGGER_NAME)
     tool, arguments, answer = ERRORS[case]
@@ -191,7 +191,7 @@ def test_a_stop_ends_the_series_for_every_tool(
     service: respx.MockRouter,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """CLAUDE.md: after 401/403/429/challenge stop and report; the STOP of S1a is sticky."""
+    """CONTRIBUTING.md: after 401/403/429/challenge stop and report; the STOP of S1a is sticky."""
     caplog.set_level(logging.INFO, logger=calls.LOGGER_NAME)
     service.get(INVESTMENT).respond(403)
     cities, suggestions = location_routes(service)

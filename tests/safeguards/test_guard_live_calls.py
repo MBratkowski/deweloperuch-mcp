@@ -1,4 +1,4 @@
-"""The Bash safety-net hook blocks ad-hoc live calls to the service (CLAUDE.md, D10) and
+"""The Bash safety-net hook blocks ad-hoc live calls to the service (CONTRIBUTING.md, D10) and
 lifting a STOP, which only the user may do.
 
 The hook runs in its own process exactly as Claude Code starts it (``python3
@@ -16,6 +16,11 @@ import pytest
 from support.paths import REPO
 
 HOOK = REPO / ".claude" / "hooks" / "guard_live_calls.py"
+
+# The Claude Code hooks are local development tooling, not part of the published
+# repository; without them there is nothing to test here.
+if not HOOK.exists():
+    pytest.skip("the local Claude Code hooks are not present", allow_module_level=True)
 
 # Assembled in code, so the templates below read as commands without the repo
 # carrying ready-to-paste service addresses.
@@ -135,7 +140,7 @@ def test_blocks_when_input_is_malformed(stdin: str) -> None:
     assert run_hook(stdin) == BLOCKED
 
 
-# --- lifting a STOP is for the user only (CLAUDE.md) ---------------------------------------
+# --- lifting a STOP is for the user only (CONTRIBUTING.md) ---------------------------------------
 
 # Assembled in code, so that running or editing this file is not itself blocked.
 CLI = "deweloperuch"

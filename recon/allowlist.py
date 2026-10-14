@@ -3,7 +3,7 @@
 The allowlist lives in the package (``deweloperuch_mcp.allowlist``), so probe and the
 package's HTTP transport check paths against one list; this module re-exports it
 through config. Every entry comes from the discovery docs; change the docs first
-(recon-verifier), then the package module. tests/recon_scripts/test_probe_allowlist.py keeps both in
+first, then the package module. tests/recon_scripts/test_probe_allowlist.py keeps both in
 sync.
 
 Keep this file parseable by Python 3.9: Python compiles the whole file before config's

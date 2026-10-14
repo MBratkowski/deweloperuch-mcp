@@ -1,6 +1,6 @@
 """What a response from deweloperuch.pl means for the requests after it (stdlib only).
 
-One policy (CLAUDE.md, D2) for the ``recon/`` scripts, which get it through
+One policy (CONTRIBUTING.md, D2) for the ``recon/`` scripts, which get it through
 ``recon/config.py``, and for the package's HTTP client:
 
 - ``stop_reason``: 401, 403, 429 and Cloudflare challenges (captcha, WAF) stop the

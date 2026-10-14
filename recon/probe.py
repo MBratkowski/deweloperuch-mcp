@@ -1,6 +1,6 @@
 """One read-only verification request to deweloperuch.pl (stdlib only).
 
-The only way recon-verifier sends live requests (CLAUDE.md, D9). One run sends at most
+The only way to send a live verification request (CONTRIBUTING.md, D9). One run sends at most
 one GET, inside the shared limiter slot (D2), with the one User-Agent (D9)::
 
     python3 recon/probe.py api "/api/city-lookup?city=warszawa"
@@ -199,7 +199,7 @@ def _check_api(path: str) -> None:
         raise _usage("Tryb api przyjmuje tylko ścieżki /api/...; strony pobiera tryb page.")
     excluded = match_excluded_api(path)
     if excluded is not None:
-        raise _usage(f"{excluded} jest poza zakresem projektu (CLAUDE.md); probe go nie wywołuje.")
+        raise _usage(f"{excluded} jest poza zakresem projektu; probe go nie wywołuje.")
     if match_api(path) is None:
         raise _usage(
             f"{path} jest spoza allowlisty odczytu (docs/discovery/endpoints.md). Nowy endpoint "

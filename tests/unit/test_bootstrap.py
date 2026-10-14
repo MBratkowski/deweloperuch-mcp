@@ -38,7 +38,7 @@ def test_session_closes_its_connections(limiter: RequestLimiter) -> None:
 def test_a_stop_in_one_service_stops_every_service_of_the_session(
     session: bootstrap.Session, service: respx.MockRouter
 ) -> None:
-    """CLAUDE.md: after 401/403/429/challenge stop the series and report; no retries."""
+    """CONTRIBUTING.md: after 401/403/429/challenge stop the series and report; no retries."""
     blocked = service.route(method="GET", path__startswith="/ceny-ofertowe/").respond(403)
     investment_routes(service)
     location_routes(service)

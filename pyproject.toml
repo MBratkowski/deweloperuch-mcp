@@ -25,7 +25,7 @@ testpaths = ["tests"]
 # (probe, scan_bundles, http_common, flight, allowlist, config), the way
 # `python3 recon/<script>.py` does.
 pythonpath = ["recon"]
-# pytest-socket: no test may open a network socket (CLAUDE.md, D10).
+# pytest-socket: no test may open a network socket (CONTRIBUTING.md, D10).
 addopts = "--disable-socket"
 markers = [
     # tests/e2e: skipped unless DEWELOPERUCH_LIVE=1 and -m live (tests/e2e/conftest.py).

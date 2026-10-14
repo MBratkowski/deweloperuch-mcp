@@ -902,7 +902,7 @@ def test_a_stop_is_recorded_and_ends_the_next_run_before_it_sends(
     assert (state.stop.status, state.stop.reason, state.stop.source) == (status, reason, "probe")
     assert (state.stop.until is not None) is (status == 429)
     first = capsys.readouterr().err
-    # recon-verifier is a model too: nothing about when it ends or how to lift it.
+    # AI assistants read this too: nothing about when it ends or how to lift it.
     assert "Zapisano STOP: inne procesy też zostały wstrzymane.\n" in first
     assert "/api/" not in (env.lock_dir / STOP_FILENAME).read_text(encoding="utf-8")
 
