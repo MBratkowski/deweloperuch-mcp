@@ -58,6 +58,16 @@ Validity rules:
 
 Clearing: only by the user, `deweloperuch stop clear` ([description](cli/commands/stop-clear.md)), after checking the cause (`deweloperuch stop status`, [description](cli/commands/stop-status.md)). The command waits for the lock at most 300 s, also removes orphaned `.stop-*.tmp` files and does not clear the lock when it cannot get the lock. An MCP server that returned STOP once (its own or from another process's record, also an expiring 429) stays latched until restart.
 
+### Lifting a STOP without a checkout
+
+Users of the Claude Desktop extension (`.mcpb`) have no `deweloperuch` command installed. After checking the cause (`stop status` first), they lift a STOP by running the `stop clear` command through uvx:
+
+```
+uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp deweloperuch stop clear
+```
+
+Then restart the MCP server, which stays latched after a STOP.
+
 **Do not delete the `~/.cache/deweloperuch-mcp` directory or the files in it.** Deleting the directory clears STOP together with the 429 pause and the lock, that is, it bypasses the block without checking the cause. Use `stop clear` instead.
 
 ## Package client

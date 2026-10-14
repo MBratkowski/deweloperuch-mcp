@@ -1,0 +1,12 @@
+# server type "uv": the host installs the dependencies, so the bundle carries no
+# environment and no vendored packages.
+.venv/
+venv/
+server/lib/
+server/venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

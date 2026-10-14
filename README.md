@@ -23,6 +23,62 @@ An unofficial [MCP](https://modelcontextprotocol.io) server and command-line too
 - *Valuation:* "Roughly what is a 55 m² flat at this address worth, based on nearby transactions?"
 - *Comparing cities:* "Rank cities by transaction price per m², and show wages and unemployment next to them."
 
+## Install
+
+Pick the option that fits you. Supported systems: macOS and Linux. **Windows is not supported** (the shared request limiter uses `fcntl` file locks).
+
+### 1. Claude Desktop, one click
+
+1. Download `deweloperuch-mcp-<version>.mcpb` from the [latest release](https://github.com/MBratkowski/deweloperuch-mcp/releases/latest).
+2. Double-click it, or drag it into Claude Desktop → Settings → Extensions → Install.
+
+The first start installs Python and the dependencies with [uv](https://docs.astral.sh/uv/) and takes about a minute. The extension has no command-line tool; if the server is ever stopped (STOP), see [lifting a STOP without a checkout](docs/configuration.md#lifting-a-stop-without-a-checkout).
+
+### 2. With uv, straight from GitHub
+
+Requires [uv](https://docs.astral.sh/uv/). Nothing to clone.
+
+**Claude Desktop** (`claude_desktop_config.json`; any MCP client that starts a stdio server works the same way). If Claude Desktop reports `spawn uvx ENOENT`, put the full path from `which uvx` in `command`:
+
+```json
+{
+  "mcpServers": {
+    "deweloperuch": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/MBratkowski/deweloperuch-mcp", "deweloperuch-mcp"]
+    }
+  }
+}
+```
+
+**Claude Code:**
+
+```
+claude mcp add deweloperuch -- uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp deweloperuch-mcp
+```
+
+**CLI:**
+
+```
+uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp deweloperuch --help
+```
+
+To pin a release, add `@v0.1.0` at the end of the git URL.
+
+### 3. From source (developers)
+
+Requirements: Python 3.11 or newer and [uv](https://docs.astral.sh/uv/).
+
+```
+git clone https://github.com/MBratkowski/deweloperuch-mcp.git
+cd deweloperuch-mcp
+uv sync
+uv run deweloperuch --help                  # sends no requests
+uv run deweloperuch locations search krak   # first real request
+```
+
+As the client command use `uv run --directory /path/to/deweloperuch-mcp deweloperuch-mcp` (Claude Code: `claude mcp add deweloperuch -- uv run --directory /path/to/deweloperuch-mcp deweloperuch-mcp`). The server speaks stdio and logs to stderr. More: [docs/mcp/README.md](docs/mcp/README.md#mcp-client-configuration).
+
 ## Tools
 
 Overview, argument rules, errors and result sizes: [docs/mcp/README.md](docs/mcp/README.md).
@@ -67,39 +123,6 @@ Overview, output format and exit codes: [docs/cli/README.md](docs/cli/README.md)
 | [`deweloperuch stop status [--json]`](docs/cli/commands/stop-status.md) | Shows the STOP lock shared by all processes (offline; exit code 3 when active). |
 | [`deweloperuch stop clear`](docs/cli/commands/stop-clear.md) | Clears the STOP lock, after you have checked the cause. |
 
-## Quickstart
-
-Requirements: Python 3.11 or newer and [uv](https://docs.astral.sh/uv/).
-
-```
-git clone https://github.com/MBratkowski/deweloperuch-mcp.git
-cd deweloperuch-mcp
-uv sync
-uv run deweloperuch --help                  # sends no requests
-uv run deweloperuch locations search krak   # first real request
-```
-
-**Claude Desktop** (`claude_desktop_config.json`, `mcpServers` format; any MCP client that starts a stdio server works the same way):
-
-```json
-{
-  "mcpServers": {
-    "deweloperuch": {
-      "command": "uv",
-      "args": ["run", "--directory", "/path/to/deweloperuch-mcp", "deweloperuch-mcp"]
-    }
-  }
-}
-```
-
-**Claude Code:**
-
-```
-claude mcp add deweloperuch -- uv run --directory /path/to/deweloperuch-mcp deweloperuch-mcp
-```
-
-Replace `/path/to/deweloperuch-mcp` with the directory you cloned. The server speaks stdio and logs to stderr; the host should read its stderr. More: [docs/mcp/README.md](docs/mcp/README.md#mcp-client-configuration).
-
 ## How it works
 
 ```
@@ -143,7 +166,7 @@ After an intended output change, refresh the golden outputs with `DEWELOPERUCH_U
 DEWELOPERUCH_LIVE=1 uv run pytest -m live tests/e2e -rs --maxfail=3
 ```
 
-Both the variable and `-m live` are required. Scenarios and request budget: [tests/e2e/README.md](tests/e2e/README.md). Contributing guide: [CONTRIBUTING.md](CONTRIBUTING.md).
+Both the variable and `-m live` are required. Scenarios and request budget: [tests/e2e/README.md](tests/e2e/README.md). Contributing guide and release procedure: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Documentation
 

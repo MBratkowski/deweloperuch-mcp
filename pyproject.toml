@@ -4,7 +4,31 @@ version = "0.1.0"
 description = "MCP server and CLI over deweloperuch.pl data (developer offer prices, RCN transactions, market statistics)"
 readme = "README.md"
 license = "MIT"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "deweloperuch-mcp contributors" }]
 requires-python = ">=3.11"
+keywords = [
+    "mcp", "model-context-protocol", "claude", "deweloperuch", "real-estate", "apartments",
+    "poland", "nieruchomosci", "mieszkania", "rcn", "gus", "nbp",
+]
+# The request limiter needs fcntl.flock: macOS and Linux only, no Windows.
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
+    "Natural Language :: Polish",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Typing :: Typed",
+]
 dependencies = [
     "httpx>=0.28.1",
     "mcp>=2.3.0",
@@ -12,10 +36,13 @@ dependencies = [
     "typer>=0.27.3",
 ]
 
-
 [project.urls]
+Homepage = "https://github.com/MBratkowski/deweloperuch-mcp"
 Repository = "https://github.com/MBratkowski/deweloperuch-mcp"
+Documentation = "https://github.com/MBratkowski/deweloperuch-mcp/blob/main/docs/mcp/README.md"
 Issues = "https://github.com/MBratkowski/deweloperuch-mcp/issues"
+Changelog = "https://github.com/MBratkowski/deweloperuch-mcp/blob/main/CHANGELOG.md"
+
 [project.scripts]
 deweloperuch = "deweloperuch_mcp.cli:main"
 deweloperuch-mcp = "deweloperuch_mcp.mcp_server:main"

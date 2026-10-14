@@ -47,7 +47,7 @@ Results contain addresses of public pages for humans, only in `*_url` fields: `l
 
 ## MCP client configuration
 
-After installing (see the [README](../../README.md#quickstart)) the script is at `.venv/bin/deweloperuch-mcp`. An example entry in the client configuration (`mcpServers` format, e.g. Claude Desktop, Claude Code `.mcp.json`):
+Installation options (Claude Desktop extension, `uvx` from GitHub, from source): [README](../../README.md#install). With `uvx` the entry is `"command": "uvx", "args": ["--from", "git+https://github.com/MBratkowski/deweloperuch-mcp", "deweloperuch-mcp"]` (if the client reports `spawn uvx ENOENT`, use the full path from `which uvx`). For a source checkout, after `uv sync` the script is at `.venv/bin/deweloperuch-mcp`. An example entry in the client configuration (`mcpServers` format, e.g. Claude Desktop, Claude Code `.mcp.json`):
 
 ```json
 {

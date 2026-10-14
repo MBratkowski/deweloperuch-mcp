@@ -1,0 +1,41 @@
+# Quality gates and offline tests on every push to main and every pull request.
+# Nothing here sends a request to deweloperuch.pl: the tests run with sockets disabled
+# (pytest-socket) and the live suite (tests/e2e) is never run in CI (D10).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - name: Lint, format, types, import contracts
+        run: make fast
+      - name: Offline tests (never the live suite)
+        run: make test
+
+  package:
+    # Builds the wheel, the sdist and the .mcpb and starts them over stdio
+    # (initialize + tools/list only: no tool call, so no request to the service).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          enable-cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+      - run: make package
+      - run: make smoke

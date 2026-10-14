@@ -14,6 +14,21 @@ make check    # fast + the offline tests + dead-code check + complexity and dupl
 
 Run `make fast` before every pull request and `make check` before asking for a review. Every `make` target is offline.
 
+## Packaging and releasing
+
+```
+make package   # wheel, sdist and the Claude Desktop extension (.mcpb)
+make smoke     # checks the built artifacts
+```
+
+`make package` builds the wheel and sdist and runs `packaging/mcpb/build.py`, which packs the `.mcpb` with the official `mcpb` CLI (2.1.2, `manifest_version` 0.4, uv runtime). CI runs `make fast` and the offline tests on every push and pull request.
+
+To release:
+
+1. Bump the version in `pyproject.toml` and in `packaging/mcpb/manifest.json` (they must match) and move the `## [Unreleased]` entries of [CHANGELOG.md](CHANGELOG.md) under the new version.
+2. Run `make package` and `make smoke`.
+3. Push a tag `v*` (for example `v0.1.0`). The release workflow builds the artifacts and attaches them to the GitHub release. A PyPI publish step is prepared but disabled.
+
 ## Polite-client rules
 
 The service is a community project. Code and tests must keep these rules:

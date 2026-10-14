@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- Claude Desktop extension `deweloperuch-mcp-<version>.mcpb` (one-click install, uv runtime, macOS and Linux; Windows is not supported) and an installable wheel and sdist, so the server also runs with `uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp deweloperuch-mcp`. `make package` builds them, `make smoke` checks them. See [README](README.md#install).
+- CI (`make fast` and the offline tests on every push and pull request) and a release workflow that builds the artifacts and attaches them to a GitHub release for every `v*` tag. See [CONTRIBUTING.md](CONTRIBUTING.md#packaging-and-releasing).
 - MCP server `deweloperuch-mcp` (stdio, read-only) with 13 tools and the matching `deweloperuch` CLI commands. See [docs/mcp/README.md](docs/mcp/README.md) and [docs/cli/README.md](docs/cli/README.md).
   - Search and details: `search_locations`, `search_offers`, `get_offer`, `search_investments`, `get_investment`, `search_developers`, `get_developer`.
   - Statistics and valuation: `get_market_statistics`, `get_transaction_statistics` (RCN), `rank_locations`, `get_building`, `estimate_property_value`, `get_government_statistics` (GUS and NBP time series for Poland, aggregates and 66 cities; command `stats government`).
@@ -17,6 +19,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - `recon/probe.py` and `recon/scan_bundles.py`, maintainer scripts for checking the service and detecting changes after a deploy. See [docs/configuration.md](docs/configuration.md#development-scripts-recon).
 
 ### Changed
+- RCN unit and transaction identifiers in the samples and tests are pseudonymised.
 - **BREAKING:** every MCP tool rejects arguments that are not in its schema (`additionalProperties: false`) with an error that lists the allowed names. Clients that relied on unknown arguments being silently ignored now get an error. Argument validation errors are now in Polish instead of the SDK's English text. See [docs/mcp/README.md](docs/mcp/README.md#errors).
 - **BREAKING:** `recon/scan_bundles.py` goes through the shared limiter, fetches only a fixed list of pages and chunks, follows no redirects, does not retry and ends at the first error. `recon/flight.py` and the recon scripts require Python 3.11 or newer.
 - With an active STOP lock, CLI data commands and the recon scripts end with exit code 3 without sending a request (before, they could wait or end with code 5).

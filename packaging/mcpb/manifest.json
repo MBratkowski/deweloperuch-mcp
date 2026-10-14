@@ -1,0 +1,99 @@
+{
+  "manifest_version": "0.4",
+  "name": "deweloperuch-mcp",
+  "display_name": "deweloperuch.pl (nieoficjalny)",
+  "version": "0.1.0",
+  "description": "Nieoficjalne dane deweloperuch.pl: ceny ofertowe mieszkań z historią, ceny transakcyjne RCN, statystyki GUS i NBP. Unofficial, read-only access to deweloperuch.pl data: asking prices with history, RCN transaction prices, GUS and NBP statistics.",
+  "long_description": "Pytaj asystenta AI o nowe mieszkania w Polsce: ceny ofertowe deweloperów z historią zmian, ceny transakcyjne z Rejestru Cen Nieruchomości (RCN) oraz statystyki GUS i NBP. Trzynaście narzędzi tylko do odczytu.\n\nAsk an AI assistant about new-build apartments in Poland: developers' asking prices with their history, transaction prices from the Real Estate Price Register (RCN) and GUS and NBP statistics. Thirteen read-only tools.\n\n**Nieoficjalne, tylko do odczytu. / Unofficial and read-only.** This project is not affiliated with, endorsed by or sponsored by deweloperuch.pl, GUS or NBP. It never creates or changes anything on the service, sends at most 1 request per second, caches responses and stops by itself after a 401, 403, 429 or a captcha. Please ask narrow questions; the service is run by other people. Data accuracy is not guaranteed and nothing here is a valuation or advice.\n\nmacOS and Linux only (the request limiter needs file locks that Windows lacks). Source code, documentation and the CLI: https://github.com/MBratkowski/deweloperuch-mcp",
+  "author": {
+    "name": "deweloperuch-mcp contributors"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MBratkowski/deweloperuch-mcp"
+  },
+  "homepage": "https://github.com/MBratkowski/deweloperuch-mcp",
+  "documentation": "https://github.com/MBratkowski/deweloperuch-mcp/blob/main/docs/mcp/README.md",
+  "support": "https://github.com/MBratkowski/deweloperuch-mcp/issues",
+  "icon": "icon.png",
+  "server": {
+    "type": "uv",
+    "entry_point": "src/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--directory", "${__dirname}", "src/server.py"]
+    }
+  },
+  "tools": [
+    {
+      "name": "search_locations",
+      "description": "Finds cities, districts and streets by a name fragment and returns city_slug."
+    },
+    {
+      "name": "search_offers",
+      "description": "A page of developers' apartment offers in a city or the whole of Poland, with price, area, price-per-m², district, status and price-drop filters and sorting."
+    },
+    {
+      "name": "get_offer",
+      "description": "One offer with its full price history and price flags (lowest price in 30/90 days, suspicious reduction)."
+    },
+    {
+      "name": "search_investments",
+      "description": "Investments of a city (averages, sorting, filter by developer) or by name across Poland."
+    },
+    {
+      "name": "get_investment",
+      "description": "An investment with its developer, average prices and a list of offers."
+    },
+    {
+      "name": "search_developers",
+      "description": "Finds developers by a name fragment and returns developer_slug."
+    },
+    {
+      "name": "get_developer",
+      "description": "A developer profile: summary, investments with active offers and cities."
+    },
+    {
+      "name": "get_market_statistics",
+      "description": "Offer-market statistics of one city: counts, price, price per m² and area distributions, the largest developers."
+    },
+    {
+      "name": "get_transaction_statistics",
+      "description": "Transaction prices (RCN) of a city by month or quarter."
+    },
+    {
+      "name": "rank_locations",
+      "description": "A ranking of places or powiats by RCN transactions and price per m²."
+    },
+    {
+      "name": "get_building",
+      "description": "A building from the RCN with its units and transactions."
+    },
+    {
+      "name": "estimate_property_value",
+      "description": "An approximate apartment value at a point from nearby RCN transactions."
+    },
+    {
+      "name": "get_government_statistics",
+      "description": "Official GUS and NBP time series (dwellings, NBP prices, unemployment, wages, demography) for Poland, aggregates and 66 cities."
+    }
+  ],
+  "keywords": [
+    "deweloperuch",
+    "nieruchomości",
+    "mieszkania",
+    "real estate",
+    "apartments",
+    "Poland",
+    "RCN",
+    "GUS",
+    "NBP"
+  ],
+  "license": "MIT",
+  "compatibility": {
+    "platforms": ["darwin", "linux"],
+    "runtimes": {
+      "python": ">=3.11"
+    }
+  }
+}
