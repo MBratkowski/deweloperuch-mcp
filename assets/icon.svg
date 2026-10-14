@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-labelledby="title">
+  <title id="title">deweloperuch-mcp</title>
+  <!-- White tile so the line art stays visible on dark backgrounds -->
+  <rect x="8" y="8" width="496" height="496" rx="96" fill="#ffffff"/>
+
+  <g fill="none" stroke="#111111" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Head -->
+    <circle cx="236" cy="300" r="148" fill="#ffffff"/>
+
+    <!-- Hard hat: dome, centre ridge and brim -->
+    <path d="M104 262 C104 160 168 112 236 112 C304 112 368 160 368 262 Z" fill="#ffffff"/>
+    <path d="M214 116 L214 150 Q236 140 258 150 L258 116"/>
+    <path d="M76 262 L396 262"/>
+
+    <!-- Eyebrows: one raised, one lowered for a cheeky look -->
+    <path d="M150 300 L204 314"/>
+    <path d="M270 312 L326 290"/>
+
+    <!-- Grin: smiling lips with an upper row of teeth -->
+    <path d="M150 370 Q236 392 322 368 Q306 448 236 448 Q166 448 150 370 Z" fill="#ffffff"/>
+    <path d="M160 398 Q236 414 312 396"/>
+    <path d="M206 384 L206 406"/>
+    <path d="M262 382 L262 404"/>
+
+    <!-- Ear -->
+    <path d="M94 292 C50 290 50 362 98 358"/>
+  </g>
+
+  <!-- Eyes -->
+  <circle cx="180" cy="334" r="12" fill="#111111"/>
+  <circle cx="296" cy="334" r="12" fill="#111111"/>
+
+  <!-- MCP badge in the top-right corner, same ink and weight as the drawing -->
+  <g transform="rotate(-8 412 92)">
+    <rect x="332" y="52" width="160" height="80" rx="22" fill="#111111"/>
+    <text x="412" y="111" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="54" font-weight="800" letter-spacing="2" fill="#ffffff">MCP</text>
+  </g>
+</svg>
