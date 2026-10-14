@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-labelledby="title">
+  <title id="title">deweloperuch-mcp</title>
+  <!-- Small variant of icon.svg for 32 px: drawn on the pixel grid, strokes twice as
+       heavy, no ear, ridge, eyebrows or teeth; the badge text is drawn pixel by pixel. -->
+  <rect width="32" height="32" rx="6" fill="#ffffff"/>
+
+  <g fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Head -->
+    <circle cx="14" cy="21" r="9" fill="#ffffff"/>
+    <!-- Hard hat: dome and brim -->
+    <path d="M7 17 C7 12.5 10 10 14 10 C18 10 21 12.5 21 17 Z" fill="#ffffff"/>
+    <path d="M3 17 L25 17"/>
+    <!-- Grin -->
+    <path d="M9 23.5 Q14 25 19 23.5 Q18 27 14 27 Q10 27 9 23.5 Z" fill="#ffffff"/>
+  </g>
+
+  <!-- Eyes -->
+  <circle cx="10.5" cy="20.5" r="1.5" fill="#111111"/>
+  <circle cx="17.5" cy="20.5" r="1.5" fill="#111111"/>
+
+  <!-- MCP badge in the top-right corner -->
+  <rect x="16" y="1" width="15" height="7" rx="1.5" fill="#111111"/>
+  <path fill="#ffffff" d="M17 2h1v5h-1z M21 2h1v5h-1z M18 3h1v1h-1z M20 3h1v1h-1z M19 4h1v1h-1z
+    M24 2h2v1h-2z M23 3h1v3h-1z M24 6h2v1h-2z
+    M27 2h2v1h-2z M27 3h1v4h-1z M29 3h1v1h-1z M28 4h1v1h-1z"/>
+</svg>

@@ -4,7 +4,7 @@
 # npm and PyPI.
 
 .PHONY: fast check lint format-check types imports test dead complexity duplicates \
-	package mcpb smoke
+	package mcpb smoke icons
 
 ## fast: what to run before every hand-over (a few seconds)
 fast: lint format-check types imports
@@ -51,6 +51,16 @@ package:
 ## mcpb: only the extension, dist/deweloperuch-mcp-<version>.mcpb (needs Node.js for npx)
 mcpb:
 	uv run python packaging/mcpb/build.py
+
+## icons: the extension's PNG icons (assets/icons, committed) from the SVGs; needs
+## rsvg-convert (librsvg). Pixel-grid variants below 64 px, the full drawing from 64 px;
+## the MCP badge text of icon.svg uses the system's Helvetica Neue or Arial.
+icons:
+	rsvg-convert -w 16 -h 16 assets/icon-tiny.svg -o assets/icons/icon-16.png
+	rsvg-convert -w 32 -h 32 assets/icon-small.svg -o assets/icons/icon-32.png
+	for size in 64 128 256 512; do \
+		rsvg-convert -w $$size -h $$size assets/icon.svg -o assets/icons/icon-$$size.png; \
+	done
 
 ## smoke: start the built wheel and the unpacked extension as an MCP client does
 ## (initialize + tools/list, no tool call, so no request to the service); run `package` first

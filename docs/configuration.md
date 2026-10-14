@@ -63,7 +63,7 @@ Clearing: only by the user, `deweloperuch stop clear` ([description](cli/command
 Users of the Claude Desktop extension (`.mcpb`) have no `deweloperuch` command installed. After checking the cause (`stop status` first), they lift a STOP by running the `stop clear` command through uvx:
 
 ```
-uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp deweloperuch stop clear
+uvx --from deweloperuch-mcp deweloperuch stop clear
 ```
 
 Then restart the MCP server, which stays latched after a STOP.

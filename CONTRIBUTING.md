@@ -23,11 +23,19 @@ make smoke     # checks the built artifacts
 
 `make package` builds the wheel and sdist and runs `packaging/mcpb/build.py`, which packs the `.mcpb` with the official `mcpb` CLI (2.1.2, `manifest_version` 0.4, uv runtime). CI runs `make fast` and the offline tests on every push and pull request.
 
+`make icons` regenerates the extension icons in `assets/icons/` from `assets/icon.svg` (large sizes) and the simplified `assets/icon-small.svg` and `assets/icon-tiny.svg` (32 and 16 px); it needs `rsvg-convert` from librsvg. The PNGs are committed, so you run it only after changing an SVG.
+
 To release:
 
-1. Bump the version in `pyproject.toml` and in `packaging/mcpb/manifest.json` (they must match) and move the `## [Unreleased]` entries of [CHANGELOG.md](CHANGELOG.md) under the new version.
+1. Bump the version in `pyproject.toml`, `packaging/mcpb/manifest.json` and `packaging/registry/server.json` (all must match; `server.json` has two `version` fields) and move the `## [Unreleased]` entries of [CHANGELOG.md](CHANGELOG.md) under the new version.
 2. Run `make package` and `make smoke`.
-3. Push a tag `v*` (for example `v0.1.0`). The release workflow builds the artifacts and attaches them to the GitHub release. A PyPI publish step is prepared but disabled.
+3. Push a tag `v*` (for example `v0.1.1`). The release workflow builds the wheel, sdist, `.mcpb` and a `server.json` with the bundle's sha256; then two separate jobs create the GitHub Release with the artifacts and publish the package to PyPI (trusted publishing, environment `pypi`).
+4. Publish to the official MCP Registry (`io.github.MBratkowski/deweloperuch-mcp`) with `mcp-publisher`, using the `server.json` downloaded from the release:
+
+```
+mcp-publisher login github
+mcp-publisher publish
+```
 
 ## Polite-client rules
 

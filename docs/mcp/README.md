@@ -26,6 +26,10 @@ Tool descriptions, schema field descriptions, `instructions` and error messages 
 
 All 13 have the annotations `readOnlyHint=true` and `openWorldHint=true`. Typical order: `search_locations` → `search_offers` → `get_investment` or `get_offer`; `search_investments` / `search_developers` turn names into slugs; to judge an offer price: `get_offer` (`price_flags`), then `get_market_statistics` or `estimate_property_value`. Three kinds of prices are not to be mixed: developers' asking prices (`search_offers`, `get_market_statistics`, `search_investments`), RCN transaction prices (`get_transaction_statistics`, `rank_locations`, `get_building`, `estimate_property_value`) and official NBP/GUS data (`get_government_statistics`).
 
+## Prompts
+
+Four prompts (`prompts/list`, shown in Claude Desktop as ready-made commands) guide the model through the tools. They send no requests themselves. See [prompts.md](prompts.md).
+
 ## Server instructions (`instructions`)
 
 > Dane z deweloperuch.pl o mieszkaniach w Polsce. Typowy plan: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami), potem get_offer (oferta z historią ceny) albo get_investment (oferty jednej inwestycji). Projekty w mieście i slug inwestycji po nazwie daje search_investments, slug dewelopera po nazwie search_developers (dalej get_developer). Ocena ceny oferty: get_offer (price_flags), potem porównaj z get_market_statistics albo estimate_property_value.
@@ -47,7 +51,7 @@ Results contain addresses of public pages for humans, only in `*_url` fields: `l
 
 ## MCP client configuration
 
-Installation options (Claude Desktop extension, `uvx` from GitHub, from source): [README](../../README.md#install). With `uvx` the entry is `"command": "uvx", "args": ["--from", "git+https://github.com/MBratkowski/deweloperuch-mcp", "deweloperuch-mcp"]` (if the client reports `spawn uvx ENOENT`, use the full path from `which uvx`). For a source checkout, after `uv sync` the script is at `.venv/bin/deweloperuch-mcp`. An example entry in the client configuration (`mcpServers` format, e.g. Claude Desktop, Claude Code `.mcp.json`):
+Installation options (Claude Desktop extension, `uvx` from PyPI or GitHub, from source): [README](../../README.md#install). With `uvx` the entry is `"command": "uvx", "args": ["deweloperuch-mcp"]` (if the client reports `spawn uvx ENOENT`, use the full path from `which uvx`). For a source checkout, after `uv sync` the script is at `.venv/bin/deweloperuch-mcp`. An example entry in the client configuration (`mcpServers` format, e.g. Claude Desktop, Claude Code `.mcp.json`):
 
 ```json
 {

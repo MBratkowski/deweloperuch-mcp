@@ -1,0 +1,186 @@
+{
+  "prompts": [
+    {
+      "name": "znajdz_mieszkanie",
+      "title": "Znajdź mieszkanie",
+      "description": "Mieszkania od deweloperów w jednym mieście z budżetem, metrażem i dzielnicą: tabela ofert od najniższej ceny za m² z linkami do deweloperuch.pl.",
+      "arguments": [
+        {
+          "name": "miasto",
+          "description": "Miasto, np. Kraków, Gdańsk.",
+          "required": true
+        },
+        {
+          "name": "budzet_max",
+          "description": "Najwyższa cena mieszkania w PLN, np. 800000.",
+          "required": false
+        },
+        {
+          "name": "metraz_min",
+          "description": "Najmniejszy metraż w m², np. 40.",
+          "required": false
+        },
+        {
+          "name": "metraz_max",
+          "description": "Największy metraż w m², np. 65.",
+          "required": false
+        },
+        {
+          "name": "dzielnica",
+          "description": "Dzielnica, np. Mokotów.",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "ocen_oferte",
+      "title": "Oceń ofertę",
+      "description": "Ocena ceny jednej oferty: historia ceny (najniższa z 30 i 90 dni, podejrzane obniżki), porównanie z rynkiem miasta i z wyceną z transakcji w okolicy; werdykt z zastrzeżeniami.",
+      "arguments": [
+        {
+          "name": "offer_id",
+          "description": "offer_id oferty z wyników search_offers albo get_investment.",
+          "required": true
+        },
+        {
+          "name": "investment_slug",
+          "description": "investment_slug inwestycji tej oferty, np. smolna: z tych samych wyników albo ostatni człon adresu strony inwestycji na deweloperuch.pl.",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "przeswietl_dewelopera",
+      "title": "Prześwietl dewelopera",
+      "description": "Profil dewelopera: gdzie i ile buduje, jego inwestycje, aktywne oferty, ceny i ich zmiany; w całej Polsce albo w jednym mieście.",
+      "arguments": [
+        {
+          "name": "nazwa",
+          "description": "Nazwa dewelopera albo jej fragment, np. Atal, Dom Development.",
+          "required": true
+        },
+        {
+          "name": "miasto",
+          "description": "Miasto, do którego zawęzić inwestycje, np. Kraków.",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "porownaj_miasta",
+      "title": "Porównaj miasta",
+      "description": "Porównanie rynku mieszkań kilku miast: ceny ofertowe deweloperów, ceny transakcyjne z RCN i opcjonalnie wynagrodzenia i bezrobocie z GUS, w jednej tabeli.",
+      "arguments": [
+        {
+          "name": "miasta",
+          "description": "Nazwy miast rozdzielone przecinkami, np. Kraków, Wrocław, Gdańsk (najwyżej 5).",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "rendered": [
+    {
+      "prompt": "znajdz_mieszkanie",
+      "arguments": {
+        "miasto": "Kraków",
+        "budzet_max": "800000",
+        "metraz_min": "40",
+        "metraz_max": "60",
+        "dzielnica": "Podgórze"
+      },
+      "description": "Mieszkania od deweloperów w jednym mieście z budżetem, metrażem i dzielnicą: tabela ofert od najniższej ceny za m² z linkami do deweloperuch.pl.",
+      "messages": [
+        {
+          "role": "user",
+          "content": {
+            "type": "text",
+            "text": "Znajdź mieszkania od deweloperów (rynek pierwotny) w mieście: Kraków.\nKryteria:\n- dzielnica: Podgórze (district)\n- cena do: 800000 PLN (price_max)\n- metraż od: 40 m² (area_min)\n- metraż do: 60 m² (area_max)\n\nPlan:\n1. search_locations z nazwą miasta: weź city_slug miasta (kind=city, offer_count większe od 0). Dzielnicę też znajdź przez search_locations: jej nazwę (kind=district, pole name) przekaż jako district razem z city_slug jej miasta.\n2. search_offers z city=city_slug, filtrami z kryteriów (nazwa parametru w nawiasie) i sort=price_per_m2_asc (od najniższej ceny za m²), per_page=10. Kwoty i metraże podaj jako liczby całkowite (np. 800 tys. zł to 800000).\n3. Pokaż wynik w tabeli: inwestycja, deweloper, cena, metraż, cena za m², zmiana ceny od pierwszej i link investment_url. Pod tabelą podaj total (ile ofert pasuje) i list_url (ta lista na deweloperuch.pl).\n\nUwagi:\n- search_offers nie filtruje po liczbie pokoi ani piętrze (serwis nie ma takich danych): gdy użytkownikowi chodzi o pokoje, powiedz to i zawęź metraż.\n- Gdy truncated=true, zaproponuj węższe kryteria zamiast przeglądać kolejne strony.\n- To ceny ofertowe deweloperów, nie transakcyjne. Historię ceny jednej oferty daje get_offer."
+          }
+        }
+      ]
+    },
+    {
+      "prompt": "znajdz_mieszkanie",
+      "arguments": {
+        "miasto": "Gdańsk"
+      },
+      "description": "Mieszkania od deweloperów w jednym mieście z budżetem, metrażem i dzielnicą: tabela ofert od najniższej ceny za m² z linkami do deweloperuch.pl.",
+      "messages": [
+        {
+          "role": "user",
+          "content": {
+            "type": "text",
+            "text": "Znajdź mieszkania od deweloperów (rynek pierwotny) w mieście: Gdańsk.\nKryteria:\n- brak, poza miastem\n\nPlan:\n1. search_locations z nazwą miasta: weź city_slug miasta (kind=city, offer_count większe od 0).\n2. search_offers z city=city_slug, filtrami z kryteriów (nazwa parametru w nawiasie) i sort=price_per_m2_asc (od najniższej ceny za m²), per_page=10. Kwoty i metraże podaj jako liczby całkowite (np. 800 tys. zł to 800000).\n3. Pokaż wynik w tabeli: inwestycja, deweloper, cena, metraż, cena za m², zmiana ceny od pierwszej i link investment_url. Pod tabelą podaj total (ile ofert pasuje) i list_url (ta lista na deweloperuch.pl).\n\nUwagi:\n- search_offers nie filtruje po liczbie pokoi ani piętrze (serwis nie ma takich danych): gdy użytkownikowi chodzi o pokoje, powiedz to i zawęź metraż.\n- Gdy truncated=true, zaproponuj węższe kryteria zamiast przeglądać kolejne strony.\n- To ceny ofertowe deweloperów, nie transakcyjne. Historię ceny jednej oferty daje get_offer."
+          }
+        }
+      ]
+    },
+    {
+      "prompt": "ocen_oferte",
+      "arguments": {
+        "offer_id": "2377",
+        "investment_slug": "smolna"
+      },
+      "description": "Ocena ceny jednej oferty: historia ceny (najniższa z 30 i 90 dni, podejrzane obniżki), porównanie z rynkiem miasta i z wyceną z transakcji w okolicy; werdykt z zastrzeżeniami.",
+      "messages": [
+        {
+          "role": "user",
+          "content": {
+            "type": "text",
+            "text": "Oceń ofertę mieszkania: offer_id 2377, inwestycja smolna. Czy cena jest rozsądna?\n\nPlan:\n1. get_offer(offer_id=2377, investment_slug=smolna): cena, metraż, cena za m², status, historia ceny i price_flags. Porównaj obecną cenę z lowest_price_30d i lowest_price_90d (najniższą ceną z 30 i 90 dni), sprawdź liczbę zmian (price_changes), największą obniżkę i podwyżkę (largest_drop_pct, largest_rise_pct) i suspicious_reduction (obniżka do 30 dni po podwyżce, „promocja” po podwyżce).\n2. get_market_statistics(city=city_slug z get_offer): gdzie wypada cena za m² oferty na tle p25, mediany i p75 miasta. Dla podobnych mieszkań zawęź area_min i area_max wokół metrażu oferty (np. ±10 m²).\n3. get_investment(investment_slug=smolna, limit=0): współrzędne lat i lng inwestycji. Gdy są, estimate_property_value(lat, lng, area_m2=metraż oferty, limit=5): wycena z transakcji w okolicy. Bez współrzędnych pomiń wycenę i powiedz o tym.\n\nWerdykt: krótko (np. okazja, w normie albo drogo na tle rynku) z liczbami: cena za m² oferty, mediana miasta, wycena z transakcji; do tego wnioski z historii ceny i linki investment_url i developer_url.\n\nZastrzeżenia, które podaj użytkownikowi:\n- get_offer i get_market_statistics to ceny ofertowe (ile chce deweloper), a estimate_property_value to ceny transakcyjne z Rejestru Cen Nieruchomości (za ile sprzedano, z kilkumiesięcznym opóźnieniem); to różne miary, nie licz z nich jednej średniej.\n- Wycena jest przybliżona: to porównanie z transakcjami w pobliżu, nie operat szacunkowy.\n- Statystyki miasta obejmują tylko aktywne oferty; przy ofercie wycofanej (status=archived) porównujesz jej ostatnią cenę z dzisiejszym rynkiem."
+          }
+        }
+      ]
+    },
+    {
+      "prompt": "przeswietl_dewelopera",
+      "arguments": {
+        "nazwa": "Atal",
+        "miasto": "Kraków"
+      },
+      "description": "Profil dewelopera: gdzie i ile buduje, jego inwestycje, aktywne oferty, ceny i ich zmiany; w całej Polsce albo w jednym mieście.",
+      "messages": [
+        {
+          "role": "user",
+          "content": {
+            "type": "text",
+            "text": "Prześwietl dewelopera: Atal, w mieście: Kraków.\n\nPlan:\n1. search_developers(name=Atal): developer_slug. Gdy pasuje kilku, wybierz najlepiej pasującego (nazwa, liczba ofert) i wymień pozostałych; gdy nie wiadomo, o którego chodzi, zapytaj użytkownika.\n2. search_locations z nazwą miasta Kraków: city_slug (kind=city).\n3. get_developer(developer_slug=developer_slug, city=city_slug): summary (aktywne oferty, średnie ceny), inwestycje z aktywnymi ofertami w tym mieście i miasta dewelopera (cities).\n4. search_investments(city=city_slug, developer_slug=developer_slug, sort=price_per_m2_asc): inwestycje dewelopera w tym mieście z ulicami i średnimi cenami za m².\n5. Zmiany cen: dla 1–3 inwestycji z największą liczbą aktywnych ofert get_investment(investment_slug=investment_slug) z domyślnym limitem; price_change_since_start_pct ofert to obniżki (ujemne) i podwyżki od pierwszej ceny. Nie sprawdzaj wszystkich inwestycji po kolei.\n\nPodsumowanie: skala (aktywne oferty, inwestycje, miasta), tabela inwestycji (nazwa, miasto, aktywne oferty, średnia cena za m², link investment_url), zmiany cen w sprawdzonych inwestycjach (ile ofert potaniało i podrożało, największe zmiany) i link developer_url.\nZastrzeżenie: to ceny ofertowe z deweloperuch.pl, a nie ocena kondycji finansowej ani rzetelności dewelopera."
+          }
+        }
+      ]
+    },
+    {
+      "prompt": "przeswietl_dewelopera",
+      "arguments": {
+        "nazwa": "Dom Development"
+      },
+      "description": "Profil dewelopera: gdzie i ile buduje, jego inwestycje, aktywne oferty, ceny i ich zmiany; w całej Polsce albo w jednym mieście.",
+      "messages": [
+        {
+          "role": "user",
+          "content": {
+            "type": "text",
+            "text": "Prześwietl dewelopera: Dom Development (cała Polska).\n\nPlan:\n1. search_developers(name=Dom Development): developer_slug. Gdy pasuje kilku, wybierz najlepiej pasującego (nazwa, liczba ofert) i wymień pozostałych; gdy nie wiadomo, o którego chodzi, zapytaj użytkownika.\n2. get_developer(developer_slug=developer_slug): summary (aktywne oferty, średnie ceny), inwestycje z aktywnymi ofertami i miasta dewelopera (cities).\n3. Tylko gdy użytkownik zapyta o jedno miasto z cities: search_investments(city=city_slug tego miasta, developer_slug=developer_slug, sort=price_per_m2_asc).\n4. Zmiany cen: dla 1–3 inwestycji z największą liczbą aktywnych ofert get_investment(investment_slug=investment_slug) z domyślnym limitem; price_change_since_start_pct ofert to obniżki (ujemne) i podwyżki od pierwszej ceny. Nie sprawdzaj wszystkich inwestycji po kolei.\n\nPodsumowanie: skala (aktywne oferty, inwestycje, miasta), tabela inwestycji (nazwa, miasto, aktywne oferty, średnia cena za m², link investment_url), zmiany cen w sprawdzonych inwestycjach (ile ofert potaniało i podrożało, największe zmiany) i link developer_url.\nZastrzeżenie: to ceny ofertowe z deweloperuch.pl, a nie ocena kondycji finansowej ani rzetelności dewelopera."
+          }
+        }
+      ]
+    },
+    {
+      "prompt": "porownaj_miasta",
+      "arguments": {
+        "miasta": "Kraków, Wrocław, Gdańsk"
+      },
+      "description": "Porównanie rynku mieszkań kilku miast: ceny ofertowe deweloperów, ceny transakcyjne z RCN i opcjonalnie wynagrodzenia i bezrobocie z GUS, w jednej tabeli.",
+      "messages": [
+        {
+          "role": "user",
+          "content": {
+            "type": "text",
+            "text": "Porównaj rynek mieszkań w miastach: Kraków, Wrocław, Gdańsk.\n\nDla każdego miasta:\n1. search_locations z nazwą miasta: city_slug (kind=city).\n2. get_market_statistics(city=city_slug): ceny ofertowe deweloperów: mediana ceny za m² (z p25 i p75), mediana ceny i metrażu, liczba ofert, inwestycji i deweloperów.\n3. get_transaction_statistics(city=city_slug): ceny transakcyjne z Rejestru Cen Nieruchomości (RCN): mediana ceny za m² i liczba transakcji w kolejnych miesiącach.\n4. Gdy rozmowa dotyczy dostępności mieszkań albo rynku pracy: get_government_statistics(location=nazwa miasta małymi literami bez polskich znaków, z myślnikami zamiast spacji, np. krakow, bielsko-biala; dataset=wages albo unemployment). Nie wymaga search_locations; dane są tylko dla miast na prawach powiatu.\n\nWynik: jedna tabela, wiersz na miasto: mediana ceny ofertowej za m², liczba ofert, cena transakcyjna za m² z okresem, którego dotyczy, liczba transakcji (i wynagrodzenie albo bezrobocie, jeśli je pobrano). Pod tabelą krótkie wnioski i linki list_url i stats_url. Gdy dla miasta brak danych, wpisz „brak” zamiast zgadywać.\n\nPamiętaj:\n- Ceny ofertowe (ile chcą deweloperzy) i transakcyjne (za ile sprzedano) to różne miary: pokazuj je w osobnych kolumnach.\n- Transakcje trafiają do RCN z kilkumiesięcznym opóźnieniem, więc najnowsze miesiące są niepełne (przeczytaj note): porównuj miasta na tych samych pełnych okresach, a spadku w ostatnich miesiącach nie traktuj jako trendu."
+          }
+        }
+      ]
+    }
+  ]
+}

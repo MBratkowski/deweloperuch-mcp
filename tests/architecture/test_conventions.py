@@ -17,6 +17,9 @@ without exceptions (the migration's allowlist is gone): any break fails
   (``FAMILY_SUPPORT``): ``usecases/support`` may hold logic that several operations of
   one capability family share (``InvestmentLookup`` for ``GetOffer`` and
   ``GetInvestment``), and only there may support import a capability model.
+- **Prompts** are text: a ``*Prompt(PromptBase)`` with ``render`` in
+  ``consumers/mcp/prompts`` imports from the package only the MCP support and the shared
+  text helpers, so it can call no tool or use case and send no request.
 - **Shapes**: models are frozen dataclasses, enums or errors; a use case module has
   ``<Op>`` (public method ``execute`` only), ``<Op>Request`` (a frozen dataclass with a
   classmethod ``parse``) and ``<Op>Result`` (a frozen dataclass); a DTO module's main
@@ -40,13 +43,14 @@ ROLE_FOLDERS = {
     "api/dto": "_dto",
     "api/queries": "_query",
     "consumers/mcp/tools": "_tool",
+    "consumers/mcp/prompts": "_prompt",
     "consumers/mcp/presenters": "_mcp_presenter",
     "consumers/cli/presenters": "_cli_presenter",
     "consumers/cli/commands": "_commands",
 }
 """Each role folder and the suffix of its modules (and of their main classes; command
 modules hold Typer functions, no class). ``api/dto/dto.py`` is the DTOs' base."""
-ROLE_CLASSES = ("Api", "Dto", "Query", "Tool", "Presenter")
+ROLE_CLASSES = ("Api", "Dto", "Query", "Tool", "Prompt", "Presenter")
 SUPPORT_FOLDERS = (
     "api/http",
     "usecases/support",
@@ -70,6 +74,7 @@ FAMILY_SUPPORT = {"usecases/support/investment_lookup": {"InvestmentLookup"}}
 with the classes each may hold; nothing else in support imports a capability model."""
 OPERATION_CODE = (
     f"{PACKAGE}.consumers.mcp.tools",
+    f"{PACKAGE}.consumers.mcp.prompts",
     f"{PACKAGE}.consumers.mcp.presenters",
     f"{PACKAGE}.consumers.cli.presenters",
     f"{PACKAGE}.consumers.cli.commands",
@@ -78,6 +83,8 @@ OPERATION_CODE = (
 )
 """Packages whose modules belong to one operation (with the use cases, the DTOs and the
 consumers' views)."""
+PROMPT_IMPORTS = (f"{PACKAGE}.consumers.mcp.support.", f"{PACKAGE}.consumers.shared.text")
+"""All a prompt may import from the package: it is text, so no tool, use case or session."""
 
 
 MODULES = sorted(
@@ -296,6 +303,27 @@ def tools_rule(module: Module) -> list[str]:
     return [f"tool {name} outside consumers/mcp/tools/" for name in functions + tools]
 
 
+def prompts_rule(module: Module) -> list[str]:
+    if module.folder != "consumers/mcp/prompts":
+        if not module.path.startswith("consumers/mcp/"):
+            return []
+        return [
+            f"prompt {name} outside consumers/mcp/prompts/"
+            for name in module.classes
+            if name.endswith("Prompt")
+        ]
+    said = []
+    prompt = module.classes.get(module.main)
+    if prompt is None or "PromptBase" not in base_names(prompt):
+        said.append(f"no {module.main}(PromptBase)")
+    elif "render" not in methods(prompt):
+        said.append(f"{module.main} has no render()")
+    for source, name in imported_names(module.tree):
+        if not source.startswith(PROMPT_IMPORTS):
+            said.append(f"prompt imports {name} from {source.removeprefix(PACKAGE + '.')}")
+    return said
+
+
 def protocols_rule(module: Module) -> list[str]:
     if module.path == "usecases/ports":
         return []
@@ -316,6 +344,7 @@ RULES = (
     use_cases_rule,
     api_rule,
     tools_rule,
+    prompts_rule,
     protocols_rule,
 )
 
@@ -412,6 +441,32 @@ def test_the_offers_reference_exists_in_every_layer() -> None:
         ("consumers/shared/offer_views", "class Offer:\n    pass", "model's name"),
         ("consumers/shared/offer_views", "def offer_search(found):\n    pass", "view builder"),
         ("api/http/transport", "class Catalog(Protocol):\n    pass", "Protocol"),
+        (
+            "consumers/mcp/prompts/find_apartment_prompt",
+            "class FindApartmentPrompt:\n    pass",
+            "PromptBase",
+        ),
+        (
+            "consumers/mcp/prompts/find_apartment_prompt",
+            "class FindApartmentPrompt(PromptBase):\n    def __call__(self): ...",
+            "render",
+        ),
+        (
+            "consumers/mcp/prompts/find_apartment_prompt",
+            "from deweloperuch_mcp.usecases.search_offers import SearchOffersRequest",
+            "prompt imports SearchOffersRequest",
+        ),
+        (
+            "consumers/mcp/prompts/find_apartment_prompt",
+            "from deweloperuch_mcp.consumers.mcp.tools.search_offers_tool import SearchOffersTool",
+            "prompt imports SearchOffersTool",
+        ),
+        (
+            "consumers/mcp/presenters/get_offer_mcp_presenter",
+            "class XPrompt:\n    pass",
+            "prompt X",
+        ),
+        ("consumers/mcp/support/calls", "class FindApartmentPrompt:\n    pass", "role class"),
     ],
 )
 def test_the_check_sees_a_broken_rule(

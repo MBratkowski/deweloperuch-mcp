@@ -1,7 +1,9 @@
-# On a version tag (v0.1.0, ...): builds the wheel, the sdist and the Claude Desktop
-# extension (.mcpb), starts them over stdio (no tool call, no request to the service)
-# and attaches them to a GitHub Release. Bump the version in pyproject.toml and
-# packaging/mcpb/manifest.json before tagging; the tag must match it.
+# On a version tag (v0.1.1, ...): builds the wheel, the sdist and the Claude Desktop
+# extension (.mcpb), starts them over stdio (no tool call, no request to the service),
+# attaches them and server.json for the MCP Registry (with the .mcpb's SHA-256) to a
+# GitHub Release and uploads the wheel and the sdist to PyPI. Bump the version in
+# pyproject.toml, packaging/mcpb/manifest.json and packaging/registry/server.json before
+# tagging; the tag must match it.
 name: release
 
 on:
@@ -9,17 +11,22 @@ on:
     tags: ["v*"]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
     steps:
+      # No credentials or caches in the job that builds what is published (setup-uv
+      # already skips its cache on tag pushes).
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@v10.3.0
       - uses: actions/setup-node@v7
         with:
           node-version: lts/*
+          package-manager-cache: false
       - name: Check that the tag matches the package version
         run: |
           version="$(uv version --short)"
@@ -27,22 +34,56 @@ jobs:
             echo "Tag $GITHUB_REF_NAME does not match pyproject.toml version $version" >&2
             exit 1
           fi
-      - name: Build the wheel, the sdist and the .mcpb
+      - name: Build the wheel, the sdist, the .mcpb and server.json
         run: make package
       - name: Start the built server as an MCP client does
         run: make smoke
+      - uses: actions/upload-artifact@v7
+        with:
+          name: python-packages
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        with:
+          name: extension
+          path: |
+            dist/*.mcpb
+            dist/server.json
+          if-no-files-found: error
+
+  github-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
       - name: Create the GitHub Release with the artifacts
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            dist/*.whl dist/*.tar.gz dist/*.mcpb \
+          gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" \
             --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
 
-      # PyPI publishing is off. To turn it on: create the project on PyPI, add a trusted
-      # publisher there (owner MBratkowski, repository deweloperuch-mcp, workflow
-      # release.yml, environment pypi), add `environment: pypi` and
-      # `permissions: { id-token: write, contents: write }` to this job, then uncomment:
-      #
-      # - name: Publish to PyPI (trusted publishing, no token)
-      #   run: uv publish --trusted-publishing always dist/*.whl dist/*.tar.gz
+  # Trusted publishing (no token in the repository): PyPI accepts the upload from this
+  # workflow and job environment only, as set up in the project's publisher settings
+  # (owner MBratkowski, repository deweloperuch-mcp, workflow release.yml, environment pypi).
+  pypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/deweloperuch-mcp/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: python-packages
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@v1.14.2

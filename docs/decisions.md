@@ -145,7 +145,7 @@ Documentation is written in English. Product text (tool descriptions, messages, 
 - **Names:** `*Api`, `*Dto`, `*Query`, `*Request`, `*Result`, `*Tool`, `*McpPresenter`, `*CliPresenter`, `*View`; ports are named after their role (`OfferCatalog`, `Clock`).
 - **File names say what is inside:** a module is named after its main class, never after the capability alone, so no file name repeats across layers (`models/developer_profile.py`, `usecases/get_developer.py`, `api/adapters/developer_profile_api.py`, `consumers/mcp/tools/get_developer_tool.py`). Shared plumbing keeps descriptive names (`api/http/transport.py`, `usecases/ports.py`).
 - **Role folders and support folders are separate:**
-  - `consumers/mcp/`: `server.py`, `tools/`, `presenters/`, `support/`;
+  - `consumers/mcp/`: `server.py`, `tools/`, `prompts/` (MCP prompts, `*Prompt` classes, since 0.1.1), `presenters/`, `support/`;
   - `consumers/cli/`: `app.py`, `commands/`, `presenters/`, `support/`;
   - `api/`: `adapters/`, `dto/`, `queries/`, `http/`, `links.py`;
   - `usecases/`: one module per operation, `ports.py`, `support/`;

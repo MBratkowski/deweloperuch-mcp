@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-14
+
+### Added
+- Four MCP prompts that appear in Claude Desktop as ready-made commands: `znajdz_mieszkanie`, `ocen_oferte`, `przeswietl_dewelopera` and `porownaj_miasta`. They send no requests; they guide the model through the 13 tools. See [docs/mcp/prompts.md](docs/mcp/prompts.md).
+- Distribution on PyPI: `uvx deweloperuch-mcp` runs the server, `uvx --from deweloperuch-mcp deweloperuch --help` the CLI, and `pip install deweloperuch-mcp` works too.
+- Metadata for the official MCP Registry: entry `io.github.MBratkowski/deweloperuch-mcp` (`packaging/registry/server.json`); the release attaches a `server.json` with the bundle's sha256.
+- Claude Desktop extension icons in several sizes (16 to 512 px, simplified drawings for the small sizes) and `make icons` to regenerate them (needs `rsvg-convert` from librsvg).
+
+### Changed
+- The release workflow is split into a build job and separate GitHub Release and PyPI jobs (trusted publishing, environment `pypi`). See [CONTRIBUTING.md](CONTRIBUTING.md#packaging-and-releasing).
+- README: install options are now the Claude Desktop extension, `uvx` from PyPI, `uvx` from GitHub (pinned to `@v0.1.1`) and from source; badges added.
+
+## [0.1.0] - 2026-10-14
+
 ### Added
 - Claude Desktop extension `deweloperuch-mcp-<version>.mcpb` (one-click install, uv runtime, macOS and Linux; Windows is not supported) and an installable wheel and sdist, so the server also runs with `uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp deweloperuch-mcp`. `make package` builds them, `make smoke` checks them. See [README](README.md#install).
 - CI (`make fast` and the offline tests on every push and pull request) and a release workflow that builds the artifacts and attaches them to a GitHub release for every `v*` tag. See [CONTRIBUTING.md](CONTRIBUTING.md#packaging-and-releasing).
@@ -34,3 +48,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - The cache stores responses that have `max-age` but no `s-maxage`, respects `no-store` and `no-cache`, and no longer sends repeated requests while a response is fresh.
 - One malformed GUS dataset no longer breaks the others on the statistics page.
 - MCP validation errors no longer contain a link to the validation library's documentation.
+
+[Unreleased]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/MBratkowski/deweloperuch-mcp/releases/tag/v0.1.0

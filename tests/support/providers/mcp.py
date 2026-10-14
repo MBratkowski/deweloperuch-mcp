@@ -5,6 +5,7 @@ Fixtures (registered in tests/conftest.py): ``server`` over the test's fast limi
 """
 
 import json
+import re
 from collections.abc import Awaitable, Callable, Iterator
 from typing import Any, TypeVar
 
@@ -113,6 +114,34 @@ def tools(server: MCPServer[bootstrap.Session]) -> dict[str, dict[str, Any]]:
     return {tool["name"]: tool for tool in listing(server)["tools"]}
 
 
+def prompts(server: MCPServer[bootstrap.Session]) -> list[dict[str, Any]]:
+    """The prompts as ``prompts/list`` gives them to a client."""
+
+    async def read(client: Client) -> list[dict[str, Any]]:
+        listed = await client.list_prompts()
+        return [
+            prompt.model_dump(mode="json", by_alias=True, exclude_none=True)
+            for prompt in listed.prompts
+        ]
+
+    return with_client(server, read)
+
+
+def rendered(
+    server: MCPServer[bootstrap.Session], prompt: str, arguments: dict[str, str]
+) -> dict[str, Any]:
+    """``prompts/get`` of ``prompt``: its description and messages (role and content),
+    without the result's ``_meta`` (it carries the server's version)."""
+
+    async def get(client: Client) -> dict[str, Any]:
+        result = await client.get_prompt(prompt, arguments)
+        return result.model_dump(
+            mode="json", by_alias=True, exclude_none=True, include={"description", "messages"}
+        )
+
+    return with_client(server, get)
+
+
 @pytest.fixture
 def sessions(limiter: RequestLimiter) -> Sessions:
     """The server's session factory on the test's fast limiter; remembers what it opened."""
@@ -137,6 +166,15 @@ def calls(
     return anyio.run(main)
 
 
+TOOL_NAME = re.compile(r"\b(?:search|get|rank|estimate)_[a-z_]+\b")
+"""How the tools are named: a verb (search, get, rank, estimate) and what it is about."""
+
+
+def tools_named(text: str) -> list[str]:
+    """The tool names in ``text``, in the order it first names them."""
+    return list(dict.fromkeys(TOOL_NAME.findall(text)))
+
+
 TOOLS = (
     "search_locations",
     "search_offers",
@@ -152,3 +190,6 @@ TOOLS = (
     "estimate_property_value",
     "get_government_statistics",
 )
+
+
+PROMPTS = ("znajdz_mieszkanie", "ocen_oferte", "przeswietl_dewelopera", "porownaj_miasta")

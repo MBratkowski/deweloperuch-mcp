@@ -1,6 +1,6 @@
 [project]
 name = "deweloperuch-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server and CLI over deweloperuch.pl data (developer offer prices, RCN transactions, market statistics)"
 readme = "README.md"
 license = "MIT"
@@ -261,10 +261,10 @@ exhaustive = true
 
 [[tool.importlinter.contracts]]
 id = "d17-mcp-folders"
-name = "D17: consumers.mcp: server > tools > presenters > support"
+name = "D17: consumers.mcp: server > tools | prompts > presenters > support"
 type = "layers"
 containers = ["deweloperuch_mcp.consumers.mcp"]
-layers = ["server", "tools", "presenters", "support"]
+layers = ["server", "tools | prompts", "presenters", "support"]
 exhaustive = true
 
 [[tool.importlinter.contracts]]

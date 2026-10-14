@@ -5,7 +5,10 @@ besides ``--help``. Thirteen read-only tools (``TOOLS``): ``search_locations``,
 ``search_offers``, ``get_offer``, ``search_investments``, ``get_investment``,
 ``search_developers``, ``get_developer``, ``get_market_statistics``,
 ``get_transaction_statistics``, ``rank_locations``, ``get_building``,
-``estimate_property_value``, ``get_government_statistics``.
+``estimate_property_value``, ``get_government_statistics``. Four prompts (``PROMPTS``),
+conversation starters a person picks in the client: ``znajdz_mieszkanie``,
+``ocen_oferte``, ``przeswietl_dewelopera``, ``porownaj_miasta``; each is one user
+message that names the tools to use, and calls none itself.
 
 - One session (``bootstrap.new_session``) for the life of the server (the lifespan opens
   it and closes it on exit), so every call shares the limiter, the cache and the STOP latch. A STOP
@@ -30,10 +33,11 @@ besides ``--help``. Thirteen read-only tools (``TOOLS``): ``search_locations``,
   that names it and lists the tool's arguments; every input schema says so
   (``additionalProperties: false``).
 
-Tools are ``*Tool`` classes in ``tools/`` (D17), with their descriptions. The
-descriptions are for the model: in Polish, like the application's messages, and without
-backend names (no endpoints, no ``invest``/``sale``). Imports only the use cases, the models, the
-composition root and the consumers (D16; tests/architecture/test_layering.py).
+Tools are ``*Tool`` classes in ``tools/`` and prompts ``*Prompt`` classes in ``prompts/``
+(D17), with their descriptions. The descriptions are for the model: in Polish, like the
+application's messages, and without backend names (no endpoints, no ``invest``/``sale``).
+Imports only the use cases, the models, the composition root and the consumers (D16;
+tests/architecture/test_layering.py).
 """
 
 import argparse
@@ -45,12 +49,18 @@ from typing import Any
 
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError, UnexpectedToolError
+from mcp.server.mcpserver.prompts import Prompt
 from mcp.types import CallToolResult, InputRequiredResult
 from mcp.types import Tool as McpTool
 from pydantic import ValidationError
 
 from deweloperuch_mcp.bootstrap import Session, new_session
+from deweloperuch_mcp.consumers.mcp.prompts.assess_offer_prompt import AssessOfferPrompt
+from deweloperuch_mcp.consumers.mcp.prompts.check_developer_prompt import CheckDeveloperPrompt
+from deweloperuch_mcp.consumers.mcp.prompts.compare_cities_prompt import CompareCitiesPrompt
+from deweloperuch_mcp.consumers.mcp.prompts.find_apartment_prompt import FindApartmentPrompt
 from deweloperuch_mcp.consumers.mcp.support.calls import SessionContext
+from deweloperuch_mcp.consumers.mcp.support.prompt_base import PromptBase
 from deweloperuch_mcp.consumers.mcp.support.tool_base import ToolBase
 from deweloperuch_mcp.consumers.mcp.tools.estimate_property_value_tool import (
     EstimatePropertyValueTool,
@@ -118,6 +128,15 @@ TOOLS: tuple[ToolBase, ...] = (
     GetGovernmentStatisticsTool(),
 )
 """The tools in the order ``tools/list`` gives them."""
+
+
+PROMPTS: tuple[PromptBase, ...] = (
+    FindApartmentPrompt(),
+    AssessOfferPrompt(),
+    CheckDeveloperPrompt(),
+    CompareCitiesPrompt(),
+)
+"""The prompts in the order ``prompts/list`` gives them."""
 
 
 # --- the server ----------------------------------------------------------------------------
@@ -251,8 +270,9 @@ class Server(MCPServer[Session]):
 def build_server(
     open_session: Callable[[], Session] | None = None,
 ) -> MCPServer[Session]:
-    """The server with its tools (``TOOLS``); each run opens one session with ``open_session``
-    (default: ``bootstrap.new_session``, looked up when the server starts)."""
+    """The server with its tools (``TOOLS``) and prompts (``PROMPTS``); each run opens one
+    session with ``open_session`` (default: ``bootstrap.new_session``, looked up when the
+    server starts)."""
 
     @asynccontextmanager
     async def lifespan(_: MCPServer[Session]) -> AsyncIterator[Session]:
@@ -270,6 +290,12 @@ def build_server(
             title=tool.title,
             description=tool.description,
             annotations=tool.annotations,
+        )
+    for prompt in PROMPTS:
+        server.add_prompt(
+            Prompt.from_function(
+                prompt.render, name=prompt.name, title=prompt.title, description=prompt.description
+            )
         )
     return server
 

@@ -1,6 +1,16 @@
-<p align="center"><img src="assets/icon.svg" alt="deweloperuch-mcp icon" width="160"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/MBratkowski/deweloperuch-mcp/main/assets/icon.svg" alt="deweloperuch-mcp icon" width="160"></p>
 
 <h1 align="center">deweloperuch-mcp</h1>
+
+<p align="center">
+  <a href="https://github.com/MBratkowski/deweloperuch-mcp/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/MBratkowski/deweloperuch-mcp/ci.yml?branch=main&label=CI" alt="CI"></a>
+  <a href="https://github.com/MBratkowski/deweloperuch-mcp/releases/latest"><img src="https://img.shields.io/github/v/release/MBratkowski/deweloperuch-mcp" alt="Latest release"></a>
+  <a href="https://pypi.org/project/deweloperuch-mcp/"><img src="https://img.shields.io/pypi/v/deweloperuch-mcp" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/deweloperuch-mcp/"><img src="https://img.shields.io/pypi/pyversions/deweloperuch-mcp" alt="Python versions"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
+</p>
+
+<!-- mcp-name: io.github.MBratkowski/deweloperuch-mcp -->
 
 Ask an AI assistant about new-build apartments in Poland: asking prices with their history, real transaction prices and official statistics.
 
@@ -34,9 +44,9 @@ Pick the option that fits you. Supported systems: macOS and Linux. **Windows is 
 
 The first start installs Python and the dependencies with [uv](https://docs.astral.sh/uv/) and takes about a minute. The extension has no command-line tool; if the server is ever stopped (STOP), see [lifting a STOP without a checkout](docs/configuration.md#lifting-a-stop-without-a-checkout).
 
-### 2. With uv, straight from GitHub
+### 2. With uv, from PyPI
 
-Requires [uv](https://docs.astral.sh/uv/). Nothing to clone.
+Requires [uv](https://docs.astral.sh/uv/). Nothing to clone. (`pip install deweloperuch-mcp` works too.)
 
 **Claude Desktop** (`claude_desktop_config.json`; any MCP client that starts a stdio server works the same way). If Claude Desktop reports `spawn uvx ENOENT`, put the full path from `which uvx` in `command`:
 
@@ -45,7 +55,7 @@ Requires [uv](https://docs.astral.sh/uv/). Nothing to clone.
   "mcpServers": {
     "deweloperuch": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/MBratkowski/deweloperuch-mcp", "deweloperuch-mcp"]
+      "args": ["deweloperuch-mcp"]
     }
   }
 }
@@ -54,18 +64,27 @@ Requires [uv](https://docs.astral.sh/uv/). Nothing to clone.
 **Claude Code:**
 
 ```
-claude mcp add deweloperuch -- uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp deweloperuch-mcp
+claude mcp add deweloperuch -- uvx deweloperuch-mcp
 ```
 
 **CLI:**
 
 ```
-uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp deweloperuch --help
+uvx --from deweloperuch-mcp deweloperuch --help
 ```
 
-To pin a release, add `@v0.1.0` at the end of the git URL.
+### 3. With uv, straight from GitHub
 
-### 3. From source (developers)
+The same as option 2 with `--from git+https://github.com/MBratkowski/deweloperuch-mcp@v0.1.1` (`@v0.1.1` pins the release; drop it to follow `main`):
+
+```
+claude mcp add deweloperuch -- uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp@v0.1.1 deweloperuch-mcp
+uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp@v0.1.1 deweloperuch --help
+```
+
+In `claude_desktop_config.json` use `"args": ["--from", "git+https://github.com/MBratkowski/deweloperuch-mcp@v0.1.1", "deweloperuch-mcp"]`.
+
+### 4. From source (developers)
 
 Requirements: Python 3.11 or newer and [uv](https://docs.astral.sh/uv/).
 
@@ -100,6 +119,17 @@ Overview, argument rules, errors and result sizes: [docs/mcp/README.md](docs/mcp
 | [`get_government_statistics`](docs/mcp/tools/get_government_statistics.md) | Official GUS and NBP time series (dwellings, NBP prices, unemployment, wages, demography) for Poland, aggregates and 66 cities. |
 
 Every tool rejects arguments that are not in its schema with an error that lists the allowed names. Tool descriptions, error messages and CLI output are in Polish, because the service and its users are Polish.
+
+## Prompts
+
+Four ready-made prompts appear in Claude Desktop as commands. They send no requests themselves; they guide the model through the tools above. Arguments and details: [docs/mcp/prompts.md](docs/mcp/prompts.md).
+
+| Prompt | Description |
+|---|---|
+| `znajdz_mieszkanie` ("Znajdź mieszkanie") | Flats from developers in one city with a budget, area and district: a table of offers from the lowest price per m². |
+| `ocen_oferte` ("Oceń ofertę") | A price assessment of one offer: price history, comparison with the city market and with the valuation from nearby transactions. |
+| `przeswietl_dewelopera` ("Prześwietl dewelopera") | A developer profile: where and how much it builds, its investments, active offers, prices and their changes. |
+| `porownaj_miasta` ("Porównaj miasta") | A comparison of the flat market of several cities (at most 5) in one table: asking prices, RCN transaction prices, optionally wages and unemployment. |
 
 ## CLI commands
 
@@ -172,7 +202,7 @@ Both the variable and `-m live` are required. Scenarios and request budget: [tes
 
 | Document | Contents |
 |---|---|
-| [docs/mcp/README.md](docs/mcp/README.md) | The MCP server: tools, client configuration, argument rules, errors, result sizes |
+| [docs/mcp/README.md](docs/mcp/README.md) | The MCP server: tools, prompts, client configuration, argument rules, errors, result sizes |
 | [docs/cli/README.md](docs/cli/README.md) | The `deweloperuch` CLI: commands, output format, exit codes |
 | [docs/configuration.md](docs/configuration.md) | Environment variables, files, the request limiter, the cache and the STOP lock |
 | [docs/discovery/README.md](docs/discovery/README.md) | Map of the data layer: service architecture, access channels, key findings |

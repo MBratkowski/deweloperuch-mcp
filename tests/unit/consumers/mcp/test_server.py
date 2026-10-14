@@ -27,17 +27,22 @@ from deweloperuch_mcp.usecases.search_offers import SearchOffers
 from support.builders.investments import investment_with_offers
 from support.builders.offers import offers_page
 from support.checks.leaks import BACKEND_NAMES, SIZE_BUDGET, SIZE_BUDGET_50
-from support.paths import SNAPSHOT
+from support.paths import PROMPTS_SNAPSHOT, SNAPSHOT
 from support.providers.mcp import (
+    PROMPTS,
+    TOOL_NAME,
     TOOLS,
     Sessions,
     call,
     data,
     keys,
     listing,
+    prompts,
     properties,
+    rendered,
     text,
     tools,
+    tools_named,
     with_client,
 )
 from support.providers.routes.government_statistics import stats_routes
@@ -53,8 +58,52 @@ pytestmark = pytest.mark.usefixtures("unix_sockets_for_the_event_loop")
 UPDATE_SNAPSHOTS = "DEWELOPERUCH_UPDATE_SNAPSHOTS"
 
 
-TOOL_NAME = re.compile(r"\b(?:search|get|rank|estimate)_[a-z_]+\b")
-"""How the tools are named: a verb (search, get, rank, estimate) and what it is about."""
+PROMPT_EXAMPLES: tuple[tuple[str, dict[str, str], list[str]], ...] = (
+    (
+        "znajdz_mieszkanie",
+        {
+            "miasto": "Kraków",
+            "budzet_max": "800000",
+            "metraz_min": "40",
+            "metraz_max": "60",
+            "dzielnica": "Podgórze",
+        },
+        ["search_locations", "search_offers", "get_offer"],
+    ),
+    ("znajdz_mieszkanie", {"miasto": "Gdańsk"}, ["search_locations", "search_offers", "get_offer"]),
+    (
+        "ocen_oferte",
+        {"offer_id": "2377", "investment_slug": "smolna"},
+        ["get_offer", "get_market_statistics", "get_investment", "estimate_property_value"],
+    ),
+    (
+        "przeswietl_dewelopera",
+        {"nazwa": "Atal", "miasto": "Kraków"},
+        [
+            "search_developers",
+            "search_locations",
+            "get_developer",
+            "search_investments",
+            "get_investment",
+        ],
+    ),
+    (
+        "przeswietl_dewelopera",
+        {"nazwa": "Dom Development"},
+        ["search_developers", "get_developer", "search_investments", "get_investment"],
+    ),
+    (
+        "porownaj_miasta",
+        {"miasta": "Kraków, Wrocław, Gdańsk"},
+        [
+            "search_locations",
+            "get_market_statistics",
+            "get_transaction_statistics",
+            "get_government_statistics",
+        ],
+    ),
+)
+"""Arguments a person gives each prompt, and the tools its message names, in that order."""
 
 
 def test_the_server_lists_its_read_only_tools(server: MCPServer[bootstrap.Session]) -> None:
@@ -185,6 +234,71 @@ def test_the_listing_matches_the_snapshot(server: MCPServer[bootstrap.Session]) 
         SNAPSHOT.write_text(seen, encoding="utf-8")
 
     assert seen == SNAPSHOT.read_text(encoding="utf-8")
+
+
+def test_the_server_lists_its_prompts_with_their_arguments(
+    server: MCPServer[bootstrap.Session],
+) -> None:
+    listed = {prompt["name"]: prompt for prompt in prompts(server)}
+
+    assert list(listed) == list(PROMPTS)
+    assert {
+        name: [(argument["name"], argument["required"]) for argument in prompt["arguments"]]
+        for name, prompt in listed.items()
+    } == {
+        "znajdz_mieszkanie": [
+            ("miasto", True),
+            ("budzet_max", False),
+            ("metraz_min", False),
+            ("metraz_max", False),
+            ("dzielnica", False),
+        ],
+        "ocen_oferte": [("offer_id", True), ("investment_slug", True)],
+        "przeswietl_dewelopera": [("nazwa", True), ("miasto", False)],
+        "porownaj_miasta": [("miasta", True)],
+    }
+    for prompt in listed.values():
+        assert prompt["title"] and prompt["description"], prompt["name"]
+        assert all(argument.get("description") for argument in prompt["arguments"])
+        assert not BACKEND_NAMES.search(json.dumps(prompt, ensure_ascii=False)), prompt["name"]
+
+
+@pytest.mark.parametrize(("prompt", "arguments", "named"), PROMPT_EXAMPLES)
+def test_a_prompt_is_one_user_message_naming_its_tools_in_order(
+    server: MCPServer[bootstrap.Session],
+    service: respx.MockRouter,
+    prompt: str,
+    arguments: dict[str, str],
+    named: list[str],
+) -> None:
+    """A prompt is text that starts a conversation: it calls no tool and sends nothing."""
+    messages = rendered(server, prompt, arguments)["messages"]
+
+    assert len(messages) == 1
+    assert (messages[0]["role"], messages[0]["content"]["type"]) == ("user", "text")
+    said = messages[0]["content"]["text"]
+    assert tools_named(said) == named
+    assert set(named) <= set(TOOLS)
+    assert not BACKEND_NAMES.search(said), BACKEND_NAMES.findall(said)
+    assert service.calls.call_count == 0
+
+
+def test_the_prompts_match_the_snapshot(server: MCPServer[bootstrap.Session]) -> None:
+    """The prompts as a client lists them and their messages for ``PROMPT_EXAMPLES``.
+    After an intended change: DEWELOPERUCH_UPDATE_SNAPSHOTS=1 uv run pytest
+    tests/unit/consumers/mcp/test_server.py"""
+    seen = {
+        "prompts": prompts(server),
+        "rendered": [
+            {"prompt": prompt, "arguments": arguments, **rendered(server, prompt, arguments)}
+            for prompt, arguments, _ in PROMPT_EXAMPLES
+        ],
+    }
+    written = json.dumps(seen, ensure_ascii=False, indent=2) + "\n"
+    if os.environ.get(UPDATE_SNAPSHOTS) == "1":
+        PROMPTS_SNAPSHOT.write_text(written, encoding="utf-8")
+
+    assert written == PROMPTS_SNAPSHOT.read_text(encoding="utf-8")
 
 
 def test_server_info_and_instructions(server: MCPServer[bootstrap.Session]) -> None:
