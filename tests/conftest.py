@@ -4,11 +4,17 @@ The helpers live in ``tests/support`` (no tests there); their asserts are rewrit
 the tests' own, so a failing helper shows the values it compared.
 """
 
+import os
 from collections.abc import Iterator
 
 import pytest
 
 from deweloperuch_mcp.api.http import transport
+
+# Typer forces a colour terminal when GITHUB_ACTIONS, FORCE_COLOR or PY_COLORS is set; the
+# CLI goldens and assertions compare plain text, as a pipe gets it. Set before the
+# providers below import Typer (also inherited by the subprocesses the tests start).
+os.environ["_TYPER_FORCE_DISABLE_TERMINAL"] = "1"
 
 pytest.register_assert_rewrite("support")
 
