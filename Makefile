@@ -4,7 +4,7 @@
 # npm and PyPI.
 
 .PHONY: fast check lint format-check types imports test dead complexity duplicates \
-	package mcpb smoke icons
+	package mcpb smoke icons skill
 
 ## fast: what to run before every hand-over (a few seconds)
 fast: lint format-check types imports
@@ -62,11 +62,20 @@ icons:
 		rsvg-convert -w $$size -h $$size assets/icon.svg -o assets/icons/icon-$$size.png; \
 	done
 
+## skill: the agent skill's skills/deweloperuch-cli/REFERENCE.md, generated from the CLI
+## (tests/skill fails while it is out of date); SKILL.md and EXAMPLES.md are written by hand
+skill:
+	uv run python packaging/skill_reference.py
+
 ## smoke: start the built wheel and the unpacked extension as an MCP client does
-## (initialize + tools/list, no tool call, so no request to the service); run `package` first
+## (initialize + tools/list, no tool call, so no request to the service), and install the
+## wheel's agent skill into build/ (it must equal skills/); run `package` first
 WHEEL = dist/deweloperuch_mcp-$(shell uv version --short)-py3-none-any.whl
 smoke:
 	uv run python packaging/smoke.py -- \
 		uvx --isolated --refresh-package deweloperuch-mcp --from $(WHEEL) deweloperuch-mcp
 	uvx --isolated --from $(WHEEL) deweloperuch --help > /dev/null
+	rm -rf build/skill-smoke
+	uvx --isolated --from $(WHEEL) deweloperuch skill install --dir build/skill-smoke > /dev/null
+	diff -r -x .DS_Store skills/deweloperuch-cli build/skill-smoke/deweloperuch-cli
 	uv run python packaging/smoke.py -- uv run --directory build/mcpb-unpacked src/server.py

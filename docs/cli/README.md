@@ -18,6 +18,10 @@ Commands:
   stop         Blokada STOP: po 401, 403, 429 albo challenge Cloudflare żaden
                proces (CLI, serwer MCP, recon) nie wysyła zapytań. Działa
                offline.
+  skill        Skill deweloperuch-cli dla agentów AI (Claude Code, Codex,
+               Cursor i innych): jak używać tego CLI. Zalecana instalacja: npx
+               skills add MBratkowski/deweloperuch-mcp (wybierasz agenta); bez
+               Node.js: deweloperuch skill install. Działa offline.
 ```
 
 `deweloperuch` without arguments prints the help and ends with exit code 2 (a click convention). The CLI's own help and output texts are Polish product texts and are quoted verbatim here; the built-in help and usage-error texts of typer/click are in English.
@@ -41,6 +45,7 @@ Commands:
 | [`stats government LOCATION DATASET`](commands/stats-government.md) | Shows GUS and NBP statistics of `polska`, an aggregate or a city as a table of periods (`--periods`, default 12, max 1000). |
 | [`stop status [--json]`](commands/stop-status.md) | Shows the STOP lock shared by all processes; offline, immediately. |
 | [`stop clear`](commands/stop-clear.md) | Clears the STOP lock. Only after checking the cause. |
+| [`skill install\|show\|path`](commands/skill.md) | The `deweloperuch-cli` agent skill: installs it into an agent's skills folder, prints it or shows its folder; offline. |
 
 Typical order: `locations search` → `offers search` → `investments get` or `offers get`; `investments search` and `developers search` turn names into slugs. `stats government` and `stats cities` need no earlier search. `valuation estimate` takes coordinates (for example from `locations search` or `investments get`).
 

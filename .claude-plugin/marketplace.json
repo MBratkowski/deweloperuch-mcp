@@ -1,0 +1,18 @@
+{
+  "name": "deweloperuch-mcp",
+  "owner": {
+    "name": "deweloperuch-mcp contributors"
+  },
+  "metadata": {
+    "description": "The deweloperuch plugin: an agent skill for the deweloperuch CLI (Polish new-build apartment prices)."
+  },
+  "plugins": [
+    {
+      "name": "deweloperuch",
+      "source": "./",
+      "description": "Teaches Claude to use the read-only deweloperuch CLI: developers' asking prices with price history, RCN transaction prices, valuations, GUS and NBP statistics for Poland.",
+      "category": "data",
+      "homepage": "https://github.com/MBratkowski/deweloperuch-mcp"
+    }
+  ]
+}

@@ -21,6 +21,7 @@ from deweloperuch_mcp import allowlist, flight, http_policy, identity, retry_aft
 loaded = sorted(sys.modules)
 print(json.dumps({{
     "user_agent_is_shared": config.USER_AGENT is identity.USER_AGENT,
+    "user_agent": config.USER_AGENT,
     "base_url_is_shared": config.BASE_URL is identity.BASE_URL,
     "limiter_is_shared": config.RequestLimiter is throttle.RequestLimiter
         and config.StoppedError is throttle.StoppedError,
@@ -94,6 +95,15 @@ def test_config_reexports_user_agent_and_base_url(tmp_path: Path) -> None:
 
     assert data["user_agent_is_shared"] is True
     assert data["base_url_is_shared"] is True
+
+
+def test_config_user_agent_without_package_metadata(tmp_path: Path) -> None:
+    """A bare python3 sees no installed package: the project still names itself."""
+    data = run_isolated(tmp_path)
+
+    assert data["user_agent"] == (
+        "deweloperuch-mcp/0+unknown (+https://github.com/MBratkowski/deweloperuch-mcp)"
+    )
 
 
 def test_config_refuses_old_python_before_importing_the_package(tmp_path: Path) -> None:

@@ -2,6 +2,7 @@
 
 from support.golden.cli import Case
 from support.golden.cli_cases import (
+    agent_skill,
     app,
     clear_stop,
     estimate_property_value,
@@ -22,6 +23,7 @@ from support.golden.cli_cases import (
 )
 
 CASES: dict[str, Case] = {
+    **agent_skill.CASES,
     **app.CASES,
     **clear_stop.CASES,
     **estimate_property_value.CASES,

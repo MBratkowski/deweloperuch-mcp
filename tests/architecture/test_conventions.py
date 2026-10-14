@@ -1,11 +1,14 @@
 """D17: one code pattern per layer, checked on the source (AST).
 
-Every module of ``models``, ``usecases``, ``api`` and ``consumers`` follows these rules,
+Every module of ``models``, ``usecases``, ``api``, ``consumers`` and ``tooling`` (the
+CLI's tooling outside the business layers) follows these rules,
 without exceptions (the migration's allowlist is gone): any break fails
 ``test_every_module_follows_d17``.
 
-- **Functions**: no public module-level functions in ``models``, ``usecases``, ``api``.
-- **Names**: no module basename in two places; a role module is named after its main class
+- **Functions**: no public module-level functions in ``models``, ``usecases``, ``api``,
+  ``tooling``.
+- **Names**: no module basename in two places; a role module (and a ``tooling`` module) is
+  named after its main class
   (``models/price_history.py`` -> ``PriceHistory``, ``api/adapters/offers_api.py`` ->
   ``OffersApi``...); a view never has a model's name; views live in ``*_views.py``.
 - **Folders**: role folders (``ROLE_FOLDERS``) hold only modules of their role; the top of
@@ -36,7 +39,7 @@ import pytest
 from support.checks import conventions
 from support.checks.conventions import PACKAGE, SOURCE, Module, classes, tree_of
 
-LAYERS = ("models", "usecases", "api", "consumers")
+LAYERS = ("models", "usecases", "api", "consumers", "tooling")
 
 ROLE_FOLDERS = {
     "api/adapters": "_api",
@@ -168,7 +171,7 @@ DTO_BASES = {
 
 
 def functions_rule(module: Module) -> list[str]:
-    if module.layer not in ("models", "usecases", "api"):
+    if module.layer not in ("models", "usecases", "api", "tooling"):
         return []
     return [f"public function {f.name}()" for f in public_functions(module.tree)]
 
@@ -177,7 +180,7 @@ def names_rule(module: Module) -> list[str]:
     said = []
     if BASENAMES[module.base] > 1:
         said.append(f"basename {module.base!r} is used by another module")
-    named_after_class = module.folder in ("models", "usecases") or (
+    named_after_class = module.folder in ("models", "usecases", "tooling") or (
         module.folder in ROLE_FOLDERS and module.folder != "consumers/cli/commands"
     )
     if named_after_class and module.path not in PLUMBING and module.main not in module.classes:
@@ -399,6 +402,8 @@ def test_the_offers_reference_exists_in_every_layer() -> None:
     ("module", "source", "found"),
     [
         ("models/offer", "def helper():\n    pass", "public function helper"),
+        ("tooling/agent_skill_installer", "def install():\n    pass", "public function install"),
+        ("tooling/agent_skill_installer", "class Installer:\n    pass", "no class AgentSkill"),
         ("models/offer", "class Offer:\n    pass", "no frozen dataclass"),
         ("usecases/search_offers", "class SearchOffers:\n    def __call__(self): ...", "public"),
         ("usecases/search_offers", "class SearchOffers:\n    def execute(self): ...", "parse"),

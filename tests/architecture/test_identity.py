@@ -1,7 +1,11 @@
-"""The service's base URL and the User-Agent have exactly one definition (D9)."""
+"""The service's base URL and the User-Agent have exactly one definition (D9).
+
+The User-Agent says what the client is (D2): the project, its version and its repository.
+"""
 
 import ast
 import re
+from importlib import metadata
 from pathlib import Path
 
 import pytest
@@ -9,16 +13,20 @@ import pytest
 from deweloperuch_mcp import identity
 from support.paths import REPO
 
-# TODO(U1): the user chooses the final User-Agent (D9). Changing it must be a
-# deliberate decision, so the current value is pinned here, and only here.
-EXPECTED_USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/130.0 Safari/537.36"
-)
+REPOSITORY = "https://github.com/MBratkowski/deweloperuch-mcp"
+# Changing the identifier must be a deliberate decision; only the version moves with releases.
+EXPECTED_USER_AGENT = f"deweloperuch-mcp/{metadata.version('deweloperuch-mcp')} (+{REPOSITORY})"
+BROWSER_TOKENS = ("Mozilla", "Chrome", "Safari", "AppleWebKit", "KHTML", "Gecko", "Firefox")
 
 
 def test_user_agent_is_pinned() -> None:
     assert identity.USER_AGENT == EXPECTED_USER_AGENT
+
+
+def test_user_agent_does_not_imitate_a_browser() -> None:
+    found = [token for token in BROWSER_TOKENS if token.lower() in identity.USER_AGENT.lower()]
+
+    assert found == []
 
 
 def test_base_url_is_the_service_origin() -> None:
@@ -29,6 +37,8 @@ def test_base_url_is_the_service_origin() -> None:
 # --- one definition ------------------------------------------------------------
 
 UA_VARIABLE = re.compile(r"(?i)^(ua|user_agent)$|_user_agent$")
+PRODUCT_TOKEN = re.compile(r"deweloperuch-mcp/\d")
+"""The project's identifier with a version: a copy, possibly of an older release's value."""
 
 
 def _literal_text(node: ast.AST) -> str | None:
@@ -66,8 +76,8 @@ def _contains_literal(node: ast.expr) -> bool:
 def _defines_user_agent(node: ast.expr | ast.stmt | ast.keyword) -> bool:
     text = _literal_text(node)
     if text is not None:
-        # The value itself (also once U1 replaces it) and any browser-style User-Agent.
-        return identity.USER_AGENT in text or "Mozilla/" in text
+        # The value itself, an identifier with any version, any browser-style User-Agent.
+        return identity.USER_AGENT in text or "Mozilla/" in text or bool(PRODUCT_TOKEN.search(text))
     if isinstance(node, ast.Dict):  # headers={"User-Agent": ...}
         return any(
             key is not None
@@ -92,9 +102,9 @@ def user_agent_definitions(source: str) -> list[int]:
 
     Static backstop only. Not covered: ``headers["User-Agent"] = "x"`` (Subscript
     target), ``req.add_header("User-Agent", "x")``, ``[("User-Agent", "x")]`` and
-    ``h.setdefault("user-agent", "x")``, unless the value contains "Mozilla/" or the
-    current USER_AGENT. The HTTP client therefore needs a behaviour test (respx)
-    asserting every request sends ``identity.USER_AGENT``.
+    ``h.setdefault("user-agent", "x")``, unless the value contains "Mozilla/",
+    "deweloperuch-mcp/<digit>" or the current USER_AGENT. The HTTP client therefore needs
+    a behaviour test (respx) asserting every request sends ``identity.USER_AGENT``.
     """
     return sorted(
         {
@@ -120,6 +130,7 @@ def user_agent_definitions(source: str) -> list[int]:
         'DEFAULT_USER_AGENT: str = "deweloperuch-mcp/0.1"',
         'self._user_agent = f"deweloperuch-mcp/{VERSION}"',
         'user_agent = "deweloperuch-mcp/" + VERSION',
+        'HEADERS = [("X-Client", "deweloperuch-mcp/0.1.1 (+https://github.com/x/y)")]',
     ],
 )
 def test_guard_flags_own_user_agent(source: str) -> None:
@@ -147,8 +158,8 @@ def test_guard_accepts_shared_constant_and_header_name(source: str) -> None:
 
 
 def test_guard_finds_a_copy_of_any_value(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Once U1 picks a non-browser value, a pasted copy is still caught."""
-    value = "deweloperuch-mcp/1.0 (+kontakt)"
+    """A pasted copy of the current value is caught, whatever the value is."""
+    value = "projekt (+kontakt)"
     monkeypatch.setattr(identity, "USER_AGENT", value)
 
     source = f'import x\n\nHEADERS = [("Accept", "*/*"), ("X-Client", "{value}")]'
@@ -167,9 +178,8 @@ def test_user_agent_is_defined_only_in_identity() -> None:
 
     expected = {Path("src/deweloperuch_mcp/identity.py")}
     assert set(found) == expected, (
-        f"User-Agent definitions (file: lines): {found}. The value must be one literal "
-        "(adjacent strings are fine) assigned to USER_AGENT in identity.py and nowhere "
-        "else; elsewhere use identity.USER_AGENT (config.USER_AGENT in recon/). A docstring "
-        "that mentions 'Mozilla/' or a value built with '+' or an f-string counts as a "
-        "definition too."
+        f"User-Agent definitions (file: lines): {found}. USER_AGENT is built in "
+        "identity.py and nowhere else; elsewhere use identity.USER_AGENT (config.USER_AGENT "
+        "in recon/). A literal that mentions 'Mozilla/' or 'deweloperuch-mcp/<version>', "
+        "or a UA-named variable built with '+' or an f-string, counts as a definition too."
     )

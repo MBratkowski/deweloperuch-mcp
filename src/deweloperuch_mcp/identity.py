@@ -5,18 +5,34 @@ request (D9). It lives in the package, not in ``recon/``, because an installed
 package (e.g. via ``uvx``) does not see the repo's ``recon/`` directory; recon
 scripts get these constants through ``recon/config.py``, which re-exports them.
 
-Keep this module free of imports: ``recon/`` scripts load it without installing
-the package or its dependencies.
+Keep this module stdlib-only: ``recon/`` scripts load it without installing the
+package or its dependencies.
 """
+
+from importlib import metadata
 
 BASE_URL = "https://deweloperuch.pl"
 """Service origin, without a trailing slash."""
 
-# TODO(U1): the user picks the final User-Agent when deciding U1 (D9). Until then this
-# is the value recon/scan_bundles.py had been sending on its own before A#3; now every
-# request (probe, scanner, the package's client) sends this constant. Do not define a
-# User-Agent anywhere else; tests/architecture/test_identity.py guards that.
-USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/130.0 Safari/537.36"
-)
+DISTRIBUTION = "deweloperuch-mcp"
+"""The package's name, also the product name in the User-Agent."""
+
+REPOSITORY_URL = "https://github.com/MBratkowski/deweloperuch-mcp"
+
+UNKNOWN_VERSION = "0+unknown"
+"""The version when no package metadata is available (e.g. ``python3 recon/<script>.py``)."""
+
+
+def installed_version() -> str:
+    """The installed package's version, or ``UNKNOWN_VERSION`` without package metadata."""
+    try:
+        return metadata.version(DISTRIBUTION)
+    except metadata.PackageNotFoundError:
+        return UNKNOWN_VERSION
+
+
+# The authors of deweloperuch.pl agreed to this project's use of the service on
+# 2026-10-14. The client says what it is: the project's name and version, and its
+# repository as the contact, in the usual "product/version (+URL)" form (D2). Do not
+# define a User-Agent anywhere else; tests/architecture/test_identity.py guards that.
+USER_AGENT = f"{DISTRIBUTION}/{installed_version()} (+{REPOSITORY_URL})"

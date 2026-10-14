@@ -72,7 +72,7 @@ Then restart the MCP server, which stays latched after a STOP.
 
 ## Package client
 
-The client (`deweloperuch_mcp.api.http.transport`) is synchronous (`httpx`), with the User-Agent from `identity`. Every request, including reading the body, fits in one slot of the shared limiter.
+The client (`deweloperuch_mcp.api.http.transport`) is synchronous (`httpx`), with the User-Agent from `identity`: `deweloperuch-mcp/<version> (+https://github.com/MBratkowski/deweloperuch-mcp)` (the version of the installed package, `0+unknown` when it cannot be read). The client states plainly what it is; the authors of the service agreed to the project's use of it (2026-10-14), and it stays frugal all the same. Every request, including reading the body, fits in one slot of the shared limiter.
 
 | Parameter | Value | Description |
 |---|---|---|
