@@ -38,15 +38,21 @@ _PAUSE_LEFT = re.compile(r"trwa jeszcze ok\. \d+ s")
 _JSON_NUMBERS = re.compile(r'"(pid|seconds_left)": [0-9.eE+-]+')
 
 
+# The text of an OS error differs between systems (unlinking a directory is EPERM on
+# macOS, EISDIR on Linux): the goldens keep only that an OS error happened.
+_OS_ERROR = re.compile(r"\[Errno \d+\] [^:'\n]+")
+
+
 def scrub(text: str, *, paths: dict[str, str]) -> str:
-    """``text`` with times, PIDs, seconds left (also as JSON numbers) and the given paths
-    as placeholders."""
+    """``text`` with times, PIDs, seconds left (also as JSON numbers), OS error texts and
+    the given paths as placeholders."""
     for path, placeholder in sorted(paths.items(), key=lambda item: -len(item[0])):
         text = text.replace(path, placeholder)
     text = _TIME.sub("<TIME>", text)
     text = _PID.sub("PID <PID>", text)
     text = _JSON_NUMBERS.sub(r'"\1": "<NUMBER>"', text)
     text = _PAUSE_LEFT.sub("trwa jeszcze ok. <N> s", text)
+    text = _OS_ERROR.sub("[Errno <N>] <OS error>", text)
     return _SECONDS_LEFT.sub("(za <N> s)", text)
 
 

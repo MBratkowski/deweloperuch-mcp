@@ -8,7 +8,7 @@
     ""
   ],
   "stderr": [
-    "Błąd: nie udało się zdjąć zapisu STOP: [Errno 1] Operation not permitted: '<LOCK_DIR>/stop.json'",
+    "Błąd: nie udało się zdjąć zapisu STOP: [Errno <N>] <OS error>: '<LOCK_DIR>/stop.json'",
     ""
   ],
   "requests": []
