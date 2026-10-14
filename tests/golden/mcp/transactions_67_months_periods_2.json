@@ -1,0 +1,50 @@
+{
+  "calls": [
+    {
+      "tool": "get_transaction_statistics",
+      "arguments": {
+        "city": "warszawa",
+        "periods": 2
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "city_slug": "warszawa",
+        "granularity": "month",
+        "total": 67,
+        "returned": 2,
+        "truncated": true,
+        "available_from": "2021-01",
+        "hint": "Pokazano ostatnie 2 z 67 okresów (dane od 2021-01); starsze pokaże większe periods (najwyżej 60).",
+        "note": "Ostatnie miesiące są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z pełnymi okresami.",
+        "stats_url": "https://deweloperuch.pl/statystyki/ceny-transakcyjne/mieszkania/warszawa",
+        "periods": [
+          {
+            "period": "2026-06",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2026-07",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa [accept: application/json]"
+  ]
+}

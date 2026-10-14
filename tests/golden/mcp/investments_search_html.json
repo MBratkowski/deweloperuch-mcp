@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "city": "sopot"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Wyszukiwanie inwestycji w 'sopot': Serwis zwrócił stronę HTML zamiast danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "UnexpectedResponseError: Wyszukiwanie inwestycji w 'sopot': Serwis zwrócił stronę HTML zamiast danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi. Szczegóły: /api/map/investments: oczekiwano JSON, przyszedł HTML"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "--name",
+    "k"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: name: podaj od 2 do 100 znaków nazwy inwestycji, podano 'k'.",
+    ""
+  ],
+  "requests": []
+}

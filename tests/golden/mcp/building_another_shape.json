@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "get_building",
+      "arguments": {
+        "building_slug": "23-marca-79c-sopot"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Budynek '23-marca-79c-sopot': Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "UnexpectedResponseError: Budynek '23-marca-79c-sopot': Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi. Szczegóły: /api/map/transactions/visible/23-marca-79c-sopot: invest_rcn_id: Field required; name: Field required; city: Field required (i 3 innych)"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/transactions/visible/23-marca-79c-sopot [accept: application/json]"
+  ]
+}

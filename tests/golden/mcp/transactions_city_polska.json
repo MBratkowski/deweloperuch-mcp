@@ -1,0 +1,24 @@
+{
+  "calls": [
+    {
+      "tool": "get_transaction_statistics",
+      "arguments": {
+        "city": "polska"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "city: oczekiwano slug miasta bez polskich znaków, np. warszawa, krakow (nie polska: cała Polska nie jest obsługiwana); slug podaje search_locations (city_slug); podano 'polska'.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: city: oczekiwano slug miasta bez polskich znaków, np. warszawa, krakow (nie polska: cała Polska nie jest obsługiwana); slug podaje search_locations (city_slug); podano 'polska'. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

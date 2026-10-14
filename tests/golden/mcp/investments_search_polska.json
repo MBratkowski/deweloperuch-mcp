@@ -1,0 +1,24 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "city": "polska"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "city=polska nie działa przy wyszukiwaniu inwestycji: podaj slug jednego miasta (search_locations) albo szukaj w całym kraju po nazwie (name, bez city).",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: city=polska nie działa przy wyszukiwaniu inwestycji: podaj slug jednego miasta (search_locations) albo szukaj w całym kraju po nazwie (name, bez city). Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

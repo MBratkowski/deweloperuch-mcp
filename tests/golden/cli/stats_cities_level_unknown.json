@@ -1,0 +1,21 @@
+{
+  "args": [
+    "stats",
+    "cities",
+    "--level",
+    "gmina"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch stats cities [OPTIONS]",
+    "Try 'deweloperuch stats cities --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for '--level': 'gmina' is not one of 'city', 'powiat'.                             │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

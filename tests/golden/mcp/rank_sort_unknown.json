@@ -1,0 +1,19 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "sort": "price_desc"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Błędny argument narzędzia rank_locations: sort musi być jedną z wartości transactions_desc, price_per_m2_desc, price_per_m2_asc, podano \"price_desc\". Popraw i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

@@ -1,0 +1,27 @@
+{
+  "args": [
+    "valuation",
+    "estimate",
+    "--lat",
+    "52.2297",
+    "--lng",
+    "21.0122",
+    "--area",
+    "50",
+    "--lat",
+    "52,2297"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch valuation estimate [OPTIONS]",
+    "Try 'deweloperuch valuation estimate --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for '--lat': '52,2297' is not a valid float.                                       │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

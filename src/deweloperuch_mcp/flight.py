@@ -155,22 +155,19 @@ def component_props(payload: str | bytes) -> Iterator[tuple[str, Any]]:
     ``children`` is skipped. Values that are references (``"$2:props:..."``) are
     yielded as they are.
     """
-    for row in rows(payload):
-        if row.tag:
-            continue
-        try:
-            tree = json.loads(row.text)
-        except (ValueError, RecursionError):
-            continue
-        stack: list[Any] = [tree]
-        while stack:
-            node = stack.pop()
-            if isinstance(node, dict):
-                stack.extend(reversed(node.values()))
-            elif isinstance(node, list):
-                if _is_client_element(node):
-                    yield from ((k, v) for k, v in node[3].items() if k != "children")
-                stack.extend(reversed(node))
+    for tree in _model_trees(payload):
+        for node in _lists_in(tree):
+            if _is_client_element(node):
+                yield from ((k, v) for k, v in node[3].items() if k != "children")
+
+
+NOT_FOUND_DIGEST = "NEXT_HTTP_ERROR_FALLBACK;404"
+"""``digest`` of the error row of a page Next.js answers with ``notFound()``.
+
+[P 2026-10-10] tests/fixtures/rsc/unknown_city_perPage10.rsc (an unknown city: HTTP 200,
+no ``initialData``, docs/discovery/pages-rsc.md "Nieznane miasto"); the page of a known
+city has no error row. The ``notFound`` prop is on every page, so it is no marker.
+"""
 
 
 def error_digests(payload: str | bytes) -> list[str]:
@@ -190,6 +187,31 @@ def error_digests(payload: str | bytes) -> list[str]:
         if isinstance(value, dict) and isinstance(value.get("digest"), str):
             found.append(value["digest"])
     return found
+
+
+def _model_trees(payload: str | bytes) -> Iterator[Any]:
+    """The decoded JSON of each model row (untagged), in order; rows that are not JSON
+    are skipped."""
+    for row in rows(payload):
+        if row.tag:
+            continue
+        try:
+            tree = json.loads(row.text)
+        except (ValueError, RecursionError):
+            continue
+        yield tree
+
+
+def _lists_in(tree: Any) -> Iterator[list[Any]]:
+    """Every list in ``tree``, ``tree`` included, in document order (depth first)."""
+    stack: list[Any] = [tree]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, dict):
+            stack.extend(reversed(node.values()))
+        elif isinstance(node, list):
+            yield node
+            stack.extend(reversed(node))
 
 
 def _is_client_element(node: list[Any]) -> bool:

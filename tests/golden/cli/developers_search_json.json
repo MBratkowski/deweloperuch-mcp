@@ -1,0 +1,32 @@
+{
+  "args": [
+    "developers",
+    "search",
+    "atal",
+    "--json"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "{",
+    "  \"total\": 1,",
+    "  \"returned\": 1,",
+    "  \"truncated\": false,",
+    "  \"hint\": null,",
+    "  \"items\": [",
+    "    {",
+    "      \"developer_slug\": \"atal\",",
+    "      \"name\": \"ATAL S.A.\",",
+    "      \"offer_count\": 4265,",
+    "      \"developer_url\": \"https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal\"",
+    "    }",
+    "  ]",
+    "}",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/developers?q=atal&limit=5 [accept: application/json]"
+  ]
+}

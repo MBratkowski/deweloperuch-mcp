@@ -1,0 +1,17 @@
+{
+  "args": [
+    "stats",
+    "cities",
+    "--limit",
+    "0"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: limit musi być liczbą całkowitą z zakresu 1–100 (liczba pozycji rankingu), podano 0.",
+    ""
+  ],
+  "requests": []
+}

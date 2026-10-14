@@ -1,0 +1,26 @@
+{
+  "args": [
+    "valuation",
+    "estimate",
+    "--lat",
+    "52.2297",
+    "--lng",
+    "21.0122",
+    "--area",
+    "50"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Wycena mieszkania 50 m² · 52.22970, 21.01220",
+    "Szacowana wartość: brak.",
+    "Wskazówka: Serwis nie podał wyceny dla tego miejsca; w promieniu może nie być transakcji.",
+    "Transakcje porównawcze: 0 · pokazano 0.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/standalone-valuation?area=50&lat=52.2297&lng=21.0122 [accept: application/json]"
+  ]
+}

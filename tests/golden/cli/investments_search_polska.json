@@ -1,0 +1,16 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "polska"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: city=polska nie działa przy wyszukiwaniu inwestycji: podaj slug jednego miasta (search_locations) albo szukaj w całym kraju po nazwie (name, bez city).",
+    ""
+  ],
+  "requests": []
+}

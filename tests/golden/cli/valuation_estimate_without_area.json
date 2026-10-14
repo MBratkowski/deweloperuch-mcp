@@ -1,0 +1,23 @@
+{
+  "args": [
+    "valuation",
+    "estimate",
+    "--lat",
+    "52",
+    "--lng",
+    "21"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch valuation estimate [OPTIONS]",
+    "Try 'deweloperuch valuation estimate --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Missing option '--area'.                                                                         │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

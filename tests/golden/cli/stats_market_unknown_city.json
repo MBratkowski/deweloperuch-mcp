@@ -1,0 +1,19 @@
+{
+  "args": [
+    "stats",
+    "market",
+    "nieznane"
+  ],
+  "exit_code": 7,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Serwis nie zna miasta 'nieznane'. Podaj city_slug z search_locations (statystyki rynku są tylko dla jednego miasta).",
+    "Szczegóły: /api/offers/city-sales/nieznane: {\"error\":\"Invalid citySlug\"}",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/offers/city-sales/nieznane [accept: application/json]"
+  ]
+}

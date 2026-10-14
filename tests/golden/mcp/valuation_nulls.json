@@ -1,0 +1,79 @@
+{
+  "calls": [
+    {
+      "tool": "estimate_property_value",
+      "arguments": {
+        "lat": 52.2297,
+        "lng": 21.0122,
+        "area_m2": 50,
+        "address": null,
+        "limit": null
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "lat": 52.2297,
+        "lng": 21.0122,
+        "area_m2": 50.0,
+        "estimated_value": 1063300.0,
+        "price_per_m2": 21266.0,
+        "radius_m": 200,
+        "period_months": 24,
+        "stats": {
+          "count": 9,
+          "median_price_per_m2": 23830.0,
+          "average_price_per_m2": 22195.0,
+          "min_price_per_m2": 13187.0,
+          "max_price_per_m2": 31492.0
+        },
+        "comparables_total": 3,
+        "comparables_returned": 3,
+        "comparables_omitted": 0,
+        "truncated": false,
+        "comparables": [
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 150.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 150.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 150.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/standalone-valuation?area=50&lat=52.2297&lng=21.0122 [accept: application/json]"
+  ]
+}

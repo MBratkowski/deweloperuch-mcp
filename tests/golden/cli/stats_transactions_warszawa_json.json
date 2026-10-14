@@ -1,0 +1,61 @@
+{
+  "args": [
+    "stats",
+    "transactions",
+    "warszawa",
+    "--json"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "{",
+    "  \"city_slug\": \"warszawa\",",
+    "  \"granularity\": \"month\",",
+    "  \"total\": 3,",
+    "  \"returned\": 3,",
+    "  \"truncated\": false,",
+    "  \"available_from\": \"2021-01\",",
+    "  \"hint\": null,",
+    "  \"note\": \"Ostatnie miesiące są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z pełnymi okresami.\",",
+    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/ceny-transakcyjne/mieszkania/warszawa\",",
+    "  \"periods\": [",
+    "    {",
+    "      \"period\": \"2021-01\",",
+    "      \"transactions\": 963,",
+    "      \"median_price_per_m2\": 10651.0,",
+    "      \"average_price_per_m2\": 10876.0,",
+    "      \"median_area_m2\": 49.4,",
+    "      \"average_area_m2\": 54.6,",
+    "      \"median_price\": 502000.0,",
+    "      \"average_price\": 596261.0",
+    "    },",
+    "    {",
+    "      \"period\": \"2021-02\",",
+    "      \"transactions\": 1165,",
+    "      \"median_price_per_m2\": 10575.0,",
+    "      \"average_price_per_m2\": 10854.0,",
+    "      \"median_area_m2\": 48.8,",
+    "      \"average_area_m2\": 55.1,",
+    "      \"median_price\": 495000.0,",
+    "      \"average_price\": 602154.0",
+    "    },",
+    "    {",
+    "      \"period\": \"2021-03\",",
+    "      \"transactions\": 1327,",
+    "      \"median_price_per_m2\": 10858.0,",
+    "      \"average_price_per_m2\": 10981.0,",
+    "      \"median_area_m2\": 48.5,",
+    "      \"average_area_m2\": 53.7,",
+    "      \"median_price\": 510000.0,",
+    "      \"average_price\": 584959.0",
+    "    }",
+    "  ]",
+    "}",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa [accept: application/json]"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "sopot"
+  ],
+  "exit_code": 6,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Wyszukiwanie inwestycji w 'sopot': Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+    "Szczegóły: /api/map/investments: (całość): Input should be a valid list",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "calls": [
+    {
+      "tool": "estimate_property_value",
+      "arguments": {
+        "lat": 52.2297,
+        "lng": 21.0122,
+        "area_m2": 50
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "WARNING",
+      "STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi. Szczegóły: /api/standalone-valuation?area=50&lat=52.2297&lng=21.0122: HTTP 403"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/standalone-valuation?area=50&lat=52.2297&lng=21.0122 [accept: application/json]"
+  ]
+}

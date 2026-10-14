@@ -19,7 +19,8 @@ from collections.abc import Iterator
 import pytest
 
 from deweloperuch_mcp import bootstrap
-from e2e.live import (
+from deweloperuch_mcp.usecases.get_stop_status import GetStopStatusRequest
+from support.e2e.live import (
     MAX_REQUESTS,
     SKIP_REASON,
     Budget,
@@ -55,8 +56,9 @@ def budget(request: pytest.FixtureRequest) -> Iterator[Budget]:
     of the shared record); at the end asserts the total against ``MAX_REQUESTS``."""
     if not live_enabled(request.config):  # belt and braces: the items are skipped anyway
         pytest.skip(SKIP_REASON)
-    state = bootstrap.stop_status()  # reads the local record; sends nothing
-    if state.active:
+    # Reads the local record; sends nothing.
+    found = bootstrap.StopUseCases().get_stop_status.execute(GetStopStatusRequest.parse())
+    if found.state.active:
         stop_exit("blokada STOP jest aktywna przed startem zestawu")
     spent = Budget(MAX_REQUESTS)
     request.config.stash[BUDGET] = spent

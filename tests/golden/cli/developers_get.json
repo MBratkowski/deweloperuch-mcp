@@ -1,0 +1,46 @@
+{
+  "args": [
+    "developers",
+    "get",
+    "atal",
+    "--city",
+    "warszawa"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "ATAL S.A. [atal] · [warszawa]",
+    "Profil dewelopera: https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal",
+    "Aktywne oferty: 69 · inwestycje: 4 · miasta: 1 · średnio: 1 001 962 PLN · 62,7 m² · 16 111 PLN/m²",
+    "Inwestycje: pokazano 4 z 4.",
+    "[warszawska-58a] Warszawska 58A · Warszawa · aktywna · aktywne oferty 36 z 73 · 958 593 PLN · 59,67 m² · 16 064 PLN/m²",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/warszawska-58a",
+    "[nowy-targowek-vi] Nowy Targówek VI · Warszawa · aktywna · aktywne oferty 24 z 75 · 1 098 683 PLN · 62,31 m² · 17 631 PLN/m²",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/nowy-targowek-vi",
+    "[osiedle-poematu-ii] Osiedle Poematu II · Warszawa · aktywna · aktywne oferty 7 z 49 · 932 482 PLN · 71,64 m² · 13 016 PLN/m²",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/osiedle-poematu-ii",
+    "[zakatek-harmonia-ii] Zakątek Harmonia II · Warszawa · aktywna · aktywne oferty 2 z 30 · 865 126 PLN · 90,73 m² · 9 536 PLN/m²",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal/zakatek-harmonia-ii",
+    "Miasta dewelopera (cała Polska):",
+    "  Poznań [poznan] · inwestycje 4 · aktywne oferty 736 · 709 389 PLN · 11 823 PLN/m²",
+    "  Kraków [krakow] · inwestycje 7 · aktywne oferty 736 · 779 580 PLN · 13 950 PLN/m²",
+    "  Łódź [lodz] · inwestycje 5 · aktywne oferty 698 · 555 358 PLN · 10 059 PLN/m²",
+    "  Szczecin [szczecin] · inwestycje 2 · aktywne oferty 529 · 660 533 PLN · 12 652 PLN/m²",
+    "  Katowice [katowice] · inwestycje 3 · aktywne oferty 390 · 800 020 PLN · 12 603 PLN/m²",
+    "  Gdańsk [gdansk] · inwestycje 6 · aktywne oferty 282 · 807 056 PLN · 13 683 PLN/m²",
+    "  Wrocław [wroclaw] · inwestycje 5 · aktywne oferty 221 · 787 421 PLN · 12 644 PLN/m²",
+    "  Piastów [piastow] · inwestycje 1 · aktywne oferty 124 · 891 840 PLN · 13 405 PLN/m²",
+    "  Gliwice [gliwice] · inwestycje 1 · aktywne oferty 96 · 581 922 PLN · 9 560 PLN/m²",
+    "  Gdynia [gdynia] · inwestycje 1 · aktywne oferty 74 · 785 459 PLN · 12 217 PLN/m²",
+    "  Warszawa [warszawa] · inwestycje 4 · aktywne oferty 69 · 1 001 962 PLN · 16 111 PLN/m²",
+    "  Kowale [kowale] · inwestycje 1 · aktywne oferty 66 · 674 962 PLN · 10 496 PLN/m²",
+    "  Swarzędz [swarzedz] · inwestycje 1 · aktywne oferty 36 · 550 909 PLN · 8 590 PLN/m²",
+    "  Reda [reda] · inwestycje 1 · aktywne oferty 21 · 510 349 PLN · 9 652 PLN/m²",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal?_rsc=682178ac [rsc: 1] [accept: */*]"
+  ]
+}

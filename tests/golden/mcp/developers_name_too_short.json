@@ -1,0 +1,24 @@
+{
+  "calls": [
+    {
+      "tool": "search_developers",
+      "arguments": {
+        "name": "a"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "name: podaj od 2 do 100 znaków nazwy dewelopera, podano 'a'.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: name: podaj od 2 do 100 znaków nazwy dewelopera, podano 'a'. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

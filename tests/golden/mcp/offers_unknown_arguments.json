@@ -1,0 +1,22 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "warszawa",
+        "rooms": 2,
+        "floor": "1",
+        "developer": "atal"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Nieznane argumenty narzędzia search_offers: 'developer', 'floor', 'rooms'. Dozwolone argumenty: city, price_min, price_max, area_min, area_max, price_per_m2_min, price_per_m2_max, district, price_dropped, status, sort, page, per_page. Popraw nazwy i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

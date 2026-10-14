@@ -1,0 +1,23 @@
+{
+  "args": [
+    "valuation",
+    "estimate",
+    "--lat",
+    "52.2297",
+    "--lng",
+    "21.0122",
+    "--area",
+    "50",
+    "--limit",
+    "-1"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: limit musi być liczbą całkowitą z zakresu 0–100000 (liczba transakcji porównawczych w wyniku), podano -1.",
+    ""
+  ],
+  "requests": []
+}

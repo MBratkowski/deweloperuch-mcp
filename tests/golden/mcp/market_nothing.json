@@ -1,0 +1,33 @@
+{
+  "calls": [
+    {
+      "tool": "get_market_statistics",
+      "arguments": {
+        "city": "sopot",
+        "price_max": 1000
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "city_slug": "sopot",
+        "offers": 0,
+        "investments": 0,
+        "developers": 0,
+        "top_developers": [],
+        "developers_returned": 0,
+        "developers_omitted": 0,
+        "truncated": false,
+        "hint": "Brak aktywnych ofert spełniających kryteria w 'sopot'. Sprawdź slug miasta (search_locations) i poluzuj filtry (cena, metraż).",
+        "list_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/mieszkania?filterPrice=0-1000&page=1&perPage=10"
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/offers/city-sales/sopot [accept: application/json]"
+  ]
+}

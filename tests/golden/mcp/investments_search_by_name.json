@@ -1,0 +1,37 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "name": "nowy targ"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 2,
+        "returned": 2,
+        "truncated": false,
+        "items": [
+          {
+            "investment_slug": "nowy-targowek-vi",
+            "name": "Nowy Targówek VI",
+            "offers_active": 27
+          },
+          {
+            "investment_slug": "apartamenty-nowy-targ",
+            "name": "Apartamenty Nowy Targ",
+            "offers_active": 0
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/investments?q=nowy%20targ&limit=10 [accept: application/json]"
+  ]
+}

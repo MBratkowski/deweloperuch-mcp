@@ -1,0 +1,22 @@
+{
+  "args": [
+    "developers",
+    "search",
+    "atal",
+    "--limit",
+    "x"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch developers search [OPTIONS] {NAME}",
+    "Try 'deweloperuch developers search --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for '--limit': 'x' is not a valid int.                                             │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

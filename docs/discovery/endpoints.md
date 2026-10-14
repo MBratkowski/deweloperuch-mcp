@@ -77,6 +77,7 @@ Starting suggestions of the search box.
 - **Dump of all active offers in a city** in compact form.
 - Response: `{ citySlug, investments: [{id, slug, developerSlug, status}], sales: [{id, investId, amount, size, priceSqm, status}] }`
 - Warsaw: 278 investments, 13,351 offers, 1.3 MB [P]. All `status: active` [P].
+- Kraków: 7325 active sales, 143 investments, 67 developers, no null `amount`/`size`/`priceSqm`; the offers list in the same minute reported total 7307 (the dump has 18 more; cause [W], maybe anomalies hidden on the list); `priceSqm` = `amount`/`size` within 0.01 [P 2026-10-13, fixtures `tests/fixtures/api/city_sales_sopot.json`, `city_sales_krakow.json`]. Used internally for aggregates only (D15).
 - Archived ones do not appear: `?includeArchived=true` is ignored (Sopot: 6 offers, all `active`, identical with and without the parameter) [P 2026-10-10, no separate sample]. `polska` **does not work**: `HTTP 400 {"error":"Invalid citySlug"}` (refuted: hypothesis that it works; `polska` exists only in page routing) [P 2026-10-10].
 - Cache-Control: `public, max-age=28800, s-maxage=300, stale-while-revalidate=3600` [P 2026-10-10]. Used in the layouts of offer lists (`ceny-ofertowe/[city]/mieszkania|inwestycje`).
 - Sample: `api.city_sales_sopot.json`
@@ -160,6 +161,7 @@ Starting suggestions of the search box.
 - Monthly transaction aggregates: `{ scope: {label}, data: [{month, transaction_count, med_price_sqm, avg_price_sqm, med_size, avg_size, med_amount, avg_amount}] }`
 - `propertyType`: `mieszkania` [P], `domy` [H]
 - The latest months have few transactions (RCN feed lag): `2026-07` has 2 transactions [P]
+- Months without transactions (2026-05, 2026-06, Warsaw) return all fields 0 (count, median/avg price per m², median area, median price); 2026-04 had 29 transactions (the RCN lag). The client treats 0 as missing [P 2026-10-13, live e2e run].
 - Sample: `api.monthly_tx.json`
 
 ### `GET /api/statystyki/powiat-price-trend?powiatId=` [P]
@@ -177,6 +179,7 @@ Starting suggestions of the search box.
 ### `GET /api/city-transaction-stats` [P]
 - City ranking (2,448): `[{city, city_slug, transaction_count, avg_price_sqm, avg_size, avg_amount, transaction_count_change, price_sqm_change, avg_size_change, amount_change}]`
 - The aggregation period and the base of `*_change` are unknown [H]. `avg_price_sqm`=16413 for Warsaw is nearly equal to the median 16414 from the statistics map, so the field may contain a median despite its name [H].
+- Warsaw `transaction_count` 3606 here vs 351,314 in `map/powiat-stats` (powiat 302); monthly stats give ~1.0-1.3k per month, so the city figure looks like about a quarter and the powiat figure like the whole RCN history; the powiat price seems to come from a different window than its count [W 2026-10-13] (T10 stays open).
 - 548 KB, cache 24 h. Sample: `api.city_tx_stats.json`
 
 ### `GET /api/announcement-stats?region=&propertyType=` [P]
@@ -196,25 +199,26 @@ Starting suggestions of the search box.
 - 180 KB, mostly `radiusPool` (279 entries). To MCP we pass only the result and the top comparables.
 - `radiusLevel`: `sasiedztwo` [P]; other levels [H]
 - The server action `fetchStandaloneValuation` gives an identical result [P]
+- `distance` is rounded to the nearest 50 m (rawDistance 42 -> 50; 93.5 and 119.8 -> 100; 152 and 165 -> 150); `stats.count` == number of `transactions` == `estimationContext.pool` (9/9/9 and 26/26/26); no transaction with `excluded=true` in the samples [P 2026-10-13, samples `api.standalone_val` and `page.offer_report`].
 - Sample: `api.standalone_val.json`
 
 ---
 
-## 6. Server actions (call details)
+## 6. Server actions (call shape)
+
+Server actions are listed for completeness. The project does not call them (read data is available through `GET`); write actions (`createSaleRcnReport`, `createInvestmentAction`, anything behind Turnstile) exist in the client and are never used.
 
 ```
-POST /<dowolna strona, np. /wycena>
+POST /<any page, e.g. /wycena>
 Accept: text/x-component
 Content-Type: text/plain;charset=UTF-8
-Next-Action: <40+ hex, z chunków JS>
-Next-Router-State-Tree: <url-encoded JSON drzewa routera>   # wysyłane przez UI; czy wymagane: [H]
-Body: [ {argumenty} ]
+Next-Action: <40+ hex characters, taken from the JS chunks>
+Next-Router-State-Tree: <URL-encoded router tree JSON>   # sent by the UI; whether required: [H]
+Body: [ {arguments} ]
 
-→ 200 text/x-component
+-> 200 text/x-component
 0:{"a":"$@1","f":"","b":"<buildId>"}
-1:<wynik JSON>
+1:<JSON result>
 ```
 
-(Legend: any page, e.g. /wycena; `Next-Action` is 40+ hex characters from the JS chunks; `Next-Router-State-Tree` is the URL-encoded router tree JSON, sent by the UI, whether it is required: [H]; body is an array of arguments; the result is JSON.)
-
-Current IDs (build `KD_IOP6Grqba7xa86pGVG`): run `python3 recon/scan_bundles.py`.
+Action IDs change with each deploy; `recon/scan_bundles.py` lists the current ones for the current build (`KD_IOP6Grqba7xa86pGVG`).

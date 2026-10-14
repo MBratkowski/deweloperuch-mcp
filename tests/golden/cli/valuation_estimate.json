@@ -1,0 +1,30 @@
+{
+  "args": [
+    "valuation",
+    "estimate",
+    "--lat",
+    "52.2297",
+    "--lng",
+    "21.0122",
+    "--area",
+    "50"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Wycena mieszkania 50 m² · 52.22970, 21.01220",
+    "Szacowana wartość: 1 063 300 PLN · 21 266 PLN/m²",
+    "Na podstawie transakcji z Rejestru Cen Nieruchomości (RCN) w promieniu 200 m z ostatnich 24 miesięcy; to przybliżenie, nie operat szacunkowy.",
+    "Statystyki cen za m² podane przez serwis (liczba: 9): mediana 23 830 · średnia 22 195 · min 13 187 · max 31 492 PLN/m²",
+    "Transakcje porównawcze: 3 · pokazano 3.",
+    "  2025-04-17   ok. 150 m  Ulica Nowogrodzka 38 · 43,57 m² · 765 002 PLN · 17 558 PLN/m² · piętro 6 · rynek wtórny [ulica-nowogrodzka-38-warszawa]",
+    "  2025-05-27   ok. 150 m  Ulica Widok 24 · 41,02 m² · 977 507 PLN · 23 830 PLN/m² · piętro 6 · rynek wtórny [ulica-widok-24-warszawa]",
+    "  2025-01-13   ok. 150 m  Ulica Widok 22 · 66,76 m² · 2 100 003 PLN · 31 456 PLN/m² · piętro 3 · rynek wtórny [ulica-widok-22-warszawa]",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/standalone-valuation?area=50&lat=52.2297&lng=21.0122 [accept: application/json]"
+  ]
+}

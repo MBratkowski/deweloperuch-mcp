@@ -1,0 +1,26 @@
+{
+  "args": [
+    "stats",
+    "cities",
+    "--level",
+    "powiat",
+    "--sort",
+    "price_per_m2_asc",
+    "--min-transactions",
+    "200000"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Ranking powiatów od najniższej ceny za m²: pokazano 2 z 2 (co najmniej 200 000 transakcji).",
+    "1. powiat Kraków [id 14] · transakcji: 225 694 · 14 899 PLN/m² · 47,7 m² · 695 000 PLN",
+    "2. powiat Warszawa [id 302] · transakcji: 351 314 · 16 367 PLN/m² · 48,6 m² · 780 000 PLN",
+    "Serwis nie podaje okresu ani tego, czy ceny i metraż to średnie, czy mediany.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/powiat-stats [accept: application/json]"
+  ]
+}

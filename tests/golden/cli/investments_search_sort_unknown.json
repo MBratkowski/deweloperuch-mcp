@@ -1,0 +1,23 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "sopot",
+    "--sort",
+    "cheap"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Usage: deweloperuch investments search [OPTIONS] [CITY]",
+    "Try 'deweloperuch investments search --help' for help.",
+    "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ Invalid value for '--sort': 'cheap' is not one of 'active_offers', 'price_per_m2_asc',           │",
+    "│ 'price_per_m2_desc', 'price_asc', 'price_desc', 'name'.                                          │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    ""
+  ],
+  "requests": []
+}

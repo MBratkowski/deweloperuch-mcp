@@ -1,0 +1,27 @@
+{
+  "args": [
+    "developers",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch developers [OPTIONS] COMMAND [ARGS]...                                         ",
+    "                                                                                                    ",
+    " Deweloperzy.                                                                                       ",
+    "                                                                                                    ",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --help          Show this message and exit.                                                      │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ get     Pokaż dewelopera z jego inwestycjami i miastami.                                         │",
+    "│ search  Znajdź deweloperów po nazwie; podaje slug dewelopera do `developers get`.                │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

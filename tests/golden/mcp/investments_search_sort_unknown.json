@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "city": "sopot",
+        "sort": "cheap"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Błędny argument narzędzia search_investments: sort musi być jedną z wartości active_offers, price_per_m2_asc, price_per_m2_desc, price_asc, price_desc, name albo pusty, podano \"cheap\". Popraw i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

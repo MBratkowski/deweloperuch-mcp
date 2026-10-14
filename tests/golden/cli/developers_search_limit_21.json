@@ -1,0 +1,18 @@
+{
+  "args": [
+    "developers",
+    "search",
+    "atal",
+    "--limit",
+    "21"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: limit musi być liczbą całkowitą z zakresu 1–20 (liczba deweloperów w wyniku), podano 21.",
+    ""
+  ],
+  "requests": []
+}

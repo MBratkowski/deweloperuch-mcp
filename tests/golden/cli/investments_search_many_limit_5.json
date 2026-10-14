@@ -1,0 +1,44 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "sopot",
+    "--sort",
+    "name",
+    "--limit",
+    "5"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Inwestycje: 60 · pokazano 5 (zwiększ --limit albo zawęź wyniki).",
+    "Wskazówka: Pasujących inwestycji jest 60, pokazano pierwsze 5 (sort=name). Zawęź wyniki przez name lub developer_slug albo zmień sort.",
+    "Nowe Kolibki etap 4 1 [nowe-kolibki-etap-4-1] · aktywna · Sopot",
+    "    oferty: aktywne 1 z 27 · średnio 1 615 878 PLN · 65,55 m² · 20 037 PLN/m²",
+    "    Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]",
+    "    https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/nowe-kolibki-etap-4-1",
+    "Nowe Kolibki etap 4 11 [nowe-kolibki-etap-4-11] · aktywna · Sopot",
+    "    oferty: aktywne 4 z 27 · średnio 1 615 878 PLN · 65,55 m² · 20 407 PLN/m²",
+    "    Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]",
+    "    https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/nowe-kolibki-etap-4-11",
+    "Nowe Kolibki etap 4 13 [nowe-kolibki-etap-4-13] · aktywna · Sopot",
+    "    oferty: aktywne 6 z 27 · średnio 1 615 878 PLN · 65,55 m² · 20 481 PLN/m²",
+    "    Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]",
+    "    https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/nowe-kolibki-etap-4-13",
+    "Nowe Kolibki etap 4 15 [nowe-kolibki-etap-4-15] · aktywna · Sopot",
+    "    oferty: aktywne 1 z 27 · średnio 1 615 878 PLN · 65,55 m² · 20 555 PLN/m²",
+    "    Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]",
+    "    https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/nowe-kolibki-etap-4-15",
+    "Nowe Kolibki etap 4 17 [nowe-kolibki-etap-4-17] · aktywna · Sopot",
+    "    oferty: aktywne 3 z 27 · średnio 1 615 878 PLN · 65,55 m² · 20 629 PLN/m²",
+    "    Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]",
+    "    https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/nowe-kolibki-etap-4-17",
+    "Oferty inwestycji: deweloperuch investments get INVESTMENT_SLUG",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

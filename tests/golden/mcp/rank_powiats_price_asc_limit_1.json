@@ -1,0 +1,41 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "level": "powiat",
+        "sort": "price_per_m2_asc",
+        "limit": 1
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "level": "powiat",
+        "sort": "price_per_m2_asc",
+        "min_transactions": 0,
+        "total": 3,
+        "returned": 1,
+        "truncated": true,
+        "hint": "Pokazano pierwsze 1 z 3 powiatów; kolejne pokaże większy limit (najwyżej 100).",
+        "items": [
+          {
+            "name": "powiat Wrocław",
+            "powiat_id": 33,
+            "transaction_count": 166308,
+            "price_per_m2": 12547.0,
+            "area_m2": 50.1,
+            "price": 607000.0
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/powiat-stats [accept: application/json]"
+  ]
+}

@@ -1,23 +1,30 @@
-# deweloperuch.pl — data layer map
+# deweloperuch.pl: data layer map
 
-As of **2026-10-09** (additions from verification B: 2026-10-10), Next.js build `KD_IOP6Grqba7xa86pGVG`.
-Method: static analysis of all client JS chunks (114 files, including those lazy-loaded from the webpack runtime), decoding of page RSC payloads, single requests to every endpoint (spacing ≥1 s, in line with `Crawl-delay: 1`). No login, no circumvention of anything.
+Findings about how the service exposes its data, gathered for `deweloperuch-mcp`. Last full survey: **2026-10-09**, with additions through 2026-10-13. Next.js build `KD_IOP6Grqba7xa86pGVG`.
 
-Markers used throughout the documentation:
+Method: static analysis of all client JS chunks (114 files, including those lazy-loaded from the webpack runtime), decoding of page RSC payloads, and single requests to the endpoints (spacing of at least 1 s, in line with `Crawl-delay: 1`). No login and no circumvention of any protection. Live checks are rare and manual.
 
-- **[P] confirmed**: observed in a request/response or in the client code.
-- **[W] inference**: follows from observations, but there was no direct test.
-- **[H] hypothesis**: to be checked.
+## Reading order
 
-Related documents:
+| File | Covers |
+|---|---|
+| This README | Service architecture, access channels, data domains, key findings |
+| [endpoints.md](endpoints.md) | Catalog of `/api/*` JSON endpoints and server actions |
+| [pages-rsc.md](pages-rsc.md) | Server-rendered pages as a data source: filters, sorting, pagination, props |
+| [entities.md](entities.md) | Entities, identifiers, relations, value dictionaries |
+| [samples/](samples/) | Trimmed response samples (`api.*.json`, `page.*.json`) |
+| [../capability-matrix.md](../capability-matrix.md) | What the CLI and MCP tools offer, with status |
+| [../open-questions.md](../open-questions.md) | Open hypotheses and resolved checks |
+| [../decisions.md](../decisions.md) | Architecture decisions |
 
-- [endpoints.md](endpoints.md): catalog of `/api/*` JSON endpoints and server actions
-- [pages-rsc.md](pages-rsc.md): SSR pages as a data source (filters, sorting, pagination, props)
-- [entities.md](entities.md): entities, identifiers, relations, value dictionaries
-- [samples/](samples/): trimmed response samples (`api.*.json`, `page.*.json`)
-- [../capability-matrix.md](../capability-matrix.md): capability matrix for CLI/MCP
-- [../open-questions.md](../open-questions.md): gaps and hypotheses
-- [../decisions.md](../decisions.md): architecture decisions
+## Certainty tags
+
+| Tag | Meaning |
+|---|---|
+| `[P]`, `[P YYYY-MM-DD]` | Confirmed in a request or response (dated when added after the first survey) |
+| `[P z kodu]` | Confirmed in the client code (JS bundle); for server behaviour treat as `[W]` |
+| `[W]` | Inference from observations, no direct test |
+| `[H]` | Hypothesis, tracked in [open-questions.md](../open-questions.md) |
 
 ## 1. Service architecture
 
@@ -31,39 +38,33 @@ Related documents:
 | `robots.txt` | `Disallow: /api/`, `/internal/`, `/cron/`; `Crawl-delay: 1` | [P] |
 | Backend behind Next.js | SSR pages receive `initialApiParams` (`filterPrice`, `filterCitySlug`…), which suggests an internal API called server-side. The host does not leak to the client | [H] |
 
-`robots.txt` implies that `/api/` is not meant for crawlers. Our client will make the same requests as a user's browser, but it has to do so sparingly (cache, concurrency limit, no mass crawling). Details in [decisions.md](../decisions.md).
+`robots.txt` excludes `/api/` for automated clients (see U1 in [open-questions.md](../open-questions.md)). The client makes the same requests as a browser and does so sparingly (cache, concurrency limit, no bulk crawling). Details in [decisions.md](../decisions.md).
 
 ## 2. Data access channels
 
-The service has four channels, with different stability and cost:
+The service has four channels with different stability and cost:
 
 ```
-            ┌──────────────────────────────────────────────────────────────┐
-            │                       deweloperuch.pl                        │
-            ├───────────────┬──────────────────┬──────────────┬────────────┤
-            │ A. JSON API   │ B. RSC payload   │ C. Server    │ D. Static  │
-            │  GET /api/*   │  GET <strona>    │   Actions    │  / CDN     │
-            │  34 ścieżki   │  RSC: 1          │  POST +      │  geojson,  │
-            │               │  text/x-component│  Next-Action │  pmtiles   │
-            ├───────────────┼──────────────────┼──────────────┼────────────┤
-            │ autocomplete, │ listy z filtrami │ wycena (ma   │ granice    │
-            │ statystyki,   │ i paginacją,     │ też GET),    │ powiatów,  │
-            │ mapy, historia│ szczegóły dewel./│ wykresy cen, │ warstwy    │
-            │ cen, wycena   │ inwestycji/oferty│ konkurencja  │ map        │
-            │               │ /adresu, GUS/NBP │              │            │
-            └───────────────┴──────────────────┴──────────────┴────────────┘
-              stabilny         średnio stabilny   niestabilny    stabilny
-              JSON             (zależy od         (ID zmienia    (pliki)
-                               nazw propsów)      się z deployem)
+ A. JSON API           B. RSC payload          C. Server Actions     D. Static / CDN
+ GET /api/*            GET <page>              POST + Next-Action    geojson, pmtiles
+ 34 paths              RSC: 1                  (response is RSC)
+                       text/x-component
+ ----------------------------------------------------------------------------------
+ autocomplete,         lists with filters      valuation (also       county borders,
+ statistics, maps,     and pagination,         has GET), price       map layers
+ price history,        developer / investment  charts, competition
+ valuation             / offer / address
+                       details, GUS/NBP
+ ----------------------------------------------------------------------------------
+ stable JSON           moderately stable       unstable (IDs change  stable (files)
+                       (depends on prop names) with each deploy)
 ```
-
-(Diagram legend: A. JSON API: 34 paths; autocomplete, statistics, maps, price history, valuation; stable JSON. B. RSC payload: lists with filters and pagination, developer/investment/offer/address details, GUS/NBP; moderately stable (depends on prop names). C. Server Actions: valuation (also has GET), price charts, competition; unstable (IDs change with each deploy). D. Static / CDN: county borders, map layers; stable (files).)
 
 ### A. JSON API `/api/*` [P]
 
 - Same-origin, `GET`, `application/json`, no session.
 - CF cache: `s-maxage` from 300 s (offers, counters) to 86400 s (RCN statistics); `max-age=28800` for the browser. Some endpoints (`cities`, `location-search`, `sale-events`, `map/investments/visible`) and RSC pages have no `s-maxage`, only `max-age=28800` (pages: `private`) [P 2026-10-10].
-- Parameters are always in the query string or path. I met no body or headers required for operation.
+- Parameters are always in the query string or path. No body or special headers are required.
 - Errors: `400 {"error": "..."}` on a bad parameter (e.g. `avg-price-trend/building/<slug>` instead of an id). `valuation-pdf` explicitly handles `429` + `Retry-After`.
 - Full catalog: [endpoints.md](endpoints.md).
 
@@ -79,7 +80,7 @@ Lists (flats, investments, developers, transactions, addresses) and detail pages
 
 ### C. Next.js Server Actions [P]
 
-`POST <page>` with headers `Next-Action: <id>`, `Accept: text/x-component`, body = JSON array of arguments. The response is RSC (`0:{…}` / `1:<result>`). The action ID is a hash that **changes with every deploy** [W]. It can be read from the JS chunks (the export name is explicit: `createServerReference("<id>",…,"fetchStandaloneValuation")`), see [`recon/scan_bundles.py`](../../recon/scan_bundles.py).
+`POST <page>` with headers `Next-Action: <id>`, `Accept: text/x-component`, body = JSON array of arguments. The response is RSC (`0:{…}` / `1:<result>`). The action ID is a hash that **changes with every deploy** [W]. It can be read from the JS chunks (the export name is explicit: `createServerReference("<id>",…,"fetchStandaloneValuation")`), see [`recon/scan_bundles.py`](../../recon/scan_bundles.py) (a read-only scanner of the public JS chunks).
 
 | Action | Type | Notes |
 |---|---|---|
@@ -88,7 +89,7 @@ Lists (flats, investments, developers, transactions, addresses) and detail pages
 | `fetchBatchPriceChartData` | read | price charts for a list of `sale_id`; probably duplicates `/api/sale-events` [H] |
 | `fetchCompetitorInvestment`, `searchCompetitorInvestments` | read | unit report, comparison with competition |
 | `fetchDevelopers`, `fetchInvestments`, `fetchDeveloperAbuse` | read | "report a developer" form |
-| `createSaleRcnReport`, `createInvestmentAction` | **write** + Turnstile | out of scope, do not call |
+| `createSaleRcnReport`, `createInvestmentAction` | **write** + Turnstile | exist in the client; never used by this project |
 
 ### D. Static resources / CDN [P in code, not downloaded]
 

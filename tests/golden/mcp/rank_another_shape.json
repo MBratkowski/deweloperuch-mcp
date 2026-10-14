@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "level": "powiat"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Ranking powiatów: Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "UnexpectedResponseError: Ranking powiatów: Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi. Szczegóły: /api/map/powiat-stats: (całość): Input should be a valid list"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/powiat-stats [accept: application/json]"
+  ]
+}

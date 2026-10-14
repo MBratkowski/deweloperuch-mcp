@@ -1,0 +1,33 @@
+{
+  "args": [
+    "developers",
+    "get",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch developers get [OPTIONS] {SLUG}                                                ",
+    "                                                                                                    ",
+    " Pokaż dewelopera z jego inwestycjami i miastami.                                                   ",
+    "                                                                                                    ",
+    "╭─ Arguments ──────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ *    SLUG      <str>  Slug dewelopera (z `developers search` albo pole developer_slug z `offers  │",
+    "│                       search`).                                                                  │",
+    "│                       [required]                                                                 │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --city         <str>  Slug miasta (np. krakow) albo polska, czyli cała Polska. [default: polska] │",
+    "│ --limit        <int>  Najwięcej pokazanych inwestycji (najpierw z największą liczbą ofert).      │",
+    "│                       [default: 20]                                                              │",
+    "│ --json                Wypisz wynik jako JSON (model domenowy).                                   │",
+    "│ --help                Show this message and exit.                                                │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

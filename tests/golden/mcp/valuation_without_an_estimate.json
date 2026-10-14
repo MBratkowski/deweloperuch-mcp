@@ -1,0 +1,36 @@
+{
+  "calls": [
+    {
+      "tool": "estimate_property_value",
+      "arguments": {
+        "lat": 52.2297,
+        "lng": 21.0122,
+        "area_m2": 50
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "lat": 52.2297,
+        "lng": 21.0122,
+        "area_m2": 50.0,
+        "estimated_value": null,
+        "radius_m": 200,
+        "period_months": 24,
+        "comparables_total": 0,
+        "comparables_returned": 0,
+        "comparables_omitted": 0,
+        "truncated": false,
+        "hint": "Serwis nie podał wyceny dla tego miejsca; w promieniu może nie być transakcji.",
+        "comparables": []
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/standalone-valuation?area=50&lat=52.2297&lng=21.0122 [accept: application/json]"
+  ]
+}

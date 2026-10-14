@@ -1,0 +1,596 @@
+{
+  "calls": [
+    {
+      "tool": "estimate_property_value",
+      "arguments": {
+        "lat": 52.2297,
+        "lng": 21.0122,
+        "area_m2": 50,
+        "limit": 50
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "lat": 52.2297,
+        "lng": 21.0122,
+        "area_m2": 50.0,
+        "estimated_value": 1063300.0,
+        "price_per_m2": 21266.0,
+        "radius_m": 200,
+        "period_months": 24,
+        "stats": {
+          "count": 9,
+          "median_price_per_m2": 23830.0,
+          "average_price_per_m2": 22195.0,
+          "min_price_per_m2": 13187.0,
+          "max_price_per_m2": 31492.0
+        },
+        "comparables_total": 60,
+        "comparables_returned": 50,
+        "comparables_omitted": 10,
+        "truncated": true,
+        "hint": "Pokazano 50 najbliższych z 60 transakcji porównawczych. To maksimum w jednym wywołaniu; stats to statystyki podane przez serwis.",
+        "comparables": [
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 50.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 60.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 70.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 80.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 90.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 100.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 110.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 120.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 130.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 140.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 150.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 160.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 170.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 180.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 190.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 200.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 210.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 220.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 230.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 240.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 250.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 260.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 270.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 280.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 290.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 300.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 310.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 320.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 330.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 340.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 350.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 360.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 370.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 380.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 390.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 400.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 410.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 420.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 430.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 440.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 450.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 460.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 470.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 480.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 490.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 500.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 510.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          },
+          {
+            "address": "Ulica Widok 22",
+            "date": "2025-01-13",
+            "price": 2100003.0,
+            "area_m2": 66.76,
+            "price_per_m2": 31456.0,
+            "floor": 3,
+            "distance_m": 520.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-22-warszawa"
+          },
+          {
+            "address": "Ulica Nowogrodzka 38",
+            "date": "2025-04-17",
+            "price": 765002.0,
+            "area_m2": 43.57,
+            "price_per_m2": 17558.0,
+            "floor": 6,
+            "distance_m": 530.0,
+            "market": "secondary",
+            "building_slug": "ulica-nowogrodzka-38-warszawa"
+          },
+          {
+            "address": "Ulica Widok 24",
+            "date": "2025-05-27",
+            "price": 977507.0,
+            "area_m2": 41.02,
+            "price_per_m2": 23830.0,
+            "floor": 6,
+            "distance_m": 540.0,
+            "market": "secondary",
+            "building_slug": "ulica-widok-24-warszawa"
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/standalone-valuation?area=50&lat=52.2297&lng=21.0122 [accept: application/json]"
+  ]
+}

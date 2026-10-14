@@ -4,14 +4,14 @@
       "tool": "search_offers",
       "arguments": {
         "city": "warszawa",
-        "sort": "area_asc"
+        "sort": "rooms_asc"
       }
     }
   ],
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool search_offers: 1 validation error for search_offersArguments\nsort\n  Input should be 'price_asc' or 'price_desc' [type=literal_error, input_value='area_asc', input_type=str]",
+      "text": "Błędny argument narzędzia search_offers: sort musi być jedną z wartości price_asc, price_desc, price_per_m2_asc, price_per_m2_desc, area_asc, area_desc, biggest_drop albo pusty, podano \"rooms_asc\". Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

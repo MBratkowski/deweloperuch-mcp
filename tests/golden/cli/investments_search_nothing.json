@@ -1,0 +1,19 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "sopot"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Inwestycje: 0 · pokazano 0.",
+    "Wskazówka: Serwis nie pokazuje żadnej inwestycji dla 'sopot': miasto może nie mieć aktywnych ofert deweloperów albo slug jest błędny. Sprawdź slug i offer_count miasta w search_locations; inwestycję po nazwie znajdziesz też bez city (name).",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

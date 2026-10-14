@@ -1,9 +1,7 @@
 # `search_locations`
 > Znajduje miasta, dzielnice i ulice w Polsce po fragmencie nazwy. Użyj na początku, żeby zamienić nazwę miejsca na city_slug, którego wymaga search_offers. Nie zwraca ofert ani cen.
 >
-> Zwraca items (kind: city, district albo street; name, city, city_slug, opcjonalnie district, street, lat, lng i offer_count, czyli liczbę ofert wg serwisu) oraz total, returned, truncated i hint. total jest null, gdy wyników jest więcej niż pokazano; truncated=true znaczy, że pasujących może być więcej: doprecyzuj nazwę. Miejscowości z offer_count=0 nie mają ofert: nie przekazuj ich do search_offers. Dzielnica i ulica podają city_slug swojego miasta; search_offers filtruje tylko po mieście.
-
-Summary: finds cities, districts and streets in Poland by a name fragment; use it first to turn a place name into the `city_slug` that `search_offers` requires; returns no offers or prices. Returns `items` plus `total`, `returned`, `truncated` and `hint`; `total` is null when there are more results than shown; places with `offer_count=0` have no offers; a district and a street give the `city_slug` of their city, and `search_offers` filters by city only.
+> Zwraca items (kind: city, district albo street; name, city, city_slug, opcjonalnie district, street, lat, lng i offer_count, czyli liczbę ofert wg serwisu) oraz total, returned, truncated i hint. total jest null, gdy wyników jest więcej niż pokazano; truncated=true znaczy, że pasujących może być więcej: doprecyzuj nazwę. Miejscowości z offer_count=0 nie mają ofert: nie przekazuj ich do search_offers. Dzielnica i ulica podają city_slug swojego miasta. Nazwę dzielnicy (kind=district, pole name) przekaż do search_offers jako district razem z tym city_slug; po ulicy search_offers nie filtruje.
 
 Title: „Szukaj lokalizacji”. Annotations: `readOnlyHint=true`, `openWorldHint=true`. Rules shared by all tools (argument rules, errors, sizes): [MCP overview](../README.md).
 
@@ -26,8 +24,8 @@ A structured result (`structuredContent`, matching `outputSchema`) and the same 
 An `items` entry: `kind` (`city`, `district`, `street`), `name`, `city`, `city_slug` (always); `district`, `street`, `lat`, `lng` (optional); `offer_count` (optional: the number of offers according to the service, 0 = no offers; exact for districts, approximate for streets and cities).
 
 ## Data limitations
-- `offer_count` for districts is the number of active offers [P 2026-10-10]; for streets and cities it is still [W] (an inference without a direct test, T32), hence "approximate". The `truncated` heuristic is also [W]; that is why the description says "there may be more". See [endpoints.md](../../discovery/endpoints.md), section `location-search`.
-- Only a city gives a `city_slug` for `search_offers`; a district and a street give the slug of their city, and `search_offers` does not filter by district.
+- `offer_count` for districts is the number of active offers; for streets and cities it is inferred, not directly verified, hence "approximate". The `truncated` flag is a heuristic as well; that is why the description says "there may be more". See [endpoints.md](../../discovery/endpoints.md), section `location-search`.
+- A district and a street give the `city_slug` of their city. To narrow `search_offers` to a district, pass the district's `name` (`kind=district`) as its `district` argument together with that `city_slug` (streets are not filtered); `get_building` and `estimate_property_value` can use the `lat`/`lng` of a street or district as an approximate point.
 
 ## Errors
 An error is a result with `isError=true` and a Polish message (technical details only in the server log). Shared rules, including STOP: [MCP overview](../README.md#errors).
@@ -35,7 +33,8 @@ An error is a result with `isError=true` and a Polish message (technical details
 | Situation | Message |
 |---|---|
 | `query` shorter than 2 or longer than 100 characters (after trimming), not a string | `query: podaj od 2 do 100 znaków nazwy miasta, dzielnicy lub ulicy, podano '…'.` |
-| Missing `query` argument, wrong type | A schema validation error from the SDK (English, prefix „Error executing tool …”) |
+| Missing `query` argument, wrong type | `Błędny argument narzędzia search_locations: query: brak wymaganego argumentu. Popraw i ponów; nic nie zostało wysłane.` (Polish; a wrong type: `… query musi być tekstem, podano 42 …`) |
+| Unknown argument | `Nieznany argument narzędzia search_locations: '…'. Dozwolone argumenty: query. Popraw nazwy i ponów; nic nie zostało wysłane.` |
 | STOP (401/403/429/challenge, also written by another process) | `STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.` (other variants: [MCP overview](../README.md#errors)) |
 | Nothing matches | Not an error: a result with `returned=0` and `hint`: `Nic nie pasuje do '…'. Sprawdź pisownię (z polskimi znakami) albo podaj początek nazwy miasta, dzielnicy lub ulicy.` |
 | Service error (5xx, network) | e.g. `Wyszukiwanie miast: Serwis odpowiedział błędem HTTP 500. Nic nie ponawiam; spróbuj później.` |
@@ -47,7 +46,7 @@ Call:
 {"name": "search_locations", "arguments": {"query": "krak"}}
 ```
 
-The `structuredContent` result (the mock does not filter by `query`: the district and street entries with Mokotów are responses from samples, not matches for "krak"; responses from the `docs/discovery/samples/` samples are substituted into the test mocks, `tests/service_mocks.py`; coordinates shortened):
+The `structuredContent` result (`tests/golden/mcp/locations.json`; the mock does not filter by `query`: the district and street entries with Mokotów are responses from samples, not matches for "krak"; coordinates shortened):
 
 ```json
 {
@@ -66,4 +65,4 @@ The `structuredContent` result (the mock does not filter by `query`: the distric
 
 Size: about 680 characters.
 
-_Source: `src/deweloperuch_mcp/interfaces/mcp/server.py`, `src/deweloperuch_mcp/interfaces/mcp/presenters.py`, `tests/snapshots/mcp_tools.json`_
+_Source: `src/deweloperuch_mcp/consumers/mcp/tools/search_locations_tool.py`, `src/deweloperuch_mcp/consumers/mcp/presenters/search_locations_mcp_presenter.py`, `src/deweloperuch_mcp/usecases/search_locations.py`, `tests/snapshots/mcp_tools.json`_

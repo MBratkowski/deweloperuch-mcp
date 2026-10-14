@@ -25,7 +25,7 @@ deweloperuch offers get 2377 --investment smolna
 deweloperuch offers get 2377 --investment smolna --json
 ```
 
-Text output (test mock, samples `api.map_inv_visible`, `api.sale_events`):
+Text output (`tests/golden/cli/offers_get.json`, samples `api.map_inv_visible`, `api.sale_events`):
 
 ```
 [2377] C224 · aktywna
@@ -36,14 +36,19 @@ Strona inwestycji: https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/inves
 Deweloper: Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]
 Profil dewelopera: https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna
 Daty: dodana 2025-02-25 · ostatnie zdarzenie 2026-10-03 · ostatnia zmiana 2026-10-03
+Najniższa cena: z 30 dni 1 620 175 PLN · z 90 dni 1 620 175 PLN
+Zmiany ceny: 1 · największa obniżka brak · największa podwyżka 0,01%
+Podejrzana obniżka: nie
 Historia ceny (3):
   2025-02-25  cena          1 620 000 PLN
   2025-02-25  wycofanie     1 620 000 PLN
   2026-10-03  przywrócenie  1 620 175 PLN
 ```
 
-The lines „Strona inwestycji” (investment page) and „Profil dewelopera” (developer profile) (D12) lead to the investment and developer pages, not to a single offer; a missing slug means no line.
+The lines „Strona inwestycji” (investment page) and „Profil dewelopera” (developer profile) lead to the investment and developer pages, not to a single offer; a missing slug means no line.
+
+The lines „Najniższa cena”, „Zmiany ceny” and „Podejrzana obniżka” are the price flags of `get_offer` (`price_flags`: the lowest price of the last 30 and 90 days, the number of changes, the largest drop and rise, and whether the latest drop is a suspicious "promotion" after a rise).
 
 With `--json` the result has all fields of the domain model, also `null` ones (e.g. `developer.website`).
 
-_Source: `src/deweloperuch_mcp/interfaces/cli/`, `uv run deweloperuch offers get --help`_
+_Source: `src/deweloperuch_mcp/consumers/cli/commands/offers_commands.py`, `src/deweloperuch_mcp/consumers/cli/presenters/get_offer_cli_presenter.py`, `uv run deweloperuch offers get --help`_

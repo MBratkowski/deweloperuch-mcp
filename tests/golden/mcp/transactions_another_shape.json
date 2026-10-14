@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "get_transaction_statistics",
+      "arguments": {
+        "city": "warszawa",
+        "granularity": "quarter"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Ceny transakcyjne dla 'warszawa': Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "UnexpectedResponseError: Ceny transakcyjne dla 'warszawa': Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi. Szczegóły: /api/avg-price-trend/city/warszawa: scope: Field required; data: Field required"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/avg-price-trend/city/warszawa [accept: application/json]"
+  ]
+}

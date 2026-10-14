@@ -10,14 +10,14 @@
   "results": [
     {
       "is_error": true,
-      "text": "Nie znaleziono inwestycji 'smolna'. Slug inwestycji podaje search_offers (pole investment_slug).",
+      "text": "Nie znaleziono inwestycji 'smolna'. Slug inwestycji podaje search_investments, search_offers albo get_developer (pole investment_slug).",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "NotFoundError: Nie znaleziono inwestycji 'smolna'. Slug inwestycji podaje search_offers (pole investment_slug). Szczegóły: /api/map/investments/visible/smolna"
+      "NotFoundError: Nie znaleziono inwestycji 'smolna'. Slug inwestycji podaje search_investments, search_offers albo get_developer (pole investment_slug). Szczegóły: /api/map/investments/visible/smolna"
     ]
   ],
   "requests": [

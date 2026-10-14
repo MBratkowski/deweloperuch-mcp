@@ -5,12 +5,10 @@ Search with filters, sorting and pagination, and most detail views, exist **only
 ## How to fetch [P]
 
 ```
-GET https://deweloperuch.pl<ścieżka>?<filtry>&_rsc=<losowy token>
+GET https://deweloperuch.pl<path>?<filters>&_rsc=<random token>
 RSC: 1
 → 200 text/x-component
 ```
-
-(`<ścieżka>` = path, `<filtry>` = filters, `<losowy token>` = random token.)
 
 - Without `_rsc`, Cloudflare returns cached HTML because it ignores `Vary: RSC` [P].
 - Alternative: full HTML and decoding `self.__next_f.push([1,"…"])`. Gives the same data but is ~10× larger (942 KB vs 98 KB) [P].
@@ -21,13 +19,13 @@ RSC: 1
   - hints `:HL…` have an empty id.
   - On the offer list the row with `initialData` comes right after two `T` rows with JSON-LD (`16:T5ed,…` WebPage, `19:T1a27,…` ItemList) [P 2026-10-10, fixture `tests/fixtures/rsc/warszawa_perPage10.rsc`]. Refuted: the old parser (`_JSON_ROW`, rows only at the start of a line) saw no `initialData` there, so `search_offers` did not work on the live service.
 - Reference parser: [`src/deweloperuch_mcp/flight.py`](../../src/deweloperuch_mcp/flight.py): `rows()`, `component_props()`, `error_digests()` (RSC) and `flight()` for HTML. `find_json_after(text, "initialData")` stays for `probe --prop`; `recon/flight.py` only re-exports.
-- Cache-Control of RSC pages: `private, max-age=28800, must-revalidate` (no `s-maxage`; `cf-cache-status` MISS or HIT with `age`) [P 2026-10-10, samples from series B; headers in probe's stderr, no separate sample].
-- **Risk**: prop names (`initialData`, `serverPaginationData`, …) are a UI implementation detail and may change without warning [W]. The RSC adapter must be isolated and have contract tests on samples.
+- Cache-Control of RSC pages: `private, max-age=28800, must-revalidate` (no `s-maxage`; `cf-cache-status` MISS or HIT with `age`) [P 2026-10-10, samples headers only, no separate sample].
+- **Risk**: prop names (`initialData`, `serverPaginationData`, …) are a UI implementation detail and may change without warning [W]. The RSC adapter is isolated and covered by contract tests on samples.
 
 ## Common list rules [P]
 
 - `page`: from 1. **Maximum 20 pages**: `page>20` returns page 20 (`pagination.page: 20`) [P].
-- `perPage`: `10`, `25`, `50`, `100` accepted [P 2026-10-10: `perPage=25` → `pagination.perPage: 25`, 25 rows; refuted: hypothesis that only {10, 50, 100} are allowed]. `20` and `500` give the default 10 [P]. The full list of allowed values is not known: observed 10, 25, 50, 100 (accepted) and 20, 500 (→ 10) [P]; others [H] (T2 partially resolved; full list: T29).
+- `perPage`: `10`, `25`, `50`, `100` accepted [P 2026-10-10: `perPage=25` → `pagination.perPage: 25`, 25 rows; refuted: hypothesis that only {10, 50, 100} are allowed]. `20` and `500` give the default 10 [P]. The full list of allowed values is not known: observed 10, 25, 50, 100 (accepted) and 20, 500 (→ 10) [P]; others [H] (full list: T29).
 - Ceiling: **2,000 records per query**. `pagination.total` gives the full count (e.g. 13,324), but `totalPages` is truncated to 20 [P].
 - `sortOrder` ∈ {`asc`, `desc`}.
 - Ranges: `min-max` (e.g. `filterPrice=500000-700000`). No lower bound → `0-…`; no upper bound → UI sentinel values: price `99999999`, price/m² `999999`, area `9999` [P z kodu]. The server treats `filterPrice=0-99999999&filterSize=0-9999` as no filter: `pagination.total` = 13324 = result without filters (Warsaw) [P 2026-10-10]; the price/m² sentinel (`999999`) was not tested separately [W].
@@ -83,11 +81,15 @@ Sample: `page.offers_list.json`, `page.offers_list.filtered.json`, `page.offers_
 ### `/ceny-ofertowe/{city}/deweloperzy/{developerSlug}`: developer profile [P]
 - Props: `data {developer, investments[], filteredStats, allCities, allCitiesWithSlugs, citiesStats, allInvestmentNames}`, `sale[]` (lightweight offer list), `data[]` (daily price-change axis: `discountCount, increaseCount, discountValue, increaseValue, cumulative*`)
 - Sample: `page.developer.json`
+- `{city}` filters the investments to that city; `polska` gives all cities (ATAL: 42 investments, 6587 `sale` rows, ~1.96 MB) [P 2026-10-13, raw fixtures `tests/fixtures/rsc/developer_atal_warszawa.rsc`, `developer_atal_polska.rsc`, consistency tests in the suite].
+- Consistency in both fixtures [P 2026-10-13]: `filteredStats.totalProjects` = number of investments; `totalSales` = Σ `active_offers` = active rows in `sale`; Σ `total_offers` = len(`sale`); `totalCities` = number of cities of the investments; `averagePrice` = round(mean price of active offers); `averageSize` = mean area of active offers (±0.01); `avgAmountPerM2` = round(mean of investments' `avg_price_sqm` weighted by `active_offers`); per investment `total_offers`/`active_offers`/`avg_amount`/`avg_size` agree with `sale`. `citiesStats` is identical on the city page and the `polska` page (14 rows) and consistent with the investments; the Warsaw row equals the Warsaw page's `filteredStats`.
+- `priceIncreaseCount`/`priceDecreaseCount` are 0 while the sums are non-zero: unreliable, not used (they stay unknown) [P 2026-10-13].
+- Unknown developer (`/ceny-ofertowe/warszawa/deweloperzy/nieistniejacy-deweloper`): HTTP 200, **no** `NEXT_HTTP_ERROR_FALLBACK;404` digest (unlike the offer list); h1 "Deweloper nie znaleziony", title "Deweloper nie znaleziony | Deweloperuch" [P 2026-10-13, fixture `developer_unknown_warszawa.rsc`]. The client must detect this by the missing data / title.
 
 ### `/ceny-ofertowe/{*}/deweloperzy/{*}/{investmentSlug}`: investment [P]
 - **The `{city}` and `{developer}` segments are ignored**. `/ceny-ofertowe/warszawa/deweloperzy/dom-development/nowy-targowek-vi` returns the ATAL investment [P].
 - Props: `investments[1]`, `sales[]` (all, including archived), `stats`, `data[]` (price-change axis)
-- Contains the same as `GET /api/map/investments/visible/{slug}` plus the change axis. **We prefer the JSON API**.
+- Contains the same as `GET /api/map/investments/visible/{slug}` plus the change axis. The JSON API is preferred.
 - Sample: `page.investment.json`
 
 ### `…/{investmentSlug}/raport-mieszkania-{slug(nazwa)}`: offer report [P]
@@ -121,7 +123,7 @@ Sample: `page.offers_list.json`, `page.offers_list.filtered.json`, `page.offers_
 
 Props `initialData {data, pagination, stats}` + `initialApiParams` (server-side echo of the filters, useful for verification):
 ```json
-{ "sale_rcn_id", "name": "<id lokalu z EGiB>", "amount", "amount_sqm", "floor", "floor_number", "rooms", "rooms_number",
+{ "sale_rcn_id", "name": "<EGiB unit id>", "amount", "amount_sqm", "floor", "floor_number", "rooms", "rooms_number",
   "type", "currency", "size", "size_building_area", "size_plot_area", "creation_date",
   "start_amount_difference(_percent)", "last_amount_difference(_percent)", "last_event_date", "total_events",
   "is_flipped", "last_transaction_classification",
@@ -129,7 +131,7 @@ Props `initialData {data, pagination, stats}` + `initialApiParams` (server-side 
 stats: { averagePrice, averageSize, avgAmountPerM2, minPricePerSqm, maxPricePerSqm, pricePerSqmRange,
          totalTransactions, minPrice, maxPrice, minSize, maxSize }
 ```
-`stats` refers to the **whole filtered set**, not only the page [W]. This makes it possible to give aggregates without paginating.
+`stats` refers to the **whole filtered set**, not only the page [W], so aggregates are available without paginating.
 Sample: `page.transactions_list.json`, `page.transactions_list.params.json`
 
 ### `/ceny-transakcyjne/{city}/adresy`: building list [P]
@@ -139,11 +141,12 @@ Sample: `page.transactions_list.json`, `page.transactions_list.params.json`
 ### `/ceny-transakcyjne/{city}/adresy/{investRcnSlug}` and `/domy/{investRcnSlug}`: building/house [P]
 - Props: `investment {invest_id (= invest_rcn_id), latitude, longitude, name, slug, city, city_slug, street, avg_*, active_offers (= number of units)}`, `sales[]` with `events[]` (full `sale_event_rcn` with `additionalData`)
 - Houses additionally have `size_usable`, `size_building`, `size_plot` [P]
-- `GET /api/map/transactions/visible/{slug}` gives the same, and we **prefer** it.
+- `GET /api/map/transactions/visible/{slug}` gives the same, and it is preferred.
 - Sample: `page.address.json`, `page.house.json`
 
 ### `/ceny-transakcyjne/polska/miasta`: city ranking [P]
 - Props: `cities[]` (as `/api/city-transaction-stats`), `teaserCharts[]` (monthly series for top cities)
+- Linked only, never fetched by the package, as is `/ceny-transakcyjne/{city}/adresy/{slug}` [P 2026-10-13].
 
 ---
 
@@ -154,6 +157,7 @@ Sample: `page.transactions_list.json`, `page.transactions_list.params.json`
 - `latestSummary` (last full month), `slices` (y/y and q/q by cross-sections: area, rooms, …), `topCities`
 - URL filters (`filterPrice`, `filterSize`, `filterRooms`, …) are handled client-side on `rawTransactions` [W].
 - Too heavy for direct use. Aggregates are better taken from `/api/monthly-transaction-stats`.
+- The package only links to this page (a bulk-dump page, see D5 in [decisions.md](../decisions.md)); it is never fetched [P 2026-10-13].
 
 ### `/statystyki/ceny-transakcyjne/{type}/{city}/mapa` [P]
 - Props: `powiats[]`: `{powiat_rcn_id, powiat_name, transaction_count, med_price_sqm, med_size, med_amount, transaction_count_change, price_sqm_change, amount_change}` (period: last quarter vs previous? [H])
@@ -163,6 +167,7 @@ Sample: `page.transactions_list.json`, `page.transactions_list.params.json`
 - `location`: 69 locations: cities and the aggregates `polska`, `7-miast`, `10-miast`, `9-miast`, `6-miast-bez-warszawy` (prop `sortedLocations` mapped to `gus.teryt` and `nbp.dbName`)
 - Sections (`tocItems`): `gus-mieszkania` (quarterly and monthly: completed/started by construction form), `gus-formy-budownictwa`, `gus-srednia-powierzchnia` (yearly), `gus-demografia` (births, deaths, natural change), `gus-wiek` (5-year cohorts F/M), `gus-bezrobocie` (monthly rate), `gus-wynagrodzenia`, `nbp` (quarterly: `pierwotnyOfertowa`, `pierwotnyTransakcyjna`, `wtornyOfertowa`, `wtornyTransakcyjna`)
 - Several props are named `data`; they have to be told apart by shape or position in the tree [P]. A fragile spot.
+- Cache headers [P 2026-10-13, `polska`]: `private, max-age=28800, must-revalidate`; `cf-cache-status: HIT`; `age: 69574` (above `max-age`). The client caches such replies for 300 s (see D2 in [decisions.md](../decisions.md)).
 - Sample: `page.stats_gov.json`
 
 ### `/statystyki/portale-ogloszeniowe/{type}/{region}` [P]

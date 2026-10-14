@@ -1,0 +1,19 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "sopot"
+  ],
+  "exit_code": 7,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Serwis nie zna miasta 'sopot'. Podaj city_slug z search_locations.",
+    "Szczegóły: /api/map/investments?citySlug=sopot",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

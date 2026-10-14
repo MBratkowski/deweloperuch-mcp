@@ -1,0 +1,39 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "name": "nowy",
+        "limit": 2
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 9,
+        "returned": 2,
+        "truncated": true,
+        "hint": "Pasujących inwestycji jest 9 (wg serwisu), pokazano 2. Doprecyzuj nazwę albo dodaj city.",
+        "items": [
+          {
+            "investment_slug": "nowy-targowek-vi",
+            "name": "Nowy Targówek VI",
+            "offers_active": 27
+          },
+          {
+            "investment_slug": "apartamenty-nowy-targ",
+            "name": "Apartamenty Nowy Targ",
+            "offers_active": 0
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/investments?q=nowy&limit=2 [accept: application/json]"
+  ]
+}

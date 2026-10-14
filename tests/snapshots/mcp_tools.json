@@ -1,13 +1,13 @@
 {
   "server": {
     "name": "deweloperuch",
-    "instructions": "Dane z deweloperuch.pl: ceny ofertowe mieszkań od deweloperów (rynek pierwotny) w Polsce, z historią zmian cen. Typowa kolejność: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami ceny i metrażu), potem get_investment (oferty jednej inwestycji) albo get_offer (jedna oferta z historią ceny). Serwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Błędy walidacji argumentów bywają po angielsku: popraw wskazane pole zgodnie ze schematem i ponów. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert. Oficjalne statystyki GUS i NBP dla Polski i miast (mieszkania oddane i rozpoczęte, ceny NBP, bezrobocie, wynagrodzenia) daje get_government_statistics; to dane rynkowe, nie oferty, i nie wymagają wcześniejszego search_locations."
+    "instructions": "Dane z deweloperuch.pl o mieszkaniach w Polsce. Typowy plan: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami), potem get_offer (oferta z historią ceny) albo get_investment (oferty jednej inwestycji). Projekty w mieście i slug inwestycji po nazwie daje search_investments, slug dewelopera po nazwie search_developers (dalej get_developer). Ocena ceny oferty: get_offer (price_flags), potem porównaj z get_market_statistics albo estimate_property_value.\n\nTrzy rodzaje cen, nie mieszaj ich: ofertowe deweloperów (search_offers, get_market_statistics, search_investments); transakcyjne z rejestru RCN (get_transaction_statistics, rank_locations, get_building, estimate_property_value; najnowsze okresy są niepełne); oficjalne NBP i GUS, obok cen także mieszkania oddane, bezrobocie i wynagrodzenia (get_government_statistics). Jego location to nazwa miasta małymi literami bez polskich znaków; nie wymaga search_locations.\n\nSerwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Gdy narzędzie odrzuci argumenty, popraw wskazane pola zgodnie z komunikatem i ponów. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert."
   },
   "tools": [
     {
       "name": "search_locations",
       "title": "Szukaj lokalizacji",
-      "description": "Znajduje miasta, dzielnice i ulice w Polsce po fragmencie nazwy. Użyj na początku, żeby zamienić nazwę miejsca na city_slug, którego wymaga search_offers. Nie zwraca ofert ani cen.\n\nZwraca items (kind: city, district albo street; name, city, city_slug, opcjonalnie district, street, lat, lng i offer_count, czyli liczbę ofert wg serwisu) oraz total, returned, truncated i hint. total jest null, gdy wyników jest więcej niż pokazano; truncated=true znaczy, że pasujących może być więcej: doprecyzuj nazwę. Miejscowości z offer_count=0 nie mają ofert: nie przekazuj ich do search_offers. Dzielnica i ulica podają city_slug swojego miasta; search_offers filtruje tylko po mieście.",
+      "description": "Znajduje miasta, dzielnice i ulice w Polsce po fragmencie nazwy. Użyj na początku, żeby zamienić nazwę miejsca na city_slug, którego wymaga search_offers. Nie zwraca ofert ani cen.\n\nZwraca items (kind: city, district albo street; name, city, city_slug, opcjonalnie district, street, lat, lng i offer_count, czyli liczbę ofert wg serwisu) oraz total, returned, truncated i hint. total jest null, gdy wyników jest więcej niż pokazano; truncated=true znaczy, że pasujących może być więcej: doprecyzuj nazwę. Miejscowości z offer_count=0 nie mają ofert: nie przekazuj ich do search_offers. Dzielnica i ulica podają city_slug swojego miasta. Nazwę dzielnicy (kind=district, pole name) przekaż do search_offers jako district razem z tym city_slug; po ulicy search_offers nie filtruje.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -20,7 +20,8 @@
         "required": [
           "query"
         ],
-        "title": "search_locationsArguments"
+        "title": "search_locationsArguments",
+        "additionalProperties": false
       },
       "outputSchema": {
         "$defs": {
@@ -173,7 +174,7 @@
     {
       "name": "search_offers",
       "title": "Szukaj ofert mieszkań",
-      "description": "Wyszukuje oferty mieszkań od deweloperów (tylko rynek pierwotny, ceny ofertowe, nie transakcyjne) w jednym mieście albo w całej Polsce (city=polska), z filtrami ceny i metrażu i sortowaniem po cenie. Użyj, gdy szukasz mieszkań w budżecie albo o danym metrażu. Nie filtruje po dzielnicy, liczbie pokoi ani deweloperze.\n\nZwraca jedną stronę: total (wszystkie pasujące), returned, page, per_page, pages_available, truncated, hint, list_url i items (offer_id, investment_slug, investment_url (strona inwestycji, nie pojedynczej oferty), name, cena w PLN, metraż w m², cena za m², status, inwestycja, deweloper, ostatnia zmiana ceny i zmiana od pierwszej ceny w procentach; miasto tylko przy city=polska). Pozycje są skrócone; szczegóły oferty i historię ceny daje get_offer. list_url to link „zobacz wszystkie na deweloperuch.pl” z tymi samymi filtrami: przydatny, gdy truncated=true albo użytkownik chce więcej ofert. Linki podawaj użytkownikowi, np. w tabeli ofert.\n\nOgraniczenia: można przejrzeć najwyżej 20 stron po per_page ofert. Gdy truncated=true, zawęź filtry zamiast przeglądać kolejne strony. Wszystkie oferty jednej inwestycji daje get_investment.",
+      "description": "Wyszukuje oferty mieszkań od deweloperów (tylko rynek pierwotny, ceny ofertowe, nie transakcyjne) w jednym mieście albo w całej Polsce (city=polska). Filtry: cena, metraż, cena za m², dzielnica, status (aktywne, archiwalne) i obniżka od pierwszej ceny; sortowanie po cenie, cenie za m², metrażu albo największej obniżce. Nie filtruje po liczbie pokoi ani piętrze (serwis nie ma takich danych) ani po deweloperze (jego inwestycje daje get_developer).\n\nZwraca jedną stronę: total (wszystkie pasujące), returned, page, per_page, pages_available, truncated, hint, list_url i items (offer_id, investment_slug, investment_url (strona inwestycji), name, cena w PLN, metraż w m², cena za m², status, inwestycja, deweloper z developer_slug, zmiany ceny w procentach; miasto tylko przy city=polska). Pozycje są skrócone; szczegóły oferty i historię ceny daje get_offer. list_url to ta lista na deweloperuch.pl z tymi samymi filtrami. Linki podawaj użytkownikowi.\n\nOgraniczenia: można przejrzeć najwyżej 20 stron po per_page ofert. Gdy truncated=true, zawęź filtry zamiast przeglądać kolejne strony. Wszystkie oferty jednej inwestycji daje get_investment, ceny całego miasta get_market_statistics.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -242,12 +243,84 @@
             "description": "Największy metraż w m².",
             "title": "Metraż do"
           },
+          "price_per_m2_min": {
+            "anyOf": [
+              {
+                "maximum": 999999,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Najniższa cena za m² w PLN.",
+            "title": "Cena za m² od"
+          },
+          "price_per_m2_max": {
+            "anyOf": [
+              {
+                "maximum": 999999,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Najwyższa cena za m² w PLN.",
+            "title": "Cena za m² do"
+          },
+          "district": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Nazwa dzielnicy dokładnie tak, jak podaje ją search_locations (kind=district, pole name), np. Mokotów; tylko z miastem tej dzielnicy, nie z polska.",
+            "title": "Dzielnica"
+          },
+          "price_dropped": {
+            "default": false,
+            "description": "true: tylko oferty, których obecna cena jest niższa od pierwszej ceny (liczy się zmiana od pierwszej ceny, nie ostatnia zmiana).",
+            "title": "Tylko przecenione",
+            "type": "boolean"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "active",
+                  "archived",
+                  "all"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "active",
+            "description": "active (domyślnie): oferty obecnie w cennikach; archived: tylko wycofane; all: aktywne i wycofane.",
+            "title": "Status ofert"
+          },
           "sort": {
             "anyOf": [
               {
                 "enum": [
                   "price_asc",
-                  "price_desc"
+                  "price_desc",
+                  "price_per_m2_asc",
+                  "price_per_m2_desc",
+                  "area_asc",
+                  "area_desc",
+                  "biggest_drop"
                 ],
                 "type": "string"
               },
@@ -256,7 +329,7 @@
               }
             ],
             "default": null,
-            "description": "price_asc: od najtańszych, price_desc: od najdroższych; brak: domyślna kolejność serwisu (nie jest gwarantowana).",
+            "description": "price_asc: od najtańszych, price_desc: od najdroższych, price_per_m2_asc i price_per_m2_desc: po cenie za m², area_asc i area_desc: po metrażu, biggest_drop: najpierw największa obniżka od pierwszej ceny (w %); brak: domyślna kolejność serwisu (nie jest gwarantowana).",
             "title": "Kolejność"
           },
           "page": {
@@ -269,7 +342,7 @@
           },
           "per_page": {
             "default": 10,
-            "description": "10 albo 50. Pozycja to ok. 450 znaków wyniku (z linkiem), więc 50 daje ok. 22 tys.; zwykle wystarcza 10.",
+            "description": "10 albo 50. Pozycja to ok. 500 znaków wyniku (z linkiem), więc 50 daje ok. 25 tys.; zwykle wystarcza 10.",
             "enum": [
               10,
               50
@@ -281,7 +354,8 @@
         "required": [
           "city"
         ],
-        "title": "search_offersArguments"
+        "title": "search_offersArguments",
+        "additionalProperties": false
       },
       "outputSchema": {
         "$defs": {
@@ -364,6 +438,11 @@
                 "title": "Developer Name",
                 "type": "string"
               },
+              "developer_slug": {
+                "description": "Slug dewelopera dla get_developer.",
+                "title": "Developer Slug",
+                "type": "string"
+              },
               "last_price_change_kind": {
                 "anyOf": [
                   {
@@ -436,7 +515,8 @@
               "name",
               "status",
               "investment_name",
-              "developer_name"
+              "developer_name",
+              "developer_slug"
             ],
             "title": "OfferItem",
             "type": "object"
@@ -521,7 +601,7 @@
     {
       "name": "get_offer",
       "title": "Oferta z historią ceny",
-      "description": "Zwraca jedną ofertę z pełną historią ceny, inwestycją i deweloperem. Użyj, gdy chcesz zobaczyć, jak zmieniała się cena mieszkania. Wymaga offer_id i investment_slug (oba podaje search_offers albo get_investment): samo offer_id nie wystarcza.\n\nZwraca cenę, metraż, cenę za m², status (active albo archived), zmianę od pierwszej ceny, daty i price_history (date, kind: offer, archived albo restored, price). investment_url i developer_url to strony inwestycji i dewelopera na deweloperuch.pl: podawaj je użytkownikowi jako linki. Do listy ofert jednej inwestycji użyj get_investment.",
+      "description": "Zwraca jedną ofertę z pełną historią ceny, inwestycją i deweloperem. Użyj, gdy chcesz zobaczyć, jak zmieniała się cena mieszkania. Wymaga offer_id i investment_slug (oba podaje search_offers albo get_investment): samo offer_id nie wystarcza.\n\nZwraca cenę, metraż, cenę za m², status (active albo archived), zmianę od pierwszej ceny, daty, price_history (date, kind: offer, archived albo restored, price) i price_flags. investment_url i developer_url to strony inwestycji i dewelopera na deweloperuch.pl: podawaj je użytkownikowi jako linki. Do listy ofert jednej inwestycji użyj get_investment.\n\nprice_flags (na dziś; ceny z offer i restored, wycofanie przerywa cenę; oferta archiwalna do dnia wycofania): lowest_price_30d i lowest_price_90d to najniższa cena obowiązująca w ostatnich 30 i 90 dniach, także ta sprzed okna; price_changes to liczba zmian ceny; largest_drop_pct i largest_rise_pct to największa pojedyncza obniżka i podwyżka w % poprzedniej ceny; suspicious_reduction=true, gdy ostatnia obniżka przyszła do 30 dni po podwyżce, a nowa cena nie jest niższa od najniższej z 30 dni przed nią („promocja” po podwyżce).",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -532,7 +612,7 @@
             "type": "integer"
           },
           "investment_slug": {
-            "description": "investment_slug inwestycji tej oferty, np. smolna (z search_offers).",
+            "description": "investment_slug inwestycji tej oferty, np. smolna (z search_investments, search_offers albo get_developer).",
             "title": "Inwestycja",
             "type": "string"
           }
@@ -541,7 +621,8 @@
           "offer_id",
           "investment_slug"
         ],
-        "title": "get_offerArguments"
+        "title": "get_offerArguments",
+        "additionalProperties": false
       },
       "outputSchema": {
         "$defs": {
@@ -625,6 +706,78 @@
               "kind"
             ],
             "title": "PriceEventItem",
+            "type": "object"
+          },
+          "PriceFlagsItem": {
+            "properties": {
+              "lowest_price_30d": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Najniższa cena obowiązująca w ostatnich 30 dniach, także ta sprzed okna, o ile oferty wtedy nie wycofano (dla oferty archiwalnej: 30 dni przed wycofaniem).",
+                "title": "Lowest Price 30D"
+              },
+              "lowest_price_90d": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "To samo dla 90 dni.",
+                "title": "Lowest Price 90D"
+              },
+              "price_changes": {
+                "description": "Ile razy cena zmieniła się względem poprzedniej.",
+                "title": "Price Changes",
+                "type": "integer"
+              },
+              "largest_drop_pct": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Największa pojedyncza obniżka w % poprzedniej ceny (dodatnia).",
+                "title": "Largest Drop Pct"
+              },
+              "largest_rise_pct": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Największa pojedyncza podwyżka w % poprzedniej ceny.",
+                "title": "Largest Rise Pct"
+              },
+              "suspicious_reduction": {
+                "description": "true: ostatnia obniżka nastąpiła do 30 dni po podwyżce, a nowa cena nie jest niższa od najniższej z 30 dni przed obniżką.",
+                "title": "Suspicious Reduction",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "price_changes",
+              "suspicious_reduction"
+            ],
+            "title": "PriceFlagsItem",
             "type": "object"
           }
         },
@@ -809,6 +962,18 @@
             },
             "title": "Price History",
             "type": "array"
+          },
+          "price_flags": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PriceFlagsItem"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Wnioski z historii ceny na dziś: ceny z offer i restored; wycofanie przerywa obowiązującą cenę."
           }
         },
         "required": [
@@ -831,14 +996,334 @@
       }
     },
     {
+      "name": "search_investments",
+      "title": "Szukaj inwestycji",
+      "description": "Wyszukuje inwestycje (projekty deweloperskie, rynek pierwotny). Dwa tryby: city (pełne dane) albo samo name (cała Polska; tylko investment_slug, name i offers_active, w kolejności serwisu). Użyj, gdy pytanie dotyczy projektów, a nie pojedynczych mieszkań: np. najtańsze za m² w mieście, inwestycje jednego dewelopera, slug inwestycji po nazwie.\n\nZ city zwraca inwestycje, które serwis pokazuje na mapie miasta (z aktywnymi ofertami; bez nich mogą nie być na liście): investment_slug, name, city_slug, ulica, status, offers_active, offers_total, średnie (avg_price, avg_area_m2, avg_price_per_m2; tylko aktywne oferty, wg serwisu), developer_slug, developer_name, investment_url i developer_url. name i developer_slug zawężają listę, sort ją porządkuje (domyślnie najwięcej aktywnych ofert); pozycje bez średniej są na końcu. Oferty i szczegóły inwestycji daje get_investment (investment_slug). Linki podawaj użytkownikowi.\n\nOgraniczenia: najwyżej limit pozycji; total, returned, truncated i hint mówią, ile pominięto i co zawęzić. Nie filtruje po cenie ani metrażu (do tego search_offers); city=polska nie działa.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "city_slug miasta z search_locations, np. warszawa, sopot (nie polska).",
+            "title": "Miasto"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Fragment nazwy inwestycji, 2–100 znaków, np. Kolibki. Z city wielkość liter i polskie znaki nie mają znaczenia; bez city szuka serwis w całej Polsce.",
+            "title": "Nazwa"
+          },
+          "developer_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "developer_slug z search_developers (po nazwie) albo z pól developer_slug w search_offers, get_investment, get_offer, np. atal. Tylko z city.",
+            "title": "Deweloper"
+          },
+          "sort": {
+            "anyOf": [
+              {
+                "enum": [
+                  "active_offers",
+                  "price_per_m2_asc",
+                  "price_per_m2_desc",
+                  "price_asc",
+                  "price_desc",
+                  "name"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Tylko z city. active_offers: najwięcej aktywnych ofert (domyślnie); price_per_m2_asc, price_per_m2_desc: średnia cena za m²; price_asc, price_desc: średnia cena; name: alfabetycznie. Bez średniej na końcu.",
+            "title": "Kolejność"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Najwięcej inwestycji w wyniku, 1–30, domyślnie 10. Pozycja z city to ok. 550–750 znaków wyniku (z linkami), więc 30 daje najwyżej ok. 23 tys.; zwykle wystarcza 10.",
+            "maximum": 30,
+            "minimum": 1,
+            "title": "Limit inwestycji",
+            "type": "integer"
+          }
+        },
+        "title": "search_investmentsArguments",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$defs": {
+          "InvestmentSearchItem": {
+            "properties": {
+              "investment_slug": {
+                "title": "Investment Slug",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "city_slug": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "City Slug"
+              },
+              "district": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "District"
+              },
+              "street": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Street"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "active (aktualna) albo archived (wycofana).",
+                "title": "Status"
+              },
+              "offers_active": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Aktywne oferty wg serwisu.",
+                "title": "Offers Active"
+              },
+              "offers_total": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Wszystkie oferty wg serwisu, także archiwalne.",
+                "title": "Offers Total"
+              },
+              "avg_price": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Średnia cena aktywnych ofert w PLN.",
+                "title": "Avg Price"
+              },
+              "avg_area_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Średni metraż aktywnych ofert w m².",
+                "title": "Avg Area M2"
+              },
+              "avg_price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Średnia cena za m² aktywnych ofert w PLN.",
+                "title": "Avg Price Per M2"
+              },
+              "developer_slug": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Developer Slug"
+              },
+              "developer_name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Developer Name"
+              },
+              "investment_url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Strona inwestycji na deweloperuch.pl: podaj ją użytkownikowi jako link.",
+                "title": "Investment Url"
+              },
+              "developer_url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Profil dewelopera na deweloperuch.pl: podaj go użytkownikowi jako link.",
+                "title": "Developer Url"
+              }
+            },
+            "required": [
+              "investment_slug",
+              "name"
+            ],
+            "title": "InvestmentSearchItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Wszystkie pasujące; null, gdy serwis nie podaje (szukanie po nazwie).",
+            "title": "Total"
+          },
+          "returned": {
+            "title": "Returned",
+            "type": "integer"
+          },
+          "truncated": {
+            "description": "true: pasujących jest więcej, niż pokazano; co zawęzić, mówi hint.",
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hint"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/InvestmentSearchItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "total",
+          "returned",
+          "truncated",
+          "items"
+        ],
+        "title": "InvestmentsResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
       "name": "get_investment",
       "title": "Inwestycja z ofertami",
-      "description": "Zwraca inwestycję (projekt deweloperski): miasto, ulicę, współrzędne, dewelopera, średnie ceny aktywnych ofert, liczbę ofert i listę ofert (najpierw aktywne, potem archiwalne). Użyj, gdy chcesz zobaczyć mieszkania jednego projektu. investment_slug podaje search_offers. investment_url i developer_url to strony inwestycji i dewelopera na deweloperuch.pl: podawaj je użytkownikowi jako linki.\n\nOgraniczenia: zwraca najwyżej limit ofert (domyślnie 20); offers_returned mówi, ile ich jest na liście, truncated i offers_omitted, czy i ile pominięto. offers_total to liczba z serwisu, a pominięte oferty liczy offers_omitted. Przy dużej inwestycji nie zwiększaj limitu bez potrzeby; offers_omitted > 0 znaczy, że lista jest niepełna. include_history=true dodaje historię ceny każdej zwróconej oferty: wynik jest dłuższy i powstaje wolniej. Dla jednej oferty lepiej użyć get_offer.",
+      "description": "Zwraca inwestycję (projekt deweloperski): miasto, ulicę, współrzędne, dewelopera, średnie ceny aktywnych ofert, liczbę ofert i listę ofert (najpierw aktywne, potem archiwalne). Użyj, gdy chcesz zobaczyć mieszkania jednego projektu. investment_slug daje search_investments, search_offers albo get_developer. investment_url i developer_url to strony inwestycji i dewelopera na deweloperuch.pl: podawaj je użytkownikowi jako linki.\n\nOgraniczenia: zwraca najwyżej limit ofert (domyślnie 20); offers_returned mówi, ile ich jest na liście, truncated i offers_omitted, czy i ile pominięto. offers_total to liczba z serwisu, a pominięte oferty liczy offers_omitted. Przy dużej inwestycji nie zwiększaj limitu bez potrzeby; offers_omitted > 0 znaczy, że lista jest niepełna. include_history=true dodaje historię ceny każdej zwróconej oferty: wynik jest dłuższy i powstaje wolniej. Dla jednej oferty lepiej użyć get_offer.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "investment_slug": {
-            "description": "investment_slug z search_offers, np. smolna.",
+            "description": "investment_slug z search_investments, search_offers albo get_developer, np. smolna.",
             "title": "Inwestycja",
             "type": "string"
           },
@@ -860,7 +1345,8 @@
         "required": [
           "investment_slug"
         ],
-        "title": "get_investmentArguments"
+        "title": "get_investmentArguments",
+        "additionalProperties": false
       },
       "outputSchema": {
         "$defs": {
@@ -1307,6 +1793,2207 @@
       }
     },
     {
+      "name": "search_developers",
+      "title": "Szukaj deweloperów",
+      "description": "Znajduje deweloperów (rynek pierwotny) po fragmencie nazwy, np. atal albo dom development. Użyj, żeby zamienić nazwę dewelopera na developer_slug, którego wymaga get_developer (profil dewelopera; domyślnie dla całej Polski, city=polska). Nie zwraca ofert ani cen.\n\nZwraca items (developer_slug, name, offer_count, czyli liczbę ofert dewelopera wg serwisu, i developer_url, czyli profil na deweloperuch.pl: podawaj go użytkownikowi jako link) oraz total, returned, truncated i hint. truncated=true znaczy, że pasujących deweloperów jest więcej niż pokazano: doprecyzuj nazwę albo zwiększ limit (najwyżej 20). total jest null, gdy wiadomo tylko, że jest ich więcej.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Fragment nazwy dewelopera, 2–100 znaków, np. atal, Dom Development.",
+            "title": "Nazwa dewelopera",
+            "type": "string"
+          },
+          "limit": {
+            "default": 5,
+            "description": "Najwięcej deweloperów w wyniku, domyślnie 5, najwyżej 20. Każdy to ok. 150 znaków wyniku.",
+            "maximum": 20,
+            "minimum": 1,
+            "title": "Limit wyników",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "search_developersArguments",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$defs": {
+          "DeveloperItem": {
+            "properties": {
+              "developer_slug": {
+                "description": "Identyfikator dewelopera dla get_developer.",
+                "title": "Developer Slug",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "offer_count": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Liczba ofert dewelopera wg serwisu.",
+                "title": "Offer Count"
+              },
+              "developer_url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Profil dewelopera na deweloperuch.pl: podaj go użytkownikowi jako link.",
+                "title": "Developer Url"
+              }
+            },
+            "required": [
+              "developer_slug",
+              "name"
+            ],
+            "title": "DeveloperItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Wszyscy pasujący deweloperzy; null, gdy wiadomo tylko, że jest ich więcej.",
+            "title": "Total"
+          },
+          "returned": {
+            "title": "Returned",
+            "type": "integer"
+          },
+          "truncated": {
+            "description": "true: pasujących deweloperów jest więcej niż pokazano; co dalej, mówi hint.",
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hint"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/DeveloperItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "total",
+          "returned",
+          "truncated",
+          "items"
+        ],
+        "title": "DevelopersResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "get_developer",
+      "title": "Profil dewelopera",
+      "description": "Zwraca profil dewelopera: nazwę, stronę www, podsumowanie jego aktywnych ofert (summary: active_offers, cities, avg_price, avg_area_m2, avg_price_per_m2), inwestycje z aktywnymi ofertami (najpierw te z największą liczbą aktywnych ofert: investment_slug, name, city, active_offers, total_offers razem z archiwalnymi, średnie aktywnych ofert, investment_url) i jego miasta (cities: inwestycje, aktywne oferty, średnia cena i cena za m²). Użyj, gdy pytanie dotyczy dewelopera: gdzie i ile buduje, w jakich cenach. developer_slug weź z search_developers (po nazwie) albo z pól developer_slug w search_offers, get_investment, get_offer. developer_url i investment_url to strony na deweloperuch.pl: podawaj je użytkownikowi jako linki.\n\ncity zawęża summary i investments do jednego miasta (city_slug z search_locations); domyślnie polska (cała Polska). cities zawsze obejmuje całą Polskę.\n\nOgraniczenia: najwyżej limit inwestycji (domyślnie 20); investments_omitted i truncated mówią, ile pominięto. Pojedynczych ofert tu nie ma: oferty inwestycji daje get_investment.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "developer_slug": {
+            "description": "developer_slug z search_developers (po nazwie) albo z pól developer_slug w search_offers, get_investment, get_offer, np. atal.",
+            "title": "Deweloper",
+            "type": "string"
+          },
+          "city": {
+            "default": "polska",
+            "description": "city_slug miasta z search_locations (np. krakow) albo polska (domyślnie: cała Polska).",
+            "title": "Miasto",
+            "type": "string"
+          },
+          "limit": {
+            "default": 20,
+            "description": "Najwięcej inwestycji w wyniku (najpierw te z największą liczbą aktywnych ofert), 1–100, domyślnie 20. Inwestycja to ok. 350 znaków wyniku; zwykle wystarcza domyślne 20.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Limit inwestycji",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "developer_slug"
+        ],
+        "title": "get_developerArguments",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$defs": {
+          "DeveloperBrief": {
+            "properties": {
+              "developer_slug": {
+                "title": "Developer Slug",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "website": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Website"
+              }
+            },
+            "required": [
+              "developer_slug",
+              "name"
+            ],
+            "title": "DeveloperBrief",
+            "type": "object"
+          },
+          "DeveloperCityItem": {
+            "properties": {
+              "city": {
+                "title": "City",
+                "type": "string"
+              },
+              "city_slug": {
+                "title": "City Slug",
+                "type": "string"
+              },
+              "investments": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Inwestycje z aktywnymi ofertami.",
+                "title": "Investments"
+              },
+              "active_offers": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Active Offers"
+              },
+              "avg_price": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Średnia cena aktywnych ofert w PLN.",
+                "title": "Avg Price"
+              },
+              "avg_price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Avg Price Per M2"
+              }
+            },
+            "required": [
+              "city",
+              "city_slug"
+            ],
+            "title": "DeveloperCityItem",
+            "type": "object"
+          },
+          "DeveloperInvestmentItem": {
+            "properties": {
+              "investment_slug": {
+                "title": "Investment Slug",
+                "type": "string"
+              },
+              "name": {
+                "title": "Name",
+                "type": "string"
+              },
+              "city": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "City"
+              },
+              "city_slug": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "City Slug"
+              },
+              "status": {
+                "description": "active (aktualna) albo archived (wycofana).",
+                "title": "Status",
+                "type": "string"
+              },
+              "active_offers": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Active Offers"
+              },
+              "total_offers": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Aktywne i archiwalne oferty.",
+                "title": "Total Offers"
+              },
+              "avg_price": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Średnia cena aktywnych ofert w PLN.",
+                "title": "Avg Price"
+              },
+              "avg_area_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Avg Area M2"
+              },
+              "avg_price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Avg Price Per M2"
+              },
+              "investment_url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Strona inwestycji na deweloperuch.pl: podaj ją użytkownikowi jako link.",
+                "title": "Investment Url"
+              }
+            },
+            "required": [
+              "investment_slug",
+              "name",
+              "status"
+            ],
+            "title": "DeveloperInvestmentItem",
+            "type": "object"
+          },
+          "DeveloperSummaryItem": {
+            "properties": {
+              "active_offers": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Aktywne oferty w zakresie city.",
+                "title": "Active Offers"
+              },
+              "cities": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Miasta z aktywnymi ofertami w zakresie city (lista cities obejmuje zawsze wszystkie miasta dewelopera).",
+                "title": "Cities"
+              },
+              "avg_price": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Średnia cena aktywnych ofert w PLN.",
+                "title": "Avg Price"
+              },
+              "avg_area_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Średni metraż aktywnych ofert.",
+                "title": "Avg Area M2"
+              },
+              "avg_price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Średnia cena za m² aktywnych ofert wg serwisu.",
+                "title": "Avg Price Per M2"
+              }
+            },
+            "title": "DeveloperSummaryItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "developer": {
+            "$ref": "#/$defs/DeveloperBrief"
+          },
+          "developer_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Profil dewelopera na deweloperuch.pl: podaj go użytkownikowi jako link.",
+            "title": "Developer Url"
+          },
+          "city_slug": {
+            "description": "Zakres summary i investments: miasto albo polska.",
+            "title": "City Slug",
+            "type": "string"
+          },
+          "summary": {
+            "$ref": "#/$defs/DeveloperSummaryItem"
+          },
+          "investments_total": {
+            "description": "Wszystkie inwestycje z aktywnymi ofertami.",
+            "title": "Investments Total",
+            "type": "integer"
+          },
+          "investments_returned": {
+            "title": "Investments Returned",
+            "type": "integer"
+          },
+          "investments_omitted": {
+            "description": "Inwestycji pominiętych przez limit.",
+            "title": "Investments Omitted",
+            "type": "integer"
+          },
+          "truncated": {
+            "description": "true: lista investments jest niepełna.",
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hint"
+          },
+          "investments": {
+            "items": {
+              "$ref": "#/$defs/DeveloperInvestmentItem"
+            },
+            "title": "Investments",
+            "type": "array"
+          },
+          "cities": {
+            "description": "Wszystkie miasta dewelopera w Polsce, niezależnie od argumentu city (także przy city=warszawa).",
+            "items": {
+              "$ref": "#/$defs/DeveloperCityItem"
+            },
+            "title": "Cities",
+            "type": "array"
+          }
+        },
+        "required": [
+          "developer",
+          "city_slug",
+          "summary",
+          "investments_total",
+          "investments_returned",
+          "investments_omitted",
+          "truncated",
+          "investments",
+          "cities"
+        ],
+        "title": "DeveloperResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "get_market_statistics",
+      "title": "Statystyki rynku miasta",
+      "description": "Zwraca statystyki rynku ofert deweloperskich w jednym mieście: liczbę ofert, inwestycji i deweloperów, rozkład cen (PLN), cen za m² (PLN/m²) i metraży (m²) jako min, p25, median, p75 i max oraz największych deweloperów wg liczby ofert (developer_slug, offers, investments, median_price_per_m2, developer_url; developer_slug to identyfikator, a nazwę dewelopera daje get_developer). Opcjonalnie tylko oferty z zakresu ceny i metrażu. Użyj, gdy pytanie dotyczy rynku miasta (typowe ceny, kto ma najwięcej ofert), a nie konkretnych mieszkań (search_offers).\n\nOgraniczenia: tylko aktywne oferty (bez archiwalnych) i tylko jedno miasto (city_slug z search_locations; polska nie działa). Liczby mogą się nieco różnić od total w search_offers. Pojedynczych ofert tu nie ma: list_url to lista tych ofert na deweloperuch.pl z tymi samymi filtrami, a developer_url profil dewelopera: podawaj je użytkownikowi jako linki.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "description": "city_slug jednego miasta z search_locations, np. krakow (nie polska).",
+            "title": "Miasto",
+            "type": "string"
+          },
+          "price_min": {
+            "anyOf": [
+              {
+                "maximum": 99999999,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Najniższa cena oferty w PLN.",
+            "title": "Cena od"
+          },
+          "price_max": {
+            "anyOf": [
+              {
+                "maximum": 99999999,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Najwyższa cena oferty w PLN.",
+            "title": "Cena do"
+          },
+          "area_min": {
+            "anyOf": [
+              {
+                "maximum": 9999,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Najmniejszy metraż w m².",
+            "title": "Metraż od"
+          },
+          "area_max": {
+            "anyOf": [
+              {
+                "maximum": 9999,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Największy metraż w m².",
+            "title": "Metraż do"
+          },
+          "top_developers": {
+            "default": 10,
+            "description": "Ilu największych deweloperów pokazać, 1–30, domyślnie 10.",
+            "maximum": 30,
+            "minimum": 1,
+            "title": "Liczba deweloperów",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "title": "get_market_statisticsArguments",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$defs": {
+          "DeveloperShareItem": {
+            "properties": {
+              "developer_slug": {
+                "description": "Identyfikator dewelopera (bez nazwy); nazwę i inwestycje daje get_developer.",
+                "title": "Developer Slug",
+                "type": "string"
+              },
+              "offers": {
+                "description": "Pasujące aktywne oferty dewelopera w mieście.",
+                "title": "Offers",
+                "type": "integer"
+              },
+              "investments": {
+                "title": "Investments",
+                "type": "integer"
+              },
+              "median_price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Mediana ceny za m² w PLN.",
+                "title": "Median Price Per M2"
+              },
+              "developer_url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Profil dewelopera na deweloperuch.pl: podaj go użytkownikowi jako link.",
+                "title": "Developer Url"
+              }
+            },
+            "required": [
+              "developer_slug",
+              "offers",
+              "investments"
+            ],
+            "title": "DeveloperShareItem",
+            "type": "object"
+          },
+          "SpreadItem": {
+            "properties": {
+              "min": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "title": "Min"
+              },
+              "p25": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "title": "P25"
+              },
+              "median": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "title": "Median"
+              },
+              "p75": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "title": "P75"
+              },
+              "max": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "title": "Max"
+              }
+            },
+            "required": [
+              "min",
+              "p25",
+              "median",
+              "p75",
+              "max"
+            ],
+            "title": "SpreadItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "city_slug": {
+            "title": "City Slug",
+            "type": "string"
+          },
+          "offers": {
+            "description": "Pasujące aktywne oferty.",
+            "title": "Offers",
+            "type": "integer"
+          },
+          "investments": {
+            "title": "Investments",
+            "type": "integer"
+          },
+          "developers": {
+            "description": "Wszyscy deweloperzy z pasującymi ofertami.",
+            "title": "Developers",
+            "type": "integer"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SpreadItem"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Ceny w PLN: min, kwartyle, mediana, max."
+          },
+          "price_per_m2": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SpreadItem"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Ceny za m² w PLN."
+          },
+          "area_m2": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SpreadItem"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Metraże w m²."
+          },
+          "top_developers": {
+            "description": "Deweloperzy z największą liczbą pasujących ofert, malejąco.",
+            "items": {
+              "$ref": "#/$defs/DeveloperShareItem"
+            },
+            "title": "Top Developers",
+            "type": "array"
+          },
+          "developers_returned": {
+            "title": "Developers Returned",
+            "type": "integer"
+          },
+          "developers_omitted": {
+            "title": "Developers Omitted",
+            "type": "integer"
+          },
+          "truncated": {
+            "description": "true: deweloperów jest więcej niż w top_developers.",
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hint"
+          },
+          "list_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Lista tych ofert na deweloperuch.pl (te same filtry ceny i metrażu): podaj ją użytkownikowi jako link.",
+            "title": "List Url"
+          }
+        },
+        "required": [
+          "city_slug",
+          "offers",
+          "investments",
+          "developers",
+          "top_developers",
+          "developers_returned",
+          "developers_omitted",
+          "truncated"
+        ],
+        "title": "MarketStatisticsResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "get_transaction_statistics",
+      "title": "Ceny transakcyjne w czasie",
+      "description": "Zwraca ceny transakcyjne mieszkań w mieście z Rejestru Cen Nieruchomości (RCN) w kolejnych miesiącach albo kwartałach: liczbę transakcji i ceny za m². To ceny faktycznych sprzedaży, a nie ceny ofertowe deweloperów (search_offers, get_market_statistics) ani oficjalne ceny NBP (get_government_statistics).\n\ngranularity=month (domyślnie): mediana i średnia ceny za m², mediana metrażu i mediana ceny mieszkania. granularity=quarter: tylko średnia cena za m² i liczba transakcji, za to dłuższa historia. Miesiące i kwartały to różne statystyki: nie łącz ich w jeden wykres ani szereg.\n\nZwraca periods (od najstarszego; okres bez transakcji nie ma cen) oraz total, returned, truncated, available_from, hint, note i stats_url (link dla użytkownika).\n\nOgraniczenia: tylko mieszkania i całe miasta (city_slug z search_locations; bez dzielnic, ulic i całej Polski). Domyślnie ostatnie 12 okresów; truncated=true znaczy, że są starsze (zwiększ periods, najwyżej 60). Najnowsze miesiące są niepełne, bo transakcje trafiają do RCN z kilkumiesięcznym opóźnieniem: mają zaniżoną liczbę transakcji i niepewne ceny, więc ich spadku nie traktuj jako trendu (przeczytaj note).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "city": {
+            "description": "city_slug miasta z search_locations, np. warszawa, krakow, gdansk (małe litery bez polskich znaków). Statystyki są dla całych miast; dzielnice, ulice i cała Polska (polska) nie są obsługiwane.",
+            "title": "Miasto",
+            "type": "string"
+          },
+          "granularity": {
+            "default": "month",
+            "description": "month (domyślnie): miesiące, z medianą i średnią ceny za m², medianą metrażu i medianą ceny mieszkania; quarter: kwartały, tylko średnia cena za m² i liczba transakcji, ale dłuższa historia.",
+            "enum": [
+              "month",
+              "quarter"
+            ],
+            "title": "Długość okresu",
+            "type": "string"
+          },
+          "periods": {
+            "default": 12,
+            "description": "Ile ostatnich okresów (miesięcy albo kwartałów) zwrócić, 1–60, domyślnie 12. 60 miesięcy to ok. 9 tys. znaków; dla trendu wieloletniego wybierz quarter zamiast wielu miesięcy.",
+            "maximum": 60,
+            "minimum": 1,
+            "title": "Liczba okresów",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "city"
+        ],
+        "title": "get_transaction_statisticsArguments",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$defs": {
+          "TransactionPeriodItem": {
+            "properties": {
+              "period": {
+                "description": "Miesiąc (2025-08) albo kwartał (2025-Q3).",
+                "title": "Period",
+                "type": "string"
+              },
+              "transactions": {
+                "description": "Liczba transakcji w okresie (w najnowszych okresach zaniżona, zob. note).",
+                "title": "Transactions",
+                "type": "integer"
+              },
+              "median_price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Mediana ceny transakcyjnej 1 m² w PLN (tylko month).",
+                "title": "Median Price Per M2"
+              },
+              "average_price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Średnia cena transakcyjna 1 m² w PLN.",
+                "title": "Average Price Per M2"
+              },
+              "median_area_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Mediana metrażu w m² (tylko month).",
+                "title": "Median Area M2"
+              },
+              "median_price": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Mediana ceny transakcyjnej mieszkania w PLN (tylko month).",
+                "title": "Median Price"
+              }
+            },
+            "required": [
+              "period",
+              "transactions"
+            ],
+            "title": "TransactionPeriodItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "city_slug": {
+            "title": "City Slug",
+            "type": "string"
+          },
+          "granularity": {
+            "description": "month (miesiące) albo quarter (kwartały).",
+            "title": "Granularity",
+            "type": "string"
+          },
+          "total": {
+            "description": "Wszystkie okresy, które serwis ma dla miasta.",
+            "title": "Total",
+            "type": "integer"
+          },
+          "returned": {
+            "description": "Okresy w wyniku: ostatnie z nich.",
+            "title": "Returned",
+            "type": "integer"
+          },
+          "truncated": {
+            "description": "true: są starsze okresy niż pokazane; co dalej, mówi hint.",
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "available_from": {
+            "description": "Najstarszy okres, jaki ma serwis.",
+            "title": "Available From",
+            "type": "string"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Co zrobić dalej, gdy wynik jest obcięty.",
+            "title": "Hint"
+          },
+          "note": {
+            "description": "Uwaga do danych: najnowsze okresy są niepełne.",
+            "title": "Note",
+            "type": "string"
+          },
+          "stats_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Strona statystyk transakcji na deweloperuch.pl dla ludzi: podaj ją użytkownikowi jako link.",
+            "title": "Stats Url"
+          },
+          "periods": {
+            "description": "Okresy od najstarszego; okres bez transakcji nie ma cen ani metrażu.",
+            "items": {
+              "$ref": "#/$defs/TransactionPeriodItem"
+            },
+            "title": "Periods",
+            "type": "array"
+          }
+        },
+        "required": [
+          "city_slug",
+          "granularity",
+          "total",
+          "returned",
+          "truncated",
+          "available_from",
+          "note",
+          "periods"
+        ],
+        "title": "TransactionStatisticsResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "rank_locations",
+      "title": "Ranking miast i powiatów",
+      "description": "Ranking miejscowości (level=city) albo powiatów (level=powiat) w Polsce według transakcji z Rejestru Cen Nieruchomości (RCN): liczba transakcji i cena transakcyjna za m². Dla porównania wielu miast (gdzie najwięcej transakcji, gdzie najdrożej, gdzie najtaniej): to narzędzie; dla trendu jednego miasta w czasie: get_transaction_statistics. To ceny transakcyjne, nie ofertowe; oferty deweloperów daje search_offers.\n\nZwraca total (miejsca z co najmniej min_transactions transakcji), returned, truncated, hint i items (name, city_slug albo powiat_id, transaction_count, price_per_m2, area_m2, price); dla city także ranking_url (strona rankingu na deweloperuch.pl: podaj ją użytkownikowi jako link). powiat_id jest informacyjny: żadne narzędzie go nie przyjmuje.\n\nOgraniczenia: serwis nie podaje okresu ani tego, czy ceny i metraż to średnie, czy mediany: przedstawiaj je jako wartości podane przez serwis. Liczby transakcji powiatów obejmują wiele lat: służą tylko do uporządkowania, nie są bieżącym wolumenem; nie porównuj ich z liczbami miejscowości. Przy sortowaniu miejscowości po cenie podaj min_transactions (np. 50): przy kilku transakcjach cena bywa przypadkowa.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "default": "city",
+            "description": "city: miejscowości (miasta, także małe miasteczka i wsie), domyślnie; powiat: powiaty (bez ranking_url i bez odpowiednika w search_locations).",
+            "enum": [
+              "city",
+              "powiat"
+            ],
+            "title": "Poziom",
+            "type": "string"
+          },
+          "sort": {
+            "default": "transactions_desc",
+            "description": "transactions_desc: najwięcej transakcji (domyślnie); price_per_m2_desc: najwyższa cena za m²; price_per_m2_asc: najniższa cena za m². Miejsca bez ceny są na końcu.",
+            "enum": [
+              "transactions_desc",
+              "price_per_m2_desc",
+              "price_per_m2_asc"
+            ],
+            "title": "Kolejność",
+            "type": "string"
+          },
+          "limit": {
+            "default": 20,
+            "description": "Ile pierwszych pozycji rankingu zwrócić, 1–100, domyślnie 20. Pozycja to ok. 120 znaków wyniku. Dla pełnych list zawężaj min_transactions, nie podnoś limitu bez potrzeby.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Liczba pozycji",
+            "type": "integer"
+          },
+          "min_transactions": {
+            "default": 0,
+            "description": "Pomiń miejsca z mniejszą liczbą transakcji; domyślnie 0 (wszystkie). Przy sortowaniu miejscowości (level=city) po cenie podaj np. 50.",
+            "maximum": 10000000,
+            "minimum": 0,
+            "title": "Najmniej transakcji",
+            "type": "integer"
+          }
+        },
+        "title": "rank_locationsArguments",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$defs": {
+          "RankedLocationItem": {
+            "properties": {
+              "name": {
+                "description": "Nazwa miejscowości albo powiatu.",
+                "title": "Name",
+                "type": "string"
+              },
+              "city_slug": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Slug miejscowości (level=city), w tym samym formacie co city_slug z search_locations.",
+                "title": "City Slug"
+              },
+              "powiat_id": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Identyfikator powiatu w serwisie (level=powiat), informacyjny: żadne narzędzie go nie przyjmuje.",
+                "title": "Powiat Id"
+              },
+              "transaction_count": {
+                "description": "Liczba transakcji wg serwisu; okresu serwis nie podaje (dla powiatów wiele lat: tylko do uporządkowania).",
+                "title": "Transaction Count",
+                "type": "integer"
+              },
+              "price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Cena transakcyjna za m² w PLN, podana przez serwis.",
+                "title": "Price Per M2"
+              },
+              "area_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Metraż w m², podany przez serwis.",
+                "title": "Area M2"
+              },
+              "price": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Cena transakcyjna w PLN, podana przez serwis.",
+                "title": "Price"
+              }
+            },
+            "required": [
+              "name",
+              "transaction_count"
+            ],
+            "title": "RankedLocationItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "level": {
+            "description": "city (miejscowości) albo powiat (powiaty).",
+            "title": "Level",
+            "type": "string"
+          },
+          "sort": {
+            "description": "Kolejność rankingu, jak w argumencie sort.",
+            "title": "Sort",
+            "type": "string"
+          },
+          "min_transactions": {
+            "description": "Próg z argumentu min_transactions (0 = wszystkie miejsca).",
+            "title": "Min Transactions",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Wszystkie miejsca tego poziomu z co najmniej min_transactions transakcji.",
+            "title": "Total",
+            "type": "integer"
+          },
+          "returned": {
+            "description": "Pozycje w items: pierwsze z rankingu.",
+            "title": "Returned",
+            "type": "integer"
+          },
+          "truncated": {
+            "description": "true: miejsc jest więcej, niż pokazano; co dalej, mówi hint.",
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Co zrobić, gdy wynik jest obcięty albo pusty.",
+            "title": "Hint"
+          },
+          "ranking_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Strona rankingu miast na deweloperuch.pl (tylko level=city): podaj ją użytkownikowi jako link.",
+            "title": "Ranking Url"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/RankedLocationItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "level",
+          "sort",
+          "min_transactions",
+          "total",
+          "returned",
+          "truncated",
+          "items"
+        ],
+        "title": "LocationRankingResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "get_building",
+      "title": "Budynek z transakcjami",
+      "description": "Zwraca budynek z rejestru cen transakcyjnych (RCN): adres, miasto, współrzędne, średnie ceny podane przez serwis i lokale (mieszkania) z ich transakcjami: datą, ceną, ceną za m², rynkiem (pierwotny albo wtórny), rodzajem transakcji i stronami. To ceny, za które lokale sprzedano, a nie ceny ofertowe deweloperów. building_slug to ostatni człon adresu strony budynku z cenami transakcyjnymi na deweloperuch.pl, np. 23-marca-79c-sopot albo aleja-krakowska-279-warszawa; gdy go nie znasz, poproś użytkownika o link do tej strony. building_url to ta strona: podawaj ją użytkownikowi jako link. Kolejność: lokale od tego z najnowszą transakcją, transakcje każdego lokalu od najstarszej.\n\nOgraniczenia: tylko budynki z mieszkaniami, nie domy. Zwraca najwyżej limit lokali (domyślnie 10); units_returned mówi, ile ich jest na liście, truncated i units_omitted, czy i ile pominięto, a units_total i transactions_total liczą cały budynek. Najnowsze miesiące bywają niepełne, bo rejestr spływa z opóźnieniem. include_trend=true dodaje średnią cenę za m² transakcji w okolicy budynku (promień radius_km) w ostatnich 12 kwartałach; to jedno zapytanie do serwisu więcej.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "building_slug": {
+            "description": "Slug budynku, np. 23-marca-79c-sopot, ze strony budynku albo z comparables w estimate_property_value.",
+            "title": "Budynek",
+            "type": "string"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Najwięcej lokali w wyniku (tych z najnowszymi transakcjami), domyślnie 10, najwyżej 50; 0 = tylko podsumowanie budynku. Ile pominięto, mówi units_omitted. Wynik ma ok. 200 znaków na transakcję; lokal może mieć kilka transakcji, więc zwykle wystarcza domyślny limit.",
+            "maximum": 50,
+            "minimum": 0,
+            "title": "Limit lokali",
+            "type": "integer"
+          },
+          "include_trend": {
+            "default": false,
+            "description": "true: dołącz średnią cenę za m² transakcji w okolicy budynku w ostatnich 12 kwartałach (jedno zapytanie więcej).",
+            "title": "Z trendem okolicy",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "building_slug"
+        ],
+        "title": "get_buildingArguments",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$defs": {
+          "NeighbourhoodTrendResult": {
+            "properties": {
+              "radius_km": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Promień okolicy budynku w km.",
+                "title": "Radius Km"
+              },
+              "total": {
+                "description": "Wszystkie kwartały, które ma serwis.",
+                "title": "Total",
+                "type": "integer"
+              },
+              "returned": {
+                "description": "Kwartały w wyniku: najnowsze z nich.",
+                "title": "Returned",
+                "type": "integer"
+              },
+              "truncated": {
+                "description": "true: są starsze kwartały niż pokazane.",
+                "title": "Truncated",
+                "type": "boolean"
+              },
+              "quarters": {
+                "description": "Kwartały od najstarszego.",
+                "items": {
+                  "$ref": "#/$defs/TrendQuarterItem"
+                },
+                "title": "Quarters",
+                "type": "array"
+              }
+            },
+            "required": [
+              "total",
+              "returned",
+              "truncated",
+              "quarters"
+            ],
+            "title": "NeighbourhoodTrendResult",
+            "type": "object"
+          },
+          "TransactionItem": {
+            "properties": {
+              "date": {
+                "anyOf": [
+                  {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Date"
+              },
+              "price": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Cena transakcyjna (za tyle lokal sprzedano, nie ofertowa) w walucie currency (domyślnie PLN).",
+                "title": "Price"
+              },
+              "price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Cena transakcyjna za m² w walucie currency (domyślnie PLN).",
+                "title": "Price Per M2"
+              },
+              "currency": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Waluta; brak pola = PLN.",
+                "title": "Currency"
+              },
+              "market": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "primary (rynek pierwotny) albo secondary (rynek wtórny).",
+                "title": "Market"
+              },
+              "classification": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Rodzaj transakcji wg serwisu: regular (zwykła), share (udział), bulk (hurtowa), government (rządowa), enforcement (egzekucja), discount (z bonifikatą), anomaly_low albo anomaly_high (cena odstająca w dół albo w górę).",
+                "title": "Classification"
+              },
+              "buyer": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "natural_person (osoba fizyczna) albo legal_person (osoba prawna, np. firma).",
+                "title": "Buyer"
+              },
+              "seller": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "natural_person (osoba fizyczna) albo legal_person (osoba prawna, np. firma).",
+                "title": "Seller"
+              },
+              "share": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Sprzedany udział w lokalu (np. 1/2), tylko gdy nie cały lokal.",
+                "title": "Share"
+              }
+            },
+            "title": "TransactionItem",
+            "type": "object"
+          },
+          "TrendQuarterItem": {
+            "properties": {
+              "period": {
+                "description": "Kwartał, np. 2025-Q3.",
+                "title": "Period",
+                "type": "string"
+              },
+              "avg_price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Średnia cena za m² w PLN.",
+                "title": "Avg Price Per M2"
+              },
+              "transactions": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Liczba transakcji w kwartale.",
+                "title": "Transactions"
+              }
+            },
+            "required": [
+              "period"
+            ],
+            "title": "TrendQuarterItem",
+            "type": "object"
+          },
+          "UnitItem": {
+            "properties": {
+              "floor": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Piętro wg rejestru cen.",
+                "title": "Floor"
+              },
+              "rooms": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Liczba pokoi wg rejestru cen.",
+                "title": "Rooms"
+              },
+              "area_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Powierzchnia lokalu w m².",
+                "title": "Area M2"
+              },
+              "transactions": {
+                "description": "Transakcje lokalu od najstarszej.",
+                "items": {
+                  "$ref": "#/$defs/TransactionItem"
+                },
+                "title": "Transactions",
+                "type": "array"
+              }
+            },
+            "required": [
+              "transactions"
+            ],
+            "title": "UnitItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "building_slug": {
+            "description": "Identyfikator do ponownego get_building.",
+            "title": "Building Slug",
+            "type": "string"
+          },
+          "name": {
+            "description": "Adres budynku wg rejestru cen.",
+            "title": "Name",
+            "type": "string"
+          },
+          "building_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Strona budynku z cenami transakcyjnymi na deweloperuch.pl: podaj ją użytkownikowi jako link.",
+            "title": "Building Url"
+          },
+          "city": {
+            "description": "Miasto budynku.",
+            "title": "City",
+            "type": "string"
+          },
+          "city_slug": {
+            "description": "city_slug jak w search_locations.",
+            "title": "City Slug",
+            "type": "string"
+          },
+          "street": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Ulica, tylko gdy inna niż name.",
+            "title": "Street"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Współrzędne budynku (WGS84).",
+            "title": "Lat"
+          },
+          "lng": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Współrzędne budynku (WGS84).",
+            "title": "Lng"
+          },
+          "avg_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Średnia cena transakcyjna lokalu w PLN, podana przez serwis.",
+            "title": "Avg Price"
+          },
+          "avg_area_m2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Średnia powierzchnia lokalu w m², podana przez serwis.",
+            "title": "Avg Area M2"
+          },
+          "avg_price_per_m2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Średnia cena za m² w PLN, podana przez serwis.",
+            "title": "Avg Price Per M2"
+          },
+          "first_transaction_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data najstarszej transakcji w budynku.",
+            "title": "First Transaction Date"
+          },
+          "last_transaction_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data najnowszej transakcji w budynku.",
+            "title": "Last Transaction Date"
+          },
+          "units_total": {
+            "description": "Wszystkie lokale budynku w rejestrze cen.",
+            "title": "Units Total",
+            "type": "integer"
+          },
+          "transactions_total": {
+            "description": "Wszystkie transakcje lokali budynku.",
+            "title": "Transactions Total",
+            "type": "integer"
+          },
+          "units": {
+            "description": "Lokale od tego z najnowszą transakcją.",
+            "items": {
+              "$ref": "#/$defs/UnitItem"
+            },
+            "title": "Units",
+            "type": "array"
+          },
+          "units_returned": {
+            "description": "Lokali na liście units.",
+            "title": "Units Returned",
+            "type": "integer"
+          },
+          "units_omitted": {
+            "description": "Lokali pominiętych przez limit.",
+            "title": "Units Omitted",
+            "type": "integer"
+          },
+          "truncated": {
+            "description": "true: lista units jest niepełna (units_omitted > 0).",
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "neighbourhood_trend": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NeighbourhoodTrendResult"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Średnia cena za m² transakcji w okolicy budynku w kolejnych kwartałach; tylko przy include_trend=true."
+          }
+        },
+        "required": [
+          "building_slug",
+          "name",
+          "city",
+          "city_slug",
+          "units_total",
+          "transactions_total",
+          "units",
+          "units_returned",
+          "units_omitted",
+          "truncated"
+        ],
+        "title": "BuildingResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "estimate_property_value",
+      "title": "Wycena mieszkania",
+      "description": "Szacuje wartość mieszkania o danym metrażu w punkcie (lat, lng) w Polsce na podstawie cen transakcyjnych z Rejestru Cen Nieruchomości (RCN) z okolicy. Wynik jest przybliżony: to porównanie z transakcjami w pobliżu, a nie operat szacunkowy. Użyj, gdy użytkownik pyta, ile może być warte mieszkanie albo czy jego cena jest rynkowa.\n\nZwraca estimated_value (PLN), price_per_m2, radius_m i period_months (skąd i z ilu miesięcy są transakcje), stats (liczba, mediana, średnia, min i max ceny za m²) oraz comparables: najbliższe transakcje porównawcze (adres, data, cena, metraż, cena za m², piętro, odległość, rynek), z comparables_total, comparables_omitted, truncated i hint. estimated_value=null znaczy, że serwis nie podał wyceny: przeczytaj hint.\n\nWymaga współrzędnych: narzędzie nie zamienia adresu na lat i lng. Weź je od użytkownika, z search_locations (ulica lub dzielnica: to punkt przybliżony, nie konkretny budynek) albo z get_investment (współrzędne inwestycji oferty). Każde wywołanie to zapytanie do serwisu: nie wyceniaj seriami wielu punktów.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "description": "Szerokość geograficzna punktu w Polsce w stopniach, np. 52.2297: pole lat z search_locations (ulica albo dzielnica, nie samo miasto) albo ze współrzędnych inwestycji w get_investment (dokładniejsze dla konkretnej oferty).",
+            "maximum": 54.9,
+            "minimum": 49.0,
+            "title": "Szerokość geograficzna",
+            "type": "number"
+          },
+          "lng": {
+            "description": "Długość geograficzna punktu w Polsce w stopniach, np. 21.0122: pole lng z search_locations (ulica albo dzielnica, nie samo miasto) albo ze współrzędnych inwestycji w get_investment (dokładniejsze dla konkretnej oferty).",
+            "maximum": 24.2,
+            "minimum": 14.1,
+            "title": "Długość geograficzna",
+            "type": "number"
+          },
+          "area_m2": {
+            "description": "Metraż mieszkania w m², 10–500, np. 48.5.",
+            "maximum": 500,
+            "minimum": 10,
+            "title": "Metraż",
+            "type": "number"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Opcjonalny opis adresu, np. Marszałkowska 100, Warszawa. Trafia do serwisu, ale nie wyznacza położenia: decydują lat i lng.",
+            "title": "Adres"
+          },
+          "limit": {
+            "default": 10,
+            "description": "Ile najbliższych transakcji porównawczych zwrócić, 0–50, domyślnie 10. Transakcja to ok. 210 znaków wyniku (50 to ok. 10,6 tys.); 0 = tylko wycena i statystyki.",
+            "maximum": 50,
+            "minimum": 0,
+            "title": "Liczba transakcji",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "lat",
+          "lng",
+          "area_m2"
+        ],
+        "title": "estimate_property_valueArguments",
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "$defs": {
+          "ComparableItem": {
+            "properties": {
+              "address": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Ulica i numer budynku.",
+                "title": "Address"
+              },
+              "date": {
+                "anyOf": [
+                  {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Data transakcji.",
+                "title": "Date"
+              },
+              "price": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Cena transakcyjna w PLN (nie ofertowa).",
+                "title": "Price"
+              },
+              "area_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Metraż w m².",
+                "title": "Area M2"
+              },
+              "price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Cena transakcyjna za m² w PLN.",
+                "title": "Price Per M2"
+              },
+              "floor": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Piętro.",
+                "title": "Floor"
+              },
+              "distance_m": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Przybliżona odległość od wycenianego punktu w m (do 50 m).",
+                "title": "Distance M"
+              },
+              "market": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "primary (rynek pierwotny) albo secondary (rynek wtórny).",
+                "title": "Market"
+              },
+              "building_slug": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Identyfikator budynku: building_slug dla get_building.",
+                "title": "Building Slug"
+              }
+            },
+            "title": "ComparableItem",
+            "type": "object"
+          },
+          "PriceStatsItem": {
+            "properties": {
+              "count": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Liczba transakcji wg serwisu.",
+                "title": "Count"
+              },
+              "median_price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Mediana ceny za m² w PLN.",
+                "title": "Median Price Per M2"
+              },
+              "average_price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Średnia cena za m² w PLN.",
+                "title": "Average Price Per M2"
+              },
+              "min_price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Najniższa cena za m² w PLN.",
+                "title": "Min Price Per M2"
+              },
+              "max_price_per_m2": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Najwyższa cena za m² w PLN.",
+                "title": "Max Price Per M2"
+              }
+            },
+            "title": "PriceStatsItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lng": {
+            "title": "Lng",
+            "type": "number"
+          },
+          "area_m2": {
+            "description": "Metraż wycenianego mieszkania w m².",
+            "title": "Area M2",
+            "type": "number"
+          },
+          "estimated_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Szacowana wartość mieszkania w PLN (price_per_m2 × area_m2): przybliżenie, nie operat szacunkowy. null: serwis nie podał wyceny.",
+            "title": "Estimated Value"
+          },
+          "price_per_m2": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Szacowana cena za m² w PLN.",
+            "title": "Price Per M2"
+          },
+          "radius_m": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Promień w metrach, z którego są transakcje porównawcze.",
+            "title": "Radius M"
+          },
+          "period_months": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Z ilu ostatnich miesięcy są transakcje porównawcze.",
+            "title": "Period Months"
+          },
+          "stats": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PriceStatsItem"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Statystyki cen za m² podane przez serwis."
+          },
+          "comparables_total": {
+            "description": "Wszystkie transakcje porównawcze serwisu.",
+            "title": "Comparables Total",
+            "type": "integer"
+          },
+          "comparables_returned": {
+            "description": "Transakcji na liście comparables.",
+            "title": "Comparables Returned",
+            "type": "integer"
+          },
+          "comparables_omitted": {
+            "description": "Transakcji pominiętych przez limit.",
+            "title": "Comparables Omitted",
+            "type": "integer"
+          },
+          "truncated": {
+            "description": "true: lista comparables jest niepełna (comparables_omitted > 0).",
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Co zrobić dalej.",
+            "title": "Hint"
+          },
+          "comparables": {
+            "description": "Transakcje porównawcze od najbliższych, najwyżej limit.",
+            "items": {
+              "$ref": "#/$defs/ComparableItem"
+            },
+            "title": "Comparables",
+            "type": "array"
+          }
+        },
+        "required": [
+          "lat",
+          "lng",
+          "area_m2",
+          "estimated_value",
+          "comparables_total",
+          "comparables_returned",
+          "comparables_omitted",
+          "truncated",
+          "comparables"
+        ],
+        "title": "ValuationResult",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
       "name": "get_government_statistics",
       "title": "Statystyki GUS i NBP",
       "description": "Zwraca oficjalne statystyki GUS i NBP jako szeregi czasowe dla Polski, agregatu miast albo miasta na prawach powiatu: mieszkania oddane do użytkowania i rozpoczęte (razem, wg form budownictwa, na wynajem), średnią powierzchnię mieszkań oddanych przez deweloperów, średnie ceny m² wg NBP (rynek pierwotny i wtórny, ceny ofertowe i transakcyjne), stopę bezrobocia, wynagrodzenia, demografię i ludność. Użyj jako kontekstu rynku; ofert i cen konkretnych mieszkań tu nie ma (search_offers).\n\nZwraca periods (od najstarszego) i series (series_id, label, unit, values wyrównane z periods; null = brak danych) oraz frequency, source, total, returned, truncated, available_from, note i stats_url (sekcja strony na deweloperuch.pl: podaj ją użytkownikowi jako link).\n\nOgraniczenia: domyślnie ostatnie 12 okresów; truncated=true znaczy, że są starsze (zwiększ periods, najwyżej 120). nbp_prices: tylko 17 dużych miast i 3 agregaty, nie polska. Nie każdy zestaw jest dostępny dla każdej lokalizacji (błąd wskaże, co podać); dane GUS i NBP są publikowane z opóźnieniem, ostatni okres bywa sprzed kilku tygodni lub miesięcy. Przeczytaj note: ostatni okres bywa niepełny.",
@@ -1346,7 +4033,8 @@
           "location",
           "dataset"
         ],
-        "title": "get_government_statisticsArguments"
+        "title": "get_government_statisticsArguments",
+        "additionalProperties": false
       },
       "outputSchema": {
         "$defs": {

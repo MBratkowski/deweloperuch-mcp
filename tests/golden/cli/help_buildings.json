@@ -1,0 +1,26 @@
+{
+  "args": [
+    "buildings",
+    "--help"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "                                                                                                    ",
+    " Usage: deweloperuch buildings [OPTIONS] COMMAND [ARGS]...                                          ",
+    "                                                                                                    ",
+    " Budynki z rejestru cen transakcyjnych (RCN): lokale i ich transakcje.                              ",
+    "                                                                                                    ",
+    "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ --help          Show this message and exit.                                                      │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "╭─ Commands ───────────────────────────────────────────────────────────────────────────────────────╮",
+    "│ get  Pokaż budynek z lokalami i ich transakcjami (ceny transakcyjne, nie ofertowe).              │",
+    "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": []
+}

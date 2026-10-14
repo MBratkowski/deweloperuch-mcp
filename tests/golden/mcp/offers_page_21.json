@@ -11,7 +11,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool search_offers: 1 validation error for search_offersArguments\npage\n  Input should be less than or equal to 20 [type=less_than_equal, input_value=21, input_type=int]",
+      "text": "Błędny argument narzędzia search_offers: page musi być liczbą całkowitą z zakresu 1–20, podano 21. Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

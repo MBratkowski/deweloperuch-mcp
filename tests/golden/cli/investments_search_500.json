@@ -1,0 +1,19 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "sopot"
+  ],
+  "exit_code": 4,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Wyszukiwanie inwestycji w 'sopot': Serwis odpowiedział błędem HTTP 500. Nic nie ponawiam; spróbuj później.",
+    "Szczegóły: /api/map/investments?citySlug=sopot: x",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

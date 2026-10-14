@@ -11,7 +11,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool search_offers: 1 validation error for search_offersArguments\nprice_max\n  Input should be greater than or equal to 0 [type=greater_than_equal, input_value=-1, input_type=int]",
+      "text": "Błędny argument narzędzia search_offers: price_max musi być liczbą całkowitą z zakresu 0–99999999 albo pusty, podano -1. Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

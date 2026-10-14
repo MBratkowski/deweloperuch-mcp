@@ -1,0 +1,58 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "city": " sopot "
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 2,
+        "returned": 2,
+        "truncated": false,
+        "items": [
+          {
+            "investment_slug": "nowe-kolibki-etap-4",
+            "name": "Nowe Kolibki etap 4",
+            "city_slug": "sopot",
+            "status": "active",
+            "offers_active": 3,
+            "offers_total": 27,
+            "avg_price": 1615878.0,
+            "avg_area_m2": 65.55,
+            "avg_price_per_m2": 24756.49,
+            "developer_slug": "invest-komfort-spolka-akcyjna",
+            "developer_name": "Invest Komfort Spółka Akcyjna Sp.K.",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/nowe-kolibki-etap-4",
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna"
+          },
+          {
+            "investment_slug": "smolna",
+            "name": "Smolna",
+            "city_slug": "sopot",
+            "street": "Świemirowo",
+            "status": "active",
+            "offers_active": 3,
+            "offers_total": 16,
+            "avg_price": 1566392.0,
+            "avg_area_m2": 63.97,
+            "avg_price_per_m2": 24522.21,
+            "developer_slug": "invest-komfort-spolka-akcyjna",
+            "developer_name": "Invest Komfort Spółka Akcyjna Sp.K.",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna",
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna"
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

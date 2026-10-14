@@ -1,0 +1,18 @@
+{
+  "args": [
+    "stats",
+    "cities"
+  ],
+  "exit_code": 4,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Ranking miejscowości: Serwis odpowiedział błędem HTTP 500. Nic nie ponawiam; spróbuj później.",
+    "Szczegóły: /api/city-transaction-stats: busy",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/city-transaction-stats [accept: application/json]"
+  ]
+}

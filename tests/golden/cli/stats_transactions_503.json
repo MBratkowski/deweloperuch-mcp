@@ -1,0 +1,19 @@
+{
+  "args": [
+    "stats",
+    "transactions",
+    "warszawa"
+  ],
+  "exit_code": 4,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Ceny transakcyjne dla 'warszawa': Serwis odpowiedział błędem HTTP 503. Nic nie ponawiam; spróbuj później. Limiter wstrzyma następne zapytanie o 10 s.",
+    "Szczegóły: /api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa: ",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa [accept: application/json]"
+  ]
+}

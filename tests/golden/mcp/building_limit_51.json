@@ -1,0 +1,20 @@
+{
+  "calls": [
+    {
+      "tool": "get_building",
+      "arguments": {
+        "building_slug": "23-marca-79c-sopot",
+        "limit": 51
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Błędny argument narzędzia get_building: limit musi być liczbą całkowitą z zakresu 0–50, podano 51. Popraw i ponów; nic nie zostało wysłane.",
+      "structured_content": null
+    }
+  ],
+  "log": [],
+  "requests": []
+}

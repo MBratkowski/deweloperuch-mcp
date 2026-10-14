@@ -11,7 +11,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool get_government_statistics: 1 validation error for get_government_statisticsArguments\ndataset\n  Input should be 'dwellings_quarterly', 'dwellings_monthly', 'average_area', 'demography', 'population', 'unemployment', 'wages' or 'nbp_prices' [type=literal_error, input_value='prices', input_type=str]",
+      "text": "Błędny argument narzędzia get_government_statistics: dataset musi być jedną z wartości dwellings_quarterly, dwellings_monthly, average_area, demography, population, unemployment, wages, nbp_prices, podano \"prices\". Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "city": "sopot"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false,
+        "hint": "Serwis nie pokazuje żadnej inwestycji dla 'sopot': miasto może nie mieć aktywnych ofert deweloperów albo slug jest błędny. Sprawdź slug i offer_count miasta w search_locations; inwestycję po nazwie znajdziesz też bez city (name).",
+        "items": []
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

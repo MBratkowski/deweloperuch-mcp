@@ -4,7 +4,7 @@
     "search",
     "warszawa",
     "--sort",
-    "area_asc"
+    "rooms_asc"
   ],
   "exit_code": 2,
   "stdout": [
@@ -14,7 +14,8 @@
     "Usage: deweloperuch offers search [OPTIONS] {CITY}",
     "Try 'deweloperuch offers search --help' for help.",
     "╭─ Error ──────────────────────────────────────────────────────────────────────────────────────────╮",
-    "│ Invalid value for '--sort': 'area_asc' is not one of 'price_asc', 'price_desc'.                  │",
+    "│ Invalid value for '--sort': 'rooms_asc' is not one of 'price_asc', 'price_desc',                 │",
+    "│ 'price_per_m2_asc', 'price_per_m2_desc', 'area_asc', 'area_desc', 'biggest_drop'.                │",
     "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
     ""
   ],

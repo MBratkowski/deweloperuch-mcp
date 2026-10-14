@@ -1,0 +1,25 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "polska",
+        "district": "Wola"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "district działa tylko z jednym miastem: podaj jako city slug miasta tej dzielnicy (search_locations zwraca go przy dzielnicy), a nie polska; podano 'Wola'.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: district działa tylko z jednym miastem: podaj jako city slug miasta tej dzielnicy (search_locations zwraca go przy dzielnicy), a nie polska; podano 'Wola'. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

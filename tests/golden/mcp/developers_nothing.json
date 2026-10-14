@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "search_developers",
+      "arguments": {
+        "name": "xyzzy"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 0,
+        "returned": 0,
+        "truncated": false,
+        "hint": "Żaden deweloper nie pasuje do 'xyzzy'. Sprawdź pisownię albo podaj krótszy fragment nazwy, np. jej pierwsze słowo.",
+        "items": []
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/developers?q=xyzzy&limit=5 [accept: application/json]"
+  ]
+}

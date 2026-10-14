@@ -10,7 +10,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool search_locations: 1 validation error for search_locationsArguments\nquery\n  Input should be a valid string [type=string_type, input_value=42, input_type=int]",
+      "text": "Błędny argument narzędzia search_locations: query musi być tekstem, podano 42. Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

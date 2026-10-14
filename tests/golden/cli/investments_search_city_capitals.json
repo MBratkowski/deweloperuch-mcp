@@ -1,0 +1,16 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "Sopot"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: city: oczekiwano slug jednego miasta (np. warszawa, sopot; nie polska); slug podaje search_locations; podano 'Sopot'.",
+    ""
+  ],
+  "requests": []
+}

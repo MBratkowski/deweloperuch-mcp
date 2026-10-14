@@ -11,7 +11,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool get_investment: 1 validation error for get_investmentArguments\nlimit\n  Input should be less than or equal to 200 [type=less_than_equal, input_value=201, input_type=int]",
+      "text": "Błędny argument narzędzia get_investment: limit musi być liczbą całkowitą z zakresu 0–200, podano 201. Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

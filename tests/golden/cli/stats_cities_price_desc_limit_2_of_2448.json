@@ -1,0 +1,26 @@
+{
+  "args": [
+    "stats",
+    "cities",
+    "--sort",
+    "price_per_m2_desc",
+    "--limit",
+    "2"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Ranking miejscowości od najwyższej ceny za m²: pokazano 2 z 2 448.",
+    "Wskazówka: Pokazano pierwsze 2 z 2448 miejscowości; kolejne pokaże większy limit (najwyżej 100).",
+    "Ranking miast na deweloperuch.pl: https://deweloperuch.pl/ceny-transakcyjne/polska/miasta",
+    "1. Warszawa [warszawa] · transakcji: 3 606 · 16 413 PLN/m² · 48,8 m² · 780 000 PLN",
+    "2. Warszawa (kopia 3) [warszawa-kopia-3] · transakcji: 901 · 16 413 PLN/m² · 48,8 m² · 780 000 PLN",
+    "Serwis nie podaje okresu ani tego, czy ceny i metraż to średnie, czy mediany.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/city-transaction-stats [accept: application/json]"
+  ]
+}

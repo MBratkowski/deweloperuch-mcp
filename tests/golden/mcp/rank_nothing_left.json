@@ -1,0 +1,31 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "min_transactions": 1000000
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "level": "city",
+        "sort": "transactions_desc",
+        "min_transactions": 1000000,
+        "total": 0,
+        "returned": 0,
+        "truncated": false,
+        "hint": "Żadne miejsce nie ma co najmniej 1000000 transakcji: zmniejsz min_transactions.",
+        "ranking_url": "https://deweloperuch.pl/ceny-transakcyjne/polska/miasta",
+        "items": []
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/city-transaction-stats [accept: application/json]"
+  ]
+}

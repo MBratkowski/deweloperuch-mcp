@@ -1,0 +1,514 @@
+{
+  "calls": [
+    {
+      "tool": "get_transaction_statistics",
+      "arguments": {
+        "city": "warszawa",
+        "periods": 60
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "city_slug": "warszawa",
+        "granularity": "month",
+        "total": 67,
+        "returned": 60,
+        "truncated": true,
+        "available_from": "2021-01",
+        "hint": "Pokazano ostatnie 60 z 67 okresów (dane od 2021-01). To maksimum w jednym wywołaniu; dłuższy trend pokaże granularity=quarter.",
+        "note": "Ostatnie miesiące są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z pełnymi okresami.",
+        "stats_url": "https://deweloperuch.pl/statystyki/ceny-transakcyjne/mieszkania/warszawa",
+        "periods": [
+          {
+            "period": "2021-08",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2021-09",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2021-10",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2021-11",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2021-12",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2022-01",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2022-02",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2022-03",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2022-04",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2022-05",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2022-06",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2022-07",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2022-08",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2022-09",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2022-10",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2022-11",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2022-12",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2023-01",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2023-02",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2023-03",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2023-04",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2023-05",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2023-06",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2023-07",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2023-08",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2023-09",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2023-10",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2023-11",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2023-12",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2024-01",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2024-02",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2024-03",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2024-04",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2024-05",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2024-06",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2024-07",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2024-08",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2024-09",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2024-10",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2024-11",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2024-12",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2025-01",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2025-02",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2025-03",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2025-04",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2025-05",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2025-06",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2025-07",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2025-08",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2025-09",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2025-10",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2025-11",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2025-12",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2026-01",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2026-02",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2026-03",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2026-04",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          },
+          {
+            "period": "2026-05",
+            "transactions": 1165,
+            "median_price_per_m2": 10575,
+            "average_price_per_m2": 10854,
+            "median_area_m2": 48.8,
+            "median_price": 495000
+          },
+          {
+            "period": "2026-06",
+            "transactions": 1327,
+            "median_price_per_m2": 10858,
+            "average_price_per_m2": 10981,
+            "median_area_m2": 48.5,
+            "median_price": 510000
+          },
+          {
+            "period": "2026-07",
+            "transactions": 963,
+            "median_price_per_m2": 10651,
+            "average_price_per_m2": 10876,
+            "median_area_m2": 49.4,
+            "median_price": 502000
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa [accept: application/json]"
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "calls": [
+    {
+      "tool": "search_developers",
+      "arguments": {
+        "name": "dom",
+        "limit": 20
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 40,
+        "returned": 20,
+        "truncated": true,
+        "hint": "Pokazano 20 z 40 pasujących deweloperów. Doprecyzuj nazwę.",
+        "items": [
+          {
+            "developer_slug": "atal-0",
+            "name": "ATAL S.A. 0",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-0"
+          },
+          {
+            "developer_slug": "atal-1",
+            "name": "ATAL S.A. 1",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-1"
+          },
+          {
+            "developer_slug": "atal-2",
+            "name": "ATAL S.A. 2",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-2"
+          },
+          {
+            "developer_slug": "atal-3",
+            "name": "ATAL S.A. 3",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-3"
+          },
+          {
+            "developer_slug": "atal-4",
+            "name": "ATAL S.A. 4",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-4"
+          },
+          {
+            "developer_slug": "atal-5",
+            "name": "ATAL S.A. 5",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-5"
+          },
+          {
+            "developer_slug": "atal-6",
+            "name": "ATAL S.A. 6",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-6"
+          },
+          {
+            "developer_slug": "atal-7",
+            "name": "ATAL S.A. 7",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-7"
+          },
+          {
+            "developer_slug": "atal-8",
+            "name": "ATAL S.A. 8",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-8"
+          },
+          {
+            "developer_slug": "atal-9",
+            "name": "ATAL S.A. 9",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-9"
+          },
+          {
+            "developer_slug": "atal-10",
+            "name": "ATAL S.A. 10",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-10"
+          },
+          {
+            "developer_slug": "atal-11",
+            "name": "ATAL S.A. 11",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-11"
+          },
+          {
+            "developer_slug": "atal-12",
+            "name": "ATAL S.A. 12",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-12"
+          },
+          {
+            "developer_slug": "atal-13",
+            "name": "ATAL S.A. 13",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-13"
+          },
+          {
+            "developer_slug": "atal-14",
+            "name": "ATAL S.A. 14",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-14"
+          },
+          {
+            "developer_slug": "atal-15",
+            "name": "ATAL S.A. 15",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-15"
+          },
+          {
+            "developer_slug": "atal-16",
+            "name": "ATAL S.A. 16",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-16"
+          },
+          {
+            "developer_slug": "atal-17",
+            "name": "ATAL S.A. 17",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-17"
+          },
+          {
+            "developer_slug": "atal-18",
+            "name": "ATAL S.A. 18",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-18"
+          },
+          {
+            "developer_slug": "atal-19",
+            "name": "ATAL S.A. 19",
+            "offer_count": 4265,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/atal-19"
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/developers?q=dom&limit=20 [accept: application/json]"
+  ]
+}

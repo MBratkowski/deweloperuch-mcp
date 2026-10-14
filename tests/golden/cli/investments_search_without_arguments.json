@@ -1,0 +1,15 @@
+{
+  "args": [
+    "investments",
+    "search"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Podaj city (slug miasta z search_locations, np. sopot) albo name (fragment nazwy inwestycji, np. Kolibki); można oba.",
+    ""
+  ],
+  "requests": []
+}

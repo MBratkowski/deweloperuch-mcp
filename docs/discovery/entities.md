@@ -3,35 +3,34 @@
 The service has two independent data "worlds" that connect only through location:
 
 ```
- RYNEK PIERWOTNY — OFERTY                       TRANSAKCJE — RCN (GUGiK)
- ────────────────────────                       ────────────────────────
+ PRIMARY MARKET: OFFERS                          TRANSACTIONS: RCN (GUGiK)
+ ----------------------                          -------------------------
  Developer                                       Powiat (powiat_rcn_id)
-  developer_id:int, slug                          │ 1..n
-  │ 1..n                                          ▼
-  ▼                                              SourceRcn (source_rcn_id, np. 9 = Warszawa)
- Investment  ◄── slug = globalne ID              │
-  invest_id:int, slug, city_slug,                ▼
-  lat/lng, status active|archived               InvestRcn  = BUDYNEK / ADRES
-  │ 1..n                                          invest_rcn_id:int, slug "ulica-x-12-miasto",
-  ▼                                               kind flat|house, lat/lng
- Sale        = OFERTA (lokal w cenniku)           │ 1..n
-  sale_id:int, name "D1.1.1.4",                   ▼
-  amount, size, status active|archived          SaleRcn    = LOKAL / NIERUCHOMOŚĆ
-  │ 1..n                                          sale_rcn_id:int, name = id lokalu EGiB
-  ▼                                               "146517_9.5795.356_BUD.239_LOK"
- SaleEvent   = ZDARZENIE CENOWE                   │ 1..n
-  sale_event_id:int, event_type,                  ▼
-  amount, event_date, source                    SaleEventRcn = TRANSAKCJA
+  developer_id:int, slug                          | 1..n
+  | 1..n                                          v
+  v                                              SourceRcn (source_rcn_id, e.g. 9 = Warsaw)
+ Investment   (slug = global ID)                  |
+  invest_id:int, slug, city_slug,                 v
+  lat/lng, status active|archived                InvestRcn  = BUILDING / ADDRESS
+  | 1..n                                          invest_rcn_id:int, slug "street-x-12-city",
+  v                                               kind flat|house, lat/lng
+ Sale        = OFFER (unit in the price list)     | 1..n
+  sale_id:int, name "D1.1.1.4",                   v
+  amount, size, status active|archived          SaleRcn    = UNIT / PROPERTY
+  | 1..n                                          sale_rcn_id:int, name = EGiB unit id
+  v                                               "146517_9.5795.356_BUD.239_LOK"
+ SaleEvent   = PRICE EVENT                        | 1..n
+  sale_event_id:int, event_type,                  v
+  amount, event_date, source                    SaleEventRcn = TRANSACTION
                                                   sale_event_rcn_id:int, amount, amount_sqm,
                                                   date, buyer/seller, classification,
-                                                  marketType, additionalData (surowy RCN)
+                                                  marketType, additionalData (raw RCN)
 
- Lokalizacja (wspólna): City (city_slug) ─ District (nazwa) ─ Street (nazwa)
-                        City → Powiat: /api/map/city-powiats/{city}
- Łącznik ofert z RCN: wycena / raport mieszkania (transakcje w promieniu od lat/lng inwestycji)
+ Shared location: City (city_slug) - District (name) - Street (name)
+                  City -> Powiat: /api/map/city-powiats/{city}
+ Link between offers and RCN: valuation / unit report
+                  (transactions within a radius of the investment's lat/lng)
 ```
-
-(Diagram legend: left, primary market, offers: Developer → Investment (slug = global ID) → Sale = offer (unit in the price list) → SaleEvent = price event. Right, transactions, RCN (GUGiK): Powiat → SourceRcn (e.g. 9 = Warsaw) → InvestRcn = building / address → SaleRcn = unit / property (name = EGiB unit id) → SaleEventRcn = transaction (raw RCN in additionalData). Shared location: City (city_slug) ─ District (name) ─ Street (name); City → Powiat via `/api/map/city-powiats/{city}`. Link between offers and RCN: valuation / unit report (transactions within a radius of the investment's lat/lng).)
 
 ## Identifiers
 

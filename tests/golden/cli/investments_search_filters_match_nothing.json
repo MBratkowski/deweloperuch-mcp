@@ -1,0 +1,21 @@
+{
+  "args": [
+    "investments",
+    "search",
+    "sopot",
+    "--developer",
+    "atal"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Inwestycje: 0 · pokazano 0.",
+    "Wskazówka: Żadna inwestycja w 'sopot' nie pasuje do name i developer_slug. Sprawdź pisownię albo pomiń te filtry, żeby zobaczyć wszystkie inwestycje miasta.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments?citySlug=sopot [accept: application/json]"
+  ]
+}

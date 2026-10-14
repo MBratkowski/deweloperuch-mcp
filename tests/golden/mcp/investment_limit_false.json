@@ -11,7 +11,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool get_investment: 1 validation error for get_investmentArguments\nlimit\n  Value error, oczekiwano liczby całkowitej, a nie true/false [type=value_error, input_value=False, input_type=bool]",
+      "text": "Błędny argument narzędzia get_investment: limit musi być liczbą całkowitą z zakresu 0–200, podano false. Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

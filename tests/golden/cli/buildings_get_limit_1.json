@@ -1,0 +1,26 @@
+{
+  "args": [
+    "buildings",
+    "get",
+    "23-marca-79c-sopot",
+    "--limit",
+    "1"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "23 Marca 79C [23-marca-79c-sopot]",
+    "Strona budynku: https://deweloperuch.pl/ceny-transakcyjne/sopot/adresy/23-marca-79c-sopot",
+    "Miejsce: Sopot [sopot] · 54.44706, 18.54342",
+    "Średnio (wg serwisu): 1 324 115 PLN · 61,6 m² · 21 494,72 PLN/m²",
+    "Lokale: 3 · transakcje: 3 (od 2025-09-12 do 2025-11-17) · pokazano 1 · pominięto 2 (zwiększ --limit).",
+    "piętro 1 · 5 pok. · 122,01 m² · 226401_4.4191.4568_BUD.3_LOK",
+    "  2025-11-17  1 900 000,47 PLN · 15 572,5 PLN/m² · rynek pierwotny · zwykła · kupujący: osoba fizyczna · sprzedający: osoba prawna",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/transactions/visible/23-marca-79c-sopot [accept: application/json]"
+  ]
+}

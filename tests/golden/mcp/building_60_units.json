@@ -1,0 +1,201 @@
+{
+  "calls": [
+    {
+      "tool": "get_building",
+      "arguments": {
+        "building_slug": "23-marca-79c-sopot"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "building_slug": "23-marca-79c-sopot",
+        "name": "23 Marca 79C",
+        "building_url": "https://deweloperuch.pl/ceny-transakcyjne/sopot/adresy/23-marca-79c-sopot",
+        "city": "Sopot",
+        "city_slug": "sopot",
+        "lat": 54.44705851,
+        "lng": 18.54342128,
+        "avg_price": 1324114.66,
+        "avg_area_m2": 61.6,
+        "avg_price_per_m2": 21494.72,
+        "first_transaction_date": "2025-09-12",
+        "last_transaction_date": "2025-11-17",
+        "units_total": 60,
+        "transactions_total": 60,
+        "units": [
+          {
+            "floor": 1,
+            "rooms": 5,
+            "area_m2": 122.01,
+            "transactions": [
+              {
+                "date": "2025-11-17",
+                "price": 1900000.47,
+                "price_per_m2": 15572.5,
+                "market": "primary",
+                "classification": "regular",
+                "buyer": "natural_person",
+                "seller": "legal_person"
+              }
+            ]
+          },
+          {
+            "floor": 1,
+            "rooms": 5,
+            "area_m2": 122.01,
+            "transactions": [
+              {
+                "date": "2025-11-17",
+                "price": 1900000.47,
+                "price_per_m2": 15572.5,
+                "market": "primary",
+                "classification": "regular",
+                "buyer": "natural_person",
+                "seller": "legal_person"
+              }
+            ]
+          },
+          {
+            "floor": 1,
+            "rooms": 5,
+            "area_m2": 122.01,
+            "transactions": [
+              {
+                "date": "2025-11-17",
+                "price": 1900000.47,
+                "price_per_m2": 15572.5,
+                "market": "primary",
+                "classification": "regular",
+                "buyer": "natural_person",
+                "seller": "legal_person"
+              }
+            ]
+          },
+          {
+            "floor": 1,
+            "rooms": 5,
+            "area_m2": 122.01,
+            "transactions": [
+              {
+                "date": "2025-11-17",
+                "price": 1900000.47,
+                "price_per_m2": 15572.5,
+                "market": "primary",
+                "classification": "regular",
+                "buyer": "natural_person",
+                "seller": "legal_person"
+              }
+            ]
+          },
+          {
+            "floor": 1,
+            "rooms": 5,
+            "area_m2": 122.01,
+            "transactions": [
+              {
+                "date": "2025-11-17",
+                "price": 1900000.47,
+                "price_per_m2": 15572.5,
+                "market": "primary",
+                "classification": "regular",
+                "buyer": "natural_person",
+                "seller": "legal_person"
+              }
+            ]
+          },
+          {
+            "floor": 1,
+            "rooms": 5,
+            "area_m2": 122.01,
+            "transactions": [
+              {
+                "date": "2025-11-17",
+                "price": 1900000.47,
+                "price_per_m2": 15572.5,
+                "market": "primary",
+                "classification": "regular",
+                "buyer": "natural_person",
+                "seller": "legal_person"
+              }
+            ]
+          },
+          {
+            "floor": 1,
+            "rooms": 5,
+            "area_m2": 122.01,
+            "transactions": [
+              {
+                "date": "2025-11-17",
+                "price": 1900000.47,
+                "price_per_m2": 15572.5,
+                "market": "primary",
+                "classification": "regular",
+                "buyer": "natural_person",
+                "seller": "legal_person"
+              }
+            ]
+          },
+          {
+            "floor": 1,
+            "rooms": 5,
+            "area_m2": 122.01,
+            "transactions": [
+              {
+                "date": "2025-11-17",
+                "price": 1900000.47,
+                "price_per_m2": 15572.5,
+                "market": "primary",
+                "classification": "regular",
+                "buyer": "natural_person",
+                "seller": "legal_person"
+              }
+            ]
+          },
+          {
+            "floor": 1,
+            "rooms": 5,
+            "area_m2": 122.01,
+            "transactions": [
+              {
+                "date": "2025-11-17",
+                "price": 1900000.47,
+                "price_per_m2": 15572.5,
+                "market": "primary",
+                "classification": "regular",
+                "buyer": "natural_person",
+                "seller": "legal_person"
+              }
+            ]
+          },
+          {
+            "floor": 1,
+            "rooms": 5,
+            "area_m2": 122.01,
+            "transactions": [
+              {
+                "date": "2025-11-17",
+                "price": 1900000.47,
+                "price_per_m2": 15572.5,
+                "market": "primary",
+                "classification": "regular",
+                "buyer": "natural_person",
+                "seller": "legal_person"
+              }
+            ]
+          }
+        ],
+        "units_returned": 10,
+        "units_omitted": 50,
+        "truncated": true
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/transactions/visible/23-marca-79c-sopot [accept: application/json]"
+  ]
+}

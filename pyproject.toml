@@ -36,7 +36,7 @@ markers = [
 line-length = 100
 target-version = "py311"
 # recon/ modules (config, http_common, flight, allowlist, probe, scan_bundles) and test
-# helpers in tests/ (discovery_samples) are first-party for import sorting.
+# helpers in tests/support/ (``support.*``) are first-party for import sorting.
 src = [".", "src", "recon", "tests"]
 extend-exclude = [
     # Markdown (ruff formats its code blocks by default) belongs to the documentation
@@ -47,19 +47,212 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "W", "F", "I", "B", "UP", "SIM"]
+# Quality gates, stages 0 and 1 (`make fast`): structure (RET, PIE, PERF), dead code
+# (ERA, ARG, RUF100), names (N), encapsulation (SLF001, PLC2701), relative imports
+# (TID252) and size limits (C90, PLR09xx, PLR1702). Never TRY003, EM or DOC: messages are
+# Polish product text, written where they are raised.
+select = [
+    "E", "W", "F", "I", "B", "UP", "SIM",
+    "RET", "ERA", "PIE", "PERF", "ARG", "RUF100", "N", "SLF001", "TID252", "C90",
+    "PLC2701", "PLR0904", "PLR0911", "PLR0912", "PLR0913", "PLR0914", "PLR0915",
+    "PLR0916", "PLR0917", "PLR1702",
+]
+# PLC2701 (import of a private name) is a preview rule; only explicitly named preview
+# rules are on, so preview does not widen the families above.
+preview = true
+explicit-preview-rules = true
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 5
+max-positional-args = 5
+max-branches = 12
+max-statements = 40
+max-returns = 6
+max-locals = 12
+max-nested-blocks = 3
+max-bool-expr = 4
+max-public-methods = 10
+
+[tool.ruff.lint.per-file-ignores]
+# Tests: fixtures arrive as unused arguments and fakes implement ports they do not need
+# whole; helpers take many parameters, peek at private state and walk trees on purpose;
+# long scenario tests and table comments quoting the service's pages are fine.
+"tests/**" = [
+    "ARG001", "ARG002", "ARG005", "PLR0913", "PLR0917", "SLF001", "ERA001", "PERF401",
+    "PLR0911", "PLR0914", "PLR0915", "PLR1702",
+]
+# DTO fields mirror the service's camelCase JSON keys.
+"src/deweloperuch_mcp/api/dto/**" = ["N815"]
+# Typer: one parameter per option.
+"src/deweloperuch_mcp/consumers/cli/commands/**" = ["PLR0913", "PLR0917"]
+# MCP tools: one parameter per tool argument (the SDK builds the input schema from them).
+"src/deweloperuch_mcp/consumers/mcp/tools/**" = ["PLR0913", "PLR0917"]
 
 [tool.mypy]
 python_version = "3.11"
 strict = true
 # Resolves the recon modules tests import, so `mypy tests` type-checks them too.
 mypy_path = "recon"
+warn_unreachable = true
+enable_error_code = [
+    "ignore-without-code",
+    "redundant-expr",
+    "truthy-bool",
+    "possibly-undefined",
+    "exhaustive-match",
+    "deprecated",
+    "mutable-override",
+]
+
+[[tool.mypy.overrides]]
+# The core is plain Python with precise types: no explicit Any (D13, D16).
+module = ["deweloperuch_mcp.models.*", "deweloperuch_mcp.usecases.*"]
+disallow_any_explicit = true
+
+[tool.vulture]
+# `make check`: unused code at 80% confidence or more. A parameter a protocol requires but
+# the code does not use is named with a leading underscore (`__exit__(self, _exc_type,
+# ...)`), which vulture skips; there is no whitelist.
+paths = ["src", "recon"]
+min_confidence = 80
 
 [dependency-groups]
 dev = [
+    "import-linter>=2.15",
     "mypy>=2.4.0",
+    "pylint>=4.1.3",
     "pytest>=9.1.1",
     "pytest-socket>=0.8.1",
     "respx>=0.23.1",
     "ruff>=0.16.10",
+    "vulture>=2.16",
+    "xenon>=0.9.3",
 ]
+
+# --- import-linter (`lint-imports`, part of `make fast`): D16 layers and D17 folders ---------
+[tool.importlinter]
+root_package = "deweloperuch_mcp"
+# Needed to forbid third-party and stdlib modules (pydantic, httpx, os...) by name.
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+id = "d16-layers"
+name = "D16: entry shims > consumers > bootstrap > api > recon-shared stdlib > usecases > models"
+type = "layers"
+containers = ["deweloperuch_mcp"]
+layers = [
+    "cli | mcp_server | errors",
+    "consumers",
+    "bootstrap",
+    "api",
+    "identity : throttle : http_policy : retry_after : allowlist : flight",
+    "usecases",
+    "models",
+]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+id = "d16-api-ports"
+name = "D16: api implements the ports; it never calls a use case"
+type = "forbidden"
+source_modules = ["deweloperuch_mcp.api"]
+forbidden_modules = ["deweloperuch_mcp.usecases.*"]
+# D16 lets api import the ports it implements; today it implements them structurally.
+ignore_imports = ["deweloperuch_mcp.api.** -> deweloperuch_mcp.usecases.ports"]
+unmatched_ignore_imports_alerting = "none"
+
+[[tool.importlinter.contracts]]
+id = "d16-consumers-no-service"
+name = "D16: consumers reach the service only through bootstrap"
+type = "forbidden"
+source_modules = ["deweloperuch_mcp.consumers"]
+forbidden_modules = [
+    "deweloperuch_mcp.api",
+    "deweloperuch_mcp.identity",
+    "deweloperuch_mcp.throttle",
+    "deweloperuch_mcp.http_policy",
+    "deweloperuch_mcp.retry_after",
+    "deweloperuch_mcp.allowlist",
+    "deweloperuch_mcp.flight",
+    "httpx",
+]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+id = "d13-pure-core"
+name = "D13: models and usecases are plain Python (no frameworks, no I/O)"
+type = "forbidden"
+source_modules = ["deweloperuch_mcp.models", "deweloperuch_mcp.usecases"]
+forbidden_modules = [
+    "pydantic", "httpx", "mcp", "typer",
+    "os", "socket", "pathlib", "subprocess", "urllib", "importlib", "json", "time",
+]
+
+[[tool.importlinter.contracts]]
+id = "d17-usecases-independent"
+name = "D17: one use case per module, none imports another (shared code in ports and support)"
+type = "independence"
+modules = ["deweloperuch_mcp.usecases.*"]
+ignore_imports = [
+    "deweloperuch_mcp.usecases.** -> deweloperuch_mcp.usecases.ports",
+    "deweloperuch_mcp.usecases.** -> deweloperuch_mcp.usecases.support.**",
+]
+
+[[tool.importlinter.contracts]]
+id = "d17-mcp-tools-independent"
+name = "D17: MCP tools do not import each other"
+type = "independence"
+modules = ["deweloperuch_mcp.consumers.mcp.tools.*"]
+
+[[tool.importlinter.contracts]]
+id = "d17-api-adapters-independent"
+name = "D17: api adapters do not import each other"
+type = "independence"
+modules = ["deweloperuch_mcp.api.adapters.*"]
+
+[[tool.importlinter.contracts]]
+id = "d17-api-queries-independent"
+name = "D17: api queries do not import each other"
+type = "independence"
+modules = ["deweloperuch_mcp.api.queries.*"]
+
+[[tool.importlinter.contracts]]
+id = "d16-consumers"
+name = "D16: the CLI and the MCP server share only consumers.shared"
+type = "layers"
+containers = ["deweloperuch_mcp.consumers"]
+layers = ["cli | mcp", "shared"]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+id = "d17-mcp-folders"
+name = "D17: consumers.mcp: server > tools > presenters > support"
+type = "layers"
+containers = ["deweloperuch_mcp.consumers.mcp"]
+layers = ["server", "tools", "presenters", "support"]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+id = "d17-cli-folders"
+name = "D17: consumers.cli: app > commands > presenters > support"
+type = "layers"
+containers = ["deweloperuch_mcp.consumers.cli"]
+layers = ["app", "commands", "presenters", "support"]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+id = "d17-api-folders"
+name = "D17: api: links > adapters > queries > http > dto"
+type = "layers"
+containers = ["deweloperuch_mcp.api"]
+layers = ["links", "adapters", "queries", "http", "dto"]
+exhaustive = true
+
+[[tool.importlinter.contracts]]
+id = "d13-models-acyclic"
+name = "D13: the models' modules form no import cycle"
+type = "acyclic_siblings"
+ancestors = ["deweloperuch_mcp.models"]

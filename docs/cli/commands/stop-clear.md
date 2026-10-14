@@ -1,7 +1,7 @@
 # `deweloperuch stop clear`
 Clears the STOP lock (removes `stop.json` under the limiter lock) and prints what was cleared. Works offline.
 
-> **For humans only, after checking the cause** (`deweloperuch stop status`). An agent (model) does not run this command: the Bash hook in Claude Code (`.claude/hooks/guard_live_calls.py`) and a rule in `CLAUDE.md` block it. There is also no MCP tool for clearing the lock. After a 401, 403 or challenge do not clear the lock until you know why the service refused. STOP rules: [docs/cli/README.md](../README.md#stop).
+> **Run this only after checking the cause** (`deweloperuch stop status`). Automated agents and scripts must not run it. There is also no MCP tool for clearing the lock. After a 401, 403 or challenge do not clear the lock until you know why the service refused. STOP rules: [docs/cli/README.md](../README.md#stop).
 
 ## Usage
 ```
@@ -38,14 +38,14 @@ Usage: deweloperuch stop clear [OPTIONS]
 ## Examples
 ```
 uv run deweloperuch stop status     # first check the cause and the source
-uv run deweloperuch stop clear      # only then clear the lock (a human)
+uv run deweloperuch stop clear      # only then clear the lock
 ```
 
-Output after a 403 record from `probe` (from the tests `tests/test_cli.py`):
+Output after a 403 record from `probe` (`tests/golden/cli/stop_clear_403.json`):
 
 ```
 Zdjęto STOP: HTTP 403 (odmowa dostępu), <czas>, źródło: probe.
 Działający serwer MCP, który trafił na STOP, wyśle zapytania dopiero po ponownym uruchomieniu.
 ```
 
-_Source: `src/deweloperuch_mcp/interfaces/cli/` (`stop_clear`, `format_stop_clear`), `src/deweloperuch_mcp/throttle.py` (`clear_stop`), `uv run deweloperuch stop clear --help`, `tests/test_cli.py`_
+_Source: `src/deweloperuch_mcp/consumers/cli/commands/stop_commands.py`, `src/deweloperuch_mcp/consumers/cli/presenters/clear_stop_cli_presenter.py`, `src/deweloperuch_mcp/usecases/clear_stop.py`, `src/deweloperuch_mcp/throttle.py` (`clear_stop`), `uv run deweloperuch stop clear --help`, `tests/golden/cli/stop_clear_*.json`_

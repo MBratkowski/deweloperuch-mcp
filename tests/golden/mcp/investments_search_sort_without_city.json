@@ -1,0 +1,25 @@
+{
+  "calls": [
+    {
+      "tool": "search_investments",
+      "arguments": {
+        "name": "kolibki",
+        "sort": "name"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "sort działa tylko razem z city; wyniki wyszukiwania po samej nazwie są w kolejności serwisu: pomiń sort albo podaj city.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: sort działa tylko razem z city; wyniki wyszukiwania po samej nazwie są w kolejności serwisu: pomiń sort albo podaj city. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

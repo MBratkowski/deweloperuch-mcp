@@ -8,7 +8,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Error executing tool search_locations: 1 validation error for search_locationsArguments\nquery\n  Field required [type=missing, input_value={}, input_type=dict]",
+      "text": "Błędny argument narzędzia search_locations: query: brak wymaganego argumentu. Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

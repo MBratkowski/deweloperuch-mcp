@@ -529,7 +529,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(
+def main(  # noqa: PLR0913 - keyword-only transport, limiter and clock (test seams)
     argv: list[str] | None = None,
     *,
     fetch: Fetch = urllib_fetch,

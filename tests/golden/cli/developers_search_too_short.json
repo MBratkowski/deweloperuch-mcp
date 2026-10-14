@@ -1,0 +1,16 @@
+{
+  "args": [
+    "developers",
+    "search",
+    "a"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: name: podaj od 2 do 100 znaków nazwy dewelopera, podano 'a'.",
+    ""
+  ],
+  "requests": []
+}

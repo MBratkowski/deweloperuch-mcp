@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "estimate_property_value",
+      "arguments": {
+        "lat": 52.2297,
+        "lng": 21.0122,
+        "area_m2": 50,
+        "address": "ab"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "address: podaj od 3 do 200 znaków adresu albo pomiń ten parametr, podano 'ab'.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: address: podaj od 3 do 200 znaków adresu albo pomiń ten parametr, podano 'ab'. Szczegóły: None"
+    ]
+  ],
+  "requests": []
+}

@@ -1,0 +1,18 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "polska",
+    "--district",
+    "Mokotów"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: district działa tylko z jednym miastem: podaj jako city slug miasta tej dzielnicy (search_locations zwraca go przy dzielnicy), a nie polska; podano 'Mokotów'.",
+    ""
+  ],
+  "requests": []
+}

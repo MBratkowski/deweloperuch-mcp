@@ -1,0 +1,63 @@
+{
+  "args": [
+    "stats",
+    "transactions",
+    "warszawa",
+    "--granularity",
+    "quarter",
+    "--json"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "{",
+    "  \"city_slug\": \"warszawa\",",
+    "  \"granularity\": \"quarter\",",
+    "  \"total\": 3,",
+    "  \"returned\": 3,",
+    "  \"truncated\": false,",
+    "  \"available_from\": \"2017-Q1\",",
+    "  \"hint\": null,",
+    "  \"note\": \"Ostatnie kwartały są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z pełnymi okresami.\",",
+    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/ceny-transakcyjne/mieszkania/warszawa\",",
+    "  \"periods\": [",
+    "    {",
+    "      \"period\": \"2017-Q1\",",
+    "      \"transactions\": 2922,",
+    "      \"median_price_per_m2\": null,",
+    "      \"average_price_per_m2\": 7595.0,",
+    "      \"median_area_m2\": null,",
+    "      \"average_area_m2\": null,",
+    "      \"median_price\": null,",
+    "      \"average_price\": null",
+    "    },",
+    "    {",
+    "      \"period\": \"2017-Q2\",",
+    "      \"transactions\": 2854,",
+    "      \"median_price_per_m2\": null,",
+    "      \"average_price_per_m2\": 7695.0,",
+    "      \"median_area_m2\": null,",
+    "      \"average_area_m2\": null,",
+    "      \"median_price\": null,",
+    "      \"average_price\": null",
+    "    },",
+    "    {",
+    "      \"period\": \"2017-Q3\",",
+    "      \"transactions\": 2893,",
+    "      \"median_price_per_m2\": null,",
+    "      \"average_price_per_m2\": 7844.0,",
+    "      \"median_area_m2\": null,",
+    "      \"average_area_m2\": null,",
+    "      \"median_price\": null,",
+    "      \"average_price\": null",
+    "    }",
+    "  ]",
+    "}",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/avg-price-trend/city/warszawa [accept: application/json]"
+  ]
+}

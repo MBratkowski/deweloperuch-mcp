@@ -1,10 +1,23 @@
-"""Shared test setup."""
+"""Shared test setup: the suite-wide autouse fixtures and the fixture providers.
+
+The helpers live in ``tests/support`` (no tests there); their asserts are rewritten like
+the tests' own, so a failing helper shows the values it compared.
+"""
 
 from collections.abc import Iterator
 
 import pytest
 
-from deweloperuch_mcp.infrastructure.deweloperuch import transport
+from deweloperuch_mcp.api.http import transport
+
+pytest.register_assert_rewrite("support")
+
+pytest_plugins = [
+    "support.providers.network",
+    "support.providers.clients",
+    "support.providers.mcp",
+    "support.providers.cli",
+]
 
 
 @pytest.fixture(autouse=True)
@@ -14,9 +27,9 @@ def fresh_stop_latch() -> Iterator[None]:
     The latch is per process on purpose (CLAUDE.md: after a STOP the process sends
     nothing more), and pytest runs every test in one process.
     """
-    transport.testing_only_reset_stop()
+    transport.HttpClient.testing_only_reset_stop()
     yield
-    transport.testing_only_reset_stop()
+    transport.HttpClient.testing_only_reset_stop()
 
 
 @pytest.fixture(autouse=True)

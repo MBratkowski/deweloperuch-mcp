@@ -1,0 +1,46 @@
+{
+  "args": [
+    "valuation",
+    "estimate",
+    "--lat",
+    "52.2297",
+    "--lng",
+    "21.0122",
+    "--area",
+    "50",
+    "--limit",
+    "0",
+    "--json"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "{",
+    "  \"lat\": 52.2297,",
+    "  \"lng\": 21.0122,",
+    "  \"area_m2\": 50.0,",
+    "  \"address\": null,",
+    "  \"estimated_value\": 1063300.0,",
+    "  \"price_per_m2\": 21266.0,",
+    "  \"radius_m\": 200,",
+    "  \"period_months\": 24,",
+    "  \"stats\": {",
+    "    \"count\": 9,",
+    "    \"median_price_per_m2\": 23830.0,",
+    "    \"average_price_per_m2\": 22195.0,",
+    "    \"min_price_per_m2\": 13187.0,",
+    "    \"max_price_per_m2\": 31492.0",
+    "  },",
+    "  \"comparables_total\": 3,",
+    "  \"comparables_omitted\": 3,",
+    "  \"hint\": \"Pokazano 0 najbliższych z 3 transakcji porównawczych; więcej pokaże większy limit.\",",
+    "  \"comparables\": []",
+    "}",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/standalone-valuation?area=50&lat=52.2297&lng=21.0122 [accept: application/json]"
+  ]
+}
