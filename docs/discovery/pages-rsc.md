@@ -179,4 +179,4 @@ Sample: `page.transactions_list.json`, `page.transactions_list.params.json`
 
 ### `/zglos-dewelopera/mapa-zgloszen` [P]
 - Props: `developerAbuseData[]` (105): `{developer_abuse_id, name, slug, developer, website, latitude, longitude, violations[], additionalInfo}`, that is reports of violations of the price transparency act.
-- Sample: `page.developer_abuse_map.json`
+- No sample is kept: the reports are user-submitted texts naming companies.

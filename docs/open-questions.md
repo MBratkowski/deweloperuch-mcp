@@ -56,7 +56,7 @@ Priority: **P1** blocks a core capability, **P2** needed for a complete v1, **P3
 | T12 | 2026-10-10 | `city-sales` contains no archived offers (`includeArchived` ignored, Sopot 6/6 `active`); `polska` → `400 Invalid citySlug` (does not work) | `api.city_sales_sopot` |
 | T18 (a) | 2026-10-10 | Unknown slug in `map/investments/visible/{slug}`: `404 {"error":"Investment not found"}` | none (non-2xx) |
 | T19 (b) | 2026-10-10 | Unknown city on the page `/ceny-ofertowe/{city}/mieszkania`: HTTP 200 RSC without `initialData`, with a `notFound` segment; the client must detect the missing prop | none |
-| T20 (c) | 2026-10-10 | Slug alphabet: 166 of 168 slugs in the samples are `[a-z0-9-]`; 2 exceptions (`Metro-Art`, `Forrest`) only in the reports map, a different entity type. Level [W] (observation, not a server test) | `page.developer_abuse_map` |
+| T20 (c) | 2026-10-10 | Slug alphabet: 166 of 168 slugs in the samples are `[a-z0-9-]`; 2 exceptions (`Metro-Art`, `Forrest`) only in the reports map, a different entity type. Level [W] (observation, not a server test) | (reports-map sample not kept) |
 | T21 (d) | 2026-10-10 | District `count` = number of active offers (Mokotów: 1562 = `total` from `filterDistrict`). For streets and cities: T32 | `api.location_search.kinds_limit20` |
 | T22 (e) | 2026-10-10 | `limit` honored up to at least 20 (`q=mo&limit=20` → 20 results); `kind` ∈ {`city`, `district`, `street`}; no "more" flag; `q` with 1 character → empty list | `api.location_search.kinds_limit20` |
 | T23 (f) | 2026-10-10 | `sortBy=amount&sortOrder=desc` works (descending from 7,820,948) | `page.offers_list.sort_desc` |
