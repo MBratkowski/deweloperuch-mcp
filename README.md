@@ -228,7 +228,7 @@ Every `make` target is offline; the tests never open a network socket and run ag
 | `tests/contract/` | Stored service responses against the DTOs and adapters. |
 | `tests/integration/` | Use cases with the real adapters over a mocked service. |
 | `tests/characterization/` | Golden outputs of the CLI and MCP server (`tests/golden/`). |
-| `tests/architecture/`, `tests/safeguards/` | Layering and naming rules; no-network guarantees. |
+| `tests/architecture/`, `tests/safeguards/` | Layering and naming rules, repository-wide consistency (identity, published assets, metadata); no-network guarantees. |
 | `tests/support/` | Test infrastructure (fakes, builders, checks), no tests. |
 | `tests/e2e/` | The opt-in live suite, see below. |
 
