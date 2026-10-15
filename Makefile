@@ -16,7 +16,7 @@ format-check:
 	uv run ruff format --check .
 
 types:
-	uv run mypy src tests recon packaging
+	uv run mypy src tests recon packaging .github/scripts
 
 imports:
 	uv run lint-imports
