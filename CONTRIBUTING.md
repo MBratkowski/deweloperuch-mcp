@@ -26,7 +26,11 @@ The build backend is hatchling. The wheel ships the agent skill from `skills/dew
 
 `make package` builds the wheel and sdist and runs `packaging/mcpb/build.py`, which packs the `.mcpb` with the official `mcpb` CLI (2.1.2, `manifest_version` 0.4, uv runtime). CI runs `make fast` and the offline tests on every push and pull request.
 
-`make icons` regenerates the extension icons in `assets/icons/` from `assets/icon.svg` (large sizes) and the simplified `assets/icon-small.svg` and `assets/icon-tiny.svg` (32 and 16 px); it needs `rsvg-convert` from librsvg. The PNGs are committed, so you run it only after changing an SVG.
+`make icons` regenerates the images in `assets/` from the official raster `assets/icon-source.webp`; it needs ImageMagick 7 (`magick`). It writes the extension icons (`assets/icon.png` and `assets/icons/`, white rounded tiles; at 32 and 64 px the strokes are thickened so they stay legible, and the 16 px icon is copied from the hand-drawn `assets/icon-tiny.png`), the README header images `assets/icon-on-light.png` and `assets/icon-on-dark.png`, and `assets/icon.svg`, which only wraps `icon.png` for the README of releases up to 0.1.2. The outputs are committed, so you run it only after changing the source or `icon-tiny.png`. The icon is not covered by the MIT licence (see [NOTICE](NOTICE)).
+
+ImageMagick must be built with WebP support; check with `magick -list format | grep -i '^ *webp'` (the Homebrew build has it).
+
+Never rename or delete `assets/icon-on-light.png`, `assets/icon-on-dark.png` or `assets/icon.svg`: the READMEs of published releases (on PyPI and GitHub) link them by absolute URLs.
 
 To release:
 

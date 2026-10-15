@@ -37,7 +37,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/MBratkowski/deweloperuch-mcp"
+Homepage = "https://mbratkowski.github.io/deweloperuch-mcp-site/"
 Repository = "https://github.com/MBratkowski/deweloperuch-mcp"
 Documentation = "https://github.com/MBratkowski/deweloperuch-mcp/blob/main/docs/mcp/README.md"
 Issues = "https://github.com/MBratkowski/deweloperuch-mcp/issues"

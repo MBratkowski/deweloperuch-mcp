@@ -35,7 +35,7 @@ UNPACKED = ROOT / "build" / "mcpb-unpacked"
 DIST = ROOT / "dist"
 SNAPSHOT = ROOT / "tests" / "snapshots" / "mcp_tools.json"
 SERVER_JSON = ROOT / "packaging" / "registry" / "server.json"
-# Rendered from assets/icon-tiny.svg, icon-small.svg and icon.svg by `make icons`.
+# Rendered from assets/icon-source.webp (16 px: hand-drawn assets/icon-tiny.png) by `make icons`.
 ICONS = ROOT / "assets" / "icons"
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 # The CLI version the bundle was validated with; bump it deliberately.

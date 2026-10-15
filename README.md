@@ -1,4 +1,9 @@
-<p align="center"><img src="https://raw.githubusercontent.com/MBratkowski/deweloperuch-mcp/main/assets/icon.svg" alt="deweloperuch-mcp icon" width="160"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/MBratkowski/deweloperuch-mcp/main/assets/icon-on-dark.png">
+    <img src="https://raw.githubusercontent.com/MBratkowski/deweloperuch-mcp/main/assets/icon-on-light.png" alt="deweloperuch-mcp icon: a grinning builder in a hard hat labelled MCP+CLI" width="160">
+  </picture>
+</p>
 
 <h1 align="center">deweloperuch-mcp</h1>
 
@@ -8,6 +13,11 @@
   <a href="https://pypi.org/project/deweloperuch-mcp/"><img src="https://img.shields.io/pypi/v/deweloperuch-mcp" alt="PyPI version"></a>
   <a href="https://pypi.org/project/deweloperuch-mcp/"><img src="https://img.shields.io/pypi/pyversions/deweloperuch-mcp" alt="Python versions"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
+</p>
+
+<p align="center">
+  <a href="https://mbratkowski.github.io/deweloperuch-mcp-site/"><b>Website</b></a> ·
+  <a href="https://mbratkowski.github.io/deweloperuch-mcp-site/docs/"><b>Documentation in Polish</b></a>, with a visual install guide
 </p>
 
 <!-- mcp-name: io.github.MBratkowski/deweloperuch-mcp -->
@@ -36,6 +46,8 @@ An unofficial [MCP](https://modelcontextprotocol.io) server and command-line too
 ## Install
 
 Pick the first option that fits you; they go from no terminal to expert. Supported systems: macOS and Linux. **Windows is not supported** (the shared request limiter uses `fcntl` file locks).
+
+Prefer a visual walkthrough? The [install guide on the project's website](https://mbratkowski.github.io/deweloperuch-mcp-site/docs/) (in Polish) shows the installation step by step and has a prompt that lets an AI agent install it for you.
 
 ### 1. Claude Desktop, no terminal
 
@@ -234,6 +246,7 @@ Both the variable and `-m live` are required. Scenarios and request budget: [tes
 
 | Document | Contents |
 |---|---|
+| [Website](https://mbratkowski.github.io/deweloperuch-mcp-site/) and [its docs](https://mbratkowski.github.io/deweloperuch-mcp-site/docs/) | The project's landing page and user documentation in Polish, with a visual install guide |
 | [docs/mcp/README.md](docs/mcp/README.md) | The MCP server: tools, prompts, client configuration, argument rules, errors, result sizes |
 | [docs/cli/README.md](docs/cli/README.md) | The `deweloperuch` CLI: commands, output format, exit codes |
 | [docs/configuration.md](docs/configuration.md) | Environment variables, files, the request limiter, the cache and the STOP lock |
@@ -253,7 +266,7 @@ Both the variable and `-m live` are required. Scenarios and request budget: [tes
 - **RCN** (Real Estate Price Register) transaction data, reached through the service. The service's authors publish raw RCN data as CC0 in their public repository.
 - **GUS** (Central Statistical Office) and **NBP** (National Bank of Poland) statistics, reached through the service. Name them as the source when you republish figures.
 
-The code is licensed under the [MIT licence](LICENSE). The licence covers code only; the samples and fixtures used for testing contain data from the sources above and are described in [NOTICE](NOTICE).
+The code is licensed under the [MIT licence](LICENSE). The licence covers code only; the samples and fixtures used for testing contain data from the sources above and are described in [NOTICE](NOTICE). The project's icon is not covered by the MIT licence either: all rights reserved, used with permission of the deweloperuch.pl authors (see [NOTICE](NOTICE)).
 
 ## Contributing
 

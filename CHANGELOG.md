@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- Links to the project's [website](https://mbratkowski.github.io/deweloperuch-mcp-site/) and its [documentation in Polish](https://mbratkowski.github.io/deweloperuch-mcp-site/docs/), with a visual install guide, in the README.
+
+### Changed
+- New official icon (a builder in a hard hat labelled MCP+CLI) in the README and the Claude Desktop extension, in every size from 16 to 512 px (thicker strokes at 32 and 64 px, a hand-drawn 16 px version). It is used with permission of the deweloperuch.pl authors and is not covered by the MIT licence; see [NOTICE](NOTICE).
+- `make icons` builds the images from the raster `assets/icon-source.webp` and needs ImageMagick 7 (`magick`) instead of `rsvg-convert`. `assets/icon.svg` only wraps `icon.png` now, for the README of the releases up to 0.1.2.
+- The homepage in the package metadata (PyPI), the extension manifest and the Claude Code plugin is the website.
+
+### Removed
+- The old icon drawings `assets/icon-small.svg` and `assets/icon-tiny.svg`.
+
 ## [0.1.2] - 2026-10-14
 
 ### Added
@@ -61,6 +72,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - One malformed GUS dataset no longer breaks the others on the statistics page.
 - MCP validation errors no longer contain a link to the validation library's documentation.
 
-[Unreleased]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/MBratkowski/deweloperuch-mcp/releases/tag/v0.1.0

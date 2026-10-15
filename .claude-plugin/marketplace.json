@@ -12,7 +12,7 @@
       "source": "./",
       "description": "Teaches Claude to use the read-only deweloperuch CLI: developers' asking prices with price history, RCN transaction prices, valuations, GUS and NBP statistics for Poland.",
       "category": "data",
-      "homepage": "https://github.com/MBratkowski/deweloperuch-mcp"
+      "homepage": "https://mbratkowski.github.io/deweloperuch-mcp-site/"
     }
   ]
 }
