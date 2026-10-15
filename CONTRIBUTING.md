@@ -30,7 +30,7 @@ The build backend is hatchling. The wheel ships the agent skill from `skills/dew
 
 ImageMagick must be built with WebP support; check with `magick -list format | grep -i '^ *webp'` (the Homebrew build has it).
 
-Never rename or delete `assets/icon-on-light.png`, `assets/icon-on-dark.png` or `assets/icon.svg`: the READMEs of published releases (on PyPI and GitHub) link them by absolute URLs.
+Never rename or delete a file that README.md links by an absolute URL (today `assets/icon-on-light.png`, `assets/icon-on-dark.png` and `assets/icon.svg`): the READMEs of published releases (on PyPI and GitHub) keep linking it on `main`. `tests/architecture/test_assets.py` fails otherwise; add a new file linked that way to `PUBLISHED` in that test. The same test fails when the `make icons` outputs are stale and when the homepage differs between `pyproject.toml`, the extension manifest and the Claude Code plugin files (the registry `websiteUrl` in `packaging/registry/server.json` is intentionally different).
 
 To release:
 
