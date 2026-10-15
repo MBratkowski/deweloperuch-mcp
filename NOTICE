@@ -2,7 +2,7 @@ deweloperuch-mcp
 Copyright (c) 2026 deweloperuch-mcp contributors
 
 The MIT licence in the LICENSE file covers the source code of this project
-only. It does not cover any data.
+only. It does not cover any data or the project's icon (see "Icon" below).
 
 Data sources
 ------------
@@ -23,6 +23,13 @@ responses obtained from deweloperuch.pl (and, through it, from RCN, GUS and
 NBP). They are included only so that the tests can run offline against real
 response shapes. They are not covered by the MIT licence and remain subject to
 the terms of their respective owners. Personal data was removed from them.
+
+Icon
+----
+The icon in assets/ (and images derived from it) is not covered by the MIT
+licence. All rights reserved; used with permission of the deweloperuch.pl
+authors. This covers assets/icon-source.webp and every image made from it,
+including assets/icons/ and the icons inside the Claude Desktop extension.
 
 Trademarks
 ----------

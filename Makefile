@@ -52,15 +52,38 @@ package:
 mcpb:
 	uv run python packaging/mcpb/build.py
 
-## icons: the extension's PNG icons (assets/icons, committed) from the SVGs; needs
-## rsvg-convert (librsvg). Pixel-grid variants below 64 px, the full drawing from 64 px;
-## the MCP badge text of icon.svg uses the system's Helvetica Neue or Arial.
+## icons: the images in assets/ (committed) from the official raster assets/icon-source.webp;
+## needs ImageMagick 7 (`magick`) with WebP support. The extension's icons are white rounded
+## tiles; at 32 and 64 px the strokes grow (erosion kernel) before downscaling and the
+## contrast rises so they stay legible; from 128 px the kernel is Unity and the contrast 0,
+## which both mean none (Disk:0 is not a no-op: it falls back to the default disk). The
+## 16 px one is hand-drawn (assets/icon-tiny.png). icon-on-light.png and icon-on-dark.png are
+## transparent, with dark and light ink, for the README; icon.svg only wraps icon.png. The
+## published READMEs link icon-on-*.png and icon.svg by absolute URLs: never rename or
+## delete them.
+INK = magick assets/icon-source.webp -colorspace gray -level 15%,85% -trim +repage
 icons:
-	rsvg-convert -w 16 -h 16 assets/icon-tiny.svg -o assets/icons/icon-16.png
-	rsvg-convert -w 32 -h 32 assets/icon-small.svg -o assets/icons/icon-32.png
-	for size in 64 128 256 512; do \
-		rsvg-convert -w $$size -h $$size assets/icon.svg -o assets/icons/icon-$$size.png; \
+	for spec in "32 28 Disk:6 5" "64 54 Disk:4 4" "128 102 Unity 0" "256 205 Unity 0" \
+			"512 410 Unity 0"; do \
+		set -- $$spec; edge=$$(($$1 - 1)); radius=$$(($$1 * 22 / 100)); \
+		$(INK) -morphology Erode $$3 -filter Mitchell -resize x$$2 \
+			-sigmoidal-contrast $$4x50% -background white -gravity center -extent $$1x$$1 \
+			\( -size $$1x$$1 xc:black -fill white \
+				-draw "roundrectangle 0,0 $$edge,$$edge $$radius,$$radius" \) \
+			-alpha off -compose CopyOpacity -composite -strip PNG32:assets/icons/icon-$$1.png \
+			|| exit 1; \
 	done
+	cp assets/icon-tiny.png assets/icons/icon-16.png
+	cp assets/icons/icon-512.png assets/icon.png
+	$(INK) -resize x474 -negate -background black -alpha shape -bordercolor none -border 19 \
+		-strip PNG32:assets/icon-on-light.png
+	$(INK) -resize x474 -negate -background white -alpha shape -bordercolor none -border 19 \
+		-strip PNG32:assets/icon-on-dark.png
+	b64=$$(base64 < assets/icon.png | tr -d '\n') && test -n "$$b64" || exit 1; \
+	{ printf '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"'; \
+		printf ' width="512" height="512"><title>deweloperuch-mcp</title>'; \
+		printf '<image width="512" height="512" href="data:image/png;base64,'; \
+		printf '%s' "$$b64"; printf '"/></svg>\n'; } > assets/icon.svg
 
 ## skill: the agent skill's skills/deweloperuch-cli/REFERENCE.md, generated from the CLI
 ## (tests/skill fails while it is out of date); SKILL.md and EXAMPLES.md are written by hand
