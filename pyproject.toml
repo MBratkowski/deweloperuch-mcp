@@ -71,8 +71,9 @@ core-metadata-version = "2.4"
 testpaths = ["tests"]
 # recon/ scripts are not part of the package; tests import them as top-level modules
 # (probe, scan_bundles, http_common, flight, allowlist, config), the way
-# `python3 recon/<script>.py` does.
-pythonpath = ["recon"]
+# `python3 recon/<script>.py` does. The same for the repository's maintenance scripts in
+# .github/scripts/ (archive_stats).
+pythonpath = ["recon", ".github/scripts"]
 # pytest-socket: no test may open a network socket (CONTRIBUTING.md, D10).
 addopts = "--disable-socket"
 markers = [
@@ -83,9 +84,10 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-# recon/ modules (config, http_common, flight, allowlist, probe, scan_bundles) and test
-# helpers in tests/support/ (``support.*``) are first-party for import sorting.
-src = [".", "src", "recon", "tests"]
+# recon/ modules (config, http_common, flight, allowlist, probe, scan_bundles), the
+# maintenance scripts in .github/scripts/ and test helpers in tests/support/
+# (``support.*``) are first-party for import sorting.
+src = [".", "src", "recon", ".github/scripts", "tests"]
 extend-exclude = [
     # Markdown (ruff formats its code blocks by default) belongs to the documentation
     # owners; its snippets are illustrative, not project code.
@@ -142,8 +144,9 @@ max-public-methods = 10
 [tool.mypy]
 python_version = "3.11"
 strict = true
-# Resolves the recon modules tests import, so `mypy tests` type-checks them too.
-mypy_path = "recon"
+# Resolves the recon modules and .github/scripts tests import, so `mypy tests`
+# type-checks them too.
+mypy_path = "recon:.github/scripts"
 warn_unreachable = true
 enable_error_code = [
     "ignore-without-code",
@@ -164,7 +167,7 @@ disallow_any_explicit = true
 # `make check`: unused code at 80% confidence or more. A parameter a protocol requires but
 # the code does not use is named with a leading underscore (`__exit__(self, _exc_type,
 # ...)`), which vulture skips; there is no whitelist.
-paths = ["src", "recon"]
+paths = ["src", "recon", ".github/scripts"]
 min_confidence = 80
 
 [dependency-groups]

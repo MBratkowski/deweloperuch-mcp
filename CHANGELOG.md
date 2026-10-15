@@ -8,6 +8,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Links to the project's [website](https://mbratkowski.github.io/deweloperuch-mcp-site/) and its [documentation in Polish](https://mbratkowski.github.io/deweloperuch-mcp-site/docs/), with a visual install guide, in the README.
 
 ### Changed
+- Maintenance, not part of the package: a daily workflow (`.github/workflows/stats.yml`) archives GitHub traffic, release downloads, repository counters and PyPI downloads as CSV files on the `stats` branch. See [CONTRIBUTING.md](CONTRIBUTING.md#statistics-archive).
 - New official icon (a builder in a hard hat labelled MCP+CLI) in the README and the Claude Desktop extension, in every size from 16 to 512 px (thicker strokes at 32 and 64 px, a hand-drawn 16 px version). It is used with permission of the deweloperuch.pl authors and is not covered by the MIT licence; see [NOTICE](NOTICE).
 - `make icons` builds the images from the raster `assets/icon-source.webp` and needs ImageMagick 7 (`magick`) instead of `rsvg-convert`. `assets/icon.svg` only wraps `icon.png` now, for the README of the releases up to 0.1.2.
 - The homepage in the package metadata (PyPI), the extension manifest and the Claude Code plugin is the website.

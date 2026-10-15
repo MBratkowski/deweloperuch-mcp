@@ -1,0 +1,93 @@
+# Once a day: archives the project's statistics that GitHub and PyPI keep only for a while.
+# GitHub traffic (views, clones, referrers, popular paths: 14 days), release asset downloads,
+# repository counters (stars, forks, watchers) and PyPI downloads (pypistats.org: about 180
+# days) go to CSV files on the orphan branch `stats` of this repository, which the first run
+# creates. .github/scripts/archive_stats.py (standard library only, no `uv sync`) reads
+# api.github.com and pypistats.org and never contacts deweloperuch.pl. A run commits only
+# when something changed, and pushes to `stats` only.
+#
+# Secret STATS_TOKEN: a fine-grained personal access token with access to this repository
+# only and the repository permission "Administration: Read-only", which the traffic
+# endpoints need (the job's GITHUB_TOKEN gets 403 there). Without it the traffic is skipped
+# with a warning and the rest is archived. When GitHub refuses it (expired, revoked, missing
+# permission: the script exits 3), the rest is archived and pushed, then the run fails, so
+# the maintainer gets a failed run and its notification. The job's GITHUB_TOKEN reads the
+# releases and the repository and pushes to `stats`.
+#
+# Scheduled workflows run only from the default branch (main); run it by hand with
+# workflow_dispatch (Actions tab). The job runs only in this repository and only from main
+# (`github.ref`: the schedule event has no payload, so no `github.event.repository`), so a
+# fork or another branch never pushes an archive made by another version of the script.
+name: stats
+
+on:
+  schedule:
+    - cron: "37 4 * * *" # 04:37 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stats
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    if: github.repository == 'MBratkowski/deweloperuch-mcp' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # push to the stats branch
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0
+        with:
+          enable-cache: false # the script has no dependencies
+      - name: Check out the stats branch next to the code (an orphan branch on the first run)
+        run: |
+          # The exact ref (not a suffix match such as feature/stats); exit 2: no such branch.
+          found=0
+          git ls-remote --exit-code origin refs/heads/stats > /dev/null || found=$?
+          if [ "$found" -eq 0 ]; then
+            git fetch --no-tags --depth=1 origin refs/heads/stats
+            git worktree add -B stats "$RUNNER_TEMP/stats" FETCH_HEAD
+          elif [ "$found" -eq 2 ]; then
+            git worktree add --orphan -b stats "$RUNNER_TEMP/stats"
+          else
+            echo "::error::Could not list the branches of origin (git ls-remote exit $found)"
+            exit 1
+          fi
+      - name: Archive the statistics
+        id: archive
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          STATS_TOKEN: ${{ secrets.STATS_TOKEN }}
+        run: |
+          # Exit 3 (STATS_TOKEN refused, the rest archived) still commits; the last step
+          # fails the run. Any other failure stops here.
+          code=0
+          uv run --no-project --python 3.13 python .github/scripts/archive_stats.py \
+            --out "$RUNNER_TEMP/stats" || code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" -ne 0 ] && [ "$code" -ne 3 ]; then
+            exit "$code"
+          fi
+      - name: Commit and push what changed (to the stats branch only)
+        run: |
+          stats="$RUNNER_TEMP/stats"
+          git -C "$stats" add --all
+          if git -C "$stats" diff --cached --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          git -C "$stats" \
+            -c user.name="github-actions[bot]" \
+            -c user.email="41898828+github-actions[bot]@users.noreply.github.com" \
+            commit --quiet --message "Archive project statistics for $(date -u +%F)"
+          # The worktree's commit is on the shared branch; the push goes from the main
+          # checkout, which holds the job's credentials.
+          git push origin refs/heads/stats:refs/heads/stats
+      - name: Fail the run when GitHub refused STATS_TOKEN (see the annotation above)
+        if: steps.archive.outputs.code == '3'
+        run: exit 1

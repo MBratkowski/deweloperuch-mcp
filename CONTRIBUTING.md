@@ -8,7 +8,7 @@ Requirements: Python 3.11 or newer and [uv](https://docs.astral.sh/uv/).
 
 ```
 uv sync
-make fast     # ruff, ruff format --check, mypy, import-linter: a few seconds
+make fast     # ruff, ruff format --check, mypy (also .github/scripts), import-linter: a few seconds
 make check    # fast + the offline tests + dead-code check + complexity and duplication reports
 ```
 
@@ -24,7 +24,7 @@ make skill     # regenerates skills/deweloperuch-cli/REFERENCE.md from the CLI
 
 The build backend is hatchling. The wheel ships the agent skill from `skills/deweloperuch-cli/` as `deweloperuch_mcp/skills/deweloperuch-cli/`. `SKILL.md` and `EXAMPLES.md` are written by hand; `REFERENCE.md` is generated from the CLI by `make skill` (`packaging/skill_reference.py`) and a test fails when it is stale, so run `make skill` after changing any command, option or help text. `make smoke` also installs the skill from the wheel (`deweloperuch skill install --dir build/skill-smoke`) and diffs it against `skills/`. The same folder is what `npx skills add MBratkowski/deweloperuch-mcp` and the Claude Code plugin (`.claude-plugin/`) install from GitHub.
 
-`make package` builds the wheel and sdist and runs `packaging/mcpb/build.py`, which packs the `.mcpb` with the official `mcpb` CLI (2.1.2, `manifest_version` 0.4, uv runtime). CI runs `make fast` and the offline tests on every push and pull request.
+`make package` builds the wheel and sdist and runs `packaging/mcpb/build.py`, which packs the `.mcpb` with the official `mcpb` CLI (2.1.2, `manifest_version` 0.4, uv runtime). CI runs `make fast` and the offline tests on every push and pull request. A separate workflow, `stats.yml`, archives the project's statistics once a day (next section); it is not part of the package.
 
 `make icons` regenerates the images in `assets/` from the official raster `assets/icon-source.webp`; it needs ImageMagick 7 (`magick`). It writes the extension icons (`assets/icon.png` and `assets/icons/`, white rounded tiles; at 32 and 64 px the strokes are thickened so they stay legible, and the 16 px icon is copied from the hand-drawn `assets/icon-tiny.png`), the README header images `assets/icon-on-light.png` and `assets/icon-on-dark.png`, and `assets/icon.svg`, which only wraps `icon.png` for the README of releases up to 0.1.2. The outputs are committed, so you run it only after changing the source or `icon-tiny.png`. The icon is not covered by the MIT licence (see [NOTICE](NOTICE)).
 
@@ -43,6 +43,51 @@ To release:
 mcp-publisher login github
 mcp-publisher publish
 ```
+
+## Statistics archive
+
+GitHub keeps a repository's traffic for 14 days and pypistats.org keeps PyPI downloads for about 180 days. The workflow `.github/workflows/stats.yml` runs `.github/scripts/archive_stats.py` daily at 04:37 UTC (and on `workflow_dispatch`) and stores the numbers as CSV files on the orphan branch `stats` of this public repository, which the first run creates. The script uses the standard library only, reads api.github.com and pypistats.org, and never contacts the deweloperuch.pl service. It sends the honest User-Agent `deweloperuch-mcp-stats (+https://github.com/MBratkowski/deweloperuch-mcp)`.
+
+| File on `stats` | Columns | Notes |
+|---|---|---|
+| `github/views.csv`, `github/clones.csv` | `date,count,uniques` | traffic, 14-day window; upsert by date, older dates kept |
+| `github/referrers.csv` | `captured,referrer,count,uniques` | 14-day aggregate ending on `captured` |
+| `github/paths.csv` | `captured,path,title,count,uniques` | 14-day aggregate ending on `captured` |
+| `github/releases.csv` | `captured,tag,asset,download_count` | cumulative downloads of release assets; drafts skipped |
+| `github/repo.csv` | `captured,stars,forks,watchers` | |
+| `pypi/downloads.csv` | `date,category,downloads` | `with_mirrors` and `without_mirrors` |
+
+The branch also holds a `README.md` describing the files. Dates are UTC days and rows are sorted. A rerun on the same day replaces that day's snapshot, files are written only when they change, and the job commits as `github-actions[bot]` (`Archive project statistics for YYYY-MM-DD`) only when something changed, pushing to `stats` only.
+
+The job runs only in `MBratkowski/deweloperuch-mcp` and only from `refs/heads/main`. The `schedule` event has no payload, so the default branch is hard-coded in the `if:`: if the default branch is renamed, change it there. Permissions are `contents: read`, and `contents: write` for the job only.
+
+**Token.** The traffic endpoints need a token with the repository permission "Administration: read"; the job's `GITHUB_TOKEN` gets 403 there. Create a fine-grained personal access token (resource owner `MBratkowski`, only this repository, repository permission "Administration: Read-only"; Metadata read-only is added automatically) and store it as the Actions secret `STATS_TOKEN` (Settings, Secrets and variables, Actions, or `gh secret set STATS_TOKEN --repo MBratkowski/deweloperuch-mcp` and paste it at the prompt). Releases and repository counters use the job's `GITHUB_TOKEN`; pypistats gets no token. Tokens are never printed.
+
+**Exit codes of the script and what a run means.**
+
+| Code | Meaning | Workflow |
+|---|---|---|
+| 0 | archived; a source that failed gives a `::warning::` and its file stays untouched; a missing `STATS_TOKEN` only skips the traffic, with a warning | commits and pushes |
+| 1 | no source could be read, nothing archived | fails before the commit |
+| 2 | bad arguments | fails before the commit |
+| 3 | `STATS_TOKEN` is set but GitHub refused it (401 or 403 on traffic); the rest was archived | commits and pushes, then fails the run |
+
+A red run means exit 1, 2 or 3. For 3 the token has most likely expired or lost its permission: create a new one and update the secret. GitHub sends the failure email of a scheduled run to the person who last changed the `cron` line.
+
+**Run it locally** (the token is read from the environment; `--repo` defaults to `GITHUB_REPOSITORY`):
+
+```
+STATS_TOKEN=... uv run --no-project --python 3.13 python .github/scripts/archive_stats.py \
+    --out build/stats --repo MBratkowski/deweloperuch-mcp
+```
+
+To run the workflow by hand after it is on `main`: `gh workflow run stats.yml --repo MBratkowski/deweloperuch-mcp`. The first scheduled run happens only after the workflow is on `main`.
+
+**Caveats.**
+
+- GitHub disables scheduled workflows in a public repository after 60 days without repository activity; re-enable it in the Actions tab. It is not known whether the bot's pushes to `stats` count as activity.
+- A ruleset or branch protection that matches all branches would reject the push to `stats`.
+- `make types` type-checks `.github/scripts`; pytest `pythonpath`, ruff `src`, mypy `mypy_path` and vulture `paths` include it. The offline tests are in `tests/repo_stats/`. Nothing here is part of the published package (sdist and wheel use `only-include`).
 
 ## Polite-client rules
 
@@ -71,7 +116,7 @@ The package `src/deweloperuch_mcp/` has the layers `consumers` (CLI and MCP) →
 
 - `tests/unit/` mirrors `src/`: the test for `src/deweloperuch_mcp/<path>/<module>.py` is `tests/unit/<path>/test_<module>.py`.
 - `tests/support/` holds test infrastructure only (fakes, builders, checks, the live harness); it contains no tests.
-- Other folders: `contract` (samples against the DTOs), `integration`, `characterization` (golden outputs of the CLI and MCP in `tests/golden/`), `architecture`, `safeguards`, `recon_scripts`, `e2e`.
+- Other folders: `contract` (samples against the DTOs), `integration`, `characterization` (golden outputs of the CLI and MCP in `tests/golden/`), `architecture`, `safeguards`, `recon_scripts`, `repo_stats` (the statistics archive script, on real GitHub and PyPI responses in `tests/fixtures/repo_stats/`), `e2e`.
 - After an intended change of tool descriptions or output, refresh the snapshot with `DEWELOPERUCH_UPDATE_SNAPSHOTS=1 uv run pytest tests/unit/consumers/mcp/test_server.py` and the goldens with `DEWELOPERUCH_UPDATE_GOLDEN=1 uv run pytest tests/characterization`, then review the diff.
 
 ## Language
