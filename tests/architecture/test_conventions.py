@@ -91,7 +91,7 @@ PROMPT_IMPORTS = (f"{PACKAGE}.consumers.mcp.support.", f"{PACKAGE}.consumers.sha
 
 
 MODULES = sorted(
-    str(path.relative_to(SOURCE).with_suffix(""))
+    path.relative_to(SOURCE).with_suffix("").as_posix()
     for layer in LAYERS
     for path in (SOURCE / layer).rglob("*.py")
     if path.name != "__init__.py"

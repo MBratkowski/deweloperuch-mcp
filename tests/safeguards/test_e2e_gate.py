@@ -472,10 +472,10 @@ def test_cli_output_must_be_readable(stdout: str, stderr: str) -> None:
 # the real RSC responses, "awaria" with a 500, the cities with a 403 (a STOP, recorded
 # in this test's private XDG_CACHE_HOME).
 FAKE_SERVER = """\
-import pytest_socket
-pytest_socket.disable_socket(allow_unix_socket=True)
 import sys
 sys.path[:0] = [{tests!r}]
+from support.checks.sockets import event_loop_sockets_only
+event_loop_sockets_only()
 import respx
 from support.providers.routes.offers import offers_route, unknown_city_route
 with respx.mock(assert_all_called=False, assert_all_mocked=True) as router:
@@ -490,14 +490,11 @@ with respx.mock(assert_all_called=False, assert_all_mocked=True) as router:
 
 @pytest.fixture
 def fake_server(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """``live.server_script`` replaced by a script that starts the fake server."""
+    """Start the fake server through Python, including on Windows."""
     code = tmp_path / "fake_server.py"
     code.write_text(FAKE_SERVER.format(tests=str(TESTS)), encoding="utf-8")
-    script = tmp_path / "deweloperuch-mcp"
-    script.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{code}"\n', encoding="utf-8")
-    script.chmod(0o755)
-    monkeypatch.setattr(live, "server_script", lambda: script)
-    return script
+    monkeypatch.setattr(live, "server_command", lambda: [sys.executable, str(code)])
+    return code
 
 
 def test_the_harness_counts_paces_and_ends_the_session(fake_server: Path, tmp_path: Path) -> None:

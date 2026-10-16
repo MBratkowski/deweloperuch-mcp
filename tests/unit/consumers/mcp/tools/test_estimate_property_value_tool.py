@@ -189,6 +189,30 @@ def test_numbers_as_text_are_accepted(
     assert result["comparables_returned"] == 2
 
 
+@pytest.mark.parametrize("limit", [10, 1, 50])
+def test_fractional_area_caution_survives_mcp_comparable_limits(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter, limit: int
+) -> None:
+    answer = valuation_with_comparables(60)
+    answer.update(estimatedValue=558_666, estimatedPricePerSqm=13_626)
+    route = valuation_route(service, answer)
+
+    result = data(call(server, TOOL, **dict(POINT, area_m2=41.37), limit=limit))
+
+    assert route.calls[0].request.url.params["area"] == "41.37"
+    assert result["area_m2"] == 41.37
+    assert result["estimated_value"] == 558_666
+    assert result["price_per_m2"] == 13_626
+    assert (result["comparables_total"], result["comparables_returned"]) == (60, limit)
+    assert result["hint"].endswith(
+        "Serwis może nie uwzględnić części ułamkowej powierzchni w wycenie."
+    )
+    if limit == 50:
+        assert "To maksimum w jednym wywołaniu" in result["hint"]
+    else:
+        assert "więcej pokaże większy limit (najwyżej 50)" in result["hint"]
+
+
 def test_a_limit_keeps_the_nearest_and_says_how_to_see_more(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:

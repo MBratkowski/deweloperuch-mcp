@@ -14,6 +14,20 @@ make check    # fast + the offline tests + dead-code check + complexity and dupl
 
 Run `make fast` before every pull request and `make check` before asking for a review. Every `make` target is offline.
 
+On Windows, run the tools directly from PowerShell (no Make installation needed):
+
+```powershell
+uv sync --locked
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy src tests recon packaging .github/scripts
+uv run lint-imports
+$env:DEWELOPERUCH_LIVE = "0"
+uv run pytest -q
+```
+
+CI runs the offline tests and CLI/MCP startup checks on Windows, macOS and Linux with Python 3.11 and 3.13. Lint, format, type and import checks run on Linux; packaging and artifact smoke checks run in a separate Linux job. Tests use UTF-8 for Polish product text (`PYTHONUTF8=1` in CI).
+
 ## Packaging and releasing
 
 ```

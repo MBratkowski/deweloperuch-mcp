@@ -7,7 +7,6 @@ are written to a temporary directory, never to docs/discovery/samples/.
 
 import ast
 import copy
-import fcntl
 import hashlib
 import http.client
 import io
@@ -27,7 +26,7 @@ import pytest
 
 import http_common
 import probe
-from deweloperuch_mcp import identity
+from deweloperuch_mcp import identity, throttle
 from deweloperuch_mcp.throttle import (
     LOCK_FILENAME,
     MAX_DEFER,
@@ -955,14 +954,13 @@ def test_the_stop_is_recorded_before_the_lock_is_released(
     env: ProbeEnv, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     seen_at_unlock: list[bool] = []
-    real_flock = fcntl.flock
+    real_unlock = throttle.unlock_file
 
-    def flock(fd: int, operation: int) -> None:
-        if operation == fcntl.LOCK_UN:
-            seen_at_unlock.append((env.lock_dir / STOP_FILENAME).exists())
-        real_flock(fd, operation)
+    def unlock(fd: int) -> None:
+        seen_at_unlock.append((env.lock_dir / STOP_FILENAME).exists())
+        real_unlock(fd)
 
-    monkeypatch.setattr(fcntl, "flock", flock)
+    monkeypatch.setattr(throttle, "unlock_file", unlock)
 
     assert env.run(["api", "/api/cities?q=krak"], FakeProbeService([response(403)])) == STOP
     assert seen_at_unlock == [True]
@@ -1565,7 +1563,7 @@ def test_default_samples_dir_is_the_repo_one() -> None:
 def run_script(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
     # -S: no site-packages, so probe and everything it imports must be stdlib or repo code.
     return subprocess.run(
-        [sys.executable, "-E", "-s", "-S", str(PROBE), *args],
+        [sys.executable, "-E", "-s", "-S", "-X", "utf8", str(PROBE), *args],
         capture_output=True,
         text=True,
         cwd=cwd,

@@ -49,7 +49,8 @@ a STOP without an end (fail-closed). The first record wins: a later STOP may onl
 its end or make it permanent, never shorten it.
 
 This module must import only the standard library: ``recon/`` scripts load it
-without installing the package (``recon/config.py``). POSIX only (``fcntl``).
+without installing the package (``recon/config.py``). File locks use ``fcntl`` on
+POSIX and ``msvcrt`` on Windows.
 """
 
 import contextlib
@@ -58,26 +59,23 @@ import json
 import math
 import os
 import stat
+import sys
 import tempfile
 import threading
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, TypeAlias
+from typing import Any, ClassVar, TypeAlias
+
+from deweloperuch_mcp.file_lock import lock_file
+from deweloperuch_mcp.file_lock import unlock_file as unlock_file
 
 # Stdlib only as well (recon loads both without the package's dependencies): the texts a
 # STOP record may carry are the response policy's.
 from deweloperuch_mcp.http_policy import CHALLENGE, CHALLENGE_REASON, STOP_STATUSES
-
-try:
-    import fcntl
-except ImportError:  # pragma: no cover - Windows has no fcntl
-    _HAS_FLOCK = False
-else:
-    _HAS_FLOCK = True
 
 DEFAULT_MIN_INTERVAL = 1.0
 """Minimum pause between requests in seconds (robots.txt ``Crawl-delay: 1``, D2)."""
@@ -479,7 +477,7 @@ class RequestLimiter:
         """The STOP record as it is now; creates nothing, never waits.
 
         Read without the lock, on purpose (an exception to "only under the lock", for this
-        read alone): the record is only ever replaced atomically (``os.replace``), so a
+        read alone): the record is only ever replaced by an atomic rename, so a
         reader sees the old record or the new one, never a part, and a person asking for
         the status does not hang behind a request or a pause of another process.
         ``slot()`` still reads it under the lock, where it matters.
@@ -523,28 +521,25 @@ class RequestLimiter:
 
         Without ``wait`` it blocks until the lock is free (``slot()``); with it, it polls.
         """
-        if not _HAS_FLOCK:
-            raise RuntimeError(
-                "Limiter zapytań wymaga fcntl.flock (Linux, macOS). Windows nie jest wspierany."
-            )
         if getattr(_thread_state, "in_slot", False):
             raise RuntimeError(
                 "Zagnieżdżony slot limitera w tym samym wątku zablokowałby się na zawsze. "
                 "Zakończ bieżące zapytanie przed rozpoczęciem następnego."
             )
         self._lock_dir.mkdir(parents=True, exist_ok=True)
-        fd = os.open(self.lock_path, os.O_RDWR | os.O_CREAT, 0o600)
+        flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_BINARY", 0)
+        fd = os.open(self.lock_path, flags, 0o600)
         _thread_state.in_slot = True
         try:
             if wait is None:
-                fcntl.flock(fd, fcntl.LOCK_EX)
+                lock_file(fd)
             else:
                 self._poll_lock(fd, wait)
             try:
                 yield fd
             finally:
                 # Explicit unlock: a forked child holding a copy of fd must not keep the lock.
-                fcntl.flock(fd, fcntl.LOCK_UN)
+                unlock_file(fd)
         finally:
             _thread_state.in_slot = False
             os.close(fd)
@@ -554,7 +549,7 @@ class RequestLimiter:
         noticed = False
         while True:
             try:
-                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                lock_file(fd, blocking=False)
                 return
             except BlockingIOError:
                 pass
@@ -650,7 +645,7 @@ def _write_stop(path: Path, record: StopRecord) -> None:
             out.write(data)
             out.flush()
             os.fsync(out.fileno())
-        os.replace(temporary, path)
+        _replace_stop(temporary, path)
     except BaseException:
         with contextlib.suppress(OSError):
             os.unlink(temporary)
@@ -674,6 +669,72 @@ class _LockWait:
         self.on_wait = on_wait
 
 
+def _replace_stop(temporary: str, path: Path) -> None:
+    """Publish the fsynced record without excluding concurrent status readers."""
+    if sys.platform == "win32":
+        _replace_windows_stop(temporary, path)
+    else:
+        os.replace(temporary, path)
+
+
+def _replace_windows_stop(temporary: str, path: Path) -> None:
+    """Windows' legacy os.replace cannot replace an open destination, even with
+    delete sharing. FileRenameInfoEx adds the required POSIX rename semantics.
+    """
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
+
+        destination = str(path.absolute())
+        encoded_length = len(destination.encode("utf-16-le"))
+
+        class RenameInfo(ctypes.Structure):
+            flags: int
+            name_bytes: int
+            name: str
+
+            _fields_: ClassVar[Sequence[tuple[str, type[Any]] | tuple[str, type[Any], int]]] = [
+                ("flags", wintypes.DWORD),
+                ("root_directory", wintypes.HANDLE),
+                ("name_bytes", wintypes.DWORD),
+                ("name", wintypes.WCHAR * (encoded_length // 2 + 1)),
+            ]
+
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        create = kernel.CreateFileW
+        create.argtypes = [
+            wintypes.LPCWSTR,
+            wintypes.DWORD,
+            wintypes.DWORD,
+            wintypes.LPVOID,
+            wintypes.DWORD,
+            wintypes.DWORD,
+            wintypes.HANDLE,
+        ]
+        create.restype = wintypes.HANDLE
+        close = kernel.CloseHandle
+        close.argtypes = [wintypes.HANDLE]
+        close.restype = wintypes.BOOL
+        rename = kernel.SetFileInformationByHandle
+        rename.argtypes = [wintypes.HANDLE, ctypes.c_int, wintypes.LPVOID, wintypes.DWORD]
+        rename.restype = wintypes.BOOL
+        # DELETE access, share READ|WRITE|DELETE, OPEN_EXISTING; the writer is closed.
+        handle = create(temporary, 0x10000, 0x7, None, 3, 0x00200000, None)
+        if handle == ctypes.c_void_p(-1).value:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            info = RenameInfo()
+            info.flags = 0x3  # REPLACE_IF_EXISTS | POSIX_SEMANTICS
+            info.name_bytes = encoded_length
+            info.name = destination
+            if not rename(handle, 22, ctypes.byref(info), ctypes.sizeof(info)):
+                raise ctypes.WinError(ctypes.get_last_error())
+        finally:
+            close(handle)
+    else:
+        raise RuntimeError("Ta operacja zastępowania pliku jest dostępna tylko na Windows.")
+
+
 def _read_stop(path: Path) -> Stop | None:
     """The record at ``path``; ``None`` without a file. Anything unreadable is a STOP.
 
@@ -681,11 +742,13 @@ def _read_stop(path: Path) -> Stop | None:
     only a regular file counts. Never waits, never creates anything.
     """
     try:
-        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        fd = _open_stop(path)
     except FileNotFoundError:
         return None
     except OSError as err:
         return _unreadable(f"nie można otworzyć pliku: {err.strerror or err}")
+    if isinstance(fd, UnreadableStop):
+        return fd
     try:
         content = _stop_content(fd)
     finally:
@@ -696,6 +759,75 @@ def _read_stop(path: Path) -> Stop | None:
         return _parse_stop(content)
     except (ValueError, TypeError, KeyError, RecursionError) as err:
         return _unreadable(f"niepoprawna treść: {err}")
+
+
+def _open_stop(path: Path) -> int | UnreadableStop:
+    """Check the record's identity before reading, also without POSIX open flags."""
+    before = path.lstat()
+    if stat.S_ISLNK(before.st_mode):
+        return _unreadable("nie można otworzyć pliku: dowiązanie symboliczne")
+    if not stat.S_ISREG(before.st_mode):
+        return _unreadable("to nie jest zwykły plik")
+    fd = _open_stop_descriptor(path)
+    try:
+        opened = os.fstat(fd)
+        if (before.st_dev, before.st_ino) != (opened.st_dev, opened.st_ino):
+            raise OSError("plik zmienił się podczas otwierania")
+        if getattr(opened, "st_file_attributes", 0) & 0x400:  # FILE_ATTRIBUTE_REPARSE_POINT
+            raise OSError("plik jest punktem ponownej analizy")
+    except BaseException:
+        os.close(fd)
+        raise
+    return fd
+
+
+def _open_stop_descriptor(path: Path) -> int:
+    if sys.platform == "win32":
+        fd = _open_windows_stop(path)
+    else:
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+        fd = os.open(path, flags)
+    return fd
+
+
+def _open_windows_stop(path: Path) -> int:
+    """Read without following reparse points or blocking atomic replace/clear.
+
+    CRT ``os.open`` omits FILE_SHARE_DELETE. A status reader lives outside the limiter
+    lock, so it must share READ|WRITE|DELETE with the STOP writer. The descriptor owns
+    the handle after ``open_osfhandle``; on a failed conversion we close it ourselves.
+    """
+    if sys.platform == "win32":
+        import ctypes
+        import msvcrt
+        from ctypes import wintypes
+
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        create = kernel.CreateFileW
+        create.argtypes = [
+            wintypes.LPCWSTR,
+            wintypes.DWORD,
+            wintypes.DWORD,
+            wintypes.LPVOID,
+            wintypes.DWORD,
+            wintypes.DWORD,
+            wintypes.HANDLE,
+        ]
+        create.restype = wintypes.HANDLE
+        close = kernel.CloseHandle
+        close.argtypes = [wintypes.HANDLE]
+        close.restype = wintypes.BOOL
+        # GENERIC_READ; FILE_SHARE_READ|WRITE|DELETE; OPEN_EXISTING;
+        # FILE_FLAG_OPEN_REPARSE_POINT|FILE_FLAG_BACKUP_SEMANTICS.
+        handle = create(str(path), 0x80000000, 0x7, None, 3, 0x00200000 | 0x02000000, None)
+        if handle == ctypes.c_void_p(-1).value:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            return msvcrt.open_osfhandle(handle, os.O_RDONLY | os.O_BINARY)
+        except BaseException:
+            close(handle)
+            raise
+    raise RuntimeError("Ten sposób otwierania pliku jest dostępny tylko na Windows.")
 
 
 def _stop_content(fd: int) -> bytes | UnreadableStop:

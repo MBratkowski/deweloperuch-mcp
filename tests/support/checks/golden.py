@@ -38,16 +38,21 @@ _PAUSE_LEFT = re.compile(r"trwa jeszcze ok\. \d+ s")
 _JSON_NUMBERS = re.compile(r'"(pid|seconds_left)": [0-9.eE+-]+')
 
 
-# The text of an OS error differs between systems (unlinking a directory is EPERM on
-# macOS, EISDIR on Linux): the goldens keep only that an OS error happened.
-_OS_ERROR = re.compile(r"\[Errno \d+\] [^:'\n]+")
+# Unlinking a directory differs between POSIX and Windows; keep only that an OS error happened.
+_OS_ERROR = re.compile(r"\[(?:Errno|WinError) \d+\] [^:'\n]+")
 
 
 def scrub(text: str, *, paths: dict[str, str]) -> str:
     """``text`` with times, PIDs, seconds left (also as JSON numbers), OS error texts and
     the given paths as placeholders."""
     for path, placeholder in sorted(paths.items(), key=lambda item: -len(item[0])):
-        text = text.replace(path, placeholder)
+        # JSON and OSError repr double Windows backslashes. Normalize the separator
+        # after the prefix too: the goldens record filenames as <LOCK_DIR>/stop.json.
+        variants = {path, json.dumps(path, ensure_ascii=False)[1:-1]}
+        for variant in sorted(variants, key=len, reverse=True):
+            for separator in ("\\\\", "\\", "/"):
+                text = text.replace(variant + separator, placeholder + "/")
+            text = text.replace(variant, placeholder)
     text = _TIME.sub("<TIME>", text)
     text = _PID.sub("PID <PID>", text)
     text = _JSON_NUMBERS.sub(r'"\1": "<NUMBER>"', text)

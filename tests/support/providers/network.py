@@ -4,11 +4,13 @@ pytest-socket blocks every socket (``--disable-socket`` in pyproject.toml); thes
 never open the network, they only say what a test may use instead.
 """
 
+import socket
 from collections.abc import Iterator
 
 import pytest
-import pytest_socket
 import respx
+
+from support.checks.sockets import event_loop_sockets_only
 
 
 @pytest.fixture
@@ -22,8 +24,12 @@ def service() -> Iterator[respx.MockRouter]:
 def unix_sockets_for_the_event_loop() -> Iterator[None]:
     """asyncio's event loop needs a local socket pair (its self-pipe), so the modules that
     start the MCP server ask for this fixture (``pytestmark = usefixtures(...)``): Unix
-    sockets only, network sockets stay blocked (``test_network_stays_blocked``).
+    sockets on POSIX, a fixed loopback pair on Windows. Ordinary network sockets and
+    DNS stay blocked (``test_network_stays_blocked``).
     pytest-socket restores its own setting after each test. Never autouse for the suite."""
-    pytest_socket.enable_socket()
-    pytest_socket.disable_socket(allow_unix_socket=True)
-    yield
+    previous_pair = socket.socketpair
+    event_loop_sockets_only()
+    try:
+        yield
+    finally:
+        socket.socketpair = previous_pair

@@ -11,7 +11,9 @@ import os
 import signal
 import subprocess
 import sys
-import time
+import threading
+from collections.abc import Iterator
+from contextlib import ExitStack, contextmanager
 from itertools import pairwise
 from pathlib import Path
 
@@ -29,22 +31,68 @@ MIN_INTERVAL = 0.2  # fast on purpose; allowed only via the testing flag
 TOLERANCE = 0.02
 
 
-STARTUP_S = 1.0  # time for interpreters to start before the workers hit the lock
-
-
 Record = tuple[float, float, float]  # asked, start, end
 
 
-def spawn(lock_dir: Path, go_at: float, requests: int, *options: str) -> subprocess.Popen[str]:
-    cmd = [sys.executable, str(WORKER), str(lock_dir), str(go_at), str(requests)]
+@contextmanager
+def spawn(lock_dir: Path, requests: int, *options: str) -> Iterator[subprocess.Popen[str]]:
+    cmd = [sys.executable, str(WORKER), str(lock_dir), str(requests)]
     cmd += ["--min-interval", str(MIN_INTERVAL), *options]
-    return subprocess.Popen(
+    with subprocess.Popen(
         cmd,
+        stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
         env={**os.environ, "PYTHONPATH": str(SRC)},
-    )
+    ) as proc:
+        # Bound handshakes too: killing a stuck worker unblocks readline() on its pipe.
+        watchdog = threading.Timer(60, proc.kill)
+        watchdog.start()
+        try:
+            yield proc
+        finally:
+            watchdog.cancel()
+            watchdog.join()
+            if proc.poll() is None:
+                proc.kill()
+
+
+def expect_event(proc: subprocess.Popen[str], event: str) -> None:
+    assert proc.stderr is not None
+    received = proc.stderr.readline().strip()
+    assert received == event, f"expected worker event {event!r}, received {received!r}"
+
+
+def command(proc: subprocess.Popen[str], message: str) -> None:
+    assert proc.stdin is not None
+    proc.stdin.write(message + "\n")
+    proc.stdin.flush()
+
+
+@contextmanager
+def competing_workers(
+    lock_dir: Path,
+    *,
+    workers: int = 2,
+    requests: int = 1,
+    first_options: tuple[str, ...] = (),
+) -> Iterator[list[subprocess.Popen[str]]]:
+    """The first owns the slot until every other worker is about to request it."""
+    with ExitStack() as stack:
+        first = stack.enter_context(spawn(lock_dir, requests, "--hold-in-slot", *first_options))
+        others = [stack.enter_context(spawn(lock_dir, requests)) for _ in range(workers - 1)]
+        procs = [first, *others]
+        for proc in procs:
+            expect_event(proc, "ready")
+        command(first, "start")
+        expect_event(first, "asking")
+        expect_event(first, "entered")
+        for proc in others:
+            command(proc, "start")
+            expect_event(proc, "asking")
+        command(first, "finish")
+        yield procs
 
 
 def collect(proc: subprocess.Popen[str], returncode: int = 0) -> list[Record]:
@@ -55,9 +103,8 @@ def collect(proc: subprocess.Popen[str], returncode: int = 0) -> list[Record]:
 
 def test_processes_never_overlap_and_keep_min_interval(tmp_path: Path) -> None:
     workers, requests = 3, 3
-    go_at = time.time() + STARTUP_S
-    procs = [spawn(tmp_path, go_at, requests) for _ in range(workers)]
-    runs = [collect(proc) for proc in procs]
+    with competing_workers(tmp_path, workers=workers, requests=requests) as procs:
+        runs = [collect(proc) for proc in procs]
     slots = sorted((start, end) for run in runs for _, start, end in run)
 
     assert len(slots) == workers * requests
@@ -71,41 +118,55 @@ def test_processes_never_overlap_and_keep_min_interval(tmp_path: Path) -> None:
 
 def test_defer_in_one_process_delays_the_next_process(tmp_path: Path) -> None:
     deferred = 1.0
-    go_at = time.time() + STARTUP_S
-    first = spawn(tmp_path, go_at, 1, "--work", "0.3", "--defer", str(deferred))
-    second = spawn(tmp_path, go_at + 0.1, 1)
-    [(_, _, first_end)] = collect(first)
-    [(asked, start, _)] = collect(second)
+    with competing_workers(tmp_path, first_options=("--work", "0.3", "--defer", str(deferred))) as (
+        first,
+        second,
+    ):
+        [(_, first_start, first_end)] = collect(first)
+        [(asked, start, _)] = collect(second)
 
-    assert asked < first_end, "second process was not queued behind the first"
+    assert first_start <= asked < first_end, "second process was not queued behind the first"
     assert start - first_end >= deferred - TOLERANCE
 
 
-@pytest.mark.parametrize("sig", ["TERM", "KILL"])
-def test_process_killed_mid_request_still_keeps_min_interval(tmp_path: Path, sig: str) -> None:
-    """Default SIGTERM/SIGKILL skip ``finally``; the next process must still wait."""
-    go_at = time.time() + STARTUP_S
-    dying = spawn(tmp_path, go_at, 1, "--work", "0.3", "--die-in-slot", sig)
-    waiting = spawn(tmp_path, go_at + 0.1, 1)
-    [(_, _, died_at)] = collect(dying, returncode=-getattr(signal, f"SIG{sig}"))
-    [(asked, start, _)] = collect(waiting)
+@pytest.mark.parametrize(
+    "termination",
+    [
+        "EXIT",
+        pytest.param("TERM", marks=pytest.mark.skipif(os.name == "nt", reason="POSIX signal")),
+        pytest.param("KILL", marks=pytest.mark.skipif(os.name == "nt", reason="POSIX signal")),
+    ],
+)
+def test_process_terminated_mid_request_still_keeps_min_interval(
+    tmp_path: Path, termination: str
+) -> None:
+    """A crash or default POSIX signal skips ``finally``; the next process still waits."""
+    returncode = 23 if termination == "EXIT" else -getattr(signal, f"SIG{termination}")
+    with competing_workers(
+        tmp_path, first_options=("--work", "0.3", "--die-in-slot", termination)
+    ) as (dying, waiting):
+        [(_, dying_start, died_at)] = collect(dying, returncode=returncode)
+        [(asked, start, _)] = collect(waiting)
 
-    assert asked < died_at, "second process was not queued behind the dying one"
+    assert dying_start <= asked < died_at, "second process was not queued behind the dying one"
     assert start - died_at >= MIN_INTERVAL - TOLERANCE
 
 
 def test_a_stop_recorded_by_one_process_keeps_the_next_one_out(tmp_path: Path) -> None:
     """Process B queues behind A; A records a 403 STOP before releasing the lock, so B
     sees it as soon as it holds the lock and never enters its slot."""
-    go_at = time.time() + STARTUP_S
-    first = spawn(tmp_path, go_at, 1, "--work", "0.3", "--stop", "403")
-    second = spawn(tmp_path, go_at + 0.1, 1)
-    [(_, _, first_end)] = collect(first)
-    out, err = second.communicate(timeout=60)
+    with competing_workers(tmp_path, first_options=("--work", "0.3", "--stop", "403")) as (
+        first,
+        second,
+    ):
+        [(_, first_start, first_end)] = collect(first)
+        out, err = second.communicate(timeout=60)
 
     assert second.returncode == 3, err
     refused = json.loads(out)
-    assert refused["stopped"] < first_end, "second process was not queued behind the first"
+    assert first_start <= refused["stopped"] < first_end, (
+        "second process was not queued behind the first"
+    )
     assert "(HTTP 403, odmowa dostępu)" in refused["message"]
     assert "źródło" not in refused["message"]
     # B left the timing state as A wrote it: no in-flight marker, A's end and spacing.

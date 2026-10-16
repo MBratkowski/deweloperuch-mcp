@@ -20,10 +20,14 @@ class EstimatePropertyValueCliPresenter:
         self._as_json = as_json
 
     def present(self, result: EstimatePropertyValueResult) -> None:
-        show(ValuationView.from_result(result), self._as_json, self._text)
+        show(
+            ValuationView.from_result(result),
+            self._as_json,
+            lambda view: self._text(view, result.valuation_hint),
+        )
 
     @classmethod
-    def _text(cls, result: ValuationView) -> str:
+    def _text(cls, result: ValuationView, valuation_hint: str | None) -> str:
         """The estimate, where it comes from and the statistics, then one line per
         comparable transaction, the nearest first."""
         area = amount_text(result.area_m2, "m²", 2)
@@ -45,8 +49,8 @@ class EstimatePropertyValueCliPresenter:
         if result.stats is not None:
             lines.append(cls._price_stats_line(result.stats))
         # Comparable transactions left out are said on the line of their count.
-        if result.hint and not result.comparables_omitted:
-            lines.append(f"Wskazówka: {result.hint}")
+        if valuation_hint:
+            lines.append(f"Wskazówka: {valuation_hint}")
         count = (
             f"Transakcje porównawcze: {result.comparables_total} · pokazano "
             f"{len(result.comparables)}"

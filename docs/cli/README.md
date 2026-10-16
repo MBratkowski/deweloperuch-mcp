@@ -26,6 +26,16 @@ Commands:
 
 `deweloperuch` without arguments prints the help and ends with exit code 2 (a click convention). The CLI's own help and output texts are Polish product texts and are quoted verbatim here; the built-in help and usage-error texts of typer/click are in English.
 
+## Troubleshooting: another `deweloperuch` on PATH
+
+Check the commands in `deweloperuch --help` before using an installed executable. This Python package lists `locations`, `offers`, `investments`, `developers`, `buildings`, `valuation`, `stats`, `stop` and `skill`. The legacy Node package `deweloperuch-poc` instead lists `overview`, `search`, `compare`, `changes`, `history`, `brief` and `mcp-config`; its help also exits successfully. Keep the legacy installation and select the Python package explicitly:
+
+```
+uvx --from deweloperuch-mcp deweloperuch --help
+```
+
+Use the same `uvx --from deweloperuch-mcp deweloperuch` prefix for subsequent commands. Both help commands are offline; the first `uvx` run may need to download the package.
+
 ## Commands
 
 | Command | Purpose |

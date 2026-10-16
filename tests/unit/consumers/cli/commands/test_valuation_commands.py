@@ -74,6 +74,59 @@ def test_cli_json_is_the_view(limiter: RequestLimiter, service: respx.MockRouter
     assert (shown["comparables_total"], shown["comparables_omitted"]) == (3, 0)
 
 
+@pytest.mark.parametrize("limit", [3, 1])
+def test_cli_shows_the_fractional_area_caution_with_any_comparable_limit(
+    limiter: RequestLimiter, service: respx.MockRouter, limit: int
+) -> None:
+    valuation_route(service)
+
+    result = run_cli(limiter, *ESTIMATE, "--area", "41.37", "--limit", str(limit))
+
+    assert result.exit_code == 0, result.stderr
+    assert (
+        "Wskazówka: Serwis może nie uwzględnić części ułamkowej powierzchni w wycenie."
+        in result.stdout
+    )
+    assert "Wycena mieszkania 41,37 m²" in result.stdout
+    assert "Szacowana wartość: 1 063 300 PLN · 21 266 PLN/m²" in result.stdout
+    if limit == 1:
+        assert "pominięto 2 (zwiększ --limit)" in result.stdout
+
+
+def test_cli_json_retains_the_fractional_request_with_the_service_estimate(
+    limiter: RequestLimiter, service: respx.MockRouter
+) -> None:
+    answer = body("api.standalone_val")
+    answer.update(estimatedValue=558_666, estimatedPricePerSqm=13_626)
+    route = valuation_route(service, answer)
+
+    result = run_cli(limiter, *ESTIMATE, "--area", "41.37", "--json")
+
+    assert result.exit_code == 0, result.stderr
+    assert route.calls[0].request.url.params["area"] == "41.37"
+    shown = json.loads(result.stdout)
+    assert shown["area_m2"] == 41.37
+    assert shown["estimated_value"] == 558_666
+    assert shown["price_per_m2"] == 13_626
+    assert shown["hint"] == ("Serwis może nie uwzględnić części ułamkowej powierzchni w wycenie.")
+
+
+def test_cli_keeps_no_estimate_guidance_with_a_fractional_area_and_limited_comparables(
+    limiter: RequestLimiter, service: respx.MockRouter
+) -> None:
+    answer = body("api.standalone_val")
+    answer.update(estimatedValue=None, estimatedPricePerSqm=None)
+    valuation_route(service, answer)
+
+    result = run_cli(limiter, *ESTIMATE, "--area", "41.37", "--limit", "1")
+
+    assert result.exit_code == 0, result.stderr
+    assert "Szacowana wartość: brak." in result.stdout
+    assert "Serwis nie podał wyceny dla tego miejsca;" in result.stdout
+    assert "Serwis może nie uwzględnić części ułamkowej powierzchni w wycenie." in result.stdout
+    assert "pominięto 2 (zwiększ --limit)" in result.stdout
+
+
 @pytest.mark.parametrize(
     ("args", "said"),
     [
