@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+- Maintenance, not part of the package: releases automatically render and attach a changelog PNG from short Polish copy in `packaging/announcements/<version>.json`. The release workflow can also regenerate only the graphic for an existing release.
+
 ## [0.1.3] - 2026-10-16
 
 ### Added

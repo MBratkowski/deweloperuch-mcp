@@ -9,12 +9,19 @@ name: release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag whose graphic should be regenerated (for example v0.1.3)"
+        type: string
+        required: true
 
 permissions:
   contents: read
 
 jobs:
   build:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       # No credentials or caches in the job that builds what is published (setup-uv
@@ -87,3 +94,82 @@ jobs:
           name: python-packages
           path: dist
       - uses: pypa/gh-action-pypi-publish@v1.14.2
+
+  release-graphic:
+    name: Render and attach the Polish release graphic
+    needs: github-release
+    # Explicit status check permits the manual path when publishing jobs were skipped.
+    if: >-
+      ${{ !cancelled() &&
+          (github.event_name == 'workflow_dispatch' || needs.github-release.result == 'success') }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    concurrency:
+      group: release-graphic-${{ inputs.tag || github.ref_name }}
+      cancel-in-progress: false
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Check the release and its announcement data
+        id: announcement
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+[A-Za-z0-9.+-]*$ ]]; then
+            echo "Expected a release tag such as v0.1.3" >&2
+            exit 1
+          fi
+          version="${RELEASE_TAG#v}"
+          if [ ! -f "packaging/announcements/$version.json" ]; then
+            echo "Missing Polish announcement: packaging/announcements/$version.json" >&2
+            exit 1
+          fi
+          draft=$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)
+          if [ "$draft" != false ]; then
+            echo "Release $RELEASE_TAG must be published before attaching its graphic" >&2
+            exit 1
+          fi
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+      - name: Check out the reviewed renderer
+        uses: actions/checkout@v7
+        with:
+          repository: MBratkowski/deweloperuch-mcp-site
+          ref: 0ca0c90767f0e57f94ca71ba2e09a84dec47e0f0
+          path: .release-renderer
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.3.0
+      - name: Install the renderer and Chromium
+        working-directory: .release-renderer
+        run: |
+          uv sync --locked
+          uv run playwright install --with-deps chromium
+      - name: Render the announcement
+        working-directory: .release-renderer
+        env:
+          RELEASE_VERSION: ${{ steps.announcement.outputs.version }}
+        run: |
+          uv run python -m tools.render_release \
+            "$GITHUB_WORKSPACE/packaging/announcements/$RELEASE_VERSION.json" \
+            --expect-version "$RELEASE_VERSION" \
+            --output "$RUNNER_TEMP/deweloperuch-mcp-$RELEASE_VERSION-changelog.png"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-graphic-${{ steps.announcement.outputs.version }}
+          path: ${{ runner.temp }}/deweloperuch-mcp-${{ steps.announcement.outputs.version }}-changelog.png
+          if-no-files-found: error
+          retention-days: 14
+      - name: Attach the graphic to the published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ steps.announcement.outputs.version }}
+        run: |
+          asset="deweloperuch-mcp-$RELEASE_VERSION-changelog.png"
+          gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/$asset" \
+            --repo "$GITHUB_REPOSITORY" --clobber
+          printf 'Release graphic: [download PNG](https://github.com/%s/releases/download/%s/%s)\n' \
+            "$GITHUB_REPOSITORY" "$RELEASE_TAG" "$asset" >> "$GITHUB_STEP_SUMMARY"

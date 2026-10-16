@@ -1,0 +1,22 @@
+{
+  "version": "0.1.3",
+  "date": "2026-10-16",
+  "headline": "Teraz także na Windowsie.",
+  "changes": [
+    {
+      "type": "added",
+      "title": "Windows 10 (1903+) i 11",
+      "description": "CLI, MCP i instalacja w PowerShellu."
+    },
+    {
+      "type": "fixed",
+      "title": "Czytelniejsze wyceny",
+      "description": "Ostrzeżenie przy ułamkowym metrażu."
+    },
+    {
+      "type": "fixed",
+      "title": "Pewna konfiguracja CLI",
+      "description": "Skill rozpoznaje właściwy pakiet."
+    }
+  ]
+}
