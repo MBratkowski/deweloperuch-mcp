@@ -717,9 +717,11 @@ def _open_stop(path: Path) -> int | UnreadableStop:
 
 def _open_stop_descriptor(path: Path) -> int:
     if sys.platform == "win32":
-        return _open_windows_stop(path)
-    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
-    return os.open(path, flags)
+        fd = _open_windows_stop(path)
+    else:
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+        fd = os.open(path, flags)
+    return fd
 
 
 def _open_windows_stop(path: Path) -> int:

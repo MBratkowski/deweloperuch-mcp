@@ -20,7 +20,7 @@ _POLL = 0.1
 def lock_file(fd: int, *, blocking: bool = True) -> None:
     """Hold an exclusive lock; nonblocking contention raises ``BlockingIOError``."""
     if not _WINDOWS:
-        import fcntl
+        fcntl = importlib.import_module("fcntl")
 
         fcntl.flock(fd, fcntl.LOCK_EX | (0 if blocking else fcntl.LOCK_NB))
         return
@@ -43,7 +43,7 @@ def unlock_file(fd: int) -> None:
         os.lseek(fd, 0, os.SEEK_SET)
         msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
     else:
-        import fcntl
+        fcntl = importlib.import_module("fcntl")
 
         fcntl.flock(fd, fcntl.LOCK_UN)
 

@@ -472,10 +472,10 @@ def test_cli_output_must_be_readable(stdout: str, stderr: str) -> None:
 # the real RSC responses, "awaria" with a 500, the cities with a 403 (a STOP, recorded
 # in this test's private XDG_CACHE_HOME).
 FAKE_SERVER = """\
-import pytest_socket
-pytest_socket.disable_socket(allow_unix_socket=True)
 import sys
 sys.path[:0] = [{tests!r}]
+from support.checks.sockets import event_loop_sockets_only
+event_loop_sockets_only()
 import respx
 from support.providers.routes.offers import offers_route, unknown_city_route
 with respx.mock(assert_all_called=False, assert_all_mocked=True) as router:

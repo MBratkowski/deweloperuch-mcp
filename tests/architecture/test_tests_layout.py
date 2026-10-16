@@ -65,7 +65,7 @@ def is_test_code(name: str) -> bool:
 
 
 def name_of(path: Path) -> str:
-    return str(path.relative_to(TESTS))
+    return path.relative_to(TESTS).as_posix()
 
 
 def test_the_test_packages_are_found() -> None:
@@ -156,7 +156,7 @@ def test_every_unit_test_module_mirrors_a_module_of_the_package() -> None:
 def test_modules_without_unit_tests_are_listed() -> None:
     """Not a failure: the list says where unit tests are missing (a warning in the summary)."""
     untested = sorted(
-        str(path.relative_to(PACKAGE_SOURCE))
+        path.relative_to(PACKAGE_SOURCE).as_posix()
         for path in PACKAGE_SOURCE.rglob("*.py")
         if path.name != "__init__.py"
         and not (UNIT / path.parent.relative_to(PACKAGE_SOURCE) / f"test_{path.name}").exists()

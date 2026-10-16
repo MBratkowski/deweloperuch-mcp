@@ -32,7 +32,9 @@ jobs:
       - run: uv sync --locked
       - name: Lint, format, types, import contracts
         if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
-        run: make fast
+        run: |
+          make fast
+          uv run mypy --platform win32 src/deweloperuch_mcp/file_lock.py src/deweloperuch_mcp/throttle.py
       - name: Offline tests (never the live suite)
         run: uv run pytest -q
       - name: Offline CLI and MCP startup

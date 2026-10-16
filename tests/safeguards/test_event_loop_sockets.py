@@ -12,6 +12,7 @@ INSTALLERS = {
     "fixture": "fixture = unix_sockets_for_the_event_loop.__wrapped__(); next(fixture)",
     "live_harness": "unix_sockets_only()",
     "stdio_child": "exec(no_network)",
+    "fake_server_child": "exec(fake_server_bootstrap)",
 }
 
 
@@ -33,6 +34,12 @@ def test_windows_self_pipe_works_while_network_sockets_stay_blocked(installer: s
         from support.providers.network import unix_sockets_for_the_event_loop
         from support.e2e.live import unix_sockets_only
         no_network = runpy.run_path({str(TESTS / "unit" / "test_mcp_server.py")!r})["NO_NETWORK"]
+        fake_server = runpy.run_path(
+            {str(TESTS / "safeguards" / "test_e2e_gate.py")!r}
+        )["FAKE_SERVER"]
+        fake_server_bootstrap = (
+            fake_server.format(tests={str(TESTS)!r}).split("import respx\\n", 1)[0]
+        )
 
         pytest_socket.disable_socket()
         platform = sys.platform

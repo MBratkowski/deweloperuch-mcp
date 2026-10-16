@@ -819,22 +819,23 @@ def chunk_requests(site: FakeScannedSite) -> list[str]:
     return [path for path in site.paths if path not in scan_bundles.PAGES]
 
 
-@pytest.mark.skipif(os.geteuid() == 0, reason="root reads files with mode 000")
 def test_unreadable_cache_files_cannot_exceed_the_limit(
     env: ScannerEnv, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """The estimate counts them as cached (they stat fine); the hard limit still holds."""
     scan_json(env, env.site(), capsys)
-    files = [cached_file(env, path) for path in CHUNK_JS]
+    files = {cached_file(env, path) for path in CHUNK_JS}
+    read_bytes = Path.read_bytes
+
+    def unreadable(path: Path) -> bytes:
+        if path in files:
+            raise PermissionError(13, "Permission denied", str(path))
+        return read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", unreadable)
     monkeypatch.setattr(scan_bundles, "MAX_CHUNKS", 1)
     site = env.site()
-    try:
-        for file in files:
-            file.chmod(0)
-        code = env.run(["--json"], site)
-    finally:
-        for file in files:
-            file.chmod(0o600)
+    code = env.run(["--json"], site)
 
     assert code == NO_DATA
     assert chunk_requests(site) == [RUNTIME]  # the first one fits the limit of 1
@@ -1143,7 +1144,7 @@ def test_missing_build_id_does_not_block_the_baseline(env: ScannerEnv, tmp_path:
 def run_script(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
     # -S: no site-packages, so the scanner and everything it imports must be stdlib or repo code.
     return subprocess.run(
-        [sys.executable, "-E", "-s", "-S", str(SCANNER), *args],
+        [sys.executable, "-E", "-s", "-S", "-X", "utf8", str(SCANNER), *args],
         capture_output=True,
         text=True,
         cwd=cwd,
