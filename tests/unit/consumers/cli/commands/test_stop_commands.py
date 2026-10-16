@@ -1,10 +1,7 @@
 """Tests of ``deweloperuch_mcp.consumers.cli.commands.stop_commands``."""
 
-import fcntl
 import json
-import os
 import re
-import threading
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -16,6 +13,7 @@ import respx
 from deweloperuch_mcp.consumers.cli.commands import stop_commands as cli_stop
 from deweloperuch_mcp.consumers.cli.support.common import ExitCode
 from deweloperuch_mcp.throttle import LOCK_FILENAME, STOP_FILENAME, default_lock_dir
+from support.checks.locks import held_lock
 from support.providers.cli import Cli, ok
 from support.providers.clients import record_stop, shared_limiter
 from support.providers.routes.locations import location_routes
@@ -32,19 +30,8 @@ def limiter_lock_held(release_after: float = 3.0) -> Iterator[None]:
     Released after ``release_after`` s at the latest, so a command that waits for it
     without a limit fails the test instead of hanging it.
     """
-    lock = default_lock_dir() / LOCK_FILENAME
-    lock.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(lock, os.O_RDWR | os.O_CREAT, 0o600)
-    fcntl.flock(fd, fcntl.LOCK_EX)
-    releaser = threading.Timer(release_after, lambda: fcntl.flock(fd, fcntl.LOCK_UN))
-    releaser.start()
-    try:
+    with held_lock(default_lock_dir() / LOCK_FILENAME, release_after=release_after):
         yield
-    finally:
-        releaser.cancel()
-        releaser.join()
-        fcntl.flock(fd, fcntl.LOCK_UN)
-        os.close(fd)
 
 
 # Text a hostile or broken writer could put in the record for a model to read; the

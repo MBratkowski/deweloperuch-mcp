@@ -44,4 +44,11 @@ Transakcje porównawcze: 3 · pokazano 3.
 
 The slug in brackets is a building slug for `buildings get`.
 
+## Fractional areas
+The client sends fractional areas to the service (rounded to 0.01 m²). The output area is the requested area; the service does not confirm the area it actually used. `estimated_value` and `price_per_m2` are retained as returned by the service, without recomputing the total locally.
+
+For a fractional requested area, the text output and the JSON `hint` include: „Serwis może nie uwzględnić części ułamkowej powierzchni w wycenie.” This caution remains visible with `--limit`, alongside guidance about omitted comparables or a missing estimate.
+
+A check on 2026-10-16 returned the same total for 41.37 m² and 41 m² at one point. This observation does not establish a general rounding or truncation rule; see [T41](../../open-questions.md#technical).
+
 _Source: `src/deweloperuch_mcp/consumers/cli/commands/valuation_commands.py`, `src/deweloperuch_mcp/consumers/cli/presenters/estimate_property_value_cli_presenter.py`, `uv run deweloperuch valuation estimate --help`_

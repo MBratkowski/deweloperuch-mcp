@@ -12,6 +12,8 @@ from deweloperuch_mcp.usecases.support.failures import ReportedAs
 # [H] why the service gives no estimate (docs/open-questions.md): the text names a
 # possibility, not a cause. The point itself is already checked to be in Poland.
 NO_ESTIMATE = "Serwis nie podał wyceny dla tego miejsca; w promieniu może nie być transakcji."
+# T41: one fractional request matched a whole-area estimate; the general rule is unknown.
+FRACTIONAL_AREA = "Serwis może nie uwzględnić części ułamkowej powierzchni w wycenie."
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -50,14 +52,24 @@ class EstimatePropertyValueResult:
     listing: ValuationListing
 
     @property
-    def hint(self) -> str | None:
-        """What to do about a valuation without an estimate, or about comparable
-        transactions left out (D4); ``None`` otherwise."""
+    def valuation_hint(self) -> str | None:
+        """Cautions about the valuation, independent of how many comparables are shown."""
+        hints = []
         if not self.listing.valuation.estimated:
-            return NO_ESTIMATE
-        if self.listing.truncated:
-            return f"{self.nearest_shown()}; więcej pokaże większy limit."
-        return None
+            hints.append(NO_ESTIMATE)
+        if self.listing.valuation.subject.area.value % 1:
+            hints.append(FRACTIONAL_AREA)
+        return " ".join(hints) or None
+
+    @property
+    def hint(self) -> str | None:
+        """Valuation cautions and guidance about comparable transactions left out (D4)."""
+        hints = []
+        if self.listing.valuation.estimated and self.listing.truncated:
+            hints.append(f"{self.nearest_shown()}; więcej pokaże większy limit.")
+        if self.valuation_hint:
+            hints.append(self.valuation_hint)
+        return " ".join(hints) or None
 
     def nearest_shown(self) -> str:
         """``Pokazano 1 najbliższą z 3 transakcji porównawczych``, the words agreeing with

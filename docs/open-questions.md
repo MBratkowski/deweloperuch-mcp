@@ -41,10 +41,12 @@ Priority: **P1** blocks a core capability, **P2** needed for a complete v1, **P3
 | T38 | P2 | Unknown `citySlug` in `offers/city-sales`, `map/investments`, `monthly-transaction-stats` and `avg-price-trend/city`: 400, 404 or empty? | [H] | 1 request per endpoint |
 | T39 | P3 | Developer page with an unknown city but a valid developer: empty list, 200 "not found" or 404? | [H] | 1 request |
 | T40 | P2 | Meaning of `excluded` and `isSamePrimaryInvestment` in valuation transactions; do `stats` include excluded ones? | [H] | Find a valuation with `excluded=true`, compare `stats.count` |
-| T41 | P3 | Does `standalone-valuation` accept a fractional `area` (e.g. 45.5)? | [H] | 1 request |
+| T41 | P3 | How does `standalone-valuation` use fractional `area`? A request for 41.37 m² was accepted, but its estimate matched 41 m² at one point (details below). The general rounding or truncation rule is unknown. | [P] observation; [H] general rule | Further targeted checks only when needed; the client currently warns and preserves the service's figures |
 | T42 | P3 | What does `address` change in `standalone-valuation` (results with/without it for the same lat/lng)? | [H] | 2 requests |
 | T43 | P2 | Completeness of `map/investments` without `includeArchived`: are investments with no active offers missing? | [H] | Compare with the `inwestycje` list `totalCount` for a city |
 | T44 | P2 | Counting window of `map/powiat-stats` `transaction_count` (351,314 for Warsaw vs ~1.0-1.3k/month); related to T10 | [H] | Compare with the sum of `monthly-transaction-stats` |
+
+**T41 observation, 2026-10-16 ([issue #6](https://github.com/MBratkowski/deweloperuch-mcp/issues/6)).** At `lat=50.10841762`, `lng=20.04339151`, requests for `area=41.37` and `area=41` both returned `estimated_value=558666`, `price_per_m2=13626` and `comparables_total=11`. The total equals `13626 × 41`, but this pair alone does not establish how other fractional areas are handled. The Python query serializes the decimal area correctly, and the DTO preserves the service's values. The output's `area_m2` is the requested area (rounded to 0.01 m²); the service does not confirm an effective area. The client retains the upstream total without recomputing it and includes a fractional-area caution in `hint` for CLI and MCP results.
 
 ## Resolved
 

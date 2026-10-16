@@ -14,9 +14,11 @@ The code reads no other environment variables.
 
 | Path | Description |
 |---|---|
-| `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/throttle.lock` | The lock (`flock`) and state of the shared request limiter. Created automatically (directory, file with `0600` permissions). An internal protocol between processes: do not edit. |
+| `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/throttle.lock` | The lock and state of the shared request limiter (`fcntl.flock` on POSIX, `msvcrt` byte-range locking on Windows). Created automatically; `0600` permissions on POSIX, inherited directory ACLs on Windows. An internal protocol between processes: do not edit. |
 | `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/stop.json` | The STOP record shared by all processes (see [STOP](#stop-shared-lock-between-processes)). Created after 401/403/429/challenge; cleared by the user with `deweloperuch stop clear`. Do not edit by hand. |
 | `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/chunks/` | The JS chunk cache of the `recon/scan_bundles.py` scanner (the path after `/_next/static/chunks/`). `0600` files, atomic write, only for a complete 200 with a non-empty body. Names with a hash are immutable, so such a chunk is not fetched again; an empty file is fetched again, and chunks without a hash in the name on every scan. It can be deleted with no side effects (the next scan fetches the chunks anew). |
+
+On Windows the default is `%USERPROFILE%\.cache\deweloperuch-mcp`. Use Windows 10 (1903+) or Windows 11 with a local NTFS cache directory; these support immediate deletion while a status reader is open. `XDG_CACHE_HOME` may override it with an absolute Windows path; give every CLI, MCP and recon process the same value so they share the same lock and STOP record.
 
 ## Request limiter
 
@@ -34,7 +36,7 @@ Behavior from the user's point of view:
 - A process killed during a request does not hold the lock forever. The next process will still wait the standard interval.
 - After a wait error (`WaitTooLongError`, message „Następne zapytanie do deweloperuch.pl wolno wysłać dopiero za N s…”) wait the stated time and retry. As a last resort (a person) delete the `throttle.lock` file itself, but only when no process is using the service for certain and the `Retry-After` time has passed; do not clear a STOP record this way (use `stop clear`).
 - A `Retry-After` longer than 1 h is clipped to 1 h and reported as an error, and the next request waits that hour.
-- Supported systems: Linux and macOS. On Windows the limiter reports a readable error (no `fcntl.flock`).
+- Supported systems: Linux, macOS and Windows. Windows locks byte zero of the same state file, without truncating it on acquisition; both implementations release the lock when its descriptor closes or the owning process dies. See the [Python locking documentation](https://docs.python.org/3/library/msvcrt.html#msvcrt.locking).
 
 ## STOP: shared lock between processes
 
@@ -45,7 +47,7 @@ After 401, 403, 429 or a Cloudflare challenge a process writes STOP to `stop.jso
 | Location | `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/stop.json` |
 | Format | JSON, `"format": 1`: `{"format": 1, "since": ISO-UTC, "status": 401\|403\|429\|"challenge", "reason": text, "until": ISO-UTC\|null, "source": "pakiet"\|"probe"\|"scan_bundles", "pid": number}` |
 | Contents | Only the status and the canonical reason text (`reason`); no target, URL, headers or response content. |
-| Permissions, write | `0600`; atomic write (temporary file `.stop-*.tmp`, `fsync`, `os.replace`), only under the `throttle.lock` lock. |
+| Permissions, write | `0600` on POSIX, inherited directory ACLs on Windows; atomic write (temporary file `.stop-*.tmp`, `fsync`, `os.replace`), only under the `throttle.lock` lock. Directory syncing is best effort where the OS supports it. |
 | Read | `slot()` reads the record under the lock, before counting time: with an active record nothing is sent, and the limiter's timing state stays untouched. `stop status` reads without the lock. |
 
 Validity rules:

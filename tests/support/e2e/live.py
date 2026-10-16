@@ -37,7 +37,6 @@ from typing import Any, NoReturn
 
 import anyio
 import pytest
-import pytest_socket
 from anyio.from_thread import BlockingPortal, start_blocking_portal
 from mcp import ClientSession, StdioServerParameters, stdio_client
 from mcp.types import CallToolResult, InitializeResult, TextContent, Tool
@@ -435,20 +434,21 @@ class McpLive:
 
 
 def unix_sockets_only() -> None:
-    """Allow Unix sockets (an event loop's socket pair), keep the network blocked.
+    """Allow an event loop's local socket pair, keep network sockets and DNS blocked."""
+    from support.checks.sockets import event_loop_sockets_only
 
-    ``disable_socket`` subclasses whatever ``socket.socket`` is, so on top of an earlier
-    guard that refuses Unix sockets it would refuse them too: lift the guard first.
-    """
-    pytest_socket.enable_socket()
-    pytest_socket.disable_socket(allow_unix_socket=True)
+    event_loop_sockets_only()
 
 
-def server_script() -> Path:
-    script = BIN / "deweloperuch-mcp"
+def installed_script(name: str) -> Path:
+    script = BIN / (name + (".exe" if os.name == "nt" else ""))
     if not script.exists():
         pytest.fail(f"Brak skryptu {script}: zainstaluj pakiet (uv sync).")
     return script
+
+
+def server_command() -> list[str]:
+    return [str(installed_script("deweloperuch-mcp"))]
 
 
 @contextmanager
@@ -456,7 +456,8 @@ def mcp_server(log_path: Path, budget: Budget) -> Iterator[McpLive]:
     """The installed ``deweloperuch-mcp`` with the user's environment (shared limiter and
     STOP record), initialized and with its tools listed (the SDK then checks every
     result against the tool's output schema)."""
-    params = StdioServerParameters(command=str(server_script()), env=dict(os.environ))
+    command = server_command()
+    params = StdioServerParameters(command=command[0], args=command[1:], env=dict(os.environ))
     unix_sockets_only()
     log = ServerLog(log_path)
     try:
@@ -542,9 +543,7 @@ def run_cli(budget: Budget, logs: Path, *args: str) -> Run:
 
 def run_script(name: str, *args: str) -> Run:
     """An installed script of the package (only for commands that send nothing)."""
-    script = BIN / name
-    if not script.exists():
-        pytest.fail(f"Brak skryptu {script}: zainstaluj pakiet (uv sync).")
+    script = installed_script(name)
     done = _run([str(script), *args])
     run = Run(args, done.returncode, done.stdout, done.stderr, 0)
     _end_on(run, f"{name} {' '.join(args)}")

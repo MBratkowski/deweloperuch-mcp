@@ -28,6 +28,7 @@ COORDINATES = (
 
 
 NO_ESTIMATE = "Serwis nie podał wyceny dla tego miejsca; w promieniu może nie być transakcji."
+FRACTIONAL_AREA = "Serwis może nie uwzględnić części ułamkowej powierzchni w wycenie."
 
 
 @pytest.mark.parametrize(
@@ -118,6 +119,57 @@ def test_every_comparable_without_a_limit_and_no_hint() -> None:
     found = EstimatePropertyValue(FakeValuationSource(mapped(api_sample()))).execute(request)
 
     assert found.listing.returned == 3 and found.hint is None
+
+
+@pytest.mark.parametrize("area", [41.37, 48.5, 41.99])
+def test_fractional_areas_carry_a_caution_with_the_service_estimate(area: float) -> None:
+    request = EstimatePropertyValueRequest.parse(lat=50.10841762, lng=20.04339151, area_m2=area)
+    source = FakeValuationSource(
+        Valuation(
+            subject=request.subject,
+            estimated_value=558_666,
+            price_per_m2=13_626,
+            comparables=tuple(comparable(100, str(n)) for n in range(11)),
+        )
+    )
+
+    found = EstimatePropertyValue(source).execute(request)
+
+    assert source.asked[0].area.value == area
+    assert found.listing.valuation.subject.area.value == area
+    assert found.listing.valuation.estimated_value == 558_666
+    assert found.listing.valuation.price_per_m2 == 13_626
+    assert found.listing.total == 11
+    assert found.hint == FRACTIONAL_AREA
+
+
+@pytest.mark.parametrize(
+    ("estimated_value", "limit", "guidance"),
+    [
+        (None, None, NO_ESTIMATE),
+        (None, 1, NO_ESTIMATE),
+        (
+            558_666,
+            1,
+            "Pokazano 1 najbliższą z 3 transakcji porównawczych; więcej pokaże większy limit.",
+        ),
+    ],
+)
+def test_fractional_area_caution_keeps_existing_guidance(
+    estimated_value: float | None, limit: int | None, guidance: str
+) -> None:
+    request = EstimatePropertyValueRequest.parse(lat=52, lng=21, area_m2=41.37, limit=limit)
+    source = FakeValuationSource(
+        Valuation(
+            subject=request.subject,
+            estimated_value=estimated_value,
+            comparables=tuple(comparable(100, str(n)) for n in range(3)),
+        )
+    )
+
+    found = EstimatePropertyValue(source).execute(request)
+
+    assert found.hint == f"{guidance} {FRACTIONAL_AREA}"
 
 
 @pytest.mark.parametrize("comparables", [(), (comparable(100, "a"),)])

@@ -54,10 +54,10 @@ class ValuationResult(McpModel):
 
     lat: float
     lng: float
-    area_m2: float = Field(description="Metraż wycenianego mieszkania w m².")
+    area_m2: float = Field(description="Metraż podany w zapytaniu w m².")
     estimated_value: float | None = Field(
         description=(
-            "Szacowana wartość mieszkania w PLN (price_per_m2 × area_m2): przybliżenie, nie "
+            "Szacowana wartość mieszkania w PLN podana przez serwis: przybliżenie, nie "
             "operat szacunkowy. null: serwis nie podał wyceny."
         )
     )
@@ -107,7 +107,9 @@ class EstimatePropertyValueMcpPresenter:
             return result.hint
         shown = result.nearest_shown()
         if listing.returned >= self._max_comparables:
-            return (
+            guidance = (
                 f"{shown}. To maksimum w jednym wywołaniu; stats to statystyki podane przez serwis."
             )
-        return f"{shown}; więcej pokaże większy limit (najwyżej {self._max_comparables})."
+        else:
+            guidance = f"{shown}; więcej pokaże większy limit (najwyżej {self._max_comparables})."
+        return f"{guidance} {result.valuation_hint}" if result.valuation_hint else guidance

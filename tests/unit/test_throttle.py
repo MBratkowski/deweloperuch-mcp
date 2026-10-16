@@ -1,6 +1,5 @@
 """Tests of ``deweloperuch_mcp.throttle``."""
 
-import fcntl
 import json
 import math
 import os
@@ -9,8 +8,6 @@ import stat
 import tempfile
 import threading
 import time
-from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import UTC, datetime
 from itertools import pairwise
 from pathlib import Path
@@ -36,7 +33,7 @@ from deweloperuch_mcp.throttle import (
     default_lock_dir,
     format_time,
 )
-from support.checks.locks import lock_is_free, other_descriptor
+from support.checks.locks import held_lock, lock_is_free
 from support.fakes.clocks import FakeTime
 from support.paths import REPO
 from support.providers.clients import make_limiter
@@ -100,28 +97,6 @@ def refused(limiter: RequestLimiter) -> StoppedError:
     with pytest.raises(StoppedError) as caught, limiter.slot():
         pytest.fail("the slot started despite an active STOP")
     return caught.value
-
-
-@contextmanager
-def lock_held(path: Path, release_after: float = 3.0) -> Iterator[int]:
-    """The limiter's lock held through another open file description, as another
-    process (or another thread of this one) holds it while it sends a request.
-
-    Released after ``release_after`` s at the latest: code that waits for the lock
-    without a limit (a regression) then fails the test instead of hanging the suite.
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
-    fcntl.flock(fd, fcntl.LOCK_EX)
-    releaser = threading.Timer(release_after, lambda: fcntl.flock(fd, fcntl.LOCK_UN))
-    releaser.start()
-    try:
-        yield fd
-    finally:
-        releaser.cancel()
-        releaser.join()
-        fcntl.flock(fd, fcntl.LOCK_UN)
-        os.close(fd)
 
 
 GOOD = {
@@ -207,7 +182,8 @@ def test_a_stop_is_written_next_to_the_lock_without_the_request(
     }
     assert kept == StopRecord(T0, 403, "odmowa dostępu", "probe", None, os.getpid())
     assert limiter.stop_path == tmp_path / STOP_FILENAME
-    assert stat.S_IMODE((tmp_path / STOP_FILENAME).stat().st_mode) == 0o600
+    if os.name != "nt":  # Windows permissions come from the parent directory's ACL.
+        assert stat.S_IMODE((tmp_path / STOP_FILENAME).stat().st_mode) == 0o600
     # Replaced atomically: no temporary file is left behind.
     assert sorted(path.name for path in tmp_path.iterdir()) == sorted(
         [LOCK_FILENAME, STOP_FILENAME]
@@ -251,14 +227,13 @@ def test_the_record_is_written_before_the_lock_is_released(
 ) -> None:
     """A process waiting for the lock must find the record the moment it gets the lock."""
     seen_at_unlock: list[bool] = []
-    real_flock = fcntl.flock
+    real_unlock = throttle.unlock_file
 
-    def flock(fd: int, operation: int) -> None:
-        if operation == fcntl.LOCK_UN:
-            seen_at_unlock.append((tmp_path / STOP_FILENAME).exists())
-        real_flock(fd, operation)
+    def unlock(fd: int) -> None:
+        seen_at_unlock.append((tmp_path / STOP_FILENAME).exists())
+        real_unlock(fd)
 
-    monkeypatch.setattr(fcntl, "flock", flock)
+    monkeypatch.setattr(throttle, "unlock_file", unlock)
 
     record(limiter)
 
@@ -281,7 +256,7 @@ def test_the_directory_is_synced_after_the_record_is_replaced(
 
     record(limiter)
 
-    assert synced == ["file", "dir"]
+    assert synced == (["file"] if os.name == "nt" else ["file", "dir"])
 
 
 def test_stop_after_the_slot_ended_raises_and_writes_nothing(
@@ -605,6 +580,7 @@ def test_a_symlink_is_not_followed(tmp_path: Path, limiter: RequestLimiter) -> N
     assert error.stop.problem.startswith("nie można otworzyć pliku: ")
 
 
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="POSIX named pipes only")
 def test_a_fifo_is_a_stop_without_hanging(tmp_path: Path, limiter: RequestLimiter) -> None:
     os.mkfifo(tmp_path / STOP_FILENAME)
     seen: list[StopStatus] = []
@@ -617,6 +593,61 @@ def test_a_fifo_is_a_stop_without_hanging(tmp_path: Path, limiter: RequestLimite
     assert isinstance(seen[0].stop, UnreadableStop)
     assert seen[0].stop.problem == "to nie jest zwykły plik"
     assert isinstance(refused(limiter).stop, UnreadableStop)
+
+
+def test_stop_status_without_posix_open_flags(
+    tmp_path: Path, limiter: RequestLimiter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Windows lacks O_NOFOLLOW/O_NONBLOCK; a regular STOP must still be enforced."""
+    record(limiter)
+    monkeypatch.delattr(os, "O_NOFOLLOW", raising=False)
+    monkeypatch.delattr(os, "O_NONBLOCK", raising=False)
+
+    assert limiter.stop_status().active
+    assert isinstance(refused(limiter).stop, StopRecord)
+
+
+def test_stop_symlink_without_posix_open_flags_is_refused(
+    tmp_path: Path, limiter: RequestLimiter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = tmp_path / "elsewhere.json"
+    target.write_bytes(variant())
+    (tmp_path / STOP_FILENAME).symlink_to(target)
+    monkeypatch.delattr(os, "O_NOFOLLOW", raising=False)
+    monkeypatch.delattr(os, "O_NONBLOCK", raising=False)
+
+    assert isinstance(refused(limiter).stop, UnreadableStop)
+
+
+def test_stop_replacement_preserves_a_concurrent_status_reader(
+    limiter: RequestLimiter, fake_time: FakeTime
+) -> None:
+    """Windows readers must share delete access so atomic STOP replacement can finish."""
+    record(limiter, 429, "limit zapytań", defer=1)
+    reader = throttle._open_stop(limiter.stop_path)
+    assert isinstance(reader, int)
+    try:
+        fake_time.advance(10)
+        record(limiter, 403)
+        assert json.loads(os.read(reader, 4096))["status"] == 429
+        stop = limiter.stop_status().stop
+        assert isinstance(stop, StopRecord) and stop.status == 403
+        assert isinstance(refused(limiter).stop, StopRecord)
+    finally:
+        os.close(reader)
+
+
+def test_stop_clearing_works_with_a_concurrent_status_reader(limiter: RequestLimiter) -> None:
+    record(limiter)
+    reader = throttle._open_stop(limiter.stop_path)
+    assert isinstance(reader, int)
+    try:
+        before = limiter.clear_stop()
+        assert before.active
+        assert not limiter.stop_status().active
+        assert json.loads(os.read(reader, 4096))["status"] == 403
+    finally:
+        os.close(reader)
 
 
 def test_a_long_problem_is_cut(
@@ -691,7 +722,7 @@ def test_status_answers_at_once_while_the_lock_is_held(
 ) -> None:
     """A person asking for the status never hangs behind a request or a pause."""
     record(limiter)
-    with lock_held(tmp_path / LOCK_FILENAME):
+    with held_lock(tmp_path / LOCK_FILENAME):
         start = time.monotonic()
         state = limiter.stop_status()
         elapsed = time.monotonic() - start
@@ -770,7 +801,7 @@ def test_clear_waits_for_the_lock_says_so_and_gives_up(
         tmp_path, clock=lambda: T0, monotonic=fake_time.clock, sleep=bounded_sleep
     )
 
-    with lock_held(tmp_path / LOCK_FILENAME), pytest.raises(LockWaitTimeoutError) as caught:
+    with held_lock(tmp_path / LOCK_FILENAME), pytest.raises(LockWaitTimeoutError) as caught:
         limiter.clear_stop(
             wait_limit=5, notice_after=2, on_wait=lambda: notices.append(fake_time.now)
         )
@@ -783,7 +814,7 @@ def test_clear_waits_for_the_lock_says_so_and_gives_up(
 
 
 def test_clear_takes_the_lock_once_it_is_free(tmp_path: Path, fake_time: FakeTime) -> None:
-    held = lock_held(tmp_path / LOCK_FILENAME)
+    held = held_lock(tmp_path / LOCK_FILENAME)
     held.__enter__()
     polls: list[float] = []
 
@@ -1168,16 +1199,29 @@ def test_exception_after_defer_keeps_deferred_pause(tmp_path: Path, fake: FakeTi
     assert fake.sleeps == [pytest.approx(20.0)]
 
 
-def test_in_flight_marker_covers_a_killed_process(tmp_path: Path, fake: FakeTime) -> None:
+def test_in_flight_marker_covers_a_killed_process(
+    tmp_path: Path, fake: FakeTime, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """SIGTERM/SIGKILL skip ``finally``: the file must be conservative during the request."""
     limiter = make_limiter(tmp_path / "alive", fake)
     with limiter.slot():
         pass
     fake.advance(100.0)  # the completed state alone would allow an immediate start
 
-    with limiter.slot(), other_descriptor(limiter.lock_path) as fd:
+    real_write = throttle._write_json
+    in_flight: list[bytes] = []
+
+    def write_state(fd: int, state: dict[str, float]) -> None:
+        real_write(fd, state)
+        if "in_flight_since" in state:
+            # Windows' mandatory byte lock forbids reading through another descriptor.
+            os.lseek(fd, 0, os.SEEK_SET)
+            in_flight.append(os.read(fd, 4096))
+
+    monkeypatch.setattr(throttle, "_write_json", write_state)
+    with limiter.slot():
         started = fake.now
-        mid_request = os.read(fd, 4096)
+        [mid_request] = in_flight
 
     assert json.loads(mid_request) == {"in_flight_since": started}
     # A process killed at this point leaves exactly these bytes behind.
@@ -1280,16 +1324,6 @@ def test_creates_missing_lock_directory(tmp_path: Path, fake: FakeTime) -> None:
 
     assert limiter.lock_path == lock_dir / LOCK_FILENAME
     assert limiter.lock_path.is_file()
-
-
-def test_unsupported_platform_fails_with_readable_error(
-    tmp_path: Path, fake: FakeTime, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(throttle, "_HAS_FLOCK", False)
-    limiter = make_limiter(tmp_path, fake)
-
-    with pytest.raises(RuntimeError, match="Windows"), limiter.slot():
-        pass
 
 
 @pytest.mark.parametrize("min_interval", [0.0, 0.2, 0.5, 0.999])

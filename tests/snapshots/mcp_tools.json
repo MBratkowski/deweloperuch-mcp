@@ -3865,7 +3865,7 @@
             "type": "number"
           },
           "area_m2": {
-            "description": "Metraż wycenianego mieszkania w m².",
+            "description": "Metraż podany w zapytaniu w m².",
             "title": "Area M2",
             "type": "number"
           },
@@ -3878,7 +3878,7 @@
                 "type": "null"
               }
             ],
-            "description": "Szacowana wartość mieszkania w PLN (price_per_m2 × area_m2): przybliżenie, nie operat szacunkowy. null: serwis nie podał wyceny.",
+            "description": "Szacowana wartość mieszkania w PLN podana przez serwis: przybliżenie, nie operat szacunkowy. null: serwis nie podał wyceny.",
             "title": "Estimated Value"
           },
           "price_per_m2": {

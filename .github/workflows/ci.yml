@@ -13,17 +13,32 @@ permissions:
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.11", "3.13"]
+    env:
+      PYTHONUTF8: "1"
+      DEWELOPERUCH_LIVE: "0"
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.3.0
         with:
           enable-cache: true
+          python-version: ${{ matrix.python }}
       - run: uv sync --locked
       - name: Lint, format, types, import contracts
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.13'
         run: make fast
       - name: Offline tests (never the live suite)
-        run: make test
+        run: uv run pytest -q
+      - name: Offline CLI and MCP startup
+        run: |
+          uv run deweloperuch --help
+          uv run python packaging/smoke.py -- uv run deweloperuch-mcp
 
   package:
     # Builds the wheel, the sdist and the .mcpb and starts them over stdio

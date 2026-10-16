@@ -1,7 +1,7 @@
 """Subprocess worker for tests/integration/test_throttle_across_processes.py (not a test module).
 
     python throttle_worker.py LOCK_DIR GO_AT REQUESTS --min-interval S
-        [--work S] [--defer S] [--stop STATUS] [--die-in-slot TERM|KILL]
+        [--work S] [--defer S] [--stop STATUS] [--die-in-slot EXIT|TERM|KILL]
 
 Waits until wall-clock GO_AT so that workers compete for the lock, then runs
 REQUESTS fake requests (sleep instead of network) through the limiter and prints
@@ -11,8 +11,8 @@ simulated Retry-After to ``Slot.defer``. ``--stop`` records a STOP with that HTT
 status (``Slot.stop``) after the work, still inside the slot. A STOP recorded
 earlier refuses the slot: the worker then prints ``{"stopped": asked, "message":
 ...}`` and exits with 3. ``--die-in-slot`` prints the record of the first request
-(``end`` = moment of death) and kills the process with the given signal inside the
-slot, so no ``finally`` runs.
+(``end`` = moment of death) and ends the process inside the slot, so no ``finally``
+runs. ``EXIT`` uses ``os._exit(23)`` on every platform; ``TERM``/``KILL`` use POSIX signals.
 
 The network guard of the test suite (pytest-socket) is installed before anything
 else runs: the worker never needs a socket, and a mistake must not reach one.
@@ -40,7 +40,7 @@ def main() -> None:
     parser.add_argument("--work", type=float, default=0.05)
     parser.add_argument("--defer", type=float)
     parser.add_argument("--stop", type=int)
-    parser.add_argument("--die-in-slot", choices=["TERM", "KILL"])
+    parser.add_argument("--die-in-slot", choices=["EXIT", "TERM", "KILL"])
     args = parser.parse_args()
 
     limiter = RequestLimiter(
@@ -62,6 +62,8 @@ def main() -> None:
                     slot.stop(args.stop, "odmowa dostępu", source="probe")
                 if args.die_in_slot:
                     print(json.dumps([[asked, start, time.time()]]), flush=True)
+                    if args.die_in_slot == "EXIT":
+                        os._exit(23)
                     os.kill(os.getpid(), getattr(signal, f"SIG{args.die_in_slot}"))
                     time.sleep(10)  # never reached: the default action of both signals is to die
                     sys.exit("still alive after the signal")

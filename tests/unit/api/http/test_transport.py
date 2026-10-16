@@ -1,6 +1,5 @@
 """Tests of ``deweloperuch_mcp.api.http.transport``."""
 
-import fcntl
 import json
 import logging
 import os
@@ -14,7 +13,7 @@ import httpx
 import pytest
 import respx
 
-from deweloperuch_mcp import identity
+from deweloperuch_mcp import identity, throttle
 from deweloperuch_mcp.api.http import transport
 from deweloperuch_mcp.api.http.transport import (
     BODY_DEADLINE,
@@ -912,14 +911,13 @@ def test_the_stop_is_recorded_before_the_slot_is_released(
 ) -> None:
     service.get(URL).respond(403)
     seen_at_unlock: list[bool] = []
-    real_flock = fcntl.flock
+    real_unlock = throttle.unlock_file
 
-    def flock(fd: int, operation: int) -> None:
-        if operation == fcntl.LOCK_UN:
-            seen_at_unlock.append((lock_dir / STOP_FILENAME).exists())
-        real_flock(fd, operation)
+    def unlock(fd: int) -> None:
+        seen_at_unlock.append((lock_dir / STOP_FILENAME).exists())
+        real_unlock(fd)
 
-    monkeypatch.setattr(fcntl, "flock", flock)
+    monkeypatch.setattr(throttle, "unlock_file", unlock)
 
     with pytest.raises(ServiceBlockedError):
         client.get(TARGET, headers={}, decode=raw)

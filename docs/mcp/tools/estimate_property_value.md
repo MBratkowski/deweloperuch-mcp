@@ -23,15 +23,17 @@ A structured result and the same compact JSON in the content; `null` fields are 
 
 | Field | Description |
 |---|---|
-| `lat`, `lng`, `area_m2` | The query. |
-| `estimated_value` (PLN), `price_per_m2` | The estimate; `estimated_value=null` means the service gave none (read `hint`). |
+| `lat`, `lng`, `area_m2` | The query; `area_m2` is the requested area, rounded to 0.01 m². The service does not confirm the area it actually used. |
+| `estimated_value` (PLN), `price_per_m2` | The estimate as returned by the service, without recomputing the total locally; `estimated_value=null` means the service gave none (read `hint`). |
 | `radius_m`, `period_months` | The radius and the number of months the comparable transactions come from (e.g. 200 m, 24 months). |
 | `stats` | `count`, `median_price_per_m2`, `average_price_per_m2`, `min_price_per_m2`, `max_price_per_m2` as given by the service. |
-| `comparables_total`, `comparables_returned`, `comparables_omitted`, `truncated`, `hint` | How many comparable transactions exist and were returned. |
+| `comparables_total`, `comparables_returned`, `comparables_omitted`, `truncated` | How many comparable transactions exist and were returned. |
+| `hint` | Valuation cautions and guidance about omitted comparables or a missing estimate. |
 | `comparables` | The nearest transactions: `address`, `date`, `price`, `area_m2`, `price_per_m2`, `floor`, `distance_m`, `market` (`primary` or `secondary`), `building_slug` (for `get_building`). |
 
 ## Data limitations
 - An approximation from nearby RCN transactions, not an appraisal. The service rounds distances (to the nearest 50 m, verified 2026-10-13); the newest transactions are incomplete (register lag).
+- Fractional requested areas carry the caution „Serwis może nie uwzględnić części ułamkowej powierzchni w wycenie.” in `hint`, including when `limit` omits comparables. A check on 2026-10-16 returned the same total for 41.37 m² and 41 m² at one point; the general rounding or truncation rule remains unknown ([T41](../../open-questions.md#technical)). Do not assume `estimated_value` equals `price_per_m2 × area_m2`.
 - The full pool of transactions in the radius (`radiusPool`) is a bulk dump and is deliberately never returned ([decisions.md](../../decisions.md)); only `comparables` limited by `limit` do.
 - The tool does not geocode an address: coordinates come from the user, `search_locations` (street or district: an approximate point) or `get_investment`.
 - Every call is a request to the service; do not value many points in a series. Sources: [endpoints.md](../../discovery/endpoints.md), [open-questions.md](../../open-questions.md).

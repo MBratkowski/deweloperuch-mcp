@@ -81,13 +81,23 @@ def test_defer_in_one_process_delays_the_next_process(tmp_path: Path) -> None:
     assert start - first_end >= deferred - TOLERANCE
 
 
-@pytest.mark.parametrize("sig", ["TERM", "KILL"])
-def test_process_killed_mid_request_still_keeps_min_interval(tmp_path: Path, sig: str) -> None:
-    """Default SIGTERM/SIGKILL skip ``finally``; the next process must still wait."""
+@pytest.mark.parametrize(
+    "termination",
+    [
+        "EXIT",
+        pytest.param("TERM", marks=pytest.mark.skipif(os.name == "nt", reason="POSIX signal")),
+        pytest.param("KILL", marks=pytest.mark.skipif(os.name == "nt", reason="POSIX signal")),
+    ],
+)
+def test_process_terminated_mid_request_still_keeps_min_interval(
+    tmp_path: Path, termination: str
+) -> None:
+    """A crash or default POSIX signal skips ``finally``; the next process still waits."""
     go_at = time.time() + STARTUP_S
-    dying = spawn(tmp_path, go_at, 1, "--work", "0.3", "--die-in-slot", sig)
+    dying = spawn(tmp_path, go_at, 1, "--work", "0.3", "--die-in-slot", termination)
     waiting = spawn(tmp_path, go_at + 0.1, 1)
-    [(_, _, died_at)] = collect(dying, returncode=-getattr(signal, f"SIG{sig}"))
+    returncode = 23 if termination == "EXIT" else -getattr(signal, f"SIG{termination}")
+    [(_, _, died_at)] = collect(dying, returncode=returncode)
     [(asked, start, _)] = collect(waiting)
 
     assert asked < died_at, "second process was not queued behind the dying one"

@@ -5,6 +5,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- Native Windows support for the CLI, MCP server and shared request limiter, with standard-library file locking, PowerShell setup instructions and offline CI on Windows, macOS and Linux (Python 3.11 and 3.13). Windows support starts after 0.1.2. [#8](https://github.com/MBratkowski/deweloperuch-mcp/issues/8)
 - Links to the project's [website](https://mbratkowski.github.io/deweloperuch-mcp-site/) and its [documentation in Polish](https://mbratkowski.github.io/deweloperuch-mcp-site/docs/), with a visual install guide, in the README.
 
 ### Changed
@@ -15,6 +16,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Removed
 - The old icon drawings `assets/icon-small.svg` and `assets/icon-tiny.svg`.
+
+### Fixed
+- Fractional-area valuations now warn in CLI and MCP hints that the service may ignore the fractional part; requested area and the upstream estimate remain unchanged, including when comparable transactions are truncated. [#6](https://github.com/MBratkowski/deweloperuch-mcp/issues/6)
+- The CLI agent skill verifies this package's command groups before using an executable found on `PATH`; a legacy CLI with the same name uses the explicit package-qualified `uvx` invocation. [#7](https://github.com/MBratkowski/deweloperuch-mcp/issues/7)
 
 ## [0.1.2] - 2026-10-14
 

@@ -32,6 +32,7 @@
         "comparables_returned": 3,
         "comparables_omitted": 0,
         "truncated": false,
+        "hint": "Serwis może nie uwzględnić części ułamkowej powierzchni w wycenie.",
         "comparables": [
           {
             "address": "Ulica Nowogrodzka 38",

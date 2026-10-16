@@ -51,7 +51,7 @@ Results contain addresses of public pages for humans, only in `*_url` fields: `l
 
 ## MCP client configuration
 
-Installation options (Claude Desktop extension, `uvx` from PyPI or GitHub, from source): [README](../../README.md#install). With `uvx` the entry is `"command": "uvx", "args": ["deweloperuch-mcp"]` (if the client reports `spawn uvx ENOENT`, use the full path from `which uvx`). For a source checkout, after `uv sync` the script is at `.venv/bin/deweloperuch-mcp`. An example entry in the client configuration (`mcpServers` format, e.g. Claude Desktop, Claude Code `.mcp.json`):
+Installation options (Claude Desktop extension, `uvx` from PyPI or GitHub, from source): [README](../../README.md#install). Windows support is new after 0.1.2; until the next release, use a current source checkout. With `uvx` the entry is `"command": "uvx", "args": ["deweloperuch-mcp"]` (if the client reports `spawn uvx ENOENT`, use the full path from `which uvx`, or `(Get-Command uvx).Source` in PowerShell). For a source checkout, after `uv sync` the script is at `.venv/bin/deweloperuch-mcp` on macOS/Linux or `.venv\Scripts\deweloperuch-mcp.exe` on Windows. JSON paths use doubled backslashes, e.g. `"C:\\path\\to\\deweloperuch-mcp"`. An example entry in the client configuration (`mcpServers` format, e.g. Claude Desktop, Claude Code `.mcp.json`):
 
 ```json
 {

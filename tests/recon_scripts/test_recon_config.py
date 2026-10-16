@@ -140,19 +140,23 @@ def test_config_does_not_redefine_identity_constants() -> None:
 
 
 def package_files_loaded_by_config() -> list[Path]:
-    """The package's ``__init__.py`` (runs first) and every submodule config.py imports."""
-    tree = ast.parse(CONFIG.read_text(encoding="utf-8"))
-    submodules = {
-        node.module
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom)
-        and node.module is not None
-        and node.module.startswith("deweloperuch_mcp.")
-    }
-    assert submodules, "recon/config.py imports no deweloperuch_mcp.<module>"
-    return [SRC / "deweloperuch_mcp" / "__init__.py"] + sorted(
-        SRC.joinpath(*module.split(".")).with_suffix(".py") for module in submodules
-    )
+    """Check direct and transitive package imports, including platform file locks."""
+    pending = [CONFIG]
+    found = {SRC / "deweloperuch_mcp" / "__init__.py"}
+    while pending:
+        tree = ast.parse(pending.pop().read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.module is not None
+                and node.module.startswith("deweloperuch_mcp.")
+            ):
+                path = SRC.joinpath(*node.module.split(".")).with_suffix(".py")
+                if path not in found:
+                    found.add(path)
+                    pending.append(path)
+    assert len(found) > 1, "recon/config.py imports no deweloperuch_mcp.<module>"
+    return sorted(found)
 
 
 def test_shared_parsers_are_checked_for_stdlib_imports() -> None:

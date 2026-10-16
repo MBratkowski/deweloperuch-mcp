@@ -50,7 +50,15 @@ from support.checks.layering import (
 
 SHARED = frozenset(
     f"{PACKAGE}.{name}"
-    for name in ("identity", "throttle", "http_policy", "retry_after", "allowlist", "flight")
+    for name in (
+        "identity",
+        "throttle",
+        "file_lock",
+        "http_policy",
+        "retry_after",
+        "allowlist",
+        "flight",
+    )
 )
 """Stdlib-only modules ``recon/`` imports at these paths."""
 

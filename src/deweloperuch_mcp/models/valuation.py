@@ -212,7 +212,7 @@ class Valuation:
 
     subject: ValuationSubject
     estimated_value: float | None = None
-    """In PLN: ``price_per_m2`` times the area."""
+    """In PLN, as given by the service; its effective area is not confirmed (T41)."""
     price_per_m2: float | None = None
     radius_m: int | None = None
     """How far from the point the comparable transactions are."""

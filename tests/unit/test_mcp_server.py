@@ -29,7 +29,10 @@ pytestmark = pytest.mark.usefixtures("unix_sockets_for_the_event_loop")
 
 
 # pytest-socket does not reach a subprocess: its child installs the same guard first.
-NO_NETWORK = "import pytest_socket; pytest_socket.disable_socket(allow_unix_socket=True)"
+NO_NETWORK = (
+    f"import sys; sys.path[:0] = [{str(TESTS)!r}]; import pytest_socket; "
+    "from support.checks.sockets import event_loop_sockets_only; event_loop_sockets_only()"
+)
 
 
 GUARD_CHECK = f"""{NO_NETWORK}
