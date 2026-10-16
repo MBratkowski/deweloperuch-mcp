@@ -48,15 +48,36 @@ Never rename or delete a file that README.md links by an absolute URL (today `as
 
 To release:
 
-1. Bump the version in `pyproject.toml`, `packaging/mcpb/manifest.json` and `packaging/registry/server.json` (all must match; `server.json` has two `version` fields) and move the `## [Unreleased]` entries of [CHANGELOG.md](CHANGELOG.md) under the new version.
+1. Bump the version in `pyproject.toml`, `packaging/mcpb/manifest.json` and `packaging/registry/server.json` (all must match; `server.json` has two `version` fields) and move the `## [Unreleased]` entries of [CHANGELOG.md](CHANGELOG.md) under the new version. Copy `packaging/announcements/0.1.3.json` to `<version>.json` in the same directory; update its version, date and short Polish announcement copy (one to three highlights).
 2. Run `make package` and `make smoke`.
-3. Push a tag `v*` (for example `v0.1.1`). The release workflow builds the wheel, sdist, `.mcpb` and a `server.json` with the bundle's sha256; then two separate jobs create the GitHub Release with the artifacts and publish the package to PyPI (trusted publishing, environment `pypi`).
+3. Push a tag `v*` (for example `v0.1.1`). The release workflow builds the wheel, sdist, `.mcpb` and a `server.json` with the bundle's sha256; then two separate jobs create the GitHub Release with the artifacts and publish the package to PyPI (trusted publishing, environment `pypi`). After the GitHub Release is created, a separate job renders the Polish announcement and attaches `deweloperuch-mcp-<version>-changelog.png` to it.
 4. Publish to the official MCP Registry (`io.github.MBratkowski/deweloperuch-mcp`) with `mcp-publisher`, using the `server.json` downloaded from the release:
 
 ```
 mcp-publisher login github
 mcp-publisher publish
 ```
+
+The announcement renderer is pinned to a reviewed commit of
+`MBratkowski/deweloperuch-mcp-site`; release copy comes from this repository's
+`packaging/announcements/<version>.json`, not the renderer's example data.
+The JSON version must match the tag. Missing or invalid copy, missing assets or
+text that does not fit makes the graphics job fail; the package has already
+been published. No additional token or secret is needed, and no housing data is
+fetched. The job also saves the PNG as an Actions artifact.
+
+To regenerate a published release's graphic after correcting its JSON, use
+**Actions → release → Run workflow** and enter the existing tag, or run:
+
+```bash
+gh workflow run release.yml -f tag=v0.1.3
+```
+
+This manual path uses the announcement JSON from the selected workflow ref
+(normally `main`) and only replaces that release's changelog PNG. It does not
+build packages or publish them again. Automatic runs use the JSON committed
+with the release tag. Check the workflow outcome and review the PNG before
+using it in a post.
 
 ## Statistics archive
 
