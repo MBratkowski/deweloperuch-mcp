@@ -24,7 +24,7 @@ Below, `deweloperuch …` stands for `uvx --from deweloperuch-mcp deweloperuch �
 
 If those groups are missing (for example, the legacy Node `deweloperuch-poc` lists `overview` and `mcp-config`), keep the existing installation and use `uvx --from deweloperuch-mcp deweloperuch …` for every command below. Without uv: `pip install deweloperuch-mcp` (Python 3.11+). The first `uvx` run downloads the package; its notes on stderr are not errors.
 
-On Windows, update an older installed package with `uv tool upgrade deweloperuch-mcp`, or use `uvx --refresh --from deweloperuch-mcp deweloperuch --help` to refresh the one-off environment. Releases up to 0.1.2 do not support Windows. A source checkout also works: `uv run --directory C:\path\to\deweloperuch-mcp deweloperuch …`.
+On Windows, update a uv tool installation with `uv tool upgrade deweloperuch-mcp`; for a pip installation use `python -m pip install --upgrade deweloperuch-mcp`. For one-off runs, use `uvx --refresh --from deweloperuch-mcp deweloperuch --help` to refresh the environment. Releases up to 0.1.2 do not support Windows. A source checkout also works: `uv run --directory C:\path\to\deweloperuch-mcp deweloperuch …`.
 
 - `--help` on any group or command is offline and free: use it when unsure of an option.
 - Add `--json` to parse a result: the full domain model, `null` included. Without it the output is Polish text for people.
