@@ -1,9 +1,9 @@
 """Subprocess worker for tests/integration/test_throttle_across_processes.py (not a test module).
 
-    python throttle_worker.py LOCK_DIR GO_AT REQUESTS --min-interval S
-        [--work S] [--defer S] [--stop STATUS] [--die-in-slot EXIT|TERM|KILL]
+    python throttle_worker.py LOCK_DIR REQUESTS --min-interval S
+        [--work S] [--defer S] [--stop STATUS] [--die-in-slot EXIT|TERM|KILL] [--hold-in-slot]
 
-Waits until wall-clock GO_AT so that workers compete for the lock, then runs
+Reports ``ready`` on stderr and waits for ``start`` on stdin, then runs
 REQUESTS fake requests (sleep instead of network) through the limiter and prints
 a JSON list of ``[asked, start, end]`` wall-clock times per request: ``asked``
 just before entering the slot, ``start``/``end`` inside it. ``--defer`` passes a
@@ -13,6 +13,10 @@ earlier refuses the slot: the worker then prints ``{"stopped": asked, "message":
 ...}`` and exits with 3. ``--die-in-slot`` prints the record of the first request
 (``end`` = moment of death) and ends the process inside the slot, so no ``finally``
 runs. ``EXIT`` uses ``os._exit(23)`` on every platform; ``TERM``/``KILL`` use POSIX signals.
+
+Before its first slot attempt it reports ``asking``. ``--hold-in-slot`` reports
+``entered`` from inside that slot and waits for ``finish``, so the parent can start
+contenders while the slot is certainly held, regardless of interpreter startup order.
 
 The network guard of the test suite (pytest-socket) is installed before anything
 else runs: the worker never needs a socket, and a mistake must not reach one.
@@ -30,17 +34,23 @@ import pytest_socket
 from deweloperuch_mcp.throttle import RequestLimiter, StoppedError
 
 
+def synchronize(event: str, command: str | None = None) -> None:
+    print(event, file=sys.stderr, flush=True)
+    if command is not None and sys.stdin.readline().strip() != command:
+        raise RuntimeError(f"Expected parent command {command!r}")
+
+
 def main() -> None:
     pytest_socket.disable_socket(allow_unix_socket=True)
     parser = argparse.ArgumentParser()
     parser.add_argument("lock_dir")
-    parser.add_argument("go_at", type=float)
     parser.add_argument("requests", type=int)
     parser.add_argument("--min-interval", type=float, required=True)
     parser.add_argument("--work", type=float, default=0.05)
     parser.add_argument("--defer", type=float)
     parser.add_argument("--stop", type=int)
     parser.add_argument("--die-in-slot", choices=["EXIT", "TERM", "KILL"])
+    parser.add_argument("--hold-in-slot", action="store_true")
     args = parser.parse_args()
 
     limiter = RequestLimiter(
@@ -48,13 +58,17 @@ def main() -> None:
         min_interval=args.min_interval,
         testing_only_allow_fast_interval=True,
     )
-    time.sleep(max(0.0, args.go_at - time.time()))
+    synchronize("ready", "start")
     records: list[list[float]] = []
-    for _ in range(args.requests):
+    for index in range(args.requests):
         asked = time.time()
+        if index == 0:
+            synchronize("asking")
         try:
             with limiter.slot() as slot:
                 start = time.time()
+                if index == 0 and args.hold_in_slot:
+                    synchronize("entered", "finish")
                 time.sleep(args.work)
                 if args.defer is not None:
                     slot.defer(args.defer)
