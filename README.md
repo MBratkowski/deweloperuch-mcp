@@ -47,7 +47,7 @@ An unofficial [MCP](https://modelcontextprotocol.io) server and command-line too
 
 Pick the first option that fits you; they go from no terminal to expert. Supported systems: macOS, Linux and Windows 10 (1903+) / 11 with a local NTFS cache directory.
 
-**Windows support is new in the unreleased source.** Until the next release, use a current source checkout (option 5); PyPI and `.mcpb` releases up to 0.1.2 support macOS and Linux only.
+**Windows is supported starting with 0.1.3**, including the PyPI package and `.mcpb` extension. Releases up to 0.1.2 support macOS and Linux only.
 
 Prefer a visual walkthrough? The [install guide on the project's website](https://mbratkowski.github.io/deweloperuch-mcp-site/docs/) (in Polish) shows the installation step by step and has a prompt that lets an AI agent install it for you.
 
@@ -95,7 +95,7 @@ claude mcp add deweloperuch -- uvx deweloperuch-mcp
 }
 ```
 
-To run straight from GitHub instead of PyPI, use `uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp@v0.1.2 deweloperuch-mcp` (`@v0.1.2` pins the release; drop it to follow `main`). `pip install deweloperuch-mcp` works too.
+To run straight from GitHub instead of PyPI, use `uvx --from git+https://github.com/MBratkowski/deweloperuch-mcp@v0.1.3 deweloperuch-mcp` (`@v0.1.3` pins the release; drop it to follow `main`). `pip install deweloperuch-mcp` works too.
 
 If a Windows MCP client cannot find `uvx`, use the full executable path from `(Get-Command uvx).Source` as `command`. Escape backslashes in JSON, for example `"C:\\Users\\YOUR_NAME\\.local\\bin\\uvx.exe"`. A source checkout instead uses `"command": "uv"` and `"args": ["run", "--directory", "C:\\path\\to\\deweloperuch-mcp", "deweloperuch-mcp"]`.
 
@@ -149,7 +149,7 @@ As the client command use `uv run --directory /path/to/deweloperuch-mcp dewelope
 
 - **`uvx: command not found` or `spawn uvx ENOENT`**: install uv (option 2). Claude Desktop may not see your shell `PATH`, so put the full path from `which uvx` (macOS/Linux) or `(Get-Command uvx).Source` (PowerShell) in `command`.
 - **The server does not appear in Claude Desktop**: quit and restart Claude Desktop after installing the extension or editing the config.
-- **Windows with release 0.1.2 or earlier**: use the source installation (option 5) until a release includes Windows support.
+- **Windows with release 0.1.2 or earlier**: update to 0.1.3 or newer. For a uv tool installation, run `uv tool upgrade deweloperuch-mcp`; for `uvx`, run `uvx --refresh deweloperuch-mcp --help`. Replace an older `.mcpb` extension with the latest release.
 - **STOP / exit code 3**: after a 401, 403, 429 or a captcha/WAF challenge the client stops sending requests in every process, so as not to burden the service. A **429** expires by itself after the pause (at least 60 s). The other causes last until **you** lift them, after checking the cause (`deweloperuch stop status` shows the state; an AI agent must not lift it). The MCP server stays halted until you restart it. Details and the command: [docs/configuration.md](docs/configuration.md#stop-shared-lock-between-processes).
 - **Where is the cache?** Responses are cached in memory only. The limiter lock and the STOP record live in `~/.cache/deweloperuch-mcp` (`$XDG_CACHE_HOME/deweloperuch-mcp`). Do not delete that directory: it would also lift a STOP.
 

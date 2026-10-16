@@ -1,6 +1,6 @@
 [project]
 name = "deweloperuch-mcp"
-version = "0.1.2"
+version = "0.1.3"
 description = "MCP server and CLI over deweloperuch.pl data (developer offer prices, RCN transactions, market statistics)"
 readme = "README.md"
 license = "MIT"

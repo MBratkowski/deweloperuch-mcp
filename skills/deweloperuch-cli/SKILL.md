@@ -2,7 +2,7 @@
 name: deweloperuch-cli
 description: Query Polish new-build apartment data with the read-only deweloperuch CLI (data of deweloperuch.pl) - developers' asking prices with price history and price-drop flags, investments and developers, RCN transaction prices, flat valuations from nearby transactions, offer-market statistics of a city, and official GUS and NBP statistics. Use it when the user asks about buying a flat in Poland, new flats from developers, an offer and its price history, whether a price is good, a developer and its projects, transaction prices, valuing a flat, or comparing cities. Triggers in Polish - ceny mieszkań, nowe mieszkania, mieszkanie od dewelopera, deweloper, inwestycja, oferty mieszkań, historia ceny, obniżka ceny, cena za m2, ceny transakcyjne, RCN, wycena mieszkania, rynek pierwotny, GUS, NBP, wynagrodzenia, bezrobocie. In English - Poland new-build apartment prices, flat prices in Polish cities, asking vs transaction prices, property valuation in Poland.
 license: MIT
-compatibility: Needs uv (uvx) or the deweloperuch-mcp Python package (Python 3.11+), macOS, Linux or Windows, and network access to deweloperuch.pl. Windows needs a version newer than 0.1.2 or a current source checkout.
+compatibility: Needs uv (uvx) or the deweloperuch-mcp Python package (Python 3.11+), macOS, Linux or Windows, and network access to deweloperuch.pl. Windows requires deweloperuch-mcp 0.1.3 or newer.
 ---
 
 # deweloperuch CLI
@@ -14,7 +14,7 @@ compatibility: Needs uv (uvx) or the deweloperuch-mcp Python package (Python 3.1
 
 ## Running it
 
-Without installing anything (needs uv, <https://docs.astral.sh/uv/>; Windows support requires a version newer than 0.1.2 or a current source checkout):
+Without installing anything (needs uv, <https://docs.astral.sh/uv/>; Windows support starts in 0.1.3):
 
 ```
 uvx --from deweloperuch-mcp deweloperuch --help
@@ -24,7 +24,7 @@ Below, `deweloperuch …` stands for `uvx --from deweloperuch-mcp deweloperuch �
 
 If those groups are missing (for example, the legacy Node `deweloperuch-poc` lists `overview` and `mcp-config`), keep the existing installation and use `uvx --from deweloperuch-mcp deweloperuch …` for every command below. Without uv: `pip install deweloperuch-mcp` (Python 3.11+). The first `uvx` run downloads the package; its notes on stderr are not errors.
 
-On Windows before a release newer than 0.1.2, use a current source checkout for every command instead: `uv run --directory C:\path\to\deweloperuch-mcp deweloperuch …`. This replaces the whole `uvx` prefix above; the published 0.1.2 package does not support Windows.
+On Windows, update an older installed package with `uv tool upgrade deweloperuch-mcp`, or use `uvx --refresh --from deweloperuch-mcp deweloperuch --help` to refresh the one-off environment. Releases up to 0.1.2 do not support Windows. A source checkout also works: `uv run --directory C:\path\to\deweloperuch-mcp deweloperuch …`.
 
 - `--help` on any group or command is offline and free: use it when unsure of an option.
 - Add `--json` to parse a result: the full domain model, `null` included. Without it the output is Polish text for people.

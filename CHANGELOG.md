@@ -4,8 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-16
+
 ### Added
-- Native Windows support for the CLI, MCP server and shared request limiter, with standard-library file locking, PowerShell setup instructions and offline CI on Windows, macOS and Linux (Python 3.11 and 3.13). Windows support starts after 0.1.2. [#8](https://github.com/MBratkowski/deweloperuch-mcp/issues/8)
+- Native Windows support for the CLI, MCP server and shared request limiter, with standard-library file locking, PowerShell setup instructions and offline CI on Windows, macOS and Linux (Python 3.11 and 3.13). Windows support starts in 0.1.3. [#8](https://github.com/MBratkowski/deweloperuch-mcp/issues/8)
 - Links to the project's [website](https://mbratkowski.github.io/deweloperuch-mcp-site/) and its [documentation in Polish](https://mbratkowski.github.io/deweloperuch-mcp-site/docs/), with a visual install guide, in the README.
 
 ### Changed
@@ -78,7 +80,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - One malformed GUS dataset no longer breaks the others on the statistics page.
 - MCP validation errors no longer contain a link to the validation library's documentation.
 
-[Unreleased]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/MBratkowski/deweloperuch-mcp/releases/tag/v0.1.0

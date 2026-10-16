@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "deweloperuch-mcp",
   "display_name": "deweloperuch.pl (nieoficjalny)",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Nieoficjalne dane deweloperuch.pl: ceny ofertowe mieszkań z historią, ceny transakcyjne RCN, statystyki GUS i NBP. Unofficial, read-only access to deweloperuch.pl data: asking prices with history, RCN transaction prices, GUS and NBP statistics.",
   "long_description": "Pytaj asystenta AI o nowe mieszkania w Polsce: ceny ofertowe deweloperów z historią zmian, ceny transakcyjne z Rejestru Cen Nieruchomości (RCN) oraz statystyki GUS i NBP. Trzynaście narzędzi tylko do odczytu.\n\nAsk an AI assistant about new-build apartments in Poland: developers' asking prices with their history, transaction prices from the Real Estate Price Register (RCN) and GUS and NBP statistics. Thirteen read-only tools.\n\n**Nieoficjalne, tylko do odczytu. / Unofficial and read-only.** This project is not affiliated with, endorsed by or sponsored by deweloperuch.pl, GUS or NBP. It never creates or changes anything on the service, sends at most 1 request per second, caches responses and stops by itself after a 401, 403, 429 or a captcha. Please ask narrow questions; the service is run by other people. Data accuracy is not guaranteed and nothing here is a valuation or advice.\n\nmacOS, Linux and Windows (native inter-process file locks). Source code, documentation and the CLI: https://github.com/MBratkowski/deweloperuch-mcp",
   "author": {
