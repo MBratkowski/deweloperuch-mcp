@@ -278,7 +278,9 @@ def test_a_failed_write_raises_and_leaves_no_partial_file(
     def disk_full(*args: object, **kwargs: object) -> None:
         raise OSError(28, "No space left on device")
 
-    monkeypatch.setattr(tempfile if failing == "mkstemp" else os, failing, disk_full)
+    module = tempfile if failing == "mkstemp" else throttle
+    operation = failing if failing == "mkstemp" else "_replace_stop"
+    monkeypatch.setattr(module, operation, disk_full)
 
     with pytest.raises(OSError, match="No space"):
         record(limiter)
@@ -619,10 +621,12 @@ def test_stop_symlink_without_posix_open_flags_is_refused(
     assert isinstance(refused(limiter).stop, UnreadableStop)
 
 
+@pytest.mark.parametrize("folder", ["plain", "Łódź-🏠"])
 def test_stop_replacement_preserves_a_concurrent_status_reader(
-    limiter: RequestLimiter, fake_time: FakeTime
+    tmp_path: Path, fake_time: FakeTime, folder: str
 ) -> None:
     """Windows readers must share delete access so atomic STOP replacement can finish."""
+    limiter = make_limiter(tmp_path / folder, fake_time)
     record(limiter, 429, "limit zapytań", defer=1)
     reader = throttle._open_stop(limiter.stop_path)
     assert isinstance(reader, int)
@@ -1373,6 +1377,7 @@ def test_default_lock_dir_falls_back_to_home_cache(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, xdg: str | None
 ) -> None:
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
     if xdg is None:
         monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
     else:

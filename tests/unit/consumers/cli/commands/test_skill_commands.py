@@ -30,6 +30,7 @@ def places(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     for folder in ("home", "project"):
         (tmp_path / folder).mkdir()
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
     monkeypatch.chdir(tmp_path / "project")
     return tmp_path
 

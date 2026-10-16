@@ -14,6 +14,7 @@ from typer.testing import CliRunner
 from deweloperuch_mcp import bootstrap
 from deweloperuch_mcp.consumers.cli.app import app
 from deweloperuch_mcp.throttle import STOP_FILENAME, default_lock_dir
+from support.checks.console import stable_rich_console
 from support.checks.golden import check, requests_sent, scrub
 from support.fakes.clocks import FixedClock
 from support.golden.routes import (
@@ -209,8 +210,11 @@ FILTERS = (
 def run(args: tuple[str, ...]) -> Any:
     """The CLI in-process, each run with a new session on the shared fast limiter (the
     composition root's hook: no option of the command line is involved)."""
-    with bootstrap.sessions_from(
-        lambda: bootstrap.Session(limiter=shared_limiter(), clock=FixedClock())
+    with (
+        stable_rich_console(),
+        bootstrap.sessions_from(
+            lambda: bootstrap.Session(limiter=shared_limiter(), clock=FixedClock())
+        ),
     ):
         return CliRunner().invoke(app, list(args), env=TERMINAL)
 

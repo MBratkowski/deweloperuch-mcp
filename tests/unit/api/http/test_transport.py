@@ -43,6 +43,7 @@ from deweloperuch_mcp.throttle import (
     Slot,
     StopRecord,
 )
+from support.checks.locks import lock_is_held
 from support.fakes.clocks import MonotonicClock
 from support.fakes.transport import ChunkedBody, InterruptedBody, RaceLimiter, SpyCache
 
@@ -366,12 +367,33 @@ def test_documented_read_channels_are_requested(
 
 
 def test_request_runs_inside_the_limiter_slot(
-    client: HttpClient, service: respx.MockRouter, lock_dir: Path
+    client: HttpClient,
+    service: respx.MockRouter,
+    lock_dir: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     seen: list[dict[str, float]] = []
+    owner_fd: int | None = None
+    real_write = throttle._write_json
+
+    def write_state(fd: int, state: dict[str, float]) -> None:
+        nonlocal owner_fd
+        real_write(fd, state)
+        if "in_flight_since" in state:
+            owner_fd = fd
+
+    monkeypatch.setattr(throttle, "_write_json", write_state)
 
     def respond(request: httpx.Request) -> httpx.Response:
-        seen.append(lock_state(lock_dir))
+        assert lock_is_held(lock_dir / LOCK_FILENAME)
+        assert owner_fd is not None
+        # Windows' mandatory byte lock permits reading only through its owner descriptor.
+        position = os.lseek(owner_fd, 0, os.SEEK_CUR)
+        try:
+            os.lseek(owner_fd, 0, os.SEEK_SET)
+            seen.append(json.loads(os.read(owner_fd, 4096)))
+        finally:
+            os.lseek(owner_fd, position, os.SEEK_SET)
         return httpx.Response(200, json={})
 
     service.get(URL).mock(side_effect=respond)
@@ -380,6 +402,7 @@ def test_request_runs_inside_the_limiter_slot(
 
     assert list(seen[0]) == ["in_flight_since"]  # the slot is held during the request
     assert set(lock_state(lock_dir)) == {"last_end", "next_start"}  # and released after
+    assert not lock_is_held(lock_dir / LOCK_FILENAME)
 
 
 def test_limiter_pause_longer_than_max_wait_sends_nothing(

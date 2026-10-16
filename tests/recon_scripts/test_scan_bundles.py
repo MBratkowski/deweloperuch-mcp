@@ -351,6 +351,7 @@ def test_default_cache_dir_follows_xdg(monkeypatch: pytest.MonkeyPatch, tmp_path
 
     monkeypatch.setenv("XDG_CACHE_HOME", "relative/dir")  # ignored, as XDG requires
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
     expected = tmp_path / "home" / ".cache" / "deweloperuch-mcp" / "chunks"
     assert scan_bundles.default_cache_dir() == expected
 

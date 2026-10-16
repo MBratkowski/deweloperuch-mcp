@@ -63,12 +63,12 @@ import sys
 import tempfile
 import threading
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, TypeAlias
+from typing import Any, ClassVar, TypeAlias
 
 from deweloperuch_mcp.file_lock import lock_file
 from deweloperuch_mcp.file_lock import unlock_file as unlock_file
@@ -477,7 +477,7 @@ class RequestLimiter:
         """The STOP record as it is now; creates nothing, never waits.
 
         Read without the lock, on purpose (an exception to "only under the lock", for this
-        read alone): the record is only ever replaced atomically (``os.replace``), so a
+        read alone): the record is only ever replaced by an atomic rename, so a
         reader sees the old record or the new one, never a part, and a person asking for
         the status does not hang behind a request or a pause of another process.
         ``slot()`` still reads it under the lock, where it matters.
@@ -645,7 +645,7 @@ def _write_stop(path: Path, record: StopRecord) -> None:
             out.write(data)
             out.flush()
             os.fsync(out.fileno())
-        os.replace(temporary, path)
+        _replace_stop(temporary, path)
     except BaseException:
         with contextlib.suppress(OSError):
             os.unlink(temporary)
@@ -667,6 +667,72 @@ class _LockWait:
         self.limit = limit
         self.notice_after = notice_after
         self.on_wait = on_wait
+
+
+def _replace_stop(temporary: str, path: Path) -> None:
+    """Publish the fsynced record without excluding concurrent status readers."""
+    if sys.platform == "win32":
+        _replace_windows_stop(temporary, path)
+    else:
+        os.replace(temporary, path)
+
+
+def _replace_windows_stop(temporary: str, path: Path) -> None:
+    """Windows' legacy os.replace cannot replace an open destination, even with
+    delete sharing. FileRenameInfoEx adds the required POSIX rename semantics.
+    """
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
+
+        destination = str(path.absolute())
+        encoded_length = len(destination.encode("utf-16-le"))
+
+        class RenameInfo(ctypes.Structure):
+            flags: int
+            name_bytes: int
+            name: str
+
+            _fields_: ClassVar[Sequence[tuple[str, type[Any]] | tuple[str, type[Any], int]]] = [
+                ("flags", wintypes.DWORD),
+                ("root_directory", wintypes.HANDLE),
+                ("name_bytes", wintypes.DWORD),
+                ("name", wintypes.WCHAR * (encoded_length // 2 + 1)),
+            ]
+
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        create = kernel.CreateFileW
+        create.argtypes = [
+            wintypes.LPCWSTR,
+            wintypes.DWORD,
+            wintypes.DWORD,
+            wintypes.LPVOID,
+            wintypes.DWORD,
+            wintypes.DWORD,
+            wintypes.HANDLE,
+        ]
+        create.restype = wintypes.HANDLE
+        close = kernel.CloseHandle
+        close.argtypes = [wintypes.HANDLE]
+        close.restype = wintypes.BOOL
+        rename = kernel.SetFileInformationByHandle
+        rename.argtypes = [wintypes.HANDLE, ctypes.c_int, wintypes.LPVOID, wintypes.DWORD]
+        rename.restype = wintypes.BOOL
+        # DELETE access, share READ|WRITE|DELETE, OPEN_EXISTING; the writer is closed.
+        handle = create(temporary, 0x10000, 0x7, None, 3, 0x00200000, None)
+        if handle == ctypes.c_void_p(-1).value:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            info = RenameInfo()
+            info.flags = 0x3  # REPLACE_IF_EXISTS | POSIX_SEMANTICS
+            info.name_bytes = encoded_length
+            info.name = destination
+            if not rename(handle, 22, ctypes.byref(info), ctypes.sizeof(info)):
+                raise ctypes.WinError(ctypes.get_last_error())
+        finally:
+            close(handle)
+    else:
+        raise RuntimeError("Ta operacja zastępowania pliku jest dostępna tylko na Windows.")
 
 
 def _read_stop(path: Path) -> Stop | None:

@@ -47,7 +47,7 @@ After 401, 403, 429 or a Cloudflare challenge a process writes STOP to `stop.jso
 | Location | `${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/stop.json` |
 | Format | JSON, `"format": 1`: `{"format": 1, "since": ISO-UTC, "status": 401\|403\|429\|"challenge", "reason": text, "until": ISO-UTC\|null, "source": "pakiet"\|"probe"\|"scan_bundles", "pid": number}` |
 | Contents | Only the status and the canonical reason text (`reason`); no target, URL, headers or response content. |
-| Permissions, write | `0600` on POSIX, inherited directory ACLs on Windows; atomic write (temporary file `.stop-*.tmp`, `fsync`, `os.replace`), only under the `throttle.lock` lock. Directory syncing is best effort where the OS supports it. |
+| Permissions, write | `0600` on POSIX, inherited directory ACLs on Windows; atomic write (temporary file `.stop-*.tmp`, `fsync`, then `os.replace` on POSIX or `FileRenameInfoEx` with POSIX rename semantics on Windows), only under the `throttle.lock` lock. Windows readers share delete access so an open status reader can keep reading the old record while new readers receive the replacement. Directory syncing is best effort where the OS supports it. |
 | Read | `slot()` reads the record under the lock, before counting time: with an active record nothing is sent, and the limiter's timing state stays untouched. `stop status` reads without the lock. |
 
 Validity rules:

@@ -34,6 +34,7 @@ def places(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         (tmp_path / folder).mkdir()
     a_skill(tmp_path / "package" / "deweloperuch-cli")
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
     monkeypatch.chdir(tmp_path / "project")
     return tmp_path
 
