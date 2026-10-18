@@ -14,6 +14,7 @@ from deweloperuch_mcp.models.location_ranking import (
     RANKING_LIMIT_MAX,
     LocationRanking,
     LocationTransactions,
+    MinTransactions,
     RankingCriteria,
     RankingLevel,
     RankingOrder,
@@ -25,7 +26,16 @@ from deweloperuch_mcp.usecases.rank_locations import (
     RankLocationsResult,
 )
 from support.builders.rankings import criteria, names
-from support.fakes.rankings import FakeRankingLinks, FakeRankingSource, city
+from support.fakes.rankings import (
+    KRAKOW,
+    NO_PRICE,
+    VILLAGE,
+    WARSZAWA,
+    WROCLAW,
+    FakeRankingLinks,
+    FakeRankingSource,
+    city,
+)
 
 
 def rank(source: ports.TransactionRankingSource, given: RankingCriteria) -> RankLocationsResult:
@@ -93,6 +103,82 @@ def test_at_the_largest_limit_the_hint_points_to_min_transactions() -> None:
     )
 
 
+LEFT_OUT = (
+    "Przy sortowaniu po cenie pominięto miejsca z mniej niż 20 transakcjami (domyślny próg); "
+    "wszystkie miejsca pokaże min_transactions=0."
+)
+"""The hint's word on the price orders' default threshold."""
+
+
+@pytest.mark.parametrize(
+    ("given", "ranked", "hint"),
+    [
+        (
+            criteria(RankingOrder.PRICE_PER_M2_ASC, min_transactions=None),
+            ["Wrocław", "Kraków", "Warszawa"],
+            LEFT_OUT,
+        ),
+        (
+            criteria(RankingOrder.PRICE_PER_M2_DESC, limit=2, min_transactions=None),
+            ["Warszawa", "Kraków"],
+            f"{LEFT_OUT} Pokazano pierwsze 2 z 3 miejscowości; kolejne pokaże większy limit "
+            "(najwyżej 100).",
+        ),
+    ],
+)
+def test_by_price_the_hint_says_small_places_were_left_out_by_default(
+    given: RankingCriteria, ranked: list[str], hint: str
+) -> None:
+    """Wieś (1 transaction, the highest price) and Bez ceny (2) are left out."""
+    found = rank(FakeRankingSource(), given)
+
+    assert names(found.ranking) == ranked
+    assert found.ranking.criteria.threshold == MinTransactions(20)
+    assert found.hint == hint
+
+
+def test_the_default_threshold_with_the_other_hints() -> None:
+    many = tuple(city(f"M{index:03}", index + 1) for index in range(150))
+    at_most = LocationRanking.of(
+        criteria(RankingOrder.PRICE_PER_M2_ASC, RANKING_LIMIT_MAX, None), many
+    )
+    small = FakeRankingSource({RankingLevel.CITY: (VILLAGE, NO_PRICE), RankingLevel.POWIAT: ()})
+
+    assert ranking_hint(at_most) == (
+        f"{LEFT_OUT} Pokazano pierwsze 100 z 131 miejscowości; to najwięcej w jednym "
+        "wywołaniu. Pomiń małe miejsca przez min_transactions albo zmień sort."
+    )
+    assert rank(small, criteria(RankingOrder.PRICE_PER_M2_ASC, min_transactions=None)).hint == (
+        f"{LEFT_OUT} Żadne miejsce nie ma co najmniej 20 transakcji: zmniejsz min_transactions."
+    )
+
+
+def test_no_word_on_the_default_when_it_left_no_place_out() -> None:
+    """Every place has at least 20 transactions: the default threshold changes nothing."""
+    big = (WARSZAWA, KRAKOW, WROCLAW)
+    source = FakeRankingSource({RankingLevel.CITY: big, RankingLevel.POWIAT: ()})
+
+    found = rank(source, criteria(RankingOrder.PRICE_PER_M2_DESC, min_transactions=None))
+
+    assert found.ranking.criteria.threshold_by_default is True
+    assert (found.ranking.total, found.ranking.left_out) == (3, 0)
+    assert found.hint is None
+
+
+@pytest.mark.parametrize(
+    "given",
+    [
+        criteria(RankingOrder.PRICE_PER_M2_ASC, min_transactions=20),
+        criteria(RankingOrder.PRICE_PER_M2_DESC, min_transactions=0),
+        criteria(RankingOrder.TRANSACTIONS_DESC, min_transactions=None),
+    ],
+)
+def test_no_word_on_the_default_when_min_transactions_was_given_or_none_applies(
+    given: RankingCriteria,
+) -> None:
+    assert rank(FakeRankingSource(), given).hint is None
+
+
 @pytest.mark.parametrize(
     ("level", "subject"),
     [(RankingLevel.CITY, "Ranking miejscowości"), (RankingLevel.POWIAT, "Ranking powiatów")],
@@ -129,6 +215,25 @@ def test_the_arguments_default_to_the_ranking_of_cities_by_transactions() -> Non
     assert RankLocationsRequest.parse(
         level="powiat", sort="price_per_m2_asc", limit=5, min_transactions=50
     ).criteria == criteria(RankingOrder.PRICE_PER_M2_ASC, 5, 50, RankingLevel.POWIAT)
+
+
+@pytest.mark.parametrize(
+    ("sort", "min_transactions", "given", "threshold"),
+    [
+        ("price_per_m2_asc", None, None, 20),
+        ("price_per_m2_desc", None, None, 20),
+        ("transactions_desc", None, None, 0),
+        ("price_per_m2_asc", 0, 0, 0),
+        ("price_per_m2_desc", 5, 5, 5),
+    ],
+)
+def test_min_transactions_not_given_leaves_the_threshold_to_the_order(
+    sort: str, min_transactions: int | None, given: int | None, threshold: int
+) -> None:
+    found = RankLocationsRequest.parse(sort=sort, min_transactions=min_transactions).criteria
+
+    assert found.min_transactions == (None if given is None else MinTransactions(given))
+    assert found.threshold == MinTransactions(threshold)
 
 
 @pytest.mark.parametrize(

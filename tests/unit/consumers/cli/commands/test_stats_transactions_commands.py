@@ -11,7 +11,13 @@ from deweloperuch_mcp.consumers.shared.transaction_views import (
     TransactionStatisticsView,
 )
 from deweloperuch_mcp.throttle import RequestLimiter
-from support.builders.transactions import STATS_PAGE, ZERO_MONTH, months
+from support.builders.transactions import (
+    STATS_PAGE,
+    ZERO_MONTH,
+    karpacz_months,
+    months,
+    warszawa_months,
+)
 from support.providers.cli import Cli, ok
 from support.providers.routes.transactions import (
     MONTHLY_PATH,
@@ -62,6 +68,7 @@ def test_cli_shows_a_month_without_transactions_without_prices(
     assert json.loads(ok(run("warszawa", "--json")))["periods"][1] == {
         "period": "2021-02",
         "transactions": 0,
+        "incomplete": False,
         "median_price_per_m2": None,
         "average_price_per_m2": None,
         "median_area_m2": None,
@@ -97,10 +104,13 @@ def test_cli_json_is_the_whole_view(run: Cli, service: respx.MockRouter) -> None
     assert list(shown) == list(TransactionStatisticsView.model_fields)
     assert shown["granularity"] == "month"
     assert shown["stats_url"] == STATS_PAGE + "/warszawa"
+    # Three months are too little history to judge any of them.
+    assert shown["last_complete_period"] is None
     assert shown["periods"] == [
         {
             "period": "2021-03",
             "transactions": 1327,
+            "incomplete": False,
             "median_price_per_m2": 10858.0,
             "average_price_per_m2": 10981.0,
             "median_area_m2": 48.5,
@@ -108,6 +118,46 @@ def test_cli_json_is_the_whole_view(run: Cli, service: respx.MockRouter) -> None
             "median_price": 510000.0,
             "average_price": 584959.0,
         }
+    ]
+
+
+def test_cli_marks_the_incomplete_months_and_explains_the_mark(
+    run: Cli, service: respx.MockRouter
+) -> None:
+    """tests/fixtures/api/monthly_tx_warszawa_20261015.json: 2026-05, 2026-06 and 2026-07
+    have fewer than half the usual transactions; 2026-04 is the last complete month."""
+    transaction_routes(service, monthly=warszawa_months())
+
+    lines = ok(run("warszawa", "--periods", "4")).splitlines()
+
+    assert lines[2] == (
+        "Wskazówka: Pokazano ostatnie 4 z 67 okresów (dane od 2021-01); starsze pokaże większa "
+        "wartość periods. Okresy 2026-05, 2026-06 i 2026-07 mają mniej niż połowę zwykłej "
+        "liczby transakcji (dane RCN jeszcze niepełne): nie wyciągaj wniosków z ich cen ani "
+        "liczby transakcji. Ostatni okres ze zwykłą liczbą transakcji: 2026-04 (jego dane też "
+        "mogą się jeszcze zmienić)."
+    )
+    assert lines[5:] == [
+        "Okres      Transakcje  Mediana PLN/m²  Średnia PLN/m²  Mediana m²  Mediana ceny PLN",
+        "2026-04           987          16 542          16 980        48,6           770 000",
+        "2026-05 *          22          15 496          16 285        52,2           754 750",
+        "2026-06 *           0               –               –           –                 –",
+        "2026-07 *          35          33 176          31 186        53,4         1 360 209",
+        "* okres niepełny: mniej niż połowa zwykłej liczby transakcji (dane RCN jeszcze niepełne).",
+    ]
+
+
+def test_cli_json_carries_the_incomplete_months(run: Cli, service: respx.MockRouter) -> None:
+    transaction_routes(service, monthly=warszawa_months())
+
+    shown = json.loads(ok(run("warszawa", "--periods", "4", "--json")))
+
+    assert shown["last_complete_period"] == "2026-04"
+    assert [(item["period"], item["incomplete"]) for item in shown["periods"]] == [
+        ("2026-04", False),
+        ("2026-05", True),
+        ("2026-06", True),
+        ("2026-07", True),
     ]
 
 
@@ -168,3 +218,17 @@ def test_cli_help_lists_the_options_offline(run: Cli, service: respx.MockRouter)
     for option in ("CITY", "--granularity", "month", "quarter", "--periods", "--json"):
         assert option in out
     assert run.sessions == []
+
+
+def test_cli_says_when_a_small_town_has_too_few_transactions(
+    run: Cli, service: respx.MockRouter
+) -> None:
+    """tests/fixtures/api/monthly_tx_karpacz_20261016.json: nothing is marked, and the
+    hint says why."""
+    transaction_routes(service, monthly=karpacz_months())
+
+    out = ok(run("karpacz", "--periods", "3"))
+
+    assert "Transakcji jest za mało, by ocenić, które najnowsze okresy są niepełne" in out
+    assert " *" not in out
+    assert json.loads(ok(run("karpacz", "--json")))["last_complete_period"] is None

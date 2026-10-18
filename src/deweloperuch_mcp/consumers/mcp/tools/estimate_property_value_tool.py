@@ -39,7 +39,9 @@ class EstimatePropertyValueTool(ToolBase):
     # transactions within a radius; one request per call. T8 (docs/open-questions.md) is a
     # gap: no confirmed geocoding of an address, so the coordinates come from the user or
     # from search_locations (lat, lng of districts and streets [P]: a point of the street,
-    # not of a building).
+    # not of a building). [W] low_confidence: the rule of models.valuation (fewer than 5
+    # transactions, this package's threshold); the widest radius only adds a statement to
+    # the hint (the meaning of the service's ceiling of the radius is [W]).
     name = "estimate_property_value"
     title = "Wycena mieszkania"
     description = """\
@@ -52,7 +54,9 @@ Zwraca estimated_value (PLN), price_per_m2, radius_m i period_months (skąd i z 
 miesięcy są transakcje), stats (liczba, mediana, średnia, min i max ceny za m²) oraz \
 comparables: najbliższe transakcje porównawcze (adres, data, cena, metraż, cena za m², \
 piętro, odległość, rynek), z comparables_total, comparables_omitted, truncated i hint. \
-estimated_value=null znaczy, że serwis nie podał wyceny: przeczytaj hint.
+estimated_value=null znaczy, że serwis nie podał wyceny: przeczytaj hint. \
+low_confidence=true (mniej niż 5 transakcji porównawczych): wycenę podaj tylko jako \
+orientacyjną, z zastrzeżeniem z hint.
 
 Wymaga współrzędnych: narzędzie nie zamienia adresu na lat i lng. Weź je od \
 użytkownika, z search_locations (ulica lub dzielnica: to punkt przybliżony, nie \

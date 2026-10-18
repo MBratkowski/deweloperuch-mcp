@@ -16,7 +16,7 @@
       "structured_content": {
         "level": "powiat",
         "sort": "price_per_m2_asc",
-        "min_transactions": 0,
+        "min_transactions": 20,
         "total": 3,
         "returned": 1,
         "truncated": true,

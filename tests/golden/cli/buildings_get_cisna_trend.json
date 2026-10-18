@@ -1,0 +1,39 @@
+{
+  "args": [
+    "buildings",
+    "get",
+    "cisna",
+    "--trend"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Cisna [cisna]",
+    "Strona budynku: https://deweloperuch.pl/ceny-transakcyjne/cisna/adresy/cisna",
+    "Miejsce: Cisna [cisna] · 49.21459, 22.32198",
+    "Średnio (wg serwisu): 274 600 PLN · 72,08 m² · 3 809,76 PLN/m²",
+    "Lokale: 6 · transakcje: 7 (od 2022-02-01 do 2026-03-19) · pokazano 6.",
+    "Transakcje inne niż zwykłe: egzekucja 1 · udział 1.",
+    "7 pok. · 62,31 m² · 182102_2.0002.24_BUD.12_LOK",
+    "  2026-03-19  360 000 PLN · 5 777,56 PLN/m² · rynek wtórny · zwykła · kupujący: osoba fizyczna · sprzedający: osoba fizyczna",
+    "4 pok. · 65,15 m² · 182102_2.0002.35_BUD_LOK",
+    "  2025-06-02  150 000 PLN · 2 302,38 PLN/m² · rynek wtórny · zwykła · kupujący: osoba fizyczna · sprzedający: osoba fizyczna",
+    "piętro 2 · 4 pok. · 62,68 m² · 182102_2.0002.12_BUD_LOK",
+    "  2023-05-08  95 000 PLN · 1 276,2 PLN/m² · rynek wtórny · udział · kupujący: osoba fizyczna · sprzedający: osoba fizyczna · udział 1/2",
+    "  2024-06-12  280 000 PLN · 4 467,13 PLN/m² · rynek wtórny · zwykła · kupujący: osoba fizyczna · sprzedający: osoba fizyczna",
+    "piętro 2 · 5 pok. · 78,03 m² · 182102_2.0002.9_BUD_LOK",
+    "  2023-04-19  222 500 PLN · 2 851,47 PLN/m² · rynek wtórny · egzekucja · kupujący: osoba fizyczna · sprzedający: osoba fizyczna",
+    "piętro 3 · 5 pok. · 77,99 m² · 182102_2.0002.10_BUD_LOK",
+    "  2022-05-16  300 000 PLN · 3 846,65 PLN/m² · rynek wtórny · zwykła · kupujący: osoba fizyczna · sprzedający: osoba fizyczna",
+    "piętro 3 · 5 pok. · 92,26 m² · 182102_2.0002.33_BUD_LOK",
+    "  2022-02-01  283 000 PLN · 3 067,42 PLN/m² · rynek wtórny · zwykła · kupujący: osoba fizyczna · sprzedający: osoba fizyczna",
+    "Wskazówka: Serwis nie ma kwartałów trendu cen w okolicy tego budynku; to nie błąd i ponowienie nic nie zmieni. Szersze tło może dać get_transaction_statistics dla city_slug budynku (małe miejscowości mogą nie mieć tych statystyk).",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/transactions/visible/cisna [accept: application/json]",
+    "GET https://deweloperuch.pl/api/avg-price-trend/building/152198 [accept: application/json]"
+  ]
+}

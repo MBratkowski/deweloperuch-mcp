@@ -5,7 +5,9 @@
     "--sort",
     "price_per_m2_desc",
     "--limit",
-    "2"
+    "2",
+    "--min-transactions",
+    "0"
   ],
   "exit_code": 0,
   "stdout": [

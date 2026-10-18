@@ -1,0 +1,129 @@
+{
+  "calls": [
+    {
+      "tool": "get_transaction_statistics",
+      "arguments": {
+        "city": "warszawa"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "city_slug": "warszawa",
+        "granularity": "month",
+        "total": 67,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "2021-01",
+        "last_complete_period": "2026-04",
+        "hint": "Pokazano ostatnie 12 z 67 okresów (dane od 2021-01); starsze pokaże większe periods (najwyżej 60). Okresy 2026-05, 2026-06 i 2026-07 mają mniej niż połowę zwykłej liczby transakcji (dane RCN jeszcze niepełne): nie wyciągaj wniosków z ich cen ani liczby transakcji. Ostatni okres ze zwykłą liczbą transakcji: 2026-04 (jego dane też mogą się jeszcze zmienić).",
+        "note": "Ostatnie miesiące są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z okresami o zwykłej liczbie transakcji.",
+        "stats_url": "https://deweloperuch.pl/statystyki/ceny-transakcyjne/mieszkania/warszawa",
+        "periods": [
+          {
+            "period": "2025-08",
+            "transactions": 1166,
+            "median_price_per_m2": 16540,
+            "average_price_per_m2": 16982,
+            "median_area_m2": 48.4,
+            "median_price": 775000
+          },
+          {
+            "period": "2025-09",
+            "transactions": 1297,
+            "median_price_per_m2": 16424,
+            "average_price_per_m2": 16885,
+            "median_area_m2": 47.9,
+            "median_price": 760000
+          },
+          {
+            "period": "2025-10",
+            "transactions": 1287,
+            "median_price_per_m2": 16301,
+            "average_price_per_m2": 16835,
+            "median_area_m2": 49.2,
+            "median_price": 780000
+          },
+          {
+            "period": "2025-11",
+            "transactions": 1069,
+            "median_price_per_m2": 16354,
+            "average_price_per_m2": 16878,
+            "median_area_m2": 48.4,
+            "median_price": 770000
+          },
+          {
+            "period": "2025-12",
+            "transactions": 1176,
+            "median_price_per_m2": 16525,
+            "average_price_per_m2": 17128,
+            "median_area_m2": 48.2,
+            "median_price": 780000
+          },
+          {
+            "period": "2026-01",
+            "transactions": 1073,
+            "median_price_per_m2": 16542,
+            "average_price_per_m2": 17185,
+            "median_area_m2": 49.4,
+            "median_price": 800000
+          },
+          {
+            "period": "2026-02",
+            "transactions": 1180,
+            "median_price_per_m2": 16324,
+            "average_price_per_m2": 16894,
+            "median_area_m2": 48.8,
+            "median_price": 799500
+          },
+          {
+            "period": "2026-03",
+            "transactions": 1390,
+            "median_price_per_m2": 16393,
+            "average_price_per_m2": 16876,
+            "median_area_m2": 48.3,
+            "median_price": 770000
+          },
+          {
+            "period": "2026-04",
+            "transactions": 987,
+            "median_price_per_m2": 16542,
+            "average_price_per_m2": 16980,
+            "median_area_m2": 48.6,
+            "median_price": 770000
+          },
+          {
+            "period": "2026-05",
+            "transactions": 22,
+            "incomplete": true,
+            "median_price_per_m2": 15496,
+            "average_price_per_m2": 16285,
+            "median_area_m2": 52.2,
+            "median_price": 754750
+          },
+          {
+            "period": "2026-06",
+            "transactions": 0,
+            "incomplete": true
+          },
+          {
+            "period": "2026-07",
+            "transactions": 35,
+            "incomplete": true,
+            "median_price_per_m2": 33176,
+            "average_price_per_m2": 31186,
+            "median_area_m2": 53.4,
+            "median_price": 1360209
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa [accept: application/json]"
+  ]
+}

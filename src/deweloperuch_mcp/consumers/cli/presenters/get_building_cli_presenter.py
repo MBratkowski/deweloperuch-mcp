@@ -44,7 +44,21 @@ class GetBuildingCliPresenter:
 
     @classmethod
     def _text(cls, building: BuildingView) -> str:
-        lines = [f"{building.name} [{building.building_slug}]"]
+        lines = cls._summary_lines(building)
+        others = cls._other_transactions_line(building)
+        if others is not None:
+            lines.append(others)
+        for unit in building.units:
+            lines.append(cls._unit_line(unit))
+            lines += [cls._transaction_line(transaction) for transaction in unit.transactions]
+        lines += cls._trend_or_hint(building)
+        return "\n".join(lines)
+
+    @staticmethod
+    def _summary_lines(building: BuildingView) -> list[str]:
+        """The building's address (its town when the register gives none), page, place,
+        the service's averages and the counts of its units and transactions."""
+        lines = [f"{building.name or building.city} [{building.building_slug}]"]
         if building.building_url:
             lines.append(f"Strona budynku: {building.building_url}")
         place = f"Miejsce: {building.city} [{building.city_slug}]"
@@ -57,23 +71,38 @@ class GetBuildingCliPresenter:
             amount_text(building.avg_area_m2, "m²", 2),
             amount_text(building.avg_price_per_m2, per_m2_unit(_PLN), 2),
         ]
-        count = (
+        counts = (
             f"Lokale: {number_text(building.units_total)} · transakcje: "
             f"{number_text(building.transactions_total)}"
         )
         first, last = building.first_transaction_date, building.last_transaction_date
         if first is not None and last is not None:
-            count += f" (od {first.isoformat()} do {last.isoformat()})"
-        count += f" · pokazano {len(building.units)}"
+            counts += f" (od {first.isoformat()} do {last.isoformat()})"
+        counts += f" · pokazano {len(building.units)}"
         if building.units_omitted:
-            count += f" · pominięto {building.units_omitted} (zwiększ --limit)"
-        lines += [place, "Średnio (wg serwisu): " + " · ".join(averages), count + "."]
-        for unit in building.units:
-            lines.append(cls._unit_line(unit))
-            lines += [cls._transaction_line(transaction) for transaction in unit.transactions]
-        if building.neighbourhood_trend is not None:
-            lines += cls._trend_lines(building.neighbourhood_trend)
-        return "\n".join(lines)
+            counts += f" · pominięto {building.units_omitted} (zwiększ --limit)"
+        return lines + [place, "Średnio (wg serwisu): " + " · ".join(averages), counts + "."]
+
+    @staticmethod
+    def _other_transactions_line(building: BuildingView) -> str | None:
+        """The transactions of the building that are no regular sale, by class; ``None``
+        when there are none."""
+        if not building.non_regular_transactions:
+            return None
+        others = " · ".join(
+            f"{_CLASSES.get(word, word)} {number_text(found)}"
+            for word, found in building.non_regular_transactions.items()
+        )
+        return f"Transakcje inne niż zwykłe: {others}."
+
+    @classmethod
+    def _trend_or_hint(cls, building: BuildingView) -> list[str]:
+        """The trend around the building when it has quarters, then the hint, if any."""
+        trend = building.neighbourhood_trend
+        lines = cls._trend_lines(trend) if trend is not None and trend.quarters_total else []
+        if building.hint:
+            lines.append(f"Wskazówka: {building.hint}")
+        return lines
 
     @staticmethod
     def _unit_line(unit: UnitView) -> str:

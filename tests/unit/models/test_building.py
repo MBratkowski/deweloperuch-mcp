@@ -6,13 +6,25 @@ from typing import Any
 import pytest
 
 from deweloperuch_mcp.models.building import (
+    ANOMALY_LOW,
+    ENFORCEMENT,
+    REGULAR,
+    SHARE,
     BuildingRef,
     BuildingSlug,
     UnitsLimit,
 )
 from deweloperuch_mcp.models.errors import InvalidValueError, SlugText, ValueName, WholeNumber
 from support.checks import layering
-from support.fakes.buildings import MID, NEW, OLD, building_of, trend_of, unit_sold
+from support.fakes.buildings import (
+    MID,
+    NEW,
+    OLD,
+    building_of,
+    trend_of,
+    unit_sold,
+    unit_sold_as,
+)
 from support.providers.routes.buildings import SLUG
 
 BUILDING_WORDS = re.compile(r"get_building|building_slug|include_trend|\blimit\b")
@@ -57,6 +69,34 @@ def test_the_counts_and_dates_of_the_whole_building() -> None:
     assert building_of(unit_sold(1)).last_sold_on is None
 
 
+def test_the_transactions_that_are_no_regular_sale_by_class() -> None:
+    """Every unit counts, not only the ones a listing keeps; the most frequent class
+    first, equal ones by class. An unknown class counts under its own word; a transaction
+    without a class does not count (what none means is not known)."""
+    building = building_of(
+        unit_sold_as(1, REGULAR, SHARE),
+        unit_sold_as(2, ENFORCEMENT, REGULAR, None),
+        unit_sold_as(3, "nowa_klasa", SHARE),
+        unit_sold_as(4, ANOMALY_LOW),
+    )
+
+    counts = building.non_regular_transactions()
+
+    assert list(counts.items()) == [
+        (SHARE, 2),
+        (ANOMALY_LOW, 1),
+        (ENFORCEMENT, 1),
+        ("nowa_klasa", 1),
+    ]
+    assert building.listing(UnitsLimit(0)).building.non_regular_transactions() == counts
+
+
+def test_a_building_of_regular_sales_only_has_no_other_transactions() -> None:
+    assert building_of(unit_sold_as(1, REGULAR, REGULAR)).non_regular_transactions() == {}
+    assert building_of(unit_sold_as(1, None), unit_sold(2)).non_regular_transactions() == {}
+    assert building_of().non_regular_transactions() == {}
+
+
 def test_a_unit_keeps_its_transactions_in_order() -> None:
     with pytest.raises(ValueError, match="kolejności dat"):
         unit_sold(1, NEW, OLD)
@@ -75,6 +115,13 @@ def test_the_newest_quarters_of_the_trend() -> None:
     assert (trend.latest(0).quarters, trend.latest(0).omitted) == ((), 4)
     with pytest.raises(ValueError):
         trend.latest(-1)
+
+
+def test_a_trend_without_quarters_is_empty() -> None:
+    """Empty: the service has no quarter at all, not a result that kept none of them."""
+    assert trend_of().empty
+    assert not trend_of("2025-Q1").empty
+    assert not trend_of("2025-Q1").latest(0).empty
 
 
 def test_the_quarters_of_a_trend_are_in_order() -> None:

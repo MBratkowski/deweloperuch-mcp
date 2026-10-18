@@ -1,9 +1,9 @@
 """The golden cases of ``deweloperuch valuation estimate`` (tests/golden/cli/<case>.json)."""
 
-from support.builders.valuation import valuation_with_comparables
+from support.builders.valuation import CISNA_OPTIONS, valuation_with_comparables
 from support.golden.cli import ESCAPES, ESTIMATE, INJECTED_BODY, Case, case, with_the_first_address
 from support.golden.routes import valuation_answer, without_an_estimate
-from support.providers.routes.valuation import valuation_route
+from support.providers.routes.valuation import cisna_route, valuation_route
 
 CASES: dict[str, Case] = {
     "help_valuation_estimate": case("valuation", "estimate", "--help"),
@@ -26,6 +26,12 @@ CASES: dict[str, Case] = {
     ),
     "valuation_estimate_without_an_estimate": case(
         *ESTIMATE, service=lambda r: valuation_route(r, without_an_estimate())
+    ),
+    "valuation_estimate_low_confidence": case(
+        "valuation", "estimate", *CISNA_OPTIONS, service=cisna_route
+    ),
+    "valuation_estimate_low_confidence_json": case(
+        "valuation", "estimate", *CISNA_OPTIONS, "--json", service=cisna_route
     ),
     "valuation_estimate_lat_outside_poland": case(*ESTIMATE, "--lat", "60"),
     "valuation_estimate_lng_outside_poland": case(*ESTIMATE, "--lng", "10"),

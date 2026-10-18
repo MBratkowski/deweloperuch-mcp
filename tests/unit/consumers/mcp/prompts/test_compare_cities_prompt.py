@@ -33,8 +33,10 @@ def test_each_city_gets_asking_and_transaction_prices_then_one_table() -> None:
 def test_the_registry_lag_is_a_reminder() -> None:
     said = PROMPT.render(miasta="Kraków, Wrocław")
 
-    assert "z kilkumiesięcznym opóźnieniem" in said
-    assert "najnowsze miesiące są niepełne" in said
+    assert "trafiają do RCN z opóźnieniem, więc najnowsze okresy są niepełne" in said
+    assert "pomiń okresy z incomplete=true" in said
+    assert "nie nowszym niż najwcześniejszy z last_complete_period wszystkich miast" in said
+    assert "Miasto bez last_complete_period" in said and "oznacz jako niepewne" in said
     assert "nie traktuj jako trendu" in said
 
 

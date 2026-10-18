@@ -323,6 +323,9 @@ def test_server_info_and_instructions(server: MCPServer[bootstrap.Session]) -> N
     assert not re.search(r"zdejm|zdjęci|restart|dopóki", instructions, re.I)
     assert "Gdy narzędzie odrzuci argumenty, popraw wskazane pola" in instructions
     assert "po angielsku" not in instructions
+    assert "najnowsze okresy są niepełne, get_transaction_statistics oznacza je incomplete" in (
+        instructions
+    )
 
 
 @pytest.mark.parametrize(

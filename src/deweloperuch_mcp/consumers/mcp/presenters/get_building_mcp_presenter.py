@@ -3,8 +3,9 @@
 
 Cut down from the view (``consumers.shared.building_views``): no numbers or register
 designations of the units, the currency only when it is not PLN, the share only when it
-is not the whole unit, the street only when it is not the building's name; the units the
-use case kept, with ``units_returned``, ``units_omitted`` and ``truncated`` (D4), and the
+is not the whole unit, the street only when it is not the building's name, the counts of
+the transactions that are no regular sale only when there are some; the units the use
+case kept, with ``units_returned``, ``units_omitted`` and ``truncated`` (D4), and the
 quarters of the trend it kept, with how many there are.
 """
 
@@ -39,6 +40,14 @@ CLASSIFICATION = (
     "Rodzaj transakcji wg serwisu: regular (zwykła), share (udział), bulk (hurtowa), "
     "government (rządowa), enforcement (egzekucja), discount (z bonifikatą), anomaly_low "
     "albo anomaly_high (cena odstająca w dół albo w górę)."
+)
+NON_REGULAR = (
+    "Transakcje z classification innym niż regular w całym budynku: liczba wg rodzaju "
+    "(słowa jak w "
+    'classification), np. {"share": 1}; brak pola: brak takich transakcji. To nie zwykła '
+    "sprzedaż całego lokalu po cenie rynkowej: nie uśredniaj ich ze zwykłymi. "
+    # [W] api.dto.building_dto: so in the one building checked (open question T48).
+    "Średnie avg_* serwisu prawdopodobnie ich nie obejmują (sprawdzone w jednym budynku)."
 )
 PARTY = "natural_person (osoba fizyczna) albo legal_person (osoba prawna, np. firma)."
 BUILDING_URL = (
@@ -78,7 +87,7 @@ class TrendQuarterItem(McpModel):
 
 class NeighbourhoodTrendResult(McpModel):
     radius_km: float | None = Field(None, description="Promień okolicy budynku w km.")
-    total: int = Field(description="Wszystkie kwartały, które ma serwis.")
+    total: int = Field(description="Wszystkie kwartały, które ma serwis (0: brak trendu).")
     returned: int = Field(description="Kwartały w wyniku: najnowsze z nich.")
     truncated: bool = Field(description="true: są starsze kwartały niż pokazane.")
     quarters: list[TrendQuarterItem] = Field(description="Kwartały od najstarszego.")
@@ -86,7 +95,13 @@ class NeighbourhoodTrendResult(McpModel):
 
 class BuildingResult(McpModel):
     building_slug: str = Field(description="Identyfikator do ponownego get_building.")
-    name: str = Field(description="Adres budynku wg rejestru cen.")
+    name: str | None = Field(
+        None,
+        description=(
+            "Adres budynku wg rejestru cen; brak pola: rejestr nie podaje adresu (miejscowość "
+            "w city)."
+        ),
+    )
     building_url: str | None = Field(None, description=BUILDING_URL)
     city: str = Field(description="Miasto budynku.")
     city_slug: str = Field(description="city_slug jak w search_locations.")
@@ -110,10 +125,17 @@ class BuildingResult(McpModel):
     )
     units_total: int = Field(description="Wszystkie lokale budynku w rejestrze cen.")
     transactions_total: int = Field(description="Wszystkie transakcje lokali budynku.")
+    non_regular_transactions: dict[str, int] | None = Field(None, description=NON_REGULAR)
     units: list[UnitItem] = Field(description=UNITS_ORDER)
     units_returned: int = Field(description="Lokali na liście units.")
     units_omitted: int = Field(description="Lokali pominiętych przez limit.")
     truncated: bool = Field(description="true: lista units jest niepełna (units_omitted > 0).")
+    hint: str | None = Field(
+        None,
+        description=(
+            "Co zrobić dalej albo czego brakuje w wyniku, np. brak trendu w okolicy budynku."
+        ),
+    )
     neighbourhood_trend: NeighbourhoodTrendResult | None = Field(
         None,
         description=(
@@ -145,10 +167,12 @@ class GetBuildingMcpPresenter:
             last_transaction_date=view.last_transaction_date,
             units_total=view.units_total,
             transactions_total=view.transactions_total,
+            non_regular_transactions=view.non_regular_transactions or None,
             units=[self._unit(unit) for unit in view.units],
             units_returned=len(view.units),
             units_omitted=view.units_omitted,
             truncated=view.units_omitted > 0,
+            hint=view.hint,
             neighbourhood_trend=None if trend is None else self._trend(trend),
         )
 

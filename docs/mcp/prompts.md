@@ -25,7 +25,7 @@ Plan for the model: `search_locations` → `search_offers` (sorted by `price_per
 | `offer_id` | yes | offer_id oferty z wyników search_offers albo get_investment. |
 | `investment_slug` | yes | investment_slug inwestycji tej oferty, np. smolna: z tych samych wyników albo ostatni człon adresu strony inwestycji na deweloperuch.pl. |
 
-Plan for the model: `get_offer` (`price_flags`) → `get_market_statistics` → `get_investment` and `estimate_property_value` (when the investment has coordinates) → a short verdict with caveats.
+Plan for the model: `get_offer` (`price_flags`) → `get_market_statistics` → `get_investment` and `estimate_property_value` (when the investment has coordinates) → a short verdict with caveats (among them: when `estimate_property_value` returns `low_confidence=true`, pass on the caveat from `hint`, the estimate being only indicative).
 
 ## `przeswietl_dewelopera`: Prześwietl dewelopera
 > Profil dewelopera: gdzie i ile buduje, jego inwestycje, aktywne oferty, ceny i ich zmiany; w całej Polsce albo w jednym mieście.
@@ -44,6 +44,6 @@ Plan for the model: `search_developers` → `get_developer` (plus `search_locati
 |---|---|---|
 | `miasta` | yes | Nazwy miast rozdzielone przecinkami, np. Kraków, Wrocław, Gdańsk (najwyżej 5). |
 
-Plan for the model: per city `search_locations`, `get_market_statistics`, `get_transaction_statistics` and optionally `get_government_statistics` → one table with asking and transaction prices in separate columns.
+Plan for the model: per city `search_locations`, `get_market_statistics`, `get_transaction_statistics` and optionally `get_government_statistics` → one table with asking and transaction prices in separate columns; periods with `incomplete=true` are skipped and the cities are compared up to the earliest `last_complete_period` of them all (a city without one is marked uncertain, see its `hint`).
 
 _Source: `src/deweloperuch_mcp/consumers/mcp/prompts/`, `tests/snapshots/mcp_prompts.json`_

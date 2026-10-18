@@ -1,7 +1,7 @@
 # `estimate_property_value`
 > Szacuje wartość mieszkania o danym metrażu w punkcie (lat, lng) w Polsce na podstawie cen transakcyjnych z Rejestru Cen Nieruchomości (RCN) z okolicy. Wynik jest przybliżony: to porównanie z transakcjami w pobliżu, a nie operat szacunkowy. Użyj, gdy użytkownik pyta, ile może być warte mieszkanie albo czy jego cena jest rynkowa.
 >
-> Zwraca estimated_value (PLN), price_per_m2, radius_m i period_months (skąd i z ilu miesięcy są transakcje), stats (liczba, mediana, średnia, min i max ceny za m²) oraz comparables: najbliższe transakcje porównawcze (adres, data, cena, metraż, cena za m², piętro, odległość, rynek), z comparables_total, comparables_omitted, truncated i hint. estimated_value=null znaczy, że serwis nie podał wyceny: przeczytaj hint.
+> Zwraca estimated_value (PLN), price_per_m2, radius_m i period_months (skąd i z ilu miesięcy są transakcje), stats (liczba, mediana, średnia, min i max ceny za m²) oraz comparables: najbliższe transakcje porównawcze (adres, data, cena, metraż, cena za m², piętro, odległość, rynek), z comparables_total, comparables_omitted, truncated i hint. estimated_value=null znaczy, że serwis nie podał wyceny: przeczytaj hint. low_confidence=true (mniej niż 5 transakcji porównawczych): wycenę podaj tylko jako orientacyjną, z zastrzeżeniem z hint.
 >
 > Wymaga współrzędnych: narzędzie nie zamienia adresu na lat i lng. Weź je od użytkownika, z search_locations (ulica lub dzielnica: to punkt przybliżony, nie konkretny budynek) albo z get_investment (współrzędne inwestycji oferty). Każde wywołanie to zapytanie do serwisu: nie wyceniaj seriami wielu punktów.
 
@@ -24,15 +24,17 @@ A structured result and the same compact JSON in the content; `null` fields are 
 | Field | Description |
 |---|---|
 | `lat`, `lng`, `area_m2` | The query; `area_m2` is the requested area, rounded to 0.01 m². The service does not confirm the area it actually used. |
-| `estimated_value` (PLN), `price_per_m2` | The estimate as returned by the service, without recomputing the total locally; `estimated_value=null` means the service gave none (read `hint`). |
+| `estimated_value` (PLN), `price_per_m2` | The estimate as returned by the service, without recomputing the total locally; they come as a pair (a value or price of 0 or less is no value, so neither is shown). `estimated_value=null` means the service gave none (read `hint`). |
+| `low_confidence` | `true` exactly when the estimate rests on fewer than 5 comparable transactions (a package rule [W]); then give the estimate only as indicative, with the caveat from `hint`. Present on every estimate, `false` included; omitted when `estimated_value` is null. |
 | `radius_m`, `period_months` | The radius and the number of months the comparable transactions come from (e.g. 200 m, 24 months). |
 | `stats` | `count`, `median_price_per_m2`, `average_price_per_m2`, `min_price_per_m2`, `max_price_per_m2` as given by the service. |
 | `comparables_total`, `comparables_returned`, `comparables_omitted`, `truncated` | How many comparable transactions exist and were returned. |
-| `hint` | Valuation cautions and guidance about omitted comparables or a missing estimate. |
+| `hint` | In this order: the caveat (few transactions, or „Serwis nie podał transakcji…” when there are none; or only a softer sentence when just the radius reached the service's ceiling of 1000 m, `radiusCeilingM` [W]), the guidance about omitted comparables, the valuation cautions (no estimate; fractional area). |
 | `comparables` | The nearest transactions: `address`, `date`, `price`, `area_m2`, `price_per_m2`, `floor`, `distance_m`, `market` (`primary` or `secondary`), `building_slug` (for `get_building`). |
 
 ## Data limitations
 - An approximation from nearby RCN transactions, not an appraisal. The service rounds distances (to the nearest 50 m, verified 2026-10-13); the newest transactions are incomplete (register lag).
+- The threshold of 5 transactions is a rule of this package [W], not of the service (Cisna, 2026-10-15: 2 transactions at 2 302 and 5 778 PLN/m² gave 4 040 PLN/m²). The meaning of the radius ceiling is read from its name [W]. Fixtures: `tests/fixtures/api/standalone_val_cisna_20261015.json`.
 - Fractional requested areas carry the caution „Serwis może nie uwzględnić części ułamkowej powierzchni w wycenie.” in `hint`, including when `limit` omits comparables. A check on 2026-10-16 returned the same total for 41.37 m² and 41 m² at one point; the general rounding or truncation rule remains unknown ([T41](../../open-questions.md#technical)). Do not assume `estimated_value` equals `price_per_m2 × area_m2`.
 - The full pool of transactions in the radius (`radiusPool`) is a bulk dump and is deliberately never returned ([decisions.md](../../decisions.md)); only `comparables` limited by `limit` do.
 - The tool does not geocode an address: coordinates come from the user, `search_locations` (street or district: an approximate point) or `get_investment`.
@@ -74,6 +76,24 @@ The result from `tests/golden/mcp/valuation.json` (a mocked service answer):
 }
 ```
 
-(The third comparable is omitted here.)
+(The third comparable is omitted here.) `low_confidence` is `false` here: 9 transactions in `stats`.
+
+An estimate of low confidence, call `{"lat": 49.2167, "lng": 22.3333, "area_m2": 50}` (`tests/golden/mcp/valuation_low_confidence.json`, a mocked service answer based on the Cisna sample):
+
+```json
+{
+  "lat": 49.2167, "lng": 22.3333, "area_m2": 50.0,
+  "estimated_value": 202000.0, "low_confidence": true, "price_per_m2": 4040.0, "radius_m": 1000, "period_months": 24,
+  "stats": {"count": 2, "median_price_per_m2": 4040.0, "average_price_per_m2": 4040.0, "min_price_per_m2": 2302.0, "max_price_per_m2": 5778.0},
+  "comparables_total": 2, "comparables_returned": 2, "comparables_omitted": 0, "truncated": false,
+  "hint": "Wycena oparta tylko na 2 transakcjach z promienia 1 000 m (największego, jaki serwis bierze pod uwagę) z ostatnich 24 miesięcy: to orientacyjna wartość o niskiej wiarygodności. Podaj ją z tym zastrzeżeniem i z rozpiętością cen za m² tych transakcji (2 302–5 778 PLN/m²); porównaj też z cenami transakcyjnymi miasta (get_transaction_statistics).",
+  "comparables": [
+    {"date": "2025-06-02", "price": 149975.0, "area_m2": 65.15, "price_per_m2": 2302.0, "distance_m": 850.0, "market": "secondary", "building_slug": "cisna"},
+    {"date": "2026-03-19", "price": 360027.0, "area_m2": 62.31, "price_per_m2": 5778.0, "distance_m": 850.0, "market": "secondary", "building_slug": "cisna"}
+  ]
+}
+```
+
+With `"limit": 1` (`valuation_low_confidence_limit_1.json`) the hint continues with „Pokazano 1 najbliższą z 2 transakcji porównawczych; więcej pokaże większy limit (najwyżej 50).”
 
 _Source: `src/deweloperuch_mcp/consumers/mcp/tools/estimate_property_value_tool.py`, `src/deweloperuch_mcp/consumers/mcp/presenters/estimate_property_value_mcp_presenter.py`, `src/deweloperuch_mcp/usecases/estimate_property_value.py`, `tests/snapshots/mcp_tools.json`_

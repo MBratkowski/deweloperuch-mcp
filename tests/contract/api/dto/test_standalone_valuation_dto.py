@@ -14,8 +14,15 @@ from deweloperuch_mcp.api.dto.standalone_valuation_dto import (
     ValuationTransactionDto,
 )
 from deweloperuch_mcp.models.errors import UnexpectedResponseError
-from deweloperuch_mcp.models.valuation import PRIMARY, SECONDARY, ComparableTransaction
-from support.builders.valuation import SUBJECT, api_sample, mapped, parsed
+from deweloperuch_mcp.models.valuation import (
+    PRIMARY,
+    SECONDARY,
+    ComparableTransaction,
+    PricePerM2Stats,
+)
+from deweloperuch_mcp.usecases.estimate_property_value import EstimatePropertyValueResult
+from support.builders.valuation import CISNA_SUBJECT, SUBJECT, api_sample, mapped, parsed
+from support.providers.routes.valuation import cisna
 from support.providers.samples import envelope, untrimmed
 
 
@@ -120,10 +127,17 @@ def test_the_statistics_count_every_comparable_transaction(
 
 def test_the_working_data_of_the_service_is_not_read() -> None:
     """D5: radiusPool, estimationContext and buildings stay out of the DTO and the domain;
-    so do fields whose meaning is not confirmed."""
+    so do fields whose meaning is not confirmed (radiusLevel: only its values are)."""
     read = set(StandaloneValuationDto.model_fields)
     read_of_an_item = set(ValuationTransactionDto.model_fields)
-    left_out = {"radiusPool", "estimationContext", "buildings", "trendMonthlyPct", "areaElasticity"}
+    left_out = {
+        "radiusPool",
+        "estimationContext",
+        "buildings",
+        "trendMonthlyPct",
+        "areaElasticity",
+        "radiusLevel",
+    }
     left_out_of_an_item = {"excluded", "isSamePrimaryInvestment", "unitNumber", "saleRcnId"}
 
     assert read.isdisjoint(left_out)
@@ -131,7 +145,94 @@ def test_the_working_data_of_the_service_is_not_read() -> None:
     assert "radiusPool" in api_sample()  # the sample does have it
 
 
-@pytest.mark.parametrize("missing", ["estimatedValue", "estimatedPricePerSqm", "transactions"])
+def test_cisna_is_an_estimate_from_2_transactions_at_the_widest_radius() -> None:
+    """[P 2026-10-15] tests/fixtures/api/standalone_val_cisna_20261015.json: the service
+    widened the radius to its ceiling (radiusKm 1, radiusCeilingM 1000) and still found 2
+    transactions; the estimate is their mean. Both reasons of low confidence apply."""
+    valuation = mapped(cisna(), CISNA_SUBJECT)
+
+    assert (valuation.estimated_value, valuation.price_per_m2) == (202_000, 4_040)
+    assert (valuation.radius_m, valuation.radius_ceiling_m) == (1000, 1000)
+    assert valuation.period_months == 24
+    assert valuation.stats == PricePerM2Stats(
+        count=2,
+        median_price_per_m2=4040,
+        average_price_per_m2=4040,
+        min_price_per_m2=2302,
+        max_price_per_m2=5778,
+    )
+    assert [c.price_per_m2 for c in valuation.comparables] == [2302, 5778]
+    assert (valuation.few_comparables, valuation.at_widest_radius) == (True, True)
+    assert valuation.low_confidence is True
+
+
+@pytest.mark.parametrize("sample", [api_sample, report_sample])
+def test_the_samples_are_not_of_low_confidence(sample: Any) -> None:
+    """[P 2026-10-09] 9 and 26 transactions from 200 m, below the ceiling of 1000 m."""
+    valuation = mapped(sample())
+
+    assert (valuation.radius_m, valuation.radius_ceiling_m) == (200, 1000)
+    assert valuation.counted_comparables in (9, 26)
+    assert valuation.low_confidence is False
+
+
+@pytest.mark.parametrize("zero", [0, "0", -1])
+def test_prices_of_0_and_less_are_no_estimate(zero: object) -> None:
+    """A rule test on the sample with its prices replaced by hand: the service has not been
+    seen sending 0 here ([H]), but no flat costs 0 (``Dto._positive``). The count of
+    transactions is no price: 0 stays a count."""
+    data = api_sample()
+    data.update(estimatedValue=zero, estimatedPricePerSqm=zero)
+    for price in ("averagePricePerSqm", "medianPricePerSqm", "minPricePerSqm", "maxPricePerSqm"):
+        data["stats"][price] = zero
+    data["stats"]["count"] = 0
+
+    valuation = mapped(data)
+
+    assert (valuation.estimated, valuation.price_per_m2) == (False, None)
+    assert valuation.stats == PricePerM2Stats(count=0)
+    assert valuation.low_confidence is False  # no estimate: NO_ESTIMATE says what to do
+
+
+@pytest.mark.parametrize(
+    "missing",
+    [
+        dict(estimatedPricePerSqm=0),
+        dict(estimatedPricePerSqm=None),
+        dict(estimatedValue=0),
+        dict(estimatedValue=""),
+    ],
+    ids=str,
+)
+def test_the_value_and_the_price_per_m2_are_one_estimate(missing: dict[str, object]) -> None:
+    """A rule test on the sample edited by hand: [P] both samples give the value and the
+    price per m² together, so one without the other is no estimate (never a value of null
+    next to a price per m²)."""
+    data = api_sample()
+    data.update(missing)
+
+    valuation = mapped(data)
+
+    assert (valuation.estimated_value, valuation.price_per_m2) == (None, None)
+
+
+@pytest.mark.parametrize("ceiling", [0, "0", 0.4, None, ""])
+def test_a_ceiling_of_0_or_none_is_no_ceiling(ceiling: object) -> None:
+    """A rule test on the sample edited by hand (1000 in every capture): a ceiling that
+    rounds to 0 m, or none, never makes the radius the widest."""
+    data = api_sample()
+    data["radiusCeilingM"] = ceiling
+
+    valuation = mapped(data)
+    found = EstimatePropertyValueResult(listing=valuation.nearest())
+
+    assert valuation.radius_ceiling_m is None and not valuation.at_widest_radius
+    assert found.caveat() is None and found.hint is None
+
+
+@pytest.mark.parametrize(
+    "missing", ["estimatedValue", "estimatedPricePerSqm", "radiusCeilingM", "transactions"]
+)
 def test_a_renamed_field_breaks_the_contract(missing: str) -> None:
     data = api_sample()
     del data[missing]

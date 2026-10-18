@@ -3,14 +3,18 @@
 from support.builders.buildings import building_with_units
 from support.golden.mcp import BUILDING_TOOL, INJECTED, Case, building_is, case
 from support.golden.routes import building_answer, trend_answer
+from support.providers.routes.buildings import CISNA, building_routes, cisna_routes
 from support.providers.routes.buildings import SLUG as BUILDING_SLUG
-from support.providers.routes.buildings import building_routes
 
 CASES: dict[str, Case] = {
     # get_building
     "building": case(BUILDING_TOOL, building_routes, building_slug=BUILDING_SLUG),
     "building_trend": case(
         BUILDING_TOOL, building_routes, building_slug=BUILDING_SLUG, include_trend=True
+    ),
+    # The building cisna as sent (tests/fixtures/api/): other transactions, no trend.
+    "building_cisna_trend": case(
+        BUILDING_TOOL, cisna_routes, building_slug=CISNA, include_trend=True
     ),
     "building_60_units": case(
         BUILDING_TOOL, building_is(building_with_units(60)), building_slug=BUILDING_SLUG

@@ -132,6 +132,15 @@ class Dto(BaseModel):
         return float(value)
 
     @classmethod
+    def _positive(cls, value: int | float | str | None) -> float | None:
+        """A price or an area as ``_number`` gives it, with 0 and less as no value: no flat
+        has a price or an area of 0, and the service writes 0 where it has none
+        ([P 2026-10-13] monthly statistics; [P 2026-10-15] ``city-transaction-stats``,
+        tests/fixtures/api/city_tx_stats_20261015.json)."""
+        found = cls._number(value)
+        return found if found is not None and found > 0 else None
+
+    @classmethod
     def _rounded(cls, value: int | float | str | None) -> int | None:
         """The nearest whole number (``"9"``, ``9.0`` -> 9, ``1.5`` -> 2); ``None`` for no
         value."""

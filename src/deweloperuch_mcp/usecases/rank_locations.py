@@ -1,5 +1,6 @@
 """Use case ``RankLocations``: cities or powiats ranked by their RCN transactions, with what
-to do about the places left out and the service's page of the ranking."""
+to do about the places left out (also by the price orders' default threshold) and the
+service's page of the ranking."""
 
 from dataclasses import dataclass
 from typing import Self
@@ -38,10 +39,11 @@ class RankLocationsRequest:
         level: object = RankingLevel.CITY.value,
         sort: object = RankingOrder.TRANSACTIONS_DESC.value,
         limit: object = DEFAULT_RANKING_LIMIT,
-        min_transactions: object = 0,
+        min_transactions: object = None,
     ) -> Self:
         """Checked in this order: level, sort, limit, min_transactions. A refusal names the
-        parameter (``InvalidInputError``)."""
+        parameter (``InvalidInputError``). ``min_transactions`` not given (``None``) leaves
+        the threshold to the order (``RankingCriteria.threshold``)."""
         with ParameterCheck():
             return cls(
                 criteria=RankingCriteria(
@@ -62,10 +64,25 @@ class RankLocationsResult:
 
     @property
     def hint(self) -> str | None:
-        """What to do when no place is left or the ranking is cut (D4)."""
+        """That the price orders' default threshold left places out (only when it did), and
+        what to do when no place is left or the ranking is cut (D4)."""
+        said = [part for part in (self._left_out_by_default(), self._cut()) if part]
+        return " ".join(said) or None
+
+    def _left_out_by_default(self) -> str | None:
+        criteria = self.ranking.criteria
+        if not (criteria.threshold_by_default and self.ranking.left_out):
+            return None
+        return (
+            "Przy sortowaniu po cenie pominięto miejsca z mniej niż "
+            f"{criteria.threshold.value} transakcjami (domyślny próg); wszystkie miejsca "
+            "pokaże min_transactions=0."
+        )
+
+    def _cut(self) -> str | None:
         ranking = self.ranking
         criteria = ranking.criteria
-        least = criteria.min_transactions.value
+        least = criteria.threshold.value
         if not ranking.items and least:
             return (
                 f"Żadne miejsce nie ma co najmniej {least} transakcji: zmniejsz min_transactions."

@@ -9,6 +9,9 @@ from pydantic import ValidationError
 
 from deweloperuch_mcp.api.dto.city_trend_dto import CityTrendDto
 from deweloperuch_mcp.api.dto.monthly_transaction_stats_dto import MonthlyTransactionStatsDto
+from deweloperuch_mcp.models.government_statistics import PeriodCount
+from deweloperuch_mcp.models.transaction_series import Granularity, TransactionSeries
+from support.builders.transactions import WARSZAWA, warszawa_quarters
 from support.providers.samples import body, envelope
 
 
@@ -20,6 +23,22 @@ def test_the_quarterly_sample() -> None:
         ("2017-Q2", 7695, 2854),
         ("2017-Q3", 7844, 2893),
     ]
+
+
+def test_every_quarter_of_warsaw_ends_with_two_incomplete_ones() -> None:
+    """tests/fixtures/api/avg_trend_city_warszawa_20261016.json, whole: 39 quarters;
+    2026-Q2 (1,034) and 2026-Q3 (37, its average price per m² about twice the usual) are
+    incomplete, 2026-Q1 (3,721) is the last complete quarter."""
+    quarters = CityTrendDto.model_validate(warszawa_quarters()).to_model()
+
+    found = TransactionSeries(WARSZAWA, Granularity.QUARTER, quarters).latest(PeriodCount(39))
+
+    assert (found.total, found.available_from) == (39, "2017-Q1")
+    assert [item.period for item in found.periods if item.incomplete] == ["2026-Q2", "2026-Q3"]
+    assert found.last_complete_period == "2026-Q1"
+    assert found.few_transactions is False
+    assert [item.transactions for item in found.periods[-3:]] == [3721, 1034, 37]
+    assert found.periods[-1].average_price_per_m2 == 33176
 
 
 @pytest.mark.parametrize(

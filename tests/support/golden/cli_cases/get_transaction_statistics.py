@@ -1,6 +1,6 @@
 """The golden cases of ``deweloperuch stats transactions`` (tests/golden/cli/<case>.json)."""
 
-from support.builders.transactions import months
+from support.builders.transactions import months, warszawa_months
 from support.golden.cli import INJECTED, TX, Case, case
 from support.providers.routes.transactions import transaction_answer, transaction_routes
 
@@ -8,6 +8,12 @@ CASES: dict[str, Case] = {
     # stats transactions: the samples (Warsaw), more periods as copies of their rows
     "help_stats_transactions": case(*TX, "--help"),
     "stats_transactions_warszawa": case(*TX, "warszawa", service=transaction_routes),
+    # every month of Warsaw on 2026-10-15 (tests/fixtures/api/), with its incomplete tail
+    "stats_transactions_warszawa_20261015": case(
+        *TX,
+        "warszawa",
+        service=lambda router: transaction_routes(router, monthly=warszawa_months()),
+    ),
     "stats_transactions_warszawa_json": case(*TX, "warszawa", "--json", service=transaction_routes),
     "stats_transactions_warszawa_quarter": case(
         *TX, "warszawa", "--granularity", "quarter", service=transaction_routes

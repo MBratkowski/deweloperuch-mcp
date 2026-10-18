@@ -1,7 +1,7 @@
 {
   "server": {
     "name": "deweloperuch",
-    "instructions": "Dane z deweloperuch.pl o mieszkaniach w Polsce. Typowy plan: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami), potem get_offer (oferta z historią ceny) albo get_investment (oferty jednej inwestycji). Projekty w mieście i slug inwestycji po nazwie daje search_investments, slug dewelopera po nazwie search_developers (dalej get_developer). Ocena ceny oferty: get_offer (price_flags), potem porównaj z get_market_statistics albo estimate_property_value.\n\nTrzy rodzaje cen, nie mieszaj ich: ofertowe deweloperów (search_offers, get_market_statistics, search_investments); transakcyjne z rejestru RCN (get_transaction_statistics, rank_locations, get_building, estimate_property_value; najnowsze okresy są niepełne); oficjalne NBP i GUS, obok cen także mieszkania oddane, bezrobocie i wynagrodzenia (get_government_statistics). Jego location to nazwa miasta małymi literami bez polskich znaków; nie wymaga search_locations.\n\nSerwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Gdy narzędzie odrzuci argumenty, popraw wskazane pola zgodnie z komunikatem i ponów. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert."
+    "instructions": "Dane z deweloperuch.pl o mieszkaniach w Polsce. Typowy plan: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami), potem get_offer (oferta z historią ceny) albo get_investment (oferty jednej inwestycji). Projekty w mieście i slug inwestycji po nazwie daje search_investments, slug dewelopera po nazwie search_developers (dalej get_developer). Ocena ceny oferty: get_offer (price_flags), potem porównaj z get_market_statistics albo estimate_property_value.\n\nTrzy rodzaje cen, nie mieszaj ich: ofertowe deweloperów (search_offers, get_market_statistics, search_investments); transakcyjne z rejestru RCN (get_transaction_statistics, rank_locations, get_building, estimate_property_value; najnowsze okresy są niepełne, get_transaction_statistics oznacza je incomplete); oficjalne NBP i GUS, obok cen także mieszkania oddane, bezrobocie i wynagrodzenia (get_government_statistics). Jego location to nazwa miasta małymi literami bez polskich znaków; nie wymaga search_locations.\n\nSerwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Gdy narzędzie odrzuci argumenty, popraw wskazane pola zgodnie z komunikatem i ponów. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert."
   },
   "tools": [
     {
@@ -2674,7 +2674,7 @@
     {
       "name": "get_transaction_statistics",
       "title": "Ceny transakcyjne w czasie",
-      "description": "Zwraca ceny transakcyjne mieszkań w mieście z Rejestru Cen Nieruchomości (RCN) w kolejnych miesiącach albo kwartałach: liczbę transakcji i ceny za m². To ceny faktycznych sprzedaży, a nie ceny ofertowe deweloperów (search_offers, get_market_statistics) ani oficjalne ceny NBP (get_government_statistics).\n\ngranularity=month (domyślnie): mediana i średnia ceny za m², mediana metrażu i mediana ceny mieszkania. granularity=quarter: tylko średnia cena za m² i liczba transakcji, za to dłuższa historia. Miesiące i kwartały to różne statystyki: nie łącz ich w jeden wykres ani szereg.\n\nZwraca periods (od najstarszego; okres bez transakcji nie ma cen) oraz total, returned, truncated, available_from, hint, note i stats_url (link dla użytkownika).\n\nOgraniczenia: tylko mieszkania i całe miasta (city_slug z search_locations; bez dzielnic, ulic i całej Polski). Domyślnie ostatnie 12 okresów; truncated=true znaczy, że są starsze (zwiększ periods, najwyżej 60). Najnowsze miesiące są niepełne, bo transakcje trafiają do RCN z kilkumiesięcznym opóźnieniem: mają zaniżoną liczbę transakcji i niepewne ceny, więc ich spadku nie traktuj jako trendu (przeczytaj note).",
+      "description": "Zwraca ceny transakcyjne mieszkań w mieście z Rejestru Cen Nieruchomości (RCN) w kolejnych miesiącach albo kwartałach: liczbę transakcji i ceny za m². To ceny faktycznych sprzedaży, a nie ceny ofertowe deweloperów (search_offers, get_market_statistics) ani oficjalne ceny NBP (get_government_statistics).\n\ngranularity=month (domyślnie): mediana i średnia ceny za m², mediana metrażu i mediana ceny mieszkania. granularity=quarter: tylko średnia cena za m² i liczba transakcji, za to dłuższa historia. Miesiące i kwartały to różne statystyki: nie łącz ich w jeden wykres ani szereg.\n\nZwraca periods (od najstarszego; okres bez transakcji nie ma cen) oraz total, returned, truncated, available_from, last_complete_period, hint, note i stats_url (link).\n\nOgraniczenia: tylko mieszkania i całe miasta (city_slug z search_locations; bez dzielnic, ulic i całej Polski). Domyślnie ostatnie 12 okresów; truncated=true znaczy, że są starsze (zwiększ periods, najwyżej 60). Najnowsze okresy są niepełne (opóźnienie RCN). Okres z incomplete=true pomiń: nie podawaj jego cen jako trendu. Trend kończ na last_complete_period (jego dane też mogą się zmienić); brak pola (za mało transakcji): czytaj hint.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2721,6 +2721,19 @@
                 "description": "Liczba transakcji w okresie (w najnowszych okresach zaniżona, zob. note).",
                 "title": "Transactions",
                 "type": "integer"
+              },
+              "incomplete": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "true: okres ma mniej niż połowę zwykłej liczby transakcji, bo dane RCN są jeszcze niepełne; nie wyciągaj wniosków z jego cen ani liczby transakcji. Pole jest tylko przy takich okresach.",
+                "title": "Incomplete"
               },
               "median_price_per_m2": {
                 "anyOf": [
@@ -2813,6 +2826,19 @@
             "title": "Available From",
             "type": "string"
           },
+          "last_complete_period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Najnowszy okres ze zwykłą liczbą transakcji (nie incomplete), pokazany lub nie; na nim kończ trend, choć jego dane mogą się jeszcze zmienić. Brak pola: za krótka historia albo za mało transakcji, by to ocenić.",
+            "title": "Last Complete Period"
+          },
           "hint": {
             "anyOf": [
               {
@@ -2823,7 +2849,7 @@
               }
             ],
             "default": null,
-            "description": "Co zrobić dalej, gdy wynik jest obcięty.",
+            "description": "Co zrobić dalej: gdy wynik jest obcięty, ma okresy incomplete albo za mało transakcji, by je ocenić.",
             "title": "Hint"
           },
           "note": {
@@ -2874,7 +2900,7 @@
     {
       "name": "rank_locations",
       "title": "Ranking miast i powiatów",
-      "description": "Ranking miejscowości (level=city) albo powiatów (level=powiat) w Polsce według transakcji z Rejestru Cen Nieruchomości (RCN): liczba transakcji i cena transakcyjna za m². Dla porównania wielu miast (gdzie najwięcej transakcji, gdzie najdrożej, gdzie najtaniej): to narzędzie; dla trendu jednego miasta w czasie: get_transaction_statistics. To ceny transakcyjne, nie ofertowe; oferty deweloperów daje search_offers.\n\nZwraca total (miejsca z co najmniej min_transactions transakcji), returned, truncated, hint i items (name, city_slug albo powiat_id, transaction_count, price_per_m2, area_m2, price); dla city także ranking_url (strona rankingu na deweloperuch.pl: podaj ją użytkownikowi jako link). powiat_id jest informacyjny: żadne narzędzie go nie przyjmuje.\n\nOgraniczenia: serwis nie podaje okresu ani tego, czy ceny i metraż to średnie, czy mediany: przedstawiaj je jako wartości podane przez serwis. Liczby transakcji powiatów obejmują wiele lat: służą tylko do uporządkowania, nie są bieżącym wolumenem; nie porównuj ich z liczbami miejscowości. Przy sortowaniu miejscowości po cenie podaj min_transactions (np. 50): przy kilku transakcjach cena bywa przypadkowa.",
+      "description": "Ranking miejscowości (level=city) albo powiatów (level=powiat) w Polsce według transakcji z Rejestru Cen Nieruchomości (RCN): liczba transakcji i cena transakcyjna za m². Dla porównania wielu miast: to narzędzie; dla trendu jednego miasta w czasie: get_transaction_statistics. To ceny transakcyjne, nie ofertowe; oferty deweloperów daje search_offers.\n\nZwraca min_transactions (zastosowany próg), total (miejsca z co najmniej tyloma transakcjami), returned, truncated, hint i items (name, city_slug albo powiat_id, transaction_count, price_per_m2, area_m2, price); dla city także ranking_url (strona rankingu na deweloperuch.pl: podaj ją użytkownikowi jako link). powiat_id jest informacyjny: żadne narzędzie go nie przyjmuje.\n\nOgraniczenia: serwis nie podaje okresu ani tego, czy ceny i metraż to średnie, czy mediany: przedstawiaj je jako wartości podane przez serwis. Liczby transakcji powiatów obejmują wiele lat: służą tylko do uporządkowania, nie są bieżącym wolumenem; nie porównuj ich z liczbami miejscowości. Sortowanie po cenie domyślnie pomija miejsca poniżej 20 transakcji (cena bywa przypadkowa); min_transactions=0 pokazuje wszystkie, np. 50 daje stabilniejsze ceny.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2908,12 +2934,19 @@
             "type": "integer"
           },
           "min_transactions": {
-            "default": 0,
-            "description": "Pomiń miejsca z mniejszą liczbą transakcji; domyślnie 0 (wszystkie). Przy sortowaniu miejscowości (level=city) po cenie podaj np. 50.",
-            "maximum": 10000000,
-            "minimum": 0,
-            "title": "Najmniej transakcji",
-            "type": "integer"
+            "anyOf": [
+              {
+                "maximum": 10000000,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Brak = próg domyślny: 20 przy sortowaniu po cenie, 0 przy transactions_desc. 0 = wszystkie miejsca. Pomija miejsca z mniejszą liczbą transakcji; np. 50 daje stabilniejsze ceny.",
+            "title": "Najmniej transakcji"
           }
         },
         "title": "rank_locationsArguments",
@@ -3019,7 +3052,7 @@
             "type": "string"
           },
           "min_transactions": {
-            "description": "Próg z argumentu min_transactions (0 = wszystkie miejsca).",
+            "description": "Zastosowany próg: min_transactions z argumentu, a bez niego domyślny: 20 przy sortowaniu po cenie, 0 przy transactions_desc (0 = wszystkie miejsca).",
             "title": "Min Transactions",
             "type": "integer"
           },
@@ -3048,7 +3081,7 @@
               }
             ],
             "default": null,
-            "description": "Co zrobić, gdy wynik jest obcięty albo pusty.",
+            "description": "Co zrobić, gdy wynik jest obcięty albo pusty, oraz czy przy sortowaniu po cenie pominięto małe miejsca (domyślny próg).",
             "title": "Hint"
           },
           "ranking_url": {
@@ -3092,7 +3125,7 @@
     {
       "name": "get_building",
       "title": "Budynek z transakcjami",
-      "description": "Zwraca budynek z rejestru cen transakcyjnych (RCN): adres, miasto, współrzędne, średnie ceny podane przez serwis i lokale (mieszkania) z ich transakcjami: datą, ceną, ceną za m², rynkiem (pierwotny albo wtórny), rodzajem transakcji i stronami. To ceny, za które lokale sprzedano, a nie ceny ofertowe deweloperów. building_slug to ostatni człon adresu strony budynku z cenami transakcyjnymi na deweloperuch.pl, np. 23-marca-79c-sopot albo aleja-krakowska-279-warszawa; gdy go nie znasz, poproś użytkownika o link do tej strony. building_url to ta strona: podawaj ją użytkownikowi jako link. Kolejność: lokale od tego z najnowszą transakcją, transakcje każdego lokalu od najstarszej.\n\nOgraniczenia: tylko budynki z mieszkaniami, nie domy. Zwraca najwyżej limit lokali (domyślnie 10); units_returned mówi, ile ich jest na liście, truncated i units_omitted, czy i ile pominięto, a units_total i transactions_total liczą cały budynek. Najnowsze miesiące bywają niepełne, bo rejestr spływa z opóźnieniem. include_trend=true dodaje średnią cenę za m² transakcji w okolicy budynku (promień radius_km) w ostatnich 12 kwartałach; to jedno zapytanie do serwisu więcej.",
+      "description": "Zwraca budynek z rejestru cen transakcyjnych (RCN): adres, współrzędne, średnie ceny podane przez serwis i lokale z transakcjami: datą, ceną, ceną za m², rynkiem, rodzajem i stronami. To ceny, za które lokale sprzedano, nie ceny ofertowe deweloperów. building_slug to ostatni człon adresu strony budynku z cenami transakcyjnymi na deweloperuch.pl, np. 23-marca-79c-sopot; gdy go nie znasz, poproś użytkownika o link do tej strony. building_url to ta strona: podaj ją jako link. Kolejność: lokale od tego z najnowszą transakcją, transakcje każdego lokalu od najstarszej. Transakcji o classification innym niż regular (udział, egzekucja, bonifikata…) nie uśredniaj ze zwykłymi: to nie zwykła sprzedaż po cenie rynkowej; liczy je non_regular_transactions.\n\nOgraniczenia: tylko budynki z mieszkaniami, nie domy. Zwraca najwyżej limit lokali (domyślnie 10); truncated i units_omitted mówią, czy i ile pominięto; units_total i transactions_total liczą cały budynek. Najnowsze miesiące bywają niepełne (rejestr spływa z opóźnieniem). include_trend=true dodaje średnią cenę za m² transakcji w okolicy budynku (promień radius_km) w ostatnich 12 kwartałach; to jedno zapytanie do serwisu więcej.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -3140,7 +3173,7 @@
                 "title": "Radius Km"
               },
               "total": {
-                "description": "Wszystkie kwartały, które ma serwis.",
+                "description": "Wszystkie kwartały, które ma serwis (0: brak trendu).",
                 "title": "Total",
                 "type": "integer"
               },
@@ -3399,9 +3432,17 @@
             "type": "string"
           },
           "name": {
-            "description": "Adres budynku wg rejestru cen.",
-            "title": "Name",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Adres budynku wg rejestru cen; brak pola: rejestr nie podaje adresu (miejscowość w city).",
+            "title": "Name"
           },
           "building_url": {
             "anyOf": [
@@ -3542,6 +3583,22 @@
             "title": "Transactions Total",
             "type": "integer"
           },
+          "non_regular_transactions": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Transakcje z classification innym niż regular w całym budynku: liczba wg rodzaju (słowa jak w classification), np. {\"share\": 1}; brak pola: brak takich transakcji. To nie zwykła sprzedaż całego lokalu po cenie rynkowej: nie uśredniaj ich ze zwykłymi. Średnie avg_* serwisu prawdopodobnie ich nie obejmują (sprawdzone w jednym budynku).",
+            "title": "Non Regular Transactions"
+          },
           "units": {
             "description": "Lokale od tego z najnowszą transakcją.",
             "items": {
@@ -3565,6 +3622,19 @@
             "title": "Truncated",
             "type": "boolean"
           },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Co zrobić dalej albo czego brakuje w wyniku, np. brak trendu w okolicy budynku.",
+            "title": "Hint"
+          },
           "neighbourhood_trend": {
             "anyOf": [
               {
@@ -3580,7 +3650,6 @@
         },
         "required": [
           "building_slug",
-          "name",
           "city",
           "city_slug",
           "units_total",
@@ -3601,7 +3670,7 @@
     {
       "name": "estimate_property_value",
       "title": "Wycena mieszkania",
-      "description": "Szacuje wartość mieszkania o danym metrażu w punkcie (lat, lng) w Polsce na podstawie cen transakcyjnych z Rejestru Cen Nieruchomości (RCN) z okolicy. Wynik jest przybliżony: to porównanie z transakcjami w pobliżu, a nie operat szacunkowy. Użyj, gdy użytkownik pyta, ile może być warte mieszkanie albo czy jego cena jest rynkowa.\n\nZwraca estimated_value (PLN), price_per_m2, radius_m i period_months (skąd i z ilu miesięcy są transakcje), stats (liczba, mediana, średnia, min i max ceny za m²) oraz comparables: najbliższe transakcje porównawcze (adres, data, cena, metraż, cena za m², piętro, odległość, rynek), z comparables_total, comparables_omitted, truncated i hint. estimated_value=null znaczy, że serwis nie podał wyceny: przeczytaj hint.\n\nWymaga współrzędnych: narzędzie nie zamienia adresu na lat i lng. Weź je od użytkownika, z search_locations (ulica lub dzielnica: to punkt przybliżony, nie konkretny budynek) albo z get_investment (współrzędne inwestycji oferty). Każde wywołanie to zapytanie do serwisu: nie wyceniaj seriami wielu punktów.",
+      "description": "Szacuje wartość mieszkania o danym metrażu w punkcie (lat, lng) w Polsce na podstawie cen transakcyjnych z Rejestru Cen Nieruchomości (RCN) z okolicy. Wynik jest przybliżony: to porównanie z transakcjami w pobliżu, a nie operat szacunkowy. Użyj, gdy użytkownik pyta, ile może być warte mieszkanie albo czy jego cena jest rynkowa.\n\nZwraca estimated_value (PLN), price_per_m2, radius_m i period_months (skąd i z ilu miesięcy są transakcje), stats (liczba, mediana, średnia, min i max ceny za m²) oraz comparables: najbliższe transakcje porównawcze (adres, data, cena, metraż, cena za m², piętro, odległość, rynek), z comparables_total, comparables_omitted, truncated i hint. estimated_value=null znaczy, że serwis nie podał wyceny: przeczytaj hint. low_confidence=true (mniej niż 5 transakcji porównawczych): wycenę podaj tylko jako orientacyjną, z zastrzeżeniem z hint.\n\nWymaga współrzędnych: narzędzie nie zamienia adresu na lat i lng. Weź je od użytkownika, z search_locations (ulica lub dzielnica: to punkt przybliżony, nie konkretny budynek) albo z get_investment (współrzędne inwestycji oferty). Każde wywołanie to zapytanie do serwisu: nie wyceniaj seriami wielu punktów.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -3880,6 +3949,19 @@
             ],
             "description": "Szacowana wartość mieszkania w PLN podana przez serwis: przybliżenie, nie operat szacunkowy. null: serwis nie podał wyceny.",
             "title": "Estimated Value"
+          },
+          "low_confidence": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "true: wycena o niskiej wiarygodności (mniej niż 5 transakcji porównawczych); hint mówi, na czym się opiera. Podaj ją tylko jako orientacyjną, z zastrzeżeniem z hint. Jest przy każdej wycenie, brak przy estimated_value=null.",
+            "title": "Low Confidence"
           },
           "price_per_m2": {
             "anyOf": [

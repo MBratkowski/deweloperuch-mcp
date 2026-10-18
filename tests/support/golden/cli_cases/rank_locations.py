@@ -2,7 +2,11 @@
 
 from support.golden.cli import Case, case
 from support.golden.routes import many_cities
-from support.providers.routes.rankings import CITY_RANKING, ranking_routes
+from support.providers.routes.rankings import (
+    CITY_RANKING,
+    captured_ranking_routes,
+    ranking_routes,
+)
 
 CASES: dict[str, Case] = {
     # stats cities: the samples (3 places of each level) and copies of their rows
@@ -21,7 +25,24 @@ CASES: dict[str, Case] = {
         service=ranking_routes,
     ),
     "stats_cities_price_desc_limit_2_of_2448": case(
-        "stats", "cities", "--sort", "price_per_m2_desc", "--limit", "2", service=many_cities
+        "stats",
+        "cities",
+        "--sort",
+        "price_per_m2_desc",
+        "--limit",
+        "2",
+        "--min-transactions",
+        "0",
+        service=many_cities,
+    ),
+    "stats_cities_price_asc_default_threshold": case(
+        "stats",
+        "cities",
+        "--sort",
+        "price_per_m2_asc",
+        "--limit",
+        "5",
+        service=captured_ranking_routes,
     ),
     "stats_cities_limit_0": case("stats", "cities", "--limit", "0", service=ranking_routes),
     "stats_cities_level_unknown": case("stats", "cities", "--level", "gmina"),

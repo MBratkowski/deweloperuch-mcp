@@ -44,6 +44,22 @@ Transakcje porównawcze: 3 · pokazano 3.
 
 The slug in brackets is a building slug for `buildings get`.
 
+## Caveat of low confidence
+When the estimate rests on fewer than 5 comparable transactions, the output has an `Uwaga: …` line with the caveat; the valuation cautions (no estimate, fractional area) are on a separate `Wskazówka: …` line. Digits are grouped (`1 000 m`) and the period reads „z ostatniego miesiąca” or „z ostatnich 24 miesięcy”. Output of `valuation estimate --lat 49.2167 --lng 22.3333 --area 50` (`tests/golden/cli/valuation_estimate_low_confidence.json`):
+
+```
+Wycena mieszkania 50 m² · 49.21670, 22.33330
+Szacowana wartość: 202 000 PLN · 4 040 PLN/m²
+Na podstawie transakcji z Rejestru Cen Nieruchomości (RCN) w promieniu 1 000 m z ostatnich 24 miesięcy; to przybliżenie, nie operat szacunkowy.
+Uwaga: Wycena oparta tylko na 2 transakcjach z promienia 1 000 m (największego, jaki serwis bierze pod uwagę) z ostatnich 24 miesięcy: to orientacyjna wartość o niskiej wiarygodności. Podaj ją z tym zastrzeżeniem i z rozpiętością cen za m² tych transakcji (2 302–5 778 PLN/m²); porównaj też z cenami transakcyjnymi miasta (get_transaction_statistics).
+Statystyki cen za m² podane przez serwis (liczba: 2): mediana 4 040 · średnia 4 040 · min 2 302 · max 5 778 PLN/m²
+Transakcje porównawcze: 2 · pokazano 2.
+  2025-06-02   ok. 850 m  ? · 65,15 m² · 149 975 PLN · 2 302 PLN/m² · rynek wtórny [cisna]
+  2026-03-19   ok. 850 m  ? · 62,31 m² · 360 027 PLN · 5 778 PLN/m² · rynek wtórny [cisna]
+```
+
+With `--json` the result has `low_confidence` (`true` / `false` when there is an estimate; `null` without one) and the caveat is in `hint` (`tests/golden/cli/valuation_estimate_low_confidence_json.json`). The estimate and the price per m² come as a pair; a value of 0 or less is no value.
+
 ## Fractional areas
 The client sends fractional areas to the service (rounded to 0.01 m²). The output area is the requested area; the service does not confirm the area it actually used. `estimated_value` and `price_per_m2` are retained as returned by the service, without recomputing the total locally.
 

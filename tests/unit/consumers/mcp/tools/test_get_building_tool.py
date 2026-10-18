@@ -19,10 +19,15 @@ from support.providers.mcp import call, data, keys, listing, text
 from support.providers.routes.buildings import (
     BUILDING,
     BUILDING_PAGE,
+    CISNA,
+    CISNA_BODY,
+    CISNA_TREND,
     SLUG,
     TREND,
     UNKNOWN_BUILDING,
     building_routes,
+    cisna_routes,
+    fixture_body,
 )
 from support.providers.samples import body
 
@@ -102,10 +107,26 @@ def test_the_tool_is_listed_read_only_with_its_schema(server: MCPServer[bootstra
         # The order, once, in the words of the output schema's fields.
         "Kolejność: lokale od tego z najnowszą transakcją, transakcje każdego lokalu od "
         "najstarszej.",
+        "building_slug to ostatni człon adresu strony budynku z cenami transakcyjnymi",
+        "Transakcji o classification innym niż regular (udział, egzekucja, bonifikata…) nie "
+        "uśredniaj ze zwykłymi",
+        "non_regular_transactions",
     ]:
         assert phrase in described
+    assert len(described) <= 1_200
     fields = listed["outputSchema"]["properties"]
     assert fields["units"]["description"] == "Lokale od tego z najnowszą transakcją."
+    others = fields["non_regular_transactions"]
+    assert dict(type="object", additionalProperties=dict(type="integer")) in others["anyOf"]
+    assert "słowa jak w classification" in others["description"]
+    # [W] (api.dto.building_dto): said modestly, never as a fact.
+    assert (
+        "Średnie avg_* serwisu prawdopodobnie ich nie obejmują (sprawdzone w jednym budynku)."
+        in others["description"]
+    )
+    assert "name" not in listed["outputSchema"]["required"]
+    assert fields["name"]["description"].startswith("Adres budynku wg rejestru cen; brak pola")
+    assert fields["hint"]["description"].startswith("Co zrobić dalej albo czego brakuje")
     unit_fields = listed["outputSchema"]["$defs"]["UnitItem"]["properties"]
     assert unit_fields["transactions"]["description"] == "Transakcje lokalu od najstarszej."
     # Where a slug comes from: the description only (and the not-found message).
@@ -141,6 +162,8 @@ def test_a_building_with_its_units_and_their_transactions(
     assert (result["units_total"], result["transactions_total"]) == (3, 3)
     assert (result["units_returned"], result["units_omitted"], result["truncated"]) == (3, 0, False)
     assert "neighbourhood_trend" not in result
+    # Regular sales only, and nothing to say.
+    assert "non_regular_transactions" not in result and "hint" not in result
     first = result["units"][0]
     assert sorted(first) == UNIT_KEYS
     assert (first["floor"], first["rooms"], first["area_m2"]) == (1, 5, 122.01)
@@ -195,6 +218,67 @@ def test_the_trend_around_the_building_when_asked(
     first = trend["quarters"][0]
     assert first == dict(period="2006-Q2", avg_price_per_m2=5706.0, transactions=25)
     assert (result["units_returned"], result["units_omitted"], result["truncated"]) == (1, 2, True)
+
+
+def test_a_building_with_transactions_that_are_no_regular_sale(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    """The building cisna as the service sent it (tests/fixtures/api/, [P 2026-10-15]):
+    a share and an enforcement sale among 7 transactions, and no trend around it."""
+    building_route, trend_route = cisna_routes(service)
+
+    result = data(call(server, TOOL, building_slug=CISNA, include_trend=True))
+
+    assert (building_route.call_count, trend_route.call_count) == (1, 1)
+    assert (result["units_total"], result["transactions_total"], result["truncated"]) == (
+        6,
+        7,
+        False,
+    )
+    assert result["non_regular_transactions"] == {"enforcement": 1, "share": 1}
+    listed = [t.get("classification") for unit in result["units"] for t in unit["transactions"]]
+    assert listed.count("regular") == 5
+    for word, count in result["non_regular_transactions"].items():
+        assert listed.count(word) == count
+    (share,) = [t for unit in result["units"] for t in unit["transactions"] if "share" in t]
+    assert (share["classification"], share["share"]) == ("share", "1/2")
+    assert (result["avg_price"], result["avg_area_m2"], result["avg_price_per_m2"]) == (
+        274600.0,
+        72.08,
+        3809.76,
+    )
+    # Blank in the register: no name, no street, and an unknown floor is no ground floor.
+    assert "name" not in result and "street" not in result
+    assert [unit.get("floor") for unit in result["units"]] == [None, None, 2, 2, 3, 3]
+    # Without quarters: the counters stay (D4), no radius, and the hint says what next.
+    assert result["neighbourhood_trend"] == dict(total=0, returned=0, truncated=False, quarters=[])
+    assert result["hint"] == (
+        "Serwis nie ma kwartałów trendu cen w okolicy tego budynku; to nie błąd i ponowienie "
+        "nic nie zmieni. Szersze tło może dać get_transaction_statistics dla city_slug "
+        "budynku (małe miejscowości mogą nie mieć tych statystyk)."
+    )
+    assert result["city_slug"] == "cisna"
+
+
+def test_zeros_of_the_service_are_no_values(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    """A rule test on hand-edited payloads: the building cisna with an average of 0 and
+    the trend sample with a quarter's price of 0 ([W], api.dto.building_dto)."""
+    building = fixture_body(CISNA_BODY)
+    building["avg_amount"] = 0
+    trend = body("api.avg_trend_building")
+    trend["data"][0]["avgPriceSqm"] = 0
+    cisna_routes(service, building)
+    service.get(CISNA_TREND).respond(200, json=trend)
+
+    result = data(call(server, TOOL, building_slug=CISNA, include_trend=True))
+
+    assert "avg_price" not in result
+    assert result["avg_area_m2"] == 72.08
+    first = result["neighbourhood_trend"]["quarters"][0]
+    assert first == dict(period="2006-Q2", transactions=25)
+    assert "hint" not in result
 
 
 def test_the_trend_holds_its_newest_12_quarters(

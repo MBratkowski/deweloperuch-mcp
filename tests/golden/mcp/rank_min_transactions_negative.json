@@ -10,7 +10,7 @@
   "results": [
     {
       "is_error": true,
-      "text": "Błędny argument narzędzia rank_locations: min_transactions musi być liczbą całkowitą z zakresu 0–10000000, podano -1. Popraw i ponów; nic nie zostało wysłane.",
+      "text": "Błędny argument narzędzia rank_locations: min_transactions musi być liczbą całkowitą z zakresu 0–10000000 albo pusty, podano -1. Popraw i ponów; nic nie zostało wysłane.",
       "structured_content": null
     }
   ],

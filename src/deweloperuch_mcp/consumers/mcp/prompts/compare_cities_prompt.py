@@ -61,6 +61,8 @@ Gdy dla miasta brak danych, wpisz „brak” zamiast zgadywać.
 Pamiętaj:
 - Ceny ofertowe (ile chcą deweloperzy) i transakcyjne (za ile sprzedano) to różne miary: \
 pokazuj je w osobnych kolumnach.
-- Transakcje trafiają do RCN z kilkumiesięcznym opóźnieniem, więc najnowsze miesiące są \
-niepełne (przeczytaj note): porównuj miasta na tych samych pełnych okresach, a spadku w \
+- Transakcje trafiają do RCN z opóźnieniem, więc najnowsze okresy są niepełne: pomiń \
+okresy z incomplete=true i porównuj miasta na tym samym okresie, nie nowszym niż \
+najwcześniejszy z last_complete_period wszystkich miast. Miasto bez last_complete_period \
+(za mało transakcji, przeczytaj hint) oznacz jako niepewne zamiast porównywać; spadku w \
 ostatnich miesiącach nie traktuj jako trendu."""

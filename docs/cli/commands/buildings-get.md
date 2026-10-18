@@ -40,6 +40,23 @@ piętro 1 · 5 pok. · 122,01 m² · 226401_4.4191.4568_BUD.3_LOK
 (… two more units)
 ```
 
+A building without a name (`tests/golden/cli/buildings_get_cisna_trend.json`, `buildings get cisna --trend`) has a header with the city instead of the address, a line with the counts of non-regular transactions (by classification word) and, with an empty trend, the hint; units without a known floor print no `piętro` part (it used to read `piętro 0`):
+
+```
+Cisna [cisna]
+Strona budynku: <building link>
+Miejsce: Cisna [cisna] · 49.21459, 22.32198
+Średnio (wg serwisu): 274 600 PLN · 72,08 m² · 3 809,76 PLN/m²
+Lokale: 6 · transakcje: 7 (od 2022-02-01 do 2026-03-19) · pokazano 6.
+Transakcje inne niż zwykłe: egzekucja 1 · udział 1.
+7 pok. · 62,31 m² · 182102_2.0002.24_BUD.12_LOK
+  2026-03-19  360 000 PLN · 5 777,56 PLN/m² · rynek wtórny · zwykła · kupujący: osoba fizyczna · sprzedający: osoba fizyczna
+…
+Wskazówka: Serwis nie ma kwartałów trendu cen w okolicy tego budynku; to nie błąd i ponowienie nic nie zmieni. Szersze tło może dać get_transaction_statistics dla city_slug budynku (małe miejscowości mogą nie mieć tych statystyk).
+```
+
+With `--json`: `name` is nullable (`null` for a building without a name), `non_regular_transactions` is `{}` when there are none, `hint` is present. Averages, a trend quarter's price and the trend radius of 0 or less are `null`; a unit's `floor` and `rooms` are `null` when the register's text is blank. The service's averages probably do not include non-regular transactions (checked in one building, T48).
+
 With `--trend` the output ends with `Trend w okolicy (promień 1 km): średnia cena za m² i liczba transakcji.` and lines such as `  2006-Q2  5 706 PLN/m² · transakcji: 25`.
 
 _Source: `src/deweloperuch_mcp/consumers/cli/commands/buildings_commands.py`, `src/deweloperuch_mcp/consumers/cli/presenters/get_building_cli_presenter.py`, `uv run deweloperuch buildings get --help`_
