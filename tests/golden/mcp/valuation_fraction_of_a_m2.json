@@ -18,6 +18,7 @@
         "lng": 21.0122,
         "area_m2": 48.5,
         "estimated_value": 1063300.0,
+        "low_confidence": false,
         "price_per_m2": 21266.0,
         "radius_m": 200,
         "period_months": 24,

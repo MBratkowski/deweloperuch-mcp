@@ -1,0 +1,36 @@
+{
+  "args": [
+    "stats",
+    "transactions",
+    "warszawa"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Ceny transakcyjne mieszkań (RCN) · warszawa · miesięcznie",
+    "Okresy: pokazano 12 z 67 (dane od 2021-01).",
+    "Wskazówka: Pokazano ostatnie 12 z 67 okresów (dane od 2021-01); starsze pokaże większa wartość periods. Okresy 2026-05, 2026-06 i 2026-07 mają mniej niż połowę zwykłej liczby transakcji (dane RCN jeszcze niepełne): nie wyciągaj wniosków z ich cen ani liczby transakcji. Ostatni okres ze zwykłą liczbą transakcji: 2026-04 (jego dane też mogą się jeszcze zmienić).",
+    "Uwaga: Ostatnie miesiące są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z okresami o zwykłej liczbie transakcji.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/ceny-transakcyjne/mieszkania/warszawa",
+    "Okres      Transakcje  Mediana PLN/m²  Średnia PLN/m²  Mediana m²  Mediana ceny PLN",
+    "2025-08         1 166          16 540          16 982        48,4           775 000",
+    "2025-09         1 297          16 424          16 885        47,9           760 000",
+    "2025-10         1 287          16 301          16 835        49,2           780 000",
+    "2025-11         1 069          16 354          16 878        48,4           770 000",
+    "2025-12         1 176          16 525          17 128        48,2           780 000",
+    "2026-01         1 073          16 542          17 185        49,4           800 000",
+    "2026-02         1 180          16 324          16 894        48,8           799 500",
+    "2026-03         1 390          16 393          16 876        48,3           770 000",
+    "2026-04           987          16 542          16 980        48,6           770 000",
+    "2026-05 *          22          15 496          16 285        52,2           754 750",
+    "2026-06 *           0               –               –           –                 –",
+    "2026-07 *          35          33 176          31 186        53,4         1 360 209",
+    "* okres niepełny: mniej niż połowa zwykłej liczby transakcji (dane RCN jeszcze niepełne).",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa [accept: application/json]"
+  ]
+}

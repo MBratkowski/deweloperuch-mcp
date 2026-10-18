@@ -89,7 +89,9 @@ class UnitDto(Dto):
 
     sale_rcn_id: int
     name: str
+    floor: str | int | float | None = None
     floor_number: Number | None = None
+    rooms: str | int | float | None = None
     rooms_number: Number | None = None
     size: Number | None = None
     sale_event_rcn: list[TransactionDto]
@@ -101,11 +103,24 @@ class UnitDto(Dto):
         return Unit(
             unit_id=self.sale_rcn_id,
             name=self.name,
-            floor=self._exact_whole(self.floor_number),
-            rooms=self._exact_whole(self.rooms_number),
+            # A blank `floor` comes with `floor_number` 0 [P 2026-10-15] (building cisna,
+            # tests/fixtures/api/): an unknown floor, not the ground floor.
+            floor=self._stated(self.floor, self.floor_number),
+            # [W] `rooms` and `rooms_number` are the same pair; no blank one seen yet.
+            rooms=self._stated(self.rooms, self.rooms_number),
             area_m2=self._number(self.size),
             transactions=tuple(transaction.to_model() for transaction in ordered),
         )
+
+    @classmethod
+    def _stated(
+        cls, given: str | int | float | None, number: int | float | str | None
+    ) -> int | None:
+        """``number`` as a whole number when the register states the value (``given``, as
+        text or as a number); ``None`` when it is missing or blank text, whatever the
+        number."""
+        blank = given is None or (isinstance(given, str) and cls._text(given) is None)
+        return None if blank else cls._exact_whole(number)
 
     @classmethod
     def _chronological(cls, transaction: TransactionDto) -> tuple[dt.date, int]:
@@ -133,7 +148,8 @@ class BuildingDto(Dto):
         return Building(
             building_id=self.invest_rcn_id,
             building_slug=self.slug,
-            name=self.name,
+            # A blank name is no address [P 2026-10-15] (building cisna).
+            name=self._text(self.name),
             city=self.city,
             city_slug=self.city_slug,
             street=self._text(self.street),
@@ -141,10 +157,18 @@ class BuildingDto(Dto):
             lng=self._number(self.longitude),
             # [W] docs/discovery/endpoints.md, map/transactions/visible: that `avg_amount`,
             # `avg_size` and `avg_price_sqm` are the service's own means over the building
-            # follows from their names; over which transactions (all classes or not) is not
-            # known, so they are passed on as given, never recomputed (tests pin the sample's).
-            avg_price=self._number(self.avg_amount),
-            avg_area_m2=self._number(self.avg_size),
-            avg_price_per_m2=self._number(self.avg_price_sqm),
+            # follows from their names; they are passed on as given, never recomputed. In
+            # the building `cisna` they and the counter `transactions` leave out its share
+            # and its enforcement sale [P 2026-10-15] (tests/contract), but that building
+            # does not tell apart the means over its `transakcja` transactions from those
+            # over the units whose last transaction is one (`last_transaction_classification`,
+            # with each unit's `amount` and `size`). Either way, and for every building, it
+            # is [W] (open question T48).
+            # [W] 0 or less is no mean: no building with such a mean is known, but the
+            # service writes 0 for no value in its monthly statistics and
+            # city-transaction-stats [P], and no flat costs 0 (Dto._positive).
+            avg_price=self._positive(self.avg_amount),
+            avg_area_m2=self._positive(self.avg_size),
+            avg_price_per_m2=self._positive(self.avg_price_sqm),
             units=tuple(unit.to_model() for unit in self.sale),
         )

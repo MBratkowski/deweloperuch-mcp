@@ -2,6 +2,7 @@
 
 import json
 import re
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -11,10 +12,23 @@ from mcp.server.mcpserver import MCPServer
 from mcp.types import CallToolResult
 
 from deweloperuch_mcp import bootstrap
-from support.builders.valuation import WITHOUT_ADDRESS, valuation_with_comparables
+from support.builders.valuation import (
+    AT_THE_WIDEST_RADIUS,
+    CISNA_CAVEAT,
+    CISNA_REQUEST,
+    IN_CISNA,
+    WITHOUT_ADDRESS,
+    at_the_widest_radius,
+    valuation_with_comparables,
+)
 from support.e2e import live
 from support.providers.mcp import call, data, keys, text, with_client
-from support.providers.routes.valuation import VALUATION, VALUATION_PATH, valuation_route
+from support.providers.routes.valuation import (
+    VALUATION,
+    VALUATION_PATH,
+    cisna_route,
+    valuation_route,
+)
 from support.providers.samples import body
 
 # The MCP server runs behind the SDK's in-memory client: its event loop needs Unix sockets.
@@ -80,6 +94,8 @@ def test_the_tool_is_read_only_and_says_what_it_gives(
         "nie zamienia adresu na lat i lng",
         "nie wyceniaj seriami",
         "comparables_total, comparables_omitted, truncated i hint",
+        "low_confidence=true (mniej niż 5 transakcji porównawczych)",
+        "z zastrzeżeniem z hint",
     ):
         assert said in description
     visible = json.dumps([shown["description"], shown["inputSchema"]], ensure_ascii=False)
@@ -120,6 +136,7 @@ def test_a_valuation_with_the_defaults(
         "lng",
         "area_m2",
         "estimated_value",
+        "low_confidence",
         "price_per_m2",
         "radius_m",
         "period_months",
@@ -132,6 +149,7 @@ def test_a_valuation_with_the_defaults(
     ]
     assert (result["lat"], result["lng"], result["area_m2"]) == (52.2297, 21.0122, 50)
     assert (result["estimated_value"], result["price_per_m2"]) == (1_063_300, 21_266)
+    assert result["low_confidence"] is False  # 9 transactions from 200 m of at most 1000 m
     assert (result["radius_m"], result["period_months"]) == (200, 24)
     assert result["stats"] == {
         "count": 9,
@@ -155,16 +173,72 @@ def test_a_valuation_with_the_defaults(
     }
 
 
+@pytest.mark.parametrize(
+    ("answer", "point"),
+    [(valuation_route, POINT), (cisna_route, IN_CISNA)],
+    ids=["sample", "cisna"],
+)
 def test_the_result_has_no_backend_names_nor_working_data(
-    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+    server: MCPServer[bootstrap.Session],
+    service: respx.MockRouter,
+    answer: Callable[[respx.MockRouter], respx.Route],
+    point: dict[str, Any],
 ) -> None:
-    """D3 and D5: the 180 KB answer is mostly radiusPool and estimationContext."""
-    valuation_route(service)
+    """D3 and D5: the 180 KB answer is mostly radiusPool and estimationContext; the Cisna
+    capture is a whole answer, with the ceiling of the radius."""
+    answer(service)
 
-    result = call(server, TOOL, **POINT)
+    result = call(server, TOOL, **point)
 
     assert not KEY_NAMES.search(" ".join(keys(data(result))))
     assert not WORKING_DATA.search(text(result))
+
+
+def test_an_estimate_of_low_confidence_says_so_and_why(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    """Cisna [P 2026-10-15]: 2 transactions from the widest radius (1000 m)."""
+    route = cisna_route(service)
+
+    result = data(call(server, TOOL, **IN_CISNA))
+
+    assert [str(c.request.url) for c in route.calls] == [CISNA_REQUEST]
+    assert (result["estimated_value"], result["low_confidence"]) == (202_000, True)
+    assert (result["radius_m"], result["period_months"], result["stats"]["count"]) == (1000, 24, 2)
+    assert (result["comparables_total"], result["truncated"]) == (2, False)
+    assert result["hint"] == CISNA_CAVEAT
+
+
+def test_the_caveat_comes_before_the_comparables_left_out(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    cisna_route(service)
+
+    result = data(call(server, TOOL, **IN_CISNA, limit=1))
+
+    assert result["low_confidence"] is True
+    assert result["hint"] == (
+        f"{CISNA_CAVEAT} Pokazano 1 najbliższą z 2 transakcji porównawczych; więcej pokaże "
+        "większy limit (najwyżej 50)."
+    )
+
+
+def test_the_widest_radius_alone_is_said_without_low_confidence(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    """A rule test on the sample edited by hand (at_the_widest_radius): 22 transactions from
+    1000 m make a broader estimate, not an unreliable one."""
+    valuation_route(service, at_the_widest_radius(22))
+
+    shown = call(server, TOOL, **POINT)
+    result = data(shown)
+
+    assert (result["low_confidence"], result["radius_m"]) == (False, 1000)
+    assert result["hint"] == (
+        f"{AT_THE_WIDEST_RADIUS} Pokazano 10 najbliższych z 22 transakcji porównawczych; "
+        "więcej pokaże większy limit (najwyżej 50)."
+    )
+    assert "wiarygodności" not in text(shown)
 
 
 def test_the_address_goes_to_the_service_as_in_the_sample(
@@ -277,6 +351,7 @@ def test_without_an_estimate_the_value_is_null_and_the_hint_says_why(
 
     assert result["estimated_value"] is None
     assert "price_per_m2" not in result and "stats" not in result
+    assert "low_confidence" not in result  # no estimate to trust or not
     assert result["hint"] == (
         "Serwis nie podał wyceny dla tego miejsca; w promieniu może nie być transakcji."
     )

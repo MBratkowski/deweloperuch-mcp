@@ -51,6 +51,7 @@ class LocationRankingView(View):
     """``city`` or ``powiat``."""
     sort: str
     min_transactions: int
+    """The threshold applied: ``min_transactions`` as given, else the order's default."""
     total: int
     """Places with at least ``min_transactions`` transactions."""
     returned: int
@@ -68,7 +69,7 @@ class LocationRankingView(View):
         return cls(
             level=criteria.level.value,
             sort=criteria.order.value,
-            min_transactions=criteria.min_transactions.value,
+            min_transactions=criteria.threshold.value,
             total=ranking.total,
             returned=ranking.returned,
             truncated=ranking.truncated,

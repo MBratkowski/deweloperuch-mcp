@@ -9,7 +9,13 @@ from deweloperuch_mcp.consumers.cli.support.common import ExitCode
 from deweloperuch_mcp.throttle import RequestLimiter
 from support.builders.rankings import INJECTED, LEAKS, RANKING_PAGE, ranking_with_places
 from support.providers.cli import run_cli
-from support.providers.routes.rankings import CITY_RANKING, ranking_routes
+from support.providers.routes.rankings import (
+    CITIES_2026_10_15,
+    CITY_RANKING,
+    captured,
+    captured_ranking_routes,
+    ranking_routes,
+)
 
 # The MCP server runs behind the SDK's in-memory client: its event loop needs Unix sockets.
 pytestmark = pytest.mark.usefixtures("unix_sockets_for_the_event_loop")
@@ -61,6 +67,78 @@ def test_stats_cities_of_powiats_from_the_cheapest(
         "2. powiat Warszawa [id 302] · transakcji: 351 314 · 16 367 PLN/m² · 48,6 m² · 780 000 PLN",
         CAVEAT,
     ]
+
+
+LEFT_OUT = (
+    "Przy sortowaniu po cenie pominięto miejsca z mniej niż 20 transakcjami (domyślny próg); "
+    "wszystkie miejsca pokaże min_transactions=0."
+)
+"""The hint's word on the price orders' default threshold."""
+
+
+def test_stats_cities_by_price_leaves_out_small_places_unless_asked(
+    limiter: RequestLimiter, service: respx.MockRouter
+) -> None:
+    """The complete answer of 2026-10-15: without ``--min-transactions`` a price order
+    ranks the places of at least 20 transactions and says so."""
+    captured_ranking_routes(service)
+
+    result = run_cli(limiter, "stats", "cities", "--sort", "price_per_m2_asc", "--limit", "2")
+
+    assert result.exit_code == ExitCode.OK, result.output
+    assert result.stdout.splitlines() == [
+        "Ranking miejscowości od najniższej ceny za m²: pokazano 2 z 258 (co najmniej 20 "
+        "transakcji).",
+        f"Wskazówka: {LEFT_OUT} Pokazano pierwsze 2 z 258 miejscowości; kolejne pokaże "
+        "większy limit (najwyżej 100).",
+        f"Ranking miast na deweloperuch.pl: {RANKING_PAGE}",
+        "1. Kamienna Góra [kamienna-gora] · transakcji: 37 · 3 394 PLN/m² · 46,6 m² · 150 000 PLN",
+        "2. Boguszów-gorce [boguszow-gorce] · transakcji: 32 · 3 524 PLN/m² · 43,1 m² · "
+        "132 500 PLN",
+        CAVEAT,
+    ]
+
+
+def test_stats_cities_by_price_with_min_transactions_0_ranks_every_place(
+    limiter: RequestLimiter, service: respx.MockRouter
+) -> None:
+    captured_ranking_routes(service)
+
+    result = run_cli(
+        limiter,
+        "stats",
+        "cities",
+        "--sort",
+        "price_per_m2_asc",
+        "--limit",
+        "1",
+        "--min-transactions",
+        "0",
+    )
+
+    assert result.exit_code == ExitCode.OK, result.output
+    lines = result.stdout.splitlines()
+    assert lines[0] == "Ranking miejscowości od najniższej ceny za m²: pokazano 1 z 2 529."
+    assert LEFT_OUT not in result.stdout
+    assert lines[3] == (
+        "1. Miejsce Piastowe [miejsce-piastowe] · transakcji: 1 · 260 PLN/m² · 115,2 m² · "
+        "30 000 PLN"
+    )
+
+
+def test_a_place_of_zeros_has_no_price_area_or_price(
+    limiter: RequestLimiter, service: respx.MockRouter
+) -> None:
+    """The one row of the complete answer of 2026-10-15 with 0 for all three (a real row,
+    served alone)."""
+    rows = [row for row in captured(CITIES_2026_10_15) if row["city"] == "Ignatki-osiedle"]
+    ranking_routes(service, cities=rows)
+
+    result = run_cli(limiter, "stats", "cities", "--json")
+
+    assert result.exit_code == ExitCode.OK, result.output
+    (item,) = json.loads(result.stdout)["items"]
+    assert (item["price_per_m2"], item["area_m2"], item["price"]) == (None, None, None)
 
 
 def test_stats_cities_as_json_is_the_view(

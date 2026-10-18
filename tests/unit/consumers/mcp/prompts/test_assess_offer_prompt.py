@@ -43,6 +43,13 @@ def test_the_verdict_keeps_asking_and_transaction_prices_apart() -> None:
     assert "status=archived" in said
 
 
+def test_a_valuation_of_low_confidence_is_passed_on_with_its_caveat() -> None:
+    said = PROMPT.render(offer_id="2377", investment_slug="smolna")
+
+    assert "low_confidence=true (mniej niż 5 transakcji porównawczych)" in said
+    assert "przekaż zastrzeżenie z pola hint" in said
+
+
 def test_empty_arguments_ask_the_user() -> None:
     said = PROMPT.render(offer_id=" ", investment_slug="")
 

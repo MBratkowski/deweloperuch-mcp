@@ -11,8 +11,10 @@ through, so a new one is shown instead of failing.
 
 - ``Building.listing``: what a result shows: the units whose last transaction is the
   newest first, at most ``limit`` of them, with the number left out (D4).
+- ``Building.non_regular_transactions``: the transactions of the building that are no
+  regular sale (a share, an enforcement sale...), counted by class.
 - ``NeighbourhoodTrend.latest``: the newest quarters of the price per m² around the
-  building, with the number of older ones left out (D4).
+  building, with the number of older ones left out (D4); ``empty``: none at all.
 """
 
 import datetime as dt
@@ -149,15 +151,17 @@ class Building:
     """The register's number of the building (its neighbourhood trend is kept under
     it); never shown."""
     building_slug: str
-    name: str
-    """The address, as the register writes it (``23 Marca 79C``)."""
+    name: str | None
+    """The address, as the register writes it (``23 Marca 79C``); ``None`` when it gives
+    none, as for a building known only by its town."""
     city: str
     city_slug: str
     street: str | None = None
     lat: float | None = None
     lng: float | None = None
     avg_price: float | None = None
-    """The mean transaction price, as the service counts it."""
+    """The mean transaction price, as the service counts it (over the regular
+    transactions only, it seems: [W], ``api.dto.building_dto``)."""
     avg_area_m2: float | None = None
     avg_price_per_m2: float | None = None
     units: tuple[Unit, ...] = ()
@@ -178,6 +182,22 @@ class Building:
     @property
     def last_sold_on(self) -> dt.date | None:
         return max((d for d in (unit.last_sold_on for unit in self.units) if d), default=None)
+
+    def non_regular_transactions(self) -> dict[str, int]:
+        """How many transactions of the whole building are of each class other than
+        ``regular`` (a share, an enforcement sale...: no sale of a whole unit at a market
+        price), only the classes that occur, the most frequent first (equal ones by class).
+
+        An unknown class counts under its own word, as a transaction shows it; a
+        transaction without a class does not count, since what none means is not known
+        (every transaction seen so far has one [P])."""
+        counts: dict[str, int] = {}
+        for unit in self.units:
+            for transaction in unit.transactions:
+                found = transaction.classification
+                if found is not None and found != REGULAR:
+                    counts[found] = counts.get(found, 0) + 1
+        return dict(sorted(counts.items(), key=lambda item: (-item[1], item[0])))
 
     def listing(self, limit: UnitsLimit | None = None) -> "UnitListing":
         """The units whose last transaction is the newest first (those without one last;
@@ -230,6 +250,11 @@ class NeighbourhoodTrend:
     def total(self) -> int:
         """Every quarter the service has."""
         return len(self.quarters) + self.omitted
+
+    @property
+    def empty(self) -> bool:
+        """The service has no quarter at all (not: none of them was kept)."""
+        return self.total == 0
 
     def latest(self, count: int | None) -> Self:
         """The newest ``count`` quarters (all of them for ``None``)."""

@@ -6,14 +6,17 @@ from pathlib import Path
 import pytest
 import respx
 
+from deweloperuch_mcp.usecases.get_building import NO_TREND_QUARTERS
 from support.builders.buildings import NOT_FOUND, UNKNOWN, trend_with_quarters
 from support.providers.cli import buildings_cli
 from support.providers.routes.buildings import (
     BUILDING_PAGE,
+    CISNA,
     SLUG,
     TREND,
     UNKNOWN_BUILDING,
     building_routes,
+    cisna_routes,
 )
 
 # The MCP server runs behind the SDK's in-memory client: its event loop needs Unix sockets.
@@ -78,6 +81,49 @@ def test_the_cli_json_is_the_whole_view(tmp_path: Path, service: respx.MockRoute
         0,
         20,
     )
+    assert (view["non_regular_transactions"], view["hint"]) == ({}, None)
+
+
+def test_the_cli_shows_the_transactions_that_are_no_regular_sale(
+    tmp_path: Path, service: respx.MockRouter
+) -> None:
+    """The building cisna as the service sent it (tests/fixtures/api/, [P 2026-10-15]):
+    a share and an enforcement sale, and a trend without quarters, which is no trend."""
+    cisna_routes(service)
+
+    run = buildings_cli(tmp_path, CISNA, "--trend")
+
+    assert (run.exit_code, run.stderr) == (0, "")
+    lines = run.stdout.splitlines()
+    # No address in the register: the town heads the building.
+    assert lines[0] == "Cisna [cisna]"
+    assert lines[3:7] == [
+        "Średnio (wg serwisu): 274 600 PLN · 72,08 m² · 3 809,76 PLN/m²",
+        "Lokale: 6 · transakcje: 7 (od 2022-02-01 do 2026-03-19) · pokazano 6.",
+        "Transakcje inne niż zwykłe: egzekucja 1 · udział 1.",
+        # An unknown floor is left out, not shown as the ground floor.
+        "7 pok. · 62,31 m² · 182102_2.0002.24_BUD.12_LOK",
+    ]
+    assert "Trend w okolicy" not in run.stdout
+    assert lines[-1] == "Wskazówka: " + NO_TREND_QUARTERS
+    assert len(lines) == 6 + 6 + 7 + 1
+
+
+def test_the_cli_json_carries_the_other_transactions_and_the_hint(
+    tmp_path: Path, service: respx.MockRouter
+) -> None:
+    cisna_routes(service)
+
+    run = buildings_cli(tmp_path, CISNA, "--trend", "--json", "--limit", "0")
+
+    assert run.exit_code == 0, run.stderr
+    view = json.loads(run.stdout)
+    assert view["non_regular_transactions"] == {"enforcement": 1, "share": 1}
+    assert view["hint"] == NO_TREND_QUARTERS
+    assert view["neighbourhood_trend"] == dict(
+        radius_km=None, quarters_total=0, quarters_omitted=0, quarters=[]
+    )
+    assert (view["units"], view["units_omitted"]) == ([], 6)
 
 
 @pytest.mark.parametrize(

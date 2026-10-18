@@ -19,7 +19,7 @@
   "log": [
     [
       "INFO",
-      "UnexpectedResponseError: Wycena mieszkania: Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi. Szczegóły: /api/standalone-valuation: estimatedValue: Field required; estimatedPricePerSqm: Field required; radiusKm: Field required (i 3 innych)"
+      "UnexpectedResponseError: Wycena mieszkania: Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi. Szczegóły: /api/standalone-valuation: estimatedValue: Field required; estimatedPricePerSqm: Field required; radiusKm: Field required (i 4 innych)"
     ]
   ],
   "requests": [

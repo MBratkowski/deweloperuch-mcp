@@ -17,6 +17,9 @@ class TransactionPeriodView(View):
     period: str
     """``2025-08`` (month) or ``2025-Q3`` (quarter)."""
     transactions: int
+    incomplete: bool = False
+    """Fewer than half the usual number of transactions at the end of the series: the
+    register's data for it is not complete yet."""
     median_price_per_m2: float | None = None
     average_price_per_m2: float | None = None
     median_area_m2: float | None = None
@@ -29,6 +32,7 @@ class TransactionPeriodView(View):
         return cls(
             period=item.period,
             transactions=item.transactions,
+            incomplete=item.incomplete,
             median_price_per_m2=item.median_price_per_m2,
             average_price_per_m2=item.average_price_per_m2,
             median_area_m2=item.median_area_m2,
@@ -50,6 +54,9 @@ class TransactionStatisticsView(View):
     """Older periods exist than the ones shown."""
     available_from: str
     """The oldest period the service has."""
+    last_complete_period: str | None
+    """The newest period with a usual number of transactions (its data may still change);
+    ``None`` when there is too little history, or too few transactions, to tell."""
     hint: str | None
     note: str
     """The latest periods are incomplete (the RCN publishes transactions late)."""
@@ -67,6 +74,7 @@ class TransactionStatisticsView(View):
             returned=statistics.returned,
             truncated=statistics.truncated,
             available_from=statistics.available_from,
+            last_complete_period=statistics.last_complete_period,
             hint=found.hint,
             note=statistics.note,
             stats_url=found.stats_url,

@@ -75,7 +75,7 @@ Never guess a slug; take it from a command's output.
 ## Know which price you are showing
 
 - **Asking prices** (what developers want): `offers`, `investments`, `developers`, `stats market`. `stats market` covers active offers only.
-- **Transaction prices** (what flats sold for, from RCN): `stats transactions`, `stats cities`, `buildings get`, `valuation estimate`. They reach the register months late, so the newest periods are incomplete: read the `note` field and compare full periods; a drop in the last months is not a trend.
+- **Transaction prices** (what flats sold for, from RCN): `stats transactions`, `stats cities`, `buildings get`, `valuation estimate`. They reach the register months late, so the newest periods are incomplete: `stats transactions` marks them `incomplete` and names `last_complete_period` (end trends there; read `hint` when it is absent), and a drop in the last months is not a trend. A valuation with `low_confidence: true` (fewer than 5 comparable transactions) is only indicative: pass on the caveat from `hint`.
 - **Official statistics** (GUS and NBP: dwellings completed and started, NBP prices, wages, unemployment, population): `stats government`. They need no earlier search.
 
 Asking and transaction prices are different measures: show them in separate columns and never average them together. A valuation is an approximation from nearby transactions, not an appraisal („przybliżenie, nie operat”).

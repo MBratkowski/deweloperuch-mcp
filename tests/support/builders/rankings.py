@@ -47,14 +47,16 @@ def ranking_with_places(sample: str, count: int) -> Any:
 def criteria(
     order: RankingOrder = RankingOrder.TRANSACTIONS_DESC,
     limit: int = DEFAULT_RANKING_LIMIT,
-    min_transactions: int = 0,
+    min_transactions: int | None = 0,
     level: RankingLevel = RankingLevel.CITY,
 ) -> RankingCriteria:
+    """Criteria with ``min_transactions`` given (0 unless said otherwise); ``None``: not
+    given, so the order's default threshold applies."""
     return RankingCriteria(
         level=level,
         order=order,
         limit=RankingLimit(limit),
-        min_transactions=MinTransactions(min_transactions),
+        min_transactions=None if min_transactions is None else MinTransactions(min_transactions),
     )
 
 

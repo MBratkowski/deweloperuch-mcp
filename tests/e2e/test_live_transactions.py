@@ -1,16 +1,18 @@
 """Live: ``get_transaction_statistics`` (MCP over stdio) and ``deweloperuch stats
-transactions`` (CLI) on the real service. 3 live requests in file order, at most 4.
+transactions`` (CLI) on the real service. 3 live requests in file order, at most 5.
 
 One server for the module, so a repeat comes from its cache. Assertions are about
 structure, ranges and consistency, never about today's numbers. Behaviours marked [W]
-in the code (the meaning of the medians and averages, the lag of the latest months, other
-cities than Warsaw) are confirmed here only as far as the data shows them.
+in the code (the meaning of the medians and averages, the lag of the latest months, the
+rule of the incomplete periods, other cities than Warsaw) are confirmed here only as far
+as the data shows them.
 
 | Test | Requests |
 |---|---|
 | ``test_months_of_a_city`` | 1 (fixture) |
 | ``test_more_months_come_from_the_cache`` | 0 (cache) |
 | ``test_the_latest_months_hold_fewer_transactions`` | 0 |
+| ``test_the_incomplete_months_are_the_newest_ones`` | 0 (cache) |
 | ``test_quarters_of_a_city`` | 1 (fixture) |
 | ``test_the_cli_shows_another_city`` | 1 (CLI, own process) |
 """
@@ -46,6 +48,10 @@ MONTH_FIELDS = {
     "median_price",
 }
 QUARTER_FIELDS = {"period", "transactions", "average_price_per_m2"}
+FLAG = "incomplete"
+"""A period's flag besides its measures: in MCP results only where it is true."""
+FEW_TRANSACTIONS = "Transakcji jest za mało, by ocenić"
+"""The hint of a series with too few transactions to judge its newest periods."""
 PRICE_PER_M2 = (1_000, 100_000)
 """PLN per m² of a flat in a Polish city: far wider than any real median or mean."""
 SIZE_BUDGET = 8_000
@@ -71,11 +77,41 @@ def quarters(mcp: McpLive) -> Call:
 
 
 def check_counters(result: dict[str, Any], asked: int) -> None:
-    """D4: total, returned and truncated agree with the periods shown."""
+    """D4: total, returned and truncated agree with the periods shown; a hint when the
+    result is cut or shows incomplete periods, otherwise only one about too few
+    transactions."""
     assert result["returned"] == len(result["periods"]) == min(asked, result["total"])
     assert result["truncated"] is (result["returned"] < result["total"])
-    assert ("hint" in result) is result["truncated"]
+    if result["truncated"] or any(item.get(FLAG) for item in result["periods"]):
+        assert "hint" in result
+    else:
+        assert result.get("hint", FEW_TRANSACTIONS).startswith(FEW_TRANSACTIONS), result
     assert result["available_from"] <= result["periods"][0]["period"]
+
+
+def check_incomplete(result: dict[str, Any], *, compact: bool) -> list[str]:
+    """[W] the incomplete periods (models.transaction_series, INCOMPLETE_SHARE): only the
+    newest ones, all after ``last_complete_period`` and every shown one after it, each
+    named by the hint. MCP (``compact``) has the flag only where it is true, the CLI's
+    ``--json`` on every period. The flagged labels, oldest first."""
+    periods = result["periods"]
+    labels = [item["period"] for item in periods]
+    if compact:
+        assert all(item.get(FLAG, True) is True for item in periods), periods
+    else:
+        assert all(isinstance(item[FLAG], bool) for item in periods), periods
+    flagged = [item["period"] for item in periods if item.get(FLAG)]
+    assert flagged == labels[len(labels) - len(flagged) :], "niepełne okresy nie są ostatnie"
+    last = result.get("last_complete_period")
+    if last is not None:
+        assert all(label > last for label in flagged), (last, flagged)
+        if last in labels:
+            assert flagged == labels[labels.index(last) + 1 :], (last, flagged)
+    for label in flagged:
+        assert label in result["hint"], (label, result["hint"])
+    if FEW_TRANSACTIONS in (result.get("hint") or ""):
+        assert (flagged, last) == ([], None), "za mało transakcji, a okresy ocenione"
+    return flagged
 
 
 def check_periods(periods: list[dict[str, Any]], granularity: str) -> None:
@@ -90,7 +126,7 @@ def check_periods(periods: list[dict[str, Any]], granularity: str) -> None:
         measures = {
             key: value
             for key, value in item.items()
-            if key not in ("period", "transactions") and value is not None
+            if key not in ("period", "transactions", FLAG) and value is not None
         }
         assert all(value > 0 for value in measures.values()), (item["period"], measures)
         if item["transactions"] == 0:
@@ -108,25 +144,31 @@ def test_months_of_a_city(months: Call) -> None:
     assert (result["city_slug"], result["granularity"]) == (CITY, "month")
     check_counters(result, 12)
     check_periods(result["periods"], "month")
-    assert {key for item in result["periods"] for key in item} <= MONTH_FIELDS
+    check_incomplete(result, compact=True)
+    assert {key for item in result["periods"] for key in item} <= MONTH_FIELDS | {FLAG}
     full = [item for item in result["periods"] if set(item) == MONTH_FIELDS]
-    assert full, "żaden miesiąc nie ma median i średnich"
+    assert full, "żaden pełny miesiąc nie ma median i średnich"
     for item in full:
         assert 10 <= item["median_area_m2"] <= 200
         assert item["median_price"] > item["median_price_per_m2"]
+    # Five years of Warsaw's months, about a thousand transactions each: the month right
+    # before the incomplete ones is judged, and usual.
+    assert PERIOD["month"].fullmatch(result.get("last_complete_period", "")), result
     assert result["note"].startswith("Ostatnie miesiące są niepełne")
     assert result["stats_url"] == f"{STATS_PAGE}/{CITY}"
     assert len(months.text) < SIZE_BUDGET
 
 
 def test_more_months_come_from_the_cache(mcp: McpLive, months: Call) -> None:
-    """Cache: the same request as the fixture's, cut differently."""
+    """Cache: the same request as the fixture's, cut differently; the incomplete periods
+    are judged on the whole series, so the flags do not depend on the cut."""
     more = mcp.call(TOOL, city=CITY, periods=60)
 
     assert more.sent == 0
     result = more.data
     check_counters(result, 60)
     assert result["periods"][-len(months.data["periods"]) :] == months.data["periods"]
+    assert result["last_complete_period"] == months.data["last_complete_period"]
 
 
 def test_the_latest_months_hold_fewer_transactions(mcp: McpLive, months: Call) -> None:
@@ -146,6 +188,24 @@ def test_the_latest_months_hold_fewer_transactions(mcp: McpLive, months: Call) -
         )
 
 
+def test_the_incomplete_months_are_the_newest_ones(mcp: McpLive, months: Call) -> None:
+    """[W] the rule of the incomplete periods on today's data (the revision horizon is
+    open, T46): over 60 months the flagged ones are the newest, after the last complete
+    one, each named by the hint. A warning, not a failure, when none is flagged: the
+    register may have caught up, or the rule may need another look."""
+    more = mcp.call(TOOL, city=CITY, periods=60)
+
+    assert more.sent == 0
+    flagged = check_incomplete(more.data, compact=True)
+    if not flagged:
+        warnings.warn(
+            "żaden z ostatnich 60 miesięcy nie jest niepełny (ostatni pełny: "
+            f"{more.data.get('last_complete_period')}): opóźnienie RCN nie jest już widoczne",
+            UserWarning,
+            stacklevel=1,
+        )
+
+
 def test_quarters_of_a_city(quarters: Call, months: Call) -> None:
     result = quarters.data
 
@@ -153,7 +213,8 @@ def test_quarters_of_a_city(quarters: Call, months: Call) -> None:
     assert (result["city_slug"], result["granularity"]) == (CITY, "quarter")
     check_counters(result, 12)
     check_periods(result["periods"], "quarter")
-    assert {key for item in result["periods"] for key in item} <= QUARTER_FIELDS
+    check_incomplete(result, compact=True)
+    assert {key for item in result["periods"] for key in item} <= QUARTER_FIELDS | {FLAG}
     assert result["note"].startswith("Ostatnie kwartały są niepełne")
     assert result["stats_url"] == f"{STATS_PAGE}/{CITY}"
     # [W] the quarters reach further back than the months (2017 vs 2021 in the samples).
@@ -174,5 +235,6 @@ def test_the_cli_shows_another_city(
     shown = json.loads(run.stdout)
     assert (shown["city_slug"], shown["granularity"], shown["returned"]) == (OTHER_CITY, "month", 3)
     check_periods(shown["periods"], "month")
+    check_incomplete(shown, compact=False)
     assert {"average_area_m2", "average_price"} <= set(shown["periods"][-1])
     assert shown["stats_url"] == f"{STATS_PAGE}/{OTHER_CITY}"

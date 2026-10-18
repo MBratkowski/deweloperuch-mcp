@@ -20,35 +20,26 @@ class EstimatePropertyValueCliPresenter:
         self._as_json = as_json
 
     def present(self, result: EstimatePropertyValueResult) -> None:
+        caveat, valuation_hint = result.caveat(), result.valuation_hint
         show(
             ValuationView.from_result(result),
             self._as_json,
-            lambda view: self._text(view, result.valuation_hint),
+            lambda view: self._text(view, caveat=caveat, valuation_hint=valuation_hint),
         )
 
     @classmethod
-    def _text(cls, result: ValuationView, valuation_hint: str | None) -> str:
-        """The estimate, where it comes from and the statistics, then one line per
-        comparable transaction, the nearest first."""
+    def _text(cls, result: ValuationView, *, caveat: str | None, valuation_hint: str | None) -> str:
+        """The estimate with its ``caveat``, the statistics and the cautions about the
+        valuation, then one line per comparable transaction, the nearest first."""
         area = amount_text(result.area_m2, "m²", 2)
         lines = [f"Wycena mieszkania {area} · {result.lat:.5f}, {result.lng:.5f}"]
         if result.address:
             lines.append(f"Adres (opis): {printable(result.address)}")
-        if result.estimated_value is None:
-            lines.append("Szacowana wartość: brak.")
-        else:
-            value = amount_text(result.estimated_value, "PLN")
-            per_m2 = amount_text(result.price_per_m2, "PLN/m²")
-            lines.append(f"Szacowana wartość: {value} · {per_m2}")
-            source = ["Na podstawie transakcji z Rejestru Cen Nieruchomości (RCN)"]
-            if result.radius_m is not None:
-                source.append(f"w promieniu {number_text(result.radius_m)} m")
-            if result.period_months is not None:
-                source.append(f"z ostatnich {result.period_months} miesięcy")
-            lines.append(" ".join(source) + "; to przybliżenie, nie operat szacunkowy.")
+        lines += cls._estimate_lines(result, caveat)
         if result.stats is not None:
             lines.append(cls._price_stats_line(result.stats))
-        # Comparable transactions left out are said on the line of their count.
+        # The rest of the hint is said once each: the caveat on its line above, the
+        # comparable transactions left out on the line of their count.
         if valuation_hint:
             lines.append(f"Wskazówka: {valuation_hint}")
         count = (
@@ -60,6 +51,29 @@ class EstimatePropertyValueCliPresenter:
         lines.append(count + ".")
         lines += [cls._comparable_line(item) for item in result.comparables]
         return "\n".join(lines)
+
+    @staticmethod
+    def _estimate_lines(result: ValuationView, caveat: str | None) -> list[str]:
+        """The value, where it comes from (numbers as the caveat writes them: 1 000 m;
+        z ostatniego miesiąca, z ostatnich 24 miesięcy) and the ``caveat``."""
+        if result.estimated_value is None:
+            return ["Szacowana wartość: brak."]
+        value = amount_text(result.estimated_value, "PLN")
+        per_m2 = amount_text(result.price_per_m2, "PLN/m²")
+        source = ["Na podstawie transakcji z Rejestru Cen Nieruchomości (RCN)"]
+        if result.radius_m is not None:
+            source.append(f"w promieniu {number_text(result.radius_m)} m")
+        if result.period_months == 1:
+            source.append("z ostatniego miesiąca")
+        elif result.period_months is not None:
+            source.append(f"z ostatnich {result.period_months} miesięcy")
+        lines = [
+            f"Szacowana wartość: {value} · {per_m2}",
+            " ".join(source) + "; to przybliżenie, nie operat szacunkowy.",
+        ]
+        if caveat:
+            lines.append(f"Uwaga: {caveat}")
+        return lines
 
     @staticmethod
     def _price_stats_line(stats: PricePerM2StatsView) -> str:

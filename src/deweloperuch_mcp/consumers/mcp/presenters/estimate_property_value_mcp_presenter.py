@@ -1,9 +1,10 @@
 """``EstimatePropertyValueMcpPresenter``: ``estimate_property_value``'s result for a model,
 and its output schema (``ValuationResult``).
 
-The valuation without the service's working data (D5): the estimate, the radius and
-period of the comparable transactions, statistics of their prices per m² and the nearest
-of them that the use case kept (D4: total, returned, omitted, truncated).
+The valuation without the service's working data (D5): the estimate and whether it is of
+low confidence, the radius and period of the comparable transactions, statistics of their
+prices per m² and the nearest of them that the use case kept (D4: total, returned,
+omitted, truncated).
 """
 
 import datetime as dt
@@ -61,6 +62,15 @@ class ValuationResult(McpModel):
             "operat szacunkowy. null: serwis nie podał wyceny."
         )
     )
+    # Like truncated, false is shown: an estimate always says whether it is reliable.
+    low_confidence: bool | None = Field(
+        None,
+        description=(
+            "true: wycena o niskiej wiarygodności (mniej niż 5 transakcji porównawczych); "
+            "hint mówi, na czym się opiera. Podaj ją tylko jako orientacyjną, z zastrzeżeniem z "
+            "hint. Jest przy każdej wycenie, brak przy estimated_value=null."
+        ),
+    )
     price_per_m2: float | None = Field(None, description="Szacowana cena za m² w PLN.")
     radius_m: int | None = Field(
         None, description="Promień w metrach, z którego są transakcje porównawcze."
@@ -101,7 +111,8 @@ class EstimatePropertyValueMcpPresenter:
 
     def _hint(self, result: EstimatePropertyValueResult) -> str | None:
         """More comparable transactions: a larger ``limit`` up to ``max_comparables``; at the
-        cap, nothing (one call returns no more). Otherwise the use case's hint."""
+        cap, nothing (one call returns no more); between the caveat of the estimate and the
+        valuation cautions, as in the use case's hint. Otherwise the use case's hint."""
         listing = result.listing
         if listing.omitted <= 0:
             return result.hint
@@ -112,4 +123,5 @@ class EstimatePropertyValueMcpPresenter:
             )
         else:
             guidance = f"{shown}; więcej pokaże większy limit (najwyżej {self._max_comparables})."
-        return f"{guidance} {result.valuation_hint}" if result.valuation_hint else guidance
+        hints = (result.caveat(), guidance, result.valuation_hint)
+        return " ".join(hint for hint in hints if hint)

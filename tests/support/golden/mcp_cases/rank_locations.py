@@ -2,7 +2,12 @@
 
 from support.golden.mcp import INJECTED, RANK, Case, case
 from support.golden.routes import many_cities
-from support.providers.routes.rankings import CITY_RANKING, POWIAT_RANKING, ranking_routes
+from support.providers.routes.rankings import (
+    CITY_RANKING,
+    POWIAT_RANKING,
+    captured_ranking_routes,
+    ranking_routes,
+)
 
 CASES: dict[str, Case] = {
     # rank_locations: the samples (3 places of each level) and copies of their rows
@@ -15,6 +20,14 @@ CASES: dict[str, Case] = {
         RANK, ranking_routes, level="powiat", sort="price_per_m2_asc", limit=1
     ),
     "rank_cities_5_of_2448": case(RANK, many_cities, limit=5),
+    # the complete answers of 2026-10-15: by price without min_transactions (the default
+    # threshold of 20) and with min_transactions=0 (every place)
+    "rank_cities_price_asc_default_threshold": case(
+        RANK, captured_ranking_routes, sort="price_per_m2_asc"
+    ),
+    "rank_cities_price_asc_min_transactions_0": case(
+        RANK, captured_ranking_routes, sort="price_per_m2_asc", min_transactions=0, limit=5
+    ),
     "rank_nothing_left": case(RANK, ranking_routes, min_transactions=1_000_000),
     "rank_nulls": case(
         RANK, ranking_routes, level=None, sort=None, limit=None, min_transactions=None

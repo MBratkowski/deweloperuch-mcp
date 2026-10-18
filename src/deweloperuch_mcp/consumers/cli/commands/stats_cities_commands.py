@@ -31,12 +31,13 @@ def stats_cities(
         int, typer.Option(help="Ile pierwszych pozycji pokazać, 1–100.")
     ] = DEFAULT_RANKING_LIMIT,
     min_transactions: Annotated[
-        int,
+        int | None,
         typer.Option(
             "--min-transactions",
-            help="Pomiń miejsca z mniejszą liczbą transakcji (przy sortowaniu po cenie).",
+            help="Pomiń miejsca z mniejszą liczbą transakcji; domyślnie 20 przy sortowaniu po "
+            "cenie, 0 po liczbie transakcji (0: wszystkie miejsca).",
         ),
-    ] = 0,
+    ] = None,
     as_json: JsonFlag = False,
 ) -> None:
     """Pokaż ranking miejscowości albo powiatów według transakcji RCN."""

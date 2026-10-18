@@ -37,6 +37,14 @@ class TransactionPeriodItem(McpModel):
     transactions: int = Field(
         description="Liczba transakcji w okresie (w najnowszych okresach zaniżona, zob. note)."
     )
+    incomplete: bool | None = Field(
+        None,
+        description=(
+            "true: okres ma mniej niż połowę zwykłej liczby transakcji, bo dane RCN są "
+            "jeszcze niepełne; nie wyciągaj wniosków z jego cen ani liczby transakcji. Pole "
+            "jest tylko przy takich okresach."
+        ),
+    )
     median_price_per_m2: Value = Field(
         None, description="Mediana ceny transakcyjnej 1 m² w PLN (tylko month)."
     )
@@ -56,7 +64,21 @@ class TransactionStatisticsResult(McpModel):
         description="true: są starsze okresy niż pokazane; co dalej, mówi hint."
     )
     available_from: str = Field(description="Najstarszy okres, jaki ma serwis.")
-    hint: str | None = Field(None, description="Co zrobić dalej, gdy wynik jest obcięty.")
+    last_complete_period: str | None = Field(
+        None,
+        description=(
+            "Najnowszy okres ze zwykłą liczbą transakcji (nie incomplete), pokazany lub nie; "
+            "na nim kończ trend, choć jego dane mogą się jeszcze zmienić. Brak pola: za "
+            "krótka historia albo za mało transakcji, by to ocenić."
+        ),
+    )
+    hint: str | None = Field(
+        None,
+        description=(
+            "Co zrobić dalej: gdy wynik jest obcięty, ma okresy incomplete albo za mało "
+            "transakcji, by je ocenić."
+        ),
+    )
     note: str = Field(description="Uwaga do danych: najnowsze okresy są niepełne.")
     stats_url: str | None = Field(None, description=STATS_URL)
     periods: list[TransactionPeriodItem] = Field(
@@ -66,17 +88,21 @@ class TransactionStatisticsResult(McpModel):
 
 class GetTransactionStatisticsMcpPresenter:
     """The periods with the measures a model needs: the averages of area and price stay
-    in the CLI's ``--json``. A truncated result gets its own hint (``_hint``)."""
+    in the CLI's ``--json``; ``incomplete`` only where it is true. A truncated result gets
+    its own hint (``_hint``)."""
 
     def present(self, result: GetTransactionStatisticsResult) -> TransactionStatisticsResult:
         data = TransactionStatisticsView.from_result(result).model_dump(mode="json")
         data["hint"] = self._hint(result)
+        for item in data["periods"]:
+            item["incomplete"] = item["incomplete"] or None
         return TransactionStatisticsResult.model_validate(data)
 
     @staticmethod
     def _hint(result: GetTransactionStatisticsResult) -> str | None:
         """What to do about older periods: a larger ``periods`` up to ``MAX_PERIODS``; at
-        the cap, nothing (one call returns no more). Not truncated: the use case's hint."""
+        the cap, nothing (one call returns no more); then the use case's word on the
+        newest periods. Not truncated: the use case's hint."""
         statistics = result.statistics
         if not statistics.truncated:
             return result.hint
@@ -88,5 +114,7 @@ class GetTransactionStatisticsMcpPresenter:
             longer = "; dłuższy trend pokaże granularity=quarter"
             if statistics.granularity is not Granularity.MONTH:
                 longer = ""
-            return f"{shown}. To maksimum w jednym wywołaniu{longer}."
-        return f"{shown}; starsze pokaże większe periods (najwyżej {MAX_PERIODS})."
+            older = f"{shown}. To maksimum w jednym wywołaniu{longer}."
+        else:
+            older = f"{shown}; starsze pokaże większe periods (najwyżej {MAX_PERIODS})."
+        return " ".join(part for part in (older, result.latest_periods_hint) if part)

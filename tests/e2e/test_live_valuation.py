@@ -1,9 +1,11 @@
 """Live: ``estimate_property_value`` (the MCP server over stdio) and ``deweloperuch
-valuation estimate`` (the CLI), at most 4 live requests:
+valuation estimate`` (the CLI), at most 5 live requests:
 
 - ``search_locations`` for the coordinates of a street (2: cities, districts and streets),
   the way a model fills the gap of T8 (no geocoding of an address);
 - one valuation of the MCP server at those coordinates;
+- one valuation of the MCP server in Cisna, where the service had 2 transactions from its
+  widest radius [P 2026-10-15] (an estimate of low confidence);
 - one valuation of the CLI at the point of the sample ``api.standalone_val`` (its own
   process, so no cache is shared with the server).
 
@@ -13,6 +15,7 @@ confirms them.
 """
 
 import json
+import warnings
 from collections.abc import Iterator
 from typing import Any
 
@@ -28,6 +31,11 @@ api.location_search, the same query and limit as search_locations sends)."""
 AREA = 50
 SAMPLE_POINT = ("--lat", "52.2297", "--lng", "21.0122", "--area", "50")
 """The point and area of the sample api.standalone_val [P 2026-10-09]."""
+CISNA = dict(lat=49.2167, lng=22.3333, area_m2=AREA)
+"""The point and area of tests/fixtures/api/standalone_val_cisna_20261015.json: 2
+transactions, radiusKm 1 at radiusCeilingM 1000 [P 2026-10-15]."""
+MIN_RELIABLE_COMPARABLES = 5
+"""[W] deweloperuch_mcp.models.valuation: fewer transactions make low confidence."""
 POLAND_LAT, POLAND_LNG = (49.0, 54.9), (14.1, 24.2)
 MARKETS = ("primary", "secondary")
 """[P] docs/discovery/entities.md, marketType: pierwotny, wtorny."""
@@ -74,6 +82,37 @@ def valuation(mcp: McpLive, street: dict[str, Any]) -> Call:
     )
 
 
+def counted(result: dict[str, Any]) -> int:
+    """The transactions an estimate rests on: the count of stats, else (none or 0) every
+    comparable transaction, as Valuation.counted_comparables counts them."""
+    count = (result.get("stats") or {}).get("count")
+    return int(count) if count else int(result["comparables_total"])
+
+
+def check_confidence(result: dict[str, Any]) -> None:
+    """[W] low_confidence (models.valuation): an estimate from fewer than 5 transactions says
+    so, and its hint names how many (or that the service named none); any other estimate
+    says it is not of low confidence and its hint has no word of it; no estimate says
+    nothing."""
+    if result["estimated_value"] is None:
+        assert result.get("low_confidence") is None, result
+        return
+    count, hint = counted(result), result.get("hint") or ""
+    if count < MIN_RELIABLE_COMPARABLES:
+        assert result["low_confidence"] is True, result
+        transactions = "transakcji" if count == 1 else "transakcjach"
+        named = "nie podał transakcji" if count == 0 else f"na {count} {transactions}"
+        assert named in hint, hint
+    else:
+        assert result["low_confidence"] is False, result
+        assert "wiarygodności" not in hint, hint
+    # [W] a one-way guard of the ceiling's meaning: the widest radius is said only of a
+    # radius at the ceiling, 1000 m in all 3 captures [P 2026-10-09, P 2026-10-15]. A lower
+    # ceiling would go unnoticed; the result does not show it.
+    if "największego, jaki serwis" in hint:
+        assert result["radius_m"] >= 1000, result
+
+
 def check_valuation(result: dict[str, Any], limit: int) -> None:
     """Structure, ranges and consistency of one valuation (MCP or the CLI's view)."""
     for name in ("estimated_value", "comparables_total", "comparables_omitted", "comparables"):
@@ -100,6 +139,7 @@ def check_valuation(result: dict[str, Any], limit: int) -> None:
         if None not in (item.get("price"), item.get("area_m2"), item.get("price_per_m2")):
             # [P] both samples: the price per m² is the price over the area, rounded.
             assert item["price_per_m2"] == pytest.approx(item["price"] / item["area_m2"], abs=1)
+    check_confidence(result)
 
 
 def test_search_locations_gives_the_coordinates_of_a_street(street: dict[str, Any]) -> None:
@@ -116,6 +156,23 @@ def test_a_valuation_at_the_coordinates_of_a_street(valuation: Call) -> None:
     assert result["truncated"] is (result["comparables_omitted"] > 0)
     check_valuation(result, limit=10)
     assert len(valuation.text) <= SIZE_DEFAULT
+
+
+def test_a_valuation_from_few_transactions_is_of_low_confidence(mcp: McpLive) -> None:
+    """Cisna: while the service has fewer than 5 transactions there, the result says
+    low_confidence and the hint names their number (``check_confidence``); when it has
+    more, the scenario is only warned about."""
+    call = mcp.call_network("estimate_property_value", **CISNA)
+    result = call.data
+
+    assert call.sent == 1
+    check_valuation(result, limit=10)
+    if not result.get("low_confidence"):
+        warnings.warn(
+            f"Cisna nie jest już wyceną o niskiej wiarygodności: {counted(result)} transakcji, "
+            f"promień {result.get('radius_m')} m",
+            stacklevel=1,
+        )
 
 
 def test_a_point_outside_poland_sends_nothing(mcp: McpLive) -> None:
@@ -137,4 +194,7 @@ def test_the_cli_valuation_as_json(
     run.readable()
     shown = json.loads(run.stdout)
     assert (shown["lat"], shown["lng"], shown["area_m2"]) == (52.2297, 21.0122, 50)
+    assert {"low_confidence", "hint"} <= set(shown)
+    # Warsaw centre (9 transactions from 200 m [P 2026-10-09]): with 5 or more,
+    # low_confidence is false (check_confidence).
     check_valuation(shown, limit=3)

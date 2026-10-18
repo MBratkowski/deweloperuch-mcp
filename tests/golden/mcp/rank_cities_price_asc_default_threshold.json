@@ -1,0 +1,192 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "sort": "price_per_m2_asc"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "level": "city",
+        "sort": "price_per_m2_asc",
+        "min_transactions": 20,
+        "total": 258,
+        "returned": 20,
+        "truncated": true,
+        "hint": "Przy sortowaniu po cenie pominięto miejsca z mniej niż 20 transakcjami (domyślny próg); wszystkie miejsca pokaże min_transactions=0. Pokazano pierwsze 20 z 258 miejscowości; kolejne pokaże większy limit (najwyżej 100).",
+        "ranking_url": "https://deweloperuch.pl/ceny-transakcyjne/polska/miasta",
+        "items": [
+          {
+            "name": "Kamienna Góra",
+            "city_slug": "kamienna-gora",
+            "transaction_count": 37,
+            "price_per_m2": 3394.0,
+            "area_m2": 46.6,
+            "price": 150000.0
+          },
+          {
+            "name": "Boguszów-gorce",
+            "city_slug": "boguszow-gorce",
+            "transaction_count": 32,
+            "price_per_m2": 3524.0,
+            "area_m2": 43.1,
+            "price": 132500.0
+          },
+          {
+            "name": "Nowa Ruda",
+            "city_slug": "nowa-ruda",
+            "transaction_count": 27,
+            "price_per_m2": 3565.0,
+            "area_m2": 51.7,
+            "price": 180000.0
+          },
+          {
+            "name": "Głuchołazy",
+            "city_slug": "glucholazy",
+            "transaction_count": 23,
+            "price_per_m2": 3922.0,
+            "area_m2": 55.5,
+            "price": 210000.0
+          },
+          {
+            "name": "Bogatynia",
+            "city_slug": "bogatynia",
+            "transaction_count": 27,
+            "price_per_m2": 4065.0,
+            "area_m2": 49.2,
+            "price": 190000.0
+          },
+          {
+            "name": "Prudnik",
+            "city_slug": "prudnik",
+            "transaction_count": 24,
+            "price_per_m2": 4163.0,
+            "area_m2": 48.9,
+            "price": 176500.0
+          },
+          {
+            "name": "Grudziądz",
+            "city_slug": "grudziadz",
+            "transaction_count": 29,
+            "price_per_m2": 4235.0,
+            "area_m2": 49.5,
+            "price": 151000.0
+          },
+          {
+            "name": "Jastrzębie-zdrój",
+            "city_slug": "jastrzebie-zdroj",
+            "transaction_count": 68,
+            "price_per_m2": 4282.0,
+            "area_m2": 50.9,
+            "price": 217500.0
+          },
+          {
+            "name": "Wałbrzych",
+            "city_slug": "walbrzych",
+            "transaction_count": 180,
+            "price_per_m2": 4487.0,
+            "area_m2": 45.6,
+            "price": 199000.0
+          },
+          {
+            "name": "Bytom",
+            "city_slug": "bytom",
+            "transaction_count": 284,
+            "price_per_m2": 4492.0,
+            "area_m2": 45.9,
+            "price": 205000.0
+          },
+          {
+            "name": "Chełmno",
+            "city_slug": "chelmno",
+            "transaction_count": 20,
+            "price_per_m2": 4548.0,
+            "area_m2": 45.6,
+            "price": 202500.0
+          },
+          {
+            "name": "Bartoszyce",
+            "city_slug": "bartoszyce",
+            "transaction_count": 36,
+            "price_per_m2": 4550.0,
+            "area_m2": 48.4,
+            "price": 220000.0
+          },
+          {
+            "name": "Wodzisław Śląski",
+            "city_slug": "wodzislaw-slaski",
+            "transaction_count": 29,
+            "price_per_m2": 4634.0,
+            "area_m2": 54.9,
+            "price": 250000.0
+          },
+          {
+            "name": "Szprotawa",
+            "city_slug": "szprotawa",
+            "transaction_count": 22,
+            "price_per_m2": 4658.0,
+            "area_m2": 47.1,
+            "price": 195000.0
+          },
+          {
+            "name": "Skarżysko-kamienna",
+            "city_slug": "skarzysko-kamienna",
+            "transaction_count": 88,
+            "price_per_m2": 4683.0,
+            "area_m2": 46.2,
+            "price": 210000.0
+          },
+          {
+            "name": "Kędzierzyn-koźle",
+            "city_slug": "kedzierzyn-kozle",
+            "transaction_count": 79,
+            "price_per_m2": 4689.0,
+            "area_m2": 49.2,
+            "price": 245000.0
+          },
+          {
+            "name": "Namysłów",
+            "city_slug": "namyslow",
+            "transaction_count": 21,
+            "price_per_m2": 4727.0,
+            "area_m2": 50.6,
+            "price": 230000.0
+          },
+          {
+            "name": "Turek",
+            "city_slug": "turek",
+            "transaction_count": 29,
+            "price_per_m2": 4733.0,
+            "area_m2": 47.3,
+            "price": 200000.0
+          },
+          {
+            "name": "Piekary Śląskie",
+            "city_slug": "piekary-slaskie",
+            "transaction_count": 61,
+            "price_per_m2": 4772.0,
+            "area_m2": 48.2,
+            "price": 220000.0
+          },
+          {
+            "name": "Racibórz",
+            "city_slug": "raciborz",
+            "transaction_count": 69,
+            "price_per_m2": 4773.0,
+            "area_m2": 47.6,
+            "price": 240000.0
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/city-transaction-stats [accept: application/json]"
+  ]
+}

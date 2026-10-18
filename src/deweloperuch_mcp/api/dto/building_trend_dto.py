@@ -14,7 +14,9 @@ class TrendQuarterDto(Dto):
     def to_model(self) -> TrendQuarter:
         return TrendQuarter(
             period=self.period,
-            avg_price_per_m2=self._number(self.avgPriceSqm),
+            # [W] 0 or less is no price: no such quarter is known, but the service writes
+            # 0 for no value in its monthly statistics and city-transaction-stats [P].
+            avg_price_per_m2=self._positive(self.avgPriceSqm),
             transactions=self._exact_whole(self.count),
         )
 
@@ -34,7 +36,9 @@ class BuildingTrendDto(Dto):
         price per m² and ``count`` their number follows from the names.
         """
         return NeighbourhoodTrend(
-            radius_km=self._number(self.radiusKm),
+            # A trend without quarters comes with `radiusKm` 0 [P 2026-10-15]
+            # (tests/fixtures/api/avg_trend_building_152198_20261015.json): no radius.
+            radius_km=self._positive(self.radiusKm),
             quarters=tuple(
                 item.to_model() for item in sorted(self.data, key=lambda item: item.period)
             ),

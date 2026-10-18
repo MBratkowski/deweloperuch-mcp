@@ -11,9 +11,11 @@ transactions, not an appraisal::
     listing = valuation.nearest(ComparablesLimit(10))      # D4, D5: the nearest, the rest counted
 
 The domain says where a point may be (``POLAND_LAT``, ``POLAND_LNG``), which flats are
-valued (``ValuedArea``) and how a result is cut: the nearest comparable transactions
-first, at most ``limit`` of them, with the number left out. Plain Python: no I/O, no
-backend names, no addresses of pages.
+valued (``ValuedArea``), how a result is cut (the nearest comparable transactions first,
+at most ``limit`` of them, with the number left out) and when an estimate is of low
+confidence (``Valuation.low_confidence``: fewer than ``MIN_RELIABLE_COMPARABLES``
+transactions) or comes from the widest radius (``Valuation.at_widest_radius``). Plain
+Python: no I/O, no backend names, no addresses of pages.
 """
 
 import datetime as dt
@@ -49,6 +51,12 @@ COMPARABLES_LIMIT_MAX = 100_000
 PRIMARY, SECONDARY = "primary", "secondary"
 """Markets of a transaction: primary (from a developer) and secondary (resale) [P]
 (docs/discovery/entities.md, ``marketType``); other values pass through."""
+
+# [W] a rule of this package, not of the service: an estimate from fewer comparable
+# transactions rests on a handful of sales (Cisna, 2026-10-15: 2 sales at 2,302 and 5,778
+# PLN/m² gave 4,040 PLN/m²), so a result gives it with a caveat.
+MIN_RELIABLE_COMPARABLES = 5
+"""Comparable transactions below which an estimate is of low confidence."""
 
 
 def _number(
@@ -216,6 +224,8 @@ class Valuation:
     price_per_m2: float | None = None
     radius_m: int | None = None
     """How far from the point the comparable transactions are."""
+    radius_ceiling_m: int | None = None
+    """The widest radius the service takes comparable transactions from."""
     period_months: int | None = None
     """How many of the latest months the comparable transactions come from."""
     stats: PricePerM2Stats | None = None
@@ -224,6 +234,36 @@ class Valuation:
     @property
     def estimated(self) -> bool:
         return self.estimated_value is not None
+
+    @property
+    def counted_comparables(self) -> int:
+        """The comparable transactions the estimate rests on: the count of ``stats``, or
+        the transactions given when there is no count or it is 0."""
+        counted = None if self.stats is None else self.stats.count
+        return counted if counted is not None and counted > 0 else len(self.comparables)
+
+    @property
+    def few_comparables(self) -> bool:
+        """Fewer comparable transactions than ``MIN_RELIABLE_COMPARABLES``."""
+        return self.counted_comparables < MIN_RELIABLE_COMPARABLES
+
+    @property
+    def at_widest_radius(self) -> bool:
+        """The radius reached the widest the service takes (``radius_ceiling_m``): the
+        comparable transactions describe a broader neighbourhood. Not low confidence by
+        itself (``low_confidence``)."""
+        # [W] the meaning of the ceiling is read from its name and from Cisna (2026-10-15),
+        # where the radius reached it with only 2 transactions; an unknown one says nothing.
+        if self.radius_m is None or self.radius_ceiling_m is None:
+            return False
+        return self.radius_m >= self.radius_ceiling_m
+
+    @property
+    def low_confidence(self) -> bool:
+        """An estimate a result gives only with a caveat: one from fewer comparable
+        transactions than ``MIN_RELIABLE_COMPARABLES``. ``False`` without an estimate:
+        there is nothing to trust."""
+        return self.estimated and self.few_comparables
 
     def nearest(self, limit: ComparablesLimit | None = None) -> "ValuationListing":
         """The comparable transactions from the nearest (the service's order among equal

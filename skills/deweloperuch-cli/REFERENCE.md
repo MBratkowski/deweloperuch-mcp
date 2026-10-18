@@ -162,7 +162,7 @@ Pokaż ranking miejscowości albo powiatów według transakcji RCN.
 - `--level <city|powiat>`: city: miejscowości (także małe); powiat: powiaty. [default: city]
 - `--sort <transactions_desc|price_per_m2_desc|price_per_m2_asc>`: Najwięcej transakcji albo po cenie za m² (malejąco, rosnąco). [default: transactions_desc]
 - `--limit <int>`: Ile pierwszych pozycji pokazać, 1–100. [default: 20]
-- `--min-transactions <int>`: Pomiń miejsca z mniejszą liczbą transakcji (przy sortowaniu po cenie). [default: 0]
+- `--min-transactions <int>`: Pomiń miejsca z mniejszą liczbą transakcji; domyślnie 20 przy sortowaniu po cenie, 0 po liczbie transakcji (0: wszystkie miejsca).
 - `--json`: Wypisz wynik jako JSON (model domenowy).
 
 ## `deweloperuch stop`

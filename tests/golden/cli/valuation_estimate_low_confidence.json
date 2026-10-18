@@ -1,0 +1,30 @@
+{
+  "args": [
+    "valuation",
+    "estimate",
+    "--lat",
+    "49.2167",
+    "--lng",
+    "22.3333",
+    "--area",
+    "50"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Wycena mieszkania 50 m² · 49.21670, 22.33330",
+    "Szacowana wartość: 202 000 PLN · 4 040 PLN/m²",
+    "Na podstawie transakcji z Rejestru Cen Nieruchomości (RCN) w promieniu 1 000 m z ostatnich 24 miesięcy; to przybliżenie, nie operat szacunkowy.",
+    "Uwaga: Wycena oparta tylko na 2 transakcjach z promienia 1 000 m (największego, jaki serwis bierze pod uwagę) z ostatnich 24 miesięcy: to orientacyjna wartość o niskiej wiarygodności. Podaj ją z tym zastrzeżeniem i z rozpiętością cen za m² tych transakcji (2 302–5 778 PLN/m²); porównaj też z cenami transakcyjnymi miasta (get_transaction_statistics).",
+    "Statystyki cen za m² podane przez serwis (liczba: 2): mediana 4 040 · średnia 4 040 · min 2 302 · max 5 778 PLN/m²",
+    "Transakcje porównawcze: 2 · pokazano 2.",
+    "  2025-06-02   ok. 850 m  ? · 65,15 m² · 149 975 PLN · 2 302 PLN/m² · rynek wtórny [cisna]",
+    "  2026-03-19   ok. 850 m  ? · 62,31 m² · 360 027 PLN · 5 778 PLN/m² · rynek wtórny [cisna]",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/standalone-valuation?area=50&lat=49.2167&lng=22.3333 [accept: application/json]"
+  ]
+}

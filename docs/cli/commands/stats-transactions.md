@@ -27,17 +27,23 @@ deweloperuch stats transactions warszawa --granularity quarter --periods 40
 deweloperuch stats transactions krakow --json
 ```
 
-Output of the first call (`tests/golden/cli/stats_transactions_warszawa.json`, a three-month mocked series):
+Output of the first call (`tests/golden/cli/stats_transactions_warszawa_20261015.json`, a sample of 2026-10-15; the first eight periods left out). Incomplete periods are marked with ` *` and a legend line closes the table; the hint names them and the last period with a usual count:
 
 ```
 Ceny transakcyjne mieszkań (RCN) · warszawa · miesięcznie
-Okresy: pokazano 3 z 3 (dane od 2021-01).
-Uwaga: Ostatnie miesiące są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z pełnymi okresami.
-Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/ceny-transakcyjne/mieszkania/warszawa
-Okres    Transakcje  Mediana PLN/m²  Średnia PLN/m²  Mediana m²  Mediana ceny PLN
-2021-01         963          10 651          10 876        49,4           502 000
-2021-02       1 165          10 575          10 854        48,8           495 000
-2021-03       1 327          10 858          10 981        48,5           510 000
+Okresy: pokazano 12 z 67 (dane od 2021-01).
+Wskazówka: Pokazano ostatnie 12 z 67 okresów (dane od 2021-01); starsze pokaże większa wartość periods. Okresy 2026-05, 2026-06 i 2026-07 mają mniej niż połowę zwykłej liczby transakcji (dane RCN jeszcze niepełne): nie wyciągaj wniosków z ich cen ani liczby transakcji. Ostatni okres ze zwykłą liczbą transakcji: 2026-04 (jego dane też mogą się jeszcze zmienić).
+Uwaga: Ostatnie miesiące są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z okresami o zwykłej liczbie transakcji.
+Strona na deweloperuch.pl: <stats link>
+Okres      Transakcje  Mediana PLN/m²  Średnia PLN/m²  Mediana m²  Mediana ceny PLN
+…
+2026-04           987          16 542          16 980        48,6           770 000
+2026-05 *          22          15 496          16 285        52,2           754 750
+2026-06 *           0               –               –           –                 –
+2026-07 *          35          33 176          31 186        53,4         1 360 209
+* okres niepełny: mniej niż połowa zwykłej liczby transakcji (dane RCN jeszcze niepełne).
 ```
+
+With `--json` every period has `incomplete` (a bool, `false` included) and the top level has `last_complete_period` (`null` when it cannot be judged; for example in the mocked series of `tests/golden/cli/stats_transactions_warszawa_json.json`). Which periods are incomplete is a package rule [W], see [`get_transaction_statistics`](../../mcp/tools/get_transaction_statistics.md#data-limitations).
 
 _Source: `src/deweloperuch_mcp/consumers/cli/commands/stats_transactions_commands.py`, `src/deweloperuch_mcp/consumers/cli/presenters/get_transaction_statistics_cli_presenter.py`, `uv run deweloperuch stats transactions --help`_

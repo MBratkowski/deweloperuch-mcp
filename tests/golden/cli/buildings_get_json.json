@@ -21,6 +21,7 @@
     "  \"avg_price_per_m2\": 21494.72,",
     "  \"units_total\": 3,",
     "  \"transactions_total\": 3,",
+    "  \"non_regular_transactions\": {},",
     "  \"first_transaction_date\": \"2025-09-12\",",
     "  \"last_transaction_date\": \"2025-11-17\",",
     "  \"units\": [",
@@ -86,6 +87,7 @@
     "    }",
     "  ],",
     "  \"units_omitted\": 0,",
+    "  \"hint\": null,",
     "  \"neighbourhood_trend\": null",
     "}",
     ""

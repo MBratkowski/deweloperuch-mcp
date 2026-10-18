@@ -110,7 +110,8 @@ class BuildingView(View):
     """A building of the price register with its units (``get_building``)."""
 
     building_slug: str
-    name: str
+    name: str | None = None
+    """The address; ``None`` when the register gives none."""
     building_url: str | None = None
     """The building's page on the service."""
     city: str
@@ -124,12 +125,17 @@ class BuildingView(View):
     avg_price_per_m2: float | None = None
     units_total: int
     transactions_total: int
+    non_regular_transactions: dict[str, int]
+    """The transactions of the whole building that are no regular sale, by class (the
+    words of ``TransactionView.classification``), the most frequent first; ``{}``: none."""
     first_transaction_date: dt.date | None = None
     last_transaction_date: dt.date | None = None
     units: list[UnitView]
     """The units whose last transaction is the newest first; at most ``limit``."""
     units_omitted: int
     """Units left out because of ``limit``."""
+    hint: str | None = None
+    """What the numbers alone do not say, e.g. that the trend has no quarters."""
     neighbourhood_trend: NeighbourhoodTrendView | None = None
     """Only when asked for."""
 
@@ -151,10 +157,12 @@ class BuildingView(View):
             avg_price_per_m2=shown.avg_price_per_m2,
             units_total=len(shown.units),
             transactions_total=shown.transactions_count,
+            non_regular_transactions=shown.non_regular_transactions(),
             first_transaction_date=shown.first_sold_on,
             last_transaction_date=shown.last_sold_on,
             units=[UnitView.from_model(unit) for unit in listing.units],
             units_omitted=listing.omitted,
+            hint=found.hint,
             neighbourhood_trend=(
                 None if found.trend is None else NeighbourhoodTrendView.from_model(found.trend)
             ),

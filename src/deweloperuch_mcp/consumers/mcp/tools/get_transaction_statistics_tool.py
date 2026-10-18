@@ -28,7 +28,9 @@ class GetTransactionStatisticsTool(ToolBase):
     # [W] "kilkumiesięcznym": models.transaction_series.Granularity.lag_note. Only flats and
     # city slugs are [P]: no houses, districts, streets, counties, nor polska. [P 2026-10-13]
     # live: a month without transactions (Warsaw 2026-05/06) has no prices (the service sends
-    # zeros).
+    # zeros). [W] incomplete and last_complete_period: the rules above
+    # models.transaction_series.INCOMPLETE_SHARE and MIN_USUAL_TRANSACTIONS (the revision
+    # horizon is open, T46).
     name = "get_transaction_statistics"
     title = "Ceny transakcyjne w czasie"
     description = """\
@@ -43,13 +45,15 @@ to dłuższa historia. Miesiące i kwartały to różne statystyki: nie łącz i
 wykres ani szereg.
 
 Zwraca periods (od najstarszego; okres bez transakcji nie ma cen) oraz total, \
-returned, truncated, available_from, hint, note i stats_url (link dla użytkownika).
+returned, truncated, available_from, last_complete_period, hint, note i stats_url \
+(link).
 
 Ograniczenia: tylko mieszkania i całe miasta (city_slug z search_locations; bez \
 dzielnic, ulic i całej Polski). Domyślnie ostatnie 12 okresów; truncated=true znaczy, \
-że są starsze (zwiększ periods, najwyżej 60). Najnowsze miesiące są niepełne, bo \
-transakcje trafiają do RCN z kilkumiesięcznym opóźnieniem: mają zaniżoną liczbę \
-transakcji i niepewne ceny, więc ich spadku nie traktuj jako trendu (przeczytaj note)."""
+że są starsze (zwiększ periods, najwyżej 60). Najnowsze okresy są niepełne \
+(opóźnienie RCN). Okres z incomplete=true pomiń: nie podawaj jego cen jako trendu. \
+Trend kończ na last_complete_period (jego dane też mogą się zmienić); brak pola (za \
+mało transakcji): czytaj hint."""
 
     async def __call__(
         self,

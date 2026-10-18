@@ -70,7 +70,7 @@ The service has two independent data "worlds" that connect only through location
 | `kind` (addresses) | `flat`, `house` | [P] |
 | `is_flipped` | bool, marks a resale within a short time [H] | [P] |
 | `participation` | share fraction, e.g. `1/1` | [P] |
-| `radiusLevel` (valuation) | `sasiedztwo` | [P]; others [H] |
+| `radiusLevel` (valuation) | `sasiedztwo`, `okolica` | [P 2026-10-15]; others [H] |
 
 ## Normalization needed in the DTO → domain layer [P]
 

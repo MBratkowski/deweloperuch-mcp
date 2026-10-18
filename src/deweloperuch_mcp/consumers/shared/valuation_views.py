@@ -78,6 +78,9 @@ class ValuationView(View):
     address: str | None = None
     estimated_value: float | None
     """In PLN; ``None`` when the service gave no estimate."""
+    low_confidence: bool | None = None
+    """Whether the estimate is to be given only with a caveat (``hint``): fewer than 5
+    comparable transactions; ``None`` without an estimate."""
     price_per_m2: float | None
     radius_m: int | None
     """How far from the point the comparable transactions are."""
@@ -103,6 +106,7 @@ class ValuationView(View):
             area_m2=subject.area.value,
             address=None if subject.address is None else subject.address.text,
             estimated_value=shown.estimated_value,
+            low_confidence=shown.low_confidence if shown.estimated else None,
             price_per_m2=shown.price_per_m2,
             radius_m=shown.radius_m,
             period_months=shown.period_months,

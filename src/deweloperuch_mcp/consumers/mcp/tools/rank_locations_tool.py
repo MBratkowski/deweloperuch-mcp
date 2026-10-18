@@ -10,7 +10,7 @@ from deweloperuch_mcp.consumers.mcp.presenters.rank_locations_mcp_presenter impo
     RankLocationsMcpPresenter,
 )
 from deweloperuch_mcp.consumers.mcp.support.calls import SessionContext, run, session_of
-from deweloperuch_mcp.consumers.mcp.support.inputs import whole_or
+from deweloperuch_mcp.consumers.mcp.support.inputs import OptionalWholeNumber, whole_or
 from deweloperuch_mcp.consumers.mcp.support.tool_base import ToolBase
 from deweloperuch_mcp.consumers.shared.ranking_views import RankingLevelChoice, RankingSortChoice
 from deweloperuch_mcp.models.location_ranking import (
@@ -48,26 +48,29 @@ class RankLocationsTool(ToolBase):
     # the period and base of *_change: no changes over time at all.
     # powiat_id: no tool takes it and search_locations has no powiats (its kinds are city,
     # district, street [P]), so the description says it is only informative.
+    # [W] the default threshold of the price orders (20, PRICE_ORDER_MIN_TRANSACTIONS in
+    # models/location_ranking.py): a price from a handful of transactions is chance.
     name = "rank_locations"
     title = "Ranking miast i powiatów"
     description = """\
 Ranking miejscowości (level=city) albo powiatów (level=powiat) w Polsce według \
 transakcji z Rejestru Cen Nieruchomości (RCN): liczba transakcji i cena transakcyjna za \
-m². Dla porównania wielu miast (gdzie najwięcej transakcji, gdzie najdrożej, gdzie \
-najtaniej): to narzędzie; dla trendu jednego miasta w czasie: \
+m². Dla porównania wielu miast: to narzędzie; dla trendu jednego miasta w czasie: \
 get_transaction_statistics. To ceny transakcyjne, nie ofertowe; oferty deweloperów daje \
 search_offers.
 
-Zwraca total (miejsca z co najmniej min_transactions transakcji), returned, truncated, \
-hint i items (name, city_slug albo powiat_id, transaction_count, price_per_m2, area_m2, \
-price); dla city także ranking_url (strona rankingu na deweloperuch.pl: podaj ją \
-użytkownikowi jako link). powiat_id jest informacyjny: żadne narzędzie go nie przyjmuje.
+Zwraca min_transactions (zastosowany próg), total (miejsca z co najmniej tyloma \
+transakcjami), returned, truncated, hint i items (name, city_slug albo powiat_id, \
+transaction_count, price_per_m2, area_m2, price); dla city także ranking_url (strona \
+rankingu na deweloperuch.pl: podaj ją użytkownikowi jako link). powiat_id jest \
+informacyjny: żadne narzędzie go nie przyjmuje.
 
 Ograniczenia: serwis nie podaje okresu ani tego, czy ceny i metraż to średnie, czy \
 mediany: przedstawiaj je jako wartości podane przez serwis. Liczby transakcji powiatów \
 obejmują wiele lat: służą tylko do uporządkowania, nie są bieżącym wolumenem; nie \
-porównuj ich z liczbami miejscowości. Przy sortowaniu miejscowości po cenie podaj \
-min_transactions (np. 50): przy kilku transakcjach cena bywa przypadkowa."""
+porównuj ich z liczbami miejscowości. Sortowanie po cenie domyślnie pomija miejsca \
+poniżej 20 transakcji (cena bywa przypadkowa); min_transactions=0 pokazuje wszystkie, \
+np. 50 daje stabilniejsze ceny."""
 
     async def __call__(
         self,
@@ -112,16 +115,17 @@ min_transactions (np. 50): przy kilku transakcjach cena bywa przypadkowa."""
             ),
         ] = DEFAULT_RANKING_LIMIT,
         min_transactions: Annotated[
-            Least,
-            whole_or(0),
+            Least | None,
+            OptionalWholeNumber,
             Field(
                 title="Najmniej transakcji",
                 description=(
-                    "Pomiń miejsca z mniejszą liczbą transakcji; domyślnie 0 (wszystkie). Przy "
-                    "sortowaniu miejscowości (level=city) po cenie podaj np. 50."
+                    "Brak = próg domyślny: 20 przy sortowaniu po cenie, 0 przy "
+                    "transactions_desc. 0 = wszystkie miejsca. Pomija miejsca z mniejszą "
+                    "liczbą transakcji; np. 50 daje stabilniejsze ceny."
                 ),
             ),
-        ] = 0,
+        ] = None,
     ) -> Annotated[CallToolResult, LocationRankingResult]:
         session = session_of(ctx)
 

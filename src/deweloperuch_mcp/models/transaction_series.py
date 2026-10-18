@@ -15,15 +15,19 @@ Periods are labelled as in the government statistics (``statistics.Frequency``):
 measure the service does not give for that period (or at that granularity).
 
 The transactions are those of the national register of property prices (Rejestr Cen
-Nieruchomości, RCN), which the service republishes; only flats here.
+Nieruchomości, RCN), which the service republishes; only flats here. They reach the
+register late, so the newest periods of a series have too few of them: ``latest`` flags
+those as ``incomplete`` and names the newest period with a usual number of transactions
+(``last_complete_period``); see ``INCOMPLETE_SHARE`` for the rule.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import ClassVar, Self
 
 from deweloperuch_mcp.models.errors import InvalidValueError, NotFoundError, OneOf, ValueName
 from deweloperuch_mcp.models.government_statistics import Frequency, PeriodCount
+from deweloperuch_mcp.models.market_statistics import Spread
 from deweloperuch_mcp.models.values import WHOLE_COUNTRY, Slug
 
 # --- value objects ---------------------------------------------------------------------------
@@ -78,6 +82,12 @@ class Granularity(StrEnum):
         """The same periods as the government statistics label them."""
         return Frequency(self.value)
 
+    @property
+    def reference_periods(self) -> int:
+        """How many periods right before a period tell its usual number of transactions:
+        the year before it (``TransactionSeries.latest``)."""
+        return 12 if self is Granularity.MONTH else 4
+
     def lag_note(self) -> str:
         """What every result says about its latest periods.
 
@@ -90,8 +100,43 @@ class Granularity(StrEnum):
         return (
             f"{latest} są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z "
             "kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę "
-            "transakcji i mniej pewne ceny. Nie porównuj ich z pełnymi okresami."
+            "transakcji i mniej pewne ceny. Nie porównuj ich z okresami o zwykłej liczbie "
+            "transakcji."
         )
+
+
+# --- incomplete periods -----------------------------------------------------------------------
+
+# [W] tests/fixtures/api/monthly_tx_warszawa_20261015.json (Warsaw, 2026-10-15): after a
+# year of 1,069..1,390 transactions a month, 2026-04 has 987, 2026-05 22, 2026-06 0 and
+# 2026-07 35 (its median price per m² 33,176, about twice the usual); 2026-04 had 29 on
+# 2026-10-13. The quarters (avg_trend_city_warszawa_20261016.json) end the same way:
+# 2026-Q2 1,034 and 2026-Q3 37 after about 3,700. How long the register keeps adding to a
+# period is open (T46), so the rule reads only the counts. The incomplete periods are the
+# longest run at the end of the series lying entirely below INCOMPLETE_SHARE of the usual
+# number of transactions right before the run (the median of the reference_periods before
+# it): a dip inside the series is never one, and a long tail is judged against the year
+# before it, not against its own low periods. The run is at most one reference window
+# long, so a lasting drop of the market, once older than that, is not taken for the lag.
+# The period right before the run is the last complete one when it is judged usual
+# itself; it may still grow (a usual number of transactions, not final data).
+
+INCOMPLETE_SHARE = 0.5
+"""A run of periods at the end of a series with fewer transactions than this share of the
+usual number is incomplete."""
+
+MIN_REFERENCE_PERIODS = 3
+"""Fewest periods the usual number is taken from: with fewer (the start of a series), one
+or two periods would decide it, and nothing is judged."""
+
+# [W] the floor: with a usual number of a few transactions a period, chance alone puts a
+# period below half of it. A Poisson simulation in the review of 2026-10-16 had the rule
+# name a wrong last complete period in 85% of runs at 0.5 transactions a month, 31% at 1
+# and 6% at 3; tests/fixtures/api/monthly_tx_karpacz_20261016.json (a small town) has a
+# median of 1 a month and 26 months of 60 without any.
+MIN_USUAL_TRANSACTIONS = 10
+"""Below this usual number of transactions a period is not judged: nothing is flagged,
+and no period is known to be complete."""
 
 
 # --- periods and series -----------------------------------------------------------------------
@@ -103,7 +148,9 @@ class TransactionPeriod:
 
     ``median_*`` and ``average_*`` of the period's transactions: the price of one m²,
     the area and the price of the flat. Any of them may be ``None``; one that is given is
-    above 0, and a period without transactions has none (``measures``).
+    above 0, and a period without transactions has none (``measures``). ``incomplete``:
+    a period at the end of its series with too few transactions yet (set by
+    ``TransactionSeries.latest``).
     """
 
     period: str
@@ -114,6 +161,7 @@ class TransactionPeriod:
     average_area_m2: float | None = None
     median_price: float | None = None
     average_price: float | None = None
+    incomplete: bool = False
 
     @property
     def measures(self) -> tuple[float | None, ...]:
@@ -141,9 +189,17 @@ class TransactionStatistics:
     """Older periods exist than the ones shown."""
     available_from: str
     """The oldest period the service has."""
+    last_complete_period: str | None
+    """The newest period judged to have a usual number of transactions, shown or not;
+    ``None`` when none could be (too little history, or too few transactions)."""
+    few_transactions: bool
+    """Too few transactions a period to judge the newest ones (``MIN_USUAL_TRANSACTIONS``):
+    none is flagged, though they may be incomplete, and prices of a few transactions are
+    chance."""
     note: str
     """The caveat about the latest periods (``Granularity.lag_note``)."""
     periods: tuple[TransactionPeriod, ...]
+    """With ``incomplete`` set, judged on every period of the series."""
 
 
 @dataclass(frozen=True)
@@ -166,12 +222,21 @@ class TransactionSeries:
             self._check_measures(item)
 
     def latest(self, count: PeriodCount) -> TransactionStatistics:
-        """The last ``count`` periods; ``NotFoundError`` when there is none at all."""
+        """The last ``count`` periods, the incomplete ones flagged; ``NotFoundError`` when
+        there is none at all. The flags come from the whole series, so a period shown
+        alone is still judged against the periods before it. The last complete period is
+        the one right before the incomplete ones (or the newest) when it is judged usual
+        itself."""
         if not self.periods:
             raise NotFoundError(
                 f"Serwis nie ma transakcji mieszkań dla miasta {self.city.value!r}."
             )
-        shown = self.periods[-count.value :]
+        start = self._incomplete_from()
+        flagged = tuple(
+            replace(item, incomplete=index >= start) for index, item in enumerate(self.periods)
+        )
+        shown = flagged[-count.value :]
+        last = start - 1  # right before the incomplete periods; the newest when none is
         return TransactionStatistics(
             city_slug=self.city.value,
             granularity=self.granularity,
@@ -179,9 +244,53 @@ class TransactionSeries:
             returned=len(shown),
             truncated=len(shown) < len(self.periods),
             available_from=self.periods[0].period,
+            last_complete_period=self.periods[last].period if self._is_usual(last) else None,
+            few_transactions=start == len(self.periods) and self._too_few(last),
             note=self.granularity.lag_note(),
             periods=shown,
         )
+
+    def _incomplete_from(self) -> int:
+        """Where the incomplete periods at the end start: the earliest start, at most one
+        reference window back, from which every period is below the limit right before
+        it; the number of periods when there is none. The rule: the comment above
+        ``INCOMPLETE_SHARE``."""
+        end = len(self.periods)
+        counts = [item.transactions for item in self.periods]
+        for first in range(max(0, end - self.granularity.reference_periods), end):
+            limit = self._limit(first)
+            if limit is not None and all(count < limit for count in counts[first:]):
+                return first
+        return end
+
+    def _is_usual(self, index: int) -> bool:
+        """The period at ``index`` is judged, and has at least its limit."""
+        limit = self._limit(index)
+        return limit is not None and self.periods[index].transactions >= limit
+
+    def _too_few(self, index: int) -> bool:
+        """The period at ``index`` has the history to be judged, but too few transactions
+        (no limit, ``_limit``)."""
+        return self._usual(index) is not None and self._limit(index) is None
+
+    def _limit(self, index: int) -> float | None:
+        """Fewer transactions than this make the period at ``index`` incomplete: a share
+        of its usual number; ``None`` when it is not judged (too little history, or a usual
+        number below ``MIN_USUAL_TRANSACTIONS``)."""
+        usual = self._usual(index)
+        if usual is None or usual < MIN_USUAL_TRANSACTIONS:
+            return None
+        return INCOMPLETE_SHARE * usual
+
+    def _usual(self, index: int) -> float | None:
+        """The usual number of transactions of the period at ``index``: the median count
+        of the ``reference_periods`` right before it; ``None`` with fewer than
+        ``MIN_REFERENCE_PERIODS`` of them."""
+        window = self.granularity.reference_periods
+        before = sorted(item.transactions for item in self.periods[max(0, index - window) : index])
+        if len(before) < MIN_REFERENCE_PERIODS:
+            return None
+        return Spread.quantile(before, 0.5)  # q=0.5: the median
 
     def _check_labels(self) -> None:
         """Every label is a period of the granularity, and they grow strictly."""

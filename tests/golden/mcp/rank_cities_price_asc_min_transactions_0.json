@@ -1,0 +1,74 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "sort": "price_per_m2_asc",
+        "min_transactions": 0,
+        "limit": 5
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "level": "city",
+        "sort": "price_per_m2_asc",
+        "min_transactions": 0,
+        "total": 2529,
+        "returned": 5,
+        "truncated": true,
+        "hint": "Pokazano pierwsze 5 z 2529 miejscowości; kolejne pokaże większy limit (najwyżej 100).",
+        "ranking_url": "https://deweloperuch.pl/ceny-transakcyjne/polska/miasta",
+        "items": [
+          {
+            "name": "Miejsce Piastowe",
+            "city_slug": "miejsce-piastowe",
+            "transaction_count": 1,
+            "price_per_m2": 260.0,
+            "area_m2": 115.2,
+            "price": 30000.0
+          },
+          {
+            "name": "Boboluszki",
+            "city_slug": "boboluszki",
+            "transaction_count": 1,
+            "price_per_m2": 334.0,
+            "area_m2": 134.9,
+            "price": 45000.0
+          },
+          {
+            "name": "Laskówka",
+            "city_slug": "laskowka",
+            "transaction_count": 1,
+            "price_per_m2": 391.0,
+            "area_m2": 64.0,
+            "price": 25000.0
+          },
+          {
+            "name": "Ciemino",
+            "city_slug": "ciemino",
+            "transaction_count": 1,
+            "price_per_m2": 402.0,
+            "area_m2": 49.8,
+            "price": 20000.0
+          },
+          {
+            "name": "Niwa",
+            "city_slug": "niwa",
+            "transaction_count": 1,
+            "price_per_m2": 448.0,
+            "area_m2": 216.6,
+            "price": 97000.0
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/city-transaction-stats [accept: application/json]"
+  ]
+}

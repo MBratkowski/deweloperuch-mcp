@@ -4,7 +4,7 @@ This suite runs the installed package against the real deweloperuch.pl: the MCP 
 
 ## Before you run it
 
-- Live runs are opt-in and should be rare. deweloperuch.pl is a community project, and one run sends up to 115 requests. Do not run the suite alongside other live tools such as the recon scripts.
+- Live runs are opt-in and should be rare. deweloperuch.pl is a community project, and one run sends up to 120 requests. Do not run the suite alongside other live tools such as the recon scripts.
 - The suite does not set a private `XDG_CACHE_HOME`, so it uses the limiter and the STOP record of your environment (`${XDG_CACHE_HOME:-~/.cache}/deweloperuch-mcp/`). It shares them with every process that sees the same `XDG_CACHE_HOME`, e.g. an MCP client running the server; a shell with a different value gets a separate limiter.
 - An active STOP ends the run before any request. Check it with `deweloperuch stop status`, and lift it only after you have found its cause (see [Configuration](../../docs/configuration.md#stop-shared-lock-between-processes)).
 
@@ -29,8 +29,8 @@ DEWELOPERUCH_LIVE=1 uv run pytest -m live tests/e2e -rs --maxfail=3
 
 ### Request budget
 
-- **Limit:** at most 115 live requests per run (`MAX_REQUESTS` in `tests/support/e2e/live.py`). The plan is 84, about a minute and a half at 1 request per second.
-- **Worst case:** 110. Every call meant to be served from the cache goes to the network (26 more requests), and those tests fail anyway, except the two repeats allowed to send 1 request: `get_market_statistics` with filters and the filtered list of `search_investments`.
+- **Limit:** at most 120 live requests per run (`MAX_REQUESTS` in `tests/support/e2e/live.py`). The plan is 87, about a minute and a half at 1 request per second.
+- **Worst case:** 116. Every call meant to be served from the cache goes to the network (29 more requests), and those tests fail anyway, except the two repeats allowed to send 1 request: `get_market_statistics` with filters and the filtered list of `search_investments`.
 - **Report:** at the end pytest prints the section „żywe zapytania (e2e)” with the number of requests per call.
 - **Counting:** only requests that got a response are counted.
   - The MCP server logs every request (`HTTP Request:`) on stderr, and the suite reads that stream.
@@ -192,9 +192,9 @@ Each module starts its own `deweloperuch-mcp` (with its own cache); the CLI runs
 |---|---|---|---|---|
 | `test_live_developer_search.py` | `search_developers`, `developers search` | 8 | 4 / 8 | a known developer (slug, profile link for `polska`), the repeat from the cache, the largest limit (20), nothing found with a hint, 3 refusals without a request, the CLI with `--json` |
 | `test_live_investment_search.py` | `search_investments` | 4 | 3 / 4 | the investments of Sopot ordered by active offers, the same list filtered and ordered (cache, at most 1), a search by name honouring its limit and `total` [W], the match's active offers equal to those of `get_investment` [W] |
-| `test_live_transactions.py` | `get_transaction_statistics`, `stats transactions` | 5 | 3 / 4 | months of Warsaw, more months from the cache, fewer transactions in the latest months (the RCN reporting lag), quarters, the CLI for another city |
-| `test_live_rankings.py` | `rank_locations`, `stats cities` | 4 | 3 / 4 | cities by transactions, by price from the cache, powiats, the CLI as text |
-| `test_live_buildings.py` | `get_building`, `buildings get` | 5 | 4 / 4 | the building of the sample with its units, transactions and trend (2), the repeat from the cache, the CLI with `--json`, [H] an unknown slug (last, since a 5xx ends the run) |
-| `test_live_valuation.py` | `estimate_property_value`, `valuation estimate` | 4 | 4 / 4 | `search_locations` for a street's coordinates (2), a valuation there, a point outside Poland refused without a request, the CLI with `--json` at the sample's point |
+| `test_live_transactions.py` | `get_transaction_statistics`, `stats transactions` | 6 | 3 / 5 | months of Warsaw, more months from the cache, fewer transactions in the latest months (the RCN reporting lag), the incomplete months are the newest ones and end at `last_complete_period` (cache), quarters, the CLI for another city; every result: `incomplete` only on trailing periods |
+| `test_live_rankings.py` | `rank_locations`, `stats cities` | 6 | 3 / 6 | cities by transactions, by price from the cache (the most expensive with `min_transactions=50`, the cheapest with the default threshold of 20), powiats, the cheapest powiats from the cache, the CLI as text |
+| `test_live_buildings.py` | `get_building`, `buildings get` | 6 | 6 / 6 | the building of the sample with its units, transactions and trend (2), the repeat from the cache, the CLI with `--json`, `cisna` with its trend (2): no average of 0, the counts of the transactions that are no regular sale match the listed ones, a trend without quarters has no radius and a hint, [H] an unknown slug (last, since a 5xx ends the run) |
+| `test_live_valuation.py` | `estimate_property_value`, `valuation estimate` | 5 | 5 / 5 | `search_locations` for a street's coordinates (2), a valuation there, a valuation in Cisna (fewer than 5 transactions: `low_confidence` and the caveat in `hint`, only warned about when no longer so), a point outside Poland refused without a request, the CLI with `--json` at the sample's point; every valuation: `low_confidence` true exactly below 5 transactions |
 
-**In total:** 119 tests, a plan of 84 live requests, at most 110, a hard limit of 115.
+**In total:** 125 tests, a plan of 87 live requests, at most 116, a hard limit of 120.

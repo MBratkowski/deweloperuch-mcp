@@ -2,13 +2,17 @@
 (tests/golden/mcp/<case>.json).
 """
 
-from support.builders.transactions import months, quarters
+from support.builders.transactions import months, quarters, warszawa_months
 from support.golden.mcp import INJECTED, TX, Case, case, transactions_with
 from support.providers.routes.transactions import transaction_answer, transaction_routes
 
 CASES: dict[str, Case] = {
     # get_transaction_statistics: the samples (Warsaw), more periods as copies of their rows
     "transactions_months": case(TX, transaction_routes, city="warszawa"),
+    # every month of Warsaw on 2026-10-15 (tests/fixtures/api/), with its incomplete tail
+    "transactions_warszawa_20261015": case(
+        TX, transactions_with(monthly=warszawa_months()), city="warszawa"
+    ),
     "transactions_quarters": case(TX, transaction_routes, city="warszawa", granularity="quarter"),
     "transactions_67_months_periods_2": case(
         TX, transactions_with(monthly=months(67)), city="warszawa", periods=2

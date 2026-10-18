@@ -1,0 +1,29 @@
+{
+  "args": [
+    "stats",
+    "cities",
+    "--sort",
+    "price_per_m2_asc",
+    "--limit",
+    "5"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Ranking miejscowości od najniższej ceny za m²: pokazano 5 z 258 (co najmniej 20 transakcji).",
+    "Wskazówka: Przy sortowaniu po cenie pominięto miejsca z mniej niż 20 transakcjami (domyślny próg); wszystkie miejsca pokaże min_transactions=0. Pokazano pierwsze 5 z 258 miejscowości; kolejne pokaże większy limit (najwyżej 100).",
+    "Ranking miast na deweloperuch.pl: https://deweloperuch.pl/ceny-transakcyjne/polska/miasta",
+    "1. Kamienna Góra [kamienna-gora] · transakcji: 37 · 3 394 PLN/m² · 46,6 m² · 150 000 PLN",
+    "2. Boguszów-gorce [boguszow-gorce] · transakcji: 32 · 3 524 PLN/m² · 43,1 m² · 132 500 PLN",
+    "3. Nowa Ruda [nowa-ruda] · transakcji: 27 · 3 565 PLN/m² · 51,7 m² · 180 000 PLN",
+    "4. Głuchołazy [glucholazy] · transakcji: 23 · 3 922 PLN/m² · 55,5 m² · 210 000 PLN",
+    "5. Bogatynia [bogatynia] · transakcji: 27 · 4 065 PLN/m² · 49,2 m² · 190 000 PLN",
+    "Serwis nie podaje okresu ani tego, czy ceny i metraż to średnie, czy mediany.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/city-transaction-stats [accept: application/json]"
+  ]
+}

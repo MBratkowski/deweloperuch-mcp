@@ -3,7 +3,22 @@ real answers (the samples in docs/discovery/samples/, the raw payloads in
 tests/fixtures/).
 """
 
+from deweloperuch_mcp.api.adapters.transaction_ranking_api import POWIAT_RANKING
+from deweloperuch_mcp.api.dto.dto import Dto
+from deweloperuch_mcp.api.dto.powiat_transactions_list_dto import PowiatTransactionsListDto
+from support.providers.routes.rankings import POWIATS_2026_10_15, captured
 from support.providers.samples import body
+
+
+def test_no_powiat_has_zeros_and_each_has_at_least_17_transactions() -> None:
+    """[P 2026-10-15]: every powiat has its price per m², area and price, and the fewest
+    transactions is 17, so the price orders' default threshold (20) leaves out few."""
+    rows = captured(POWIATS_2026_10_15)
+    powiats = Dto.validated(PowiatTransactionsListDto, rows, POWIAT_RANKING).to_model()
+
+    assert len(powiats) == 380
+    assert all(None not in (p.price_per_m2, p.area_m2, p.price) for p in powiats)
+    assert min(p.transaction_count for p in powiats) == 17
 
 
 def test_powiat_counts_span_many_years_city_counts_about_a_quarter() -> None:

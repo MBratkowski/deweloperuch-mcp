@@ -61,5 +61,7 @@ Zastrzeżenia, które podaj użytkownikowi:
 estimate_property_value to ceny transakcyjne z Rejestru Cen Nieruchomości (za ile \
 sprzedano, z kilkumiesięcznym opóźnieniem); to różne miary, nie licz z nich jednej średniej.
 - Wycena jest przybliżona: to porównanie z transakcjami w pobliżu, nie operat szacunkowy.
+- Gdy estimate_property_value zwróci low_confidence=true (mniej niż 5 transakcji \
+porównawczych), przekaż zastrzeżenie z pola hint: wycena jest wtedy tylko orientacyjna.
 - Statystyki miasta obejmują tylko aktywne oferty; przy ofercie wycofanej \
 (status=archived) porównujesz jej ostatnią cenę z dzisiejszym rynkiem."""

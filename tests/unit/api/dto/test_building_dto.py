@@ -19,9 +19,11 @@ from deweloperuch_mcp.models.errors import (
 from support.providers.routes.buildings import (
     BUILDING,
     BUILDING_ID,
+    CISNA_BODY,
     SLUG,
     TREND,
     building_routes,
+    fixture_body,
 )
 from support.providers.samples import body
 
@@ -105,6 +107,40 @@ def test_the_averages_are_the_services_own() -> None:
 
 
 @pytest.mark.parametrize(
+    ("field", "attribute"),
+    [
+        ("avg_amount", "avg_price"),
+        ("avg_size", "avg_area_m2"),
+        ("avg_price_sqm", "avg_price_per_m2"),
+    ],
+)
+@pytest.mark.parametrize("zero", [0, "0", 0.0, -1], ids=["0", "text 0", "0.0", "-1"])
+def test_an_average_of_0_or_less_is_no_average(field: str, attribute: str, zero: object) -> None:
+    """A rule test on a hand-edited payload: the real building cisna
+    (tests/fixtures/api/) with one of its averages replaced by 0 or less. [W] no real
+    building with such an average is known; the service writes 0 for no value in its
+    monthly statistics and ``city-transaction-stats`` [P], and no flat costs 0."""
+    data = fixture_body(CISNA_BODY)
+    data[field] = zero
+
+    building = building_dto(data).to_model()
+
+    assert getattr(building, attribute) is None
+    others = {"avg_price", "avg_area_m2", "avg_price_per_m2"} - {attribute}
+    assert all(getattr(building, other) > 0 for other in others)
+
+
+@pytest.mark.parametrize(("name", "expected"), [("", None), ("  ", None), (" Rynek 1 ", "Rynek 1")])
+def test_a_blank_name_is_no_address(name: str, expected: str | None) -> None:
+    """A rule test on hand-edited payloads: the sample with its name replaced; the
+    building cisna sends ``""`` [P 2026-10-15] (tests/contract)."""
+    data = body("api.tx_visible")
+    data["name"] = name
+
+    assert building_dto(data).to_model().name == expected
+
+
+@pytest.mark.parametrize(
     ("changes", "attribute", "word"),
     [
         (dict(marketType="wtorny"), "market", "secondary"),
@@ -156,6 +192,34 @@ def test_floors_rooms_and_areas_as_numbers_or_text(
     unit = UnitDto.model_validate(data).to_model()
 
     assert (unit.floor, unit.rooms, unit.area_m2) == expected
+
+
+@pytest.mark.parametrize(
+    ("changes", "expected"),
+    [
+        # As the building cisna sends it [P 2026-10-15] (tests/contract).
+        (dict(floor="", floor_number=0), (None, 5)),
+        (dict(floor="0", floor_number=0), (0, 5)),
+        # Stated as a number instead of text: still stated.
+        (dict(floor=2, floor_number=2), (2, 5)),
+        (dict(floor=2.0, floor_number="2", rooms=5), (2, 5)),
+        # [W] rooms have the same pair of fields; no blank one has been seen.
+        (dict(rooms=" ", rooms_number=0), (1, None)),
+        (dict(floor=None, rooms=None), (None, None)),
+    ],
+)
+def test_a_floor_or_rooms_the_register_leaves_blank_are_unknown(
+    changes: dict[str, Any], expected: tuple[object, ...]
+) -> None:
+    """A rule test on hand-edited payloads: the sample's first unit (``floor`` "1",
+    ``rooms`` "5") with the text of its floor or rooms blanked. The service then sends
+    0 as the number, which is no ground floor and no count of rooms."""
+    data = body("api.tx_visible")["sale"][0]
+    data.update(changes)
+
+    unit = UnitDto.model_validate(data).to_model()
+
+    assert (unit.floor, unit.rooms) == expected
 
 
 def test_the_transactions_of_a_unit_oldest_first() -> None:

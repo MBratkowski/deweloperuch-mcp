@@ -4,8 +4,23 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- `get_transaction_statistics` / `stats transactions`: incomplete newest periods are marked. Each such period has `incomplete: true` (MCP: only when true; CLI `--json`: a bool on every period; the text table marks it with ` *` and a legend line), and the result has `last_complete_period` (omitted when it cannot be judged). The hint names the incomplete periods and the last period with a usual count (its data may still change); for small series it says there are too few transactions to judge. The rule is the package's own [W]: the longest trailing run of periods (at most 12 months or 4 quarters) with fewer than half of the median count of the reference window before it; not judged when that median is below 10 transactions or with fewer than 3 reference periods (open question T46). The `note` text, the tool description, the server instructions and the prompt `porownaj_miasta` changed accordingly.
+- `estimate_property_value` / `valuation estimate`: `low_confidence` (`true` exactly when the estimate rests on fewer than 5 comparable transactions; present on every estimate, `false` included; omitted without one). The hint carries a caveat with the facts (number of transactions, radius, months), or a softer sentence when only the radius reached the service's ceiling of 1000 m. The CLI prints it as an `Uwaga: …` line and the valuation cautions as `Wskazówka: …`. The prompt `ocen_oferte` tells the model to pass the caveat on.
+- `get_building` / `buildings get`: `non_regular_transactions` (counts of transactions with a classification other than `regular`, e.g. shares and enforcement sales; omitted in MCP when none, `{}` in CLI `--json`; the CLI prints a `Transakcje inne niż zwykłe: …` line) and `hint` (e.g. an empty neighbourhood trend). The service's averages probably do not include non-regular transactions (checked in one building, T48).
+
 ### Changed
+- **BREAKING:** `rank_locations` / `stats cities`: when `--min-transactions` / `min_transactions` is not given and the sort is by price (`price_per_m2_desc`, `price_per_m2_asc`; both levels), places with fewer than 20 transactions are now left out. `transactions_desc` keeps 0; an explicit value, including 0, always wins. The MCP argument is now an integer or null with default null (it was an integer with default 0); the output `min_transactions` echoes the applied threshold; the hint says so when the default left places out. The refusal message gained „albo pusty”. For all places use `min_transactions=0` / `--min-transactions 0`.
+- **BREAKING:** `get_building`: the output field `name` is optional (a blank address from the register is absent instead of an empty value). Consumers validating the strict output schema, where `name` was required, must accept its absence. In CLI `--json` `name` is `null` and the text header falls back to the city.
+- `get_building`: a unit's `floor` and `rooms` are absent when the register's text is blank (they read 0); building averages, a trend quarter's price and the trend radius of 0 or less are no value.
+- `estimate_property_value`: the estimate and the price per m² come as a pair; a value of 0 or less is no value. The CLI groups digits and agrees "z ostatniego miesiąca".
+- Descriptions of the tools `rank_locations`, `get_transaction_statistics`, `estimate_property_value` and `get_building` and of their parameters and fields changed (see the pages under `docs/mcp/tools/`).
+- Maintenance, not part of the package: the live e2e request budget is 120 (was 115); see `tests/e2e/README.md`.
 - Maintenance, not part of the package: releases automatically render and attach a changelog PNG from short Polish copy in `packaging/announcements/<version>.json`. The release workflow can also regenerate only the graphic for an existing release.
+
+### Fixed
+- `rank_locations` / `stats cities`: a price or area of 0 from the service is no value. The place sorts last on price and shows no price fields (CLI text `?`, `--json` `null`); before, Ignatki-osiedle (listed with 0) ranked as the cheapest place [P 2026-10-15].
+- `get_building` / `buildings get`: units with an unknown floor no longer show "piętro 0".
 
 ## [0.1.3] - 2026-10-16
 

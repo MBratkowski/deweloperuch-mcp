@@ -1,10 +1,12 @@
 """Live: ``get_building`` (the MCP server over stdio) and ``deweloperuch buildings get``
-(the CLI), at most four live requests.
+(the CLI), at most six live requests.
 
 The building is the one of the sample api.tx_visible (``23-marca-79c-sopot``, [P
 2026-10-09]): no tool finds a building's slug (the streets of the transaction search
-have none, docs/discovery/endpoints.md), so the suite takes a known one. Assertions are
-about structure, ranges and consistency, never about today's numbers.
+have none, docs/discovery/endpoints.md), so the suite takes a known one. A second one,
+``cisna`` (tests/fixtures/api/, [P 2026-10-15]), had a share and an enforcement sale
+among its transactions and no trend around it. Assertions are about structure, ranges
+and consistency, never about today's numbers.
 
 [H] What the service answers for an unknown slug is not documented: the client takes a
 404, or a 200 with null or with an error object, as "not found"
@@ -36,6 +38,13 @@ TREND_QUARTERS = 12
 SIZE_BUDGET = 8_000
 QUARTER = re.compile(r"\d{4}-Q[1-4]")
 MARKETS = ("primary", "secondary")
+AVERAGES = ("avg_price", "avg_area_m2", "avg_price_per_m2")
+OTHER_BUILDING = "cisna"
+NO_TREND_QUARTERS = (
+    "Serwis nie ma kwartałów trendu cen w okolicy tego budynku; to nie błąd i ponowienie nic "
+    "nie zmieni. Szersze tło może dać get_transaction_statistics dla city_slug budynku (małe "
+    "miejscowości mogą nie mieć tych statystyk)."
+)
 
 
 @pytest.fixture(scope="module")
@@ -55,6 +64,21 @@ def building(mcp: McpLive) -> Call:
 
 def day(text: str) -> date:
     return date.fromisoformat(text)
+
+
+def check_other_transactions(found: dict[str, Any]) -> None:
+    """No average of 0 (0 is no value); the counts of the transactions that are no
+    regular sale are positive, never ``regular``, and, when every unit is listed, those
+    of the transactions shown."""
+    for average in AVERAGES:
+        assert found.get(average, 1) > 0, (average, found.get(average))
+    counts: dict[str, int] = found.get("non_regular_transactions", {})
+    assert "regular" not in counts and all(count > 0 for count in counts.values()), counts
+    assert sum(counts.values()) <= found["transactions_total"]
+    if not found["truncated"]:
+        listed = [deed.get("classification") for u in found["units"] for deed in u["transactions"]]
+        others = {word for word in listed if word not in (None, "regular")}
+        assert counts == {word: listed.count(word) for word in others}
 
 
 def test_the_building_with_its_units_and_their_transactions(building: Call) -> None:
@@ -86,6 +110,7 @@ def test_the_building_with_its_units_and_their_transactions(building: Call) -> N
     newest = [max(day(d["date"]) for d in unit["transactions"]) for unit in found["units"]]
     assert newest == sorted(newest, reverse=True)
     assert newest[0] == last
+    check_other_transactions(found)
 
 
 def test_the_trend_around_the_building(building: Call) -> None:
@@ -99,6 +124,7 @@ def test_the_trend_around_the_building(building: Call) -> None:
     assert all(QUARTER.fullmatch(period) for period in periods)
     assert periods == sorted(periods) and len(set(periods)) == len(periods)
     assert all(q.get("avg_price_per_m2", 1) > 0 for q in trend["quarters"])
+    assert "hint" not in building.data
 
 
 def test_the_same_building_again_comes_from_the_cache(building: Call, mcp: McpLive) -> None:
@@ -125,6 +151,31 @@ def test_the_cli_shows_the_building_as_json(
     assert len(view["units"]) == min(2, view["units_total"])
     assert all(unit["unit_id"] > 0 and unit["name"] for unit in view["units"])
     assert view["neighbourhood_trend"] is None
+
+
+def test_a_building_with_transactions_that_are_no_regular_sale(mcp: McpLive) -> None:
+    """Two requests (the building, then its trend). Robust to the data changing: the
+    invariants of ``check_other_transactions``, and a trend without quarters keeps its
+    counters, has no radius and the hint says so."""
+    call = mcp.call_network(
+        "get_building", building_slug=OTHER_BUILDING, limit=50, include_trend=True
+    )
+
+    assert call.sent == 2, call.sent
+    found = call.data
+    assert (found["building_slug"], found["city_slug"]) == (OTHER_BUILDING, OTHER_BUILDING)
+    assert found.get("name") != "" and found.get("street") != ""  # blank is no value
+    check_other_transactions(found)
+    trend: dict[str, Any] = found["neighbourhood_trend"]
+    assert trend["returned"] == len(trend["quarters"]) <= TREND_QUARTERS
+    assert trend["truncated"] is (trend["total"] > trend["returned"])
+    if trend["total"] == 0:
+        assert "radius_km" not in trend
+        assert found["hint"] == NO_TREND_QUARTERS
+    else:
+        assert trend.get("radius_km", 1) > 0
+        assert all(q.get("avg_price_per_m2", 1) > 0 for q in trend["quarters"])
+        assert "hint" not in found
 
 
 def test_an_unknown_building_is_not_found(mcp: McpLive) -> None:

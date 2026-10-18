@@ -134,8 +134,9 @@ Starting suggestions of the search box.
 - Histograms as for offers. Can be slow on MISS (2–5 s).
 
 ### `GET /api/map/powiat-stats[?type=house|both]` [P]
-- All counties (369) with aggregates for the whole period: `[{powiat_rcn_id, nazwa, transaction_count, avg_price_sqm, avg_size, avg_amount}]`
+- All counties (380 on 2026-10-15; 369 in the sample) with aggregates for the whole period: `[{powiat_rcn_id, nazwa, transaction_count, avg_price_sqm, avg_size, avg_amount}]`
 - Sample: `api.powiat_stats.json`
+- [P 2026-10-15] `tests/fixtures/api/powiat_stats_20261015.json`: 380 powiats (369 in the sample of 2026-10-09; refuted: the list was thought incomplete, T52 resolved), no `avg_*` equal to 0, the fewest transactions is 17.
 
 ### `GET /api/map/powiat-investments/{powiatId}[?type=house]` [P]
 - RCN buildings in a county with aggregates: `{powiatId, powiatName, investments: [{id, lat, lng, name, slug, city, citySlug, street, district, avgAmount, avgSize, avgPriceSqm, transactions, lastEventDate}]}`
@@ -148,6 +149,7 @@ Starting suggestions of the search box.
 ### `GET /api/map/transactions/visible/{investRcnSlug}[?type=house]` [P]
 - **RCN building with full transaction history**: `{invest_rcn_id, name, city, city_slug, street, slug, latitude, longitude, avg_amount, avg_size, avg_price_sqm, transactions, source_rcn, sale: [{sale_rcn_id, name, amount, amount_sqm, floor, floor_number, rooms, rooms_number, type, currency, size, start_amount_difference(_percent), total_events, creation_date, last_event_date, is_flipped, last_transaction_classification, sale_event_rcn: [{sale_event_rcn_id, amount, amount_sqm, currency, buyerType, sellerType, classification, transactionType, marketType, participation, creation_date, additionalData: {raw RCN record}}]}]}`
 - 189 KB for a building with 86 units. Sample: `api.tx_visible.json`
+- [P 2026-10-15] `tests/fixtures/api/tx_visible_cisna_20261015.json` (building 152198, `cisna`): `name` and `street` are empty strings (a village without streets); units with an empty `floor` have `floor_number` 0 (so 0 is not a ground floor there). 6 units, 7 transactions: 5 `transakcja`, 1 `udzial` (participation 1/2), 1 `egzekucja`. The counter `transactions` (5), `avg_amount` (274,600) and `avg_size` (72.08) are the means of the 5 `transakcja` transactions, `avg_price_sqm` (3,809.76) is their summed price over their summed area. Whether this is "all `transakcja` transactions" or "units whose last classification is `transakcja`" is open (T48) [H].
 
 ### `GET /api/sale-events-rcn/batch?ids=<sale_rcn_id,…>` [P]
 - Unit price history: `{ "<id>": [{amount, creation_date}] }`
@@ -162,6 +164,8 @@ Starting suggestions of the search box.
 - `propertyType`: `mieszkania` [P], `domy` [H]
 - The latest months have few transactions (RCN feed lag): `2026-07` has 2 transactions [P]
 - Months without transactions (2026-05, 2026-06, Warsaw) return all fields 0 (count, median/avg price per m², median area, median price); 2026-04 had 29 transactions (the RCN lag). The client treats 0 as missing [P 2026-10-13, live e2e run].
+- [P 2026-10-15] `tests/fixtures/api/monthly_tx_warszawa_20261015.json`: 67 months 2021-01..2026-07, `scope.label` `city`. Tail: 2026-03 1,390, 2026-04 987 (29 on 2026-10-13), 2026-05 22, 2026-06 0 (every measure 0), 2026-07 35 with `med_price_sqm` 33,176 (about twice the months before); 2026-08 and 2026-09 are absent. Revision horizon: T46 [W].
+- [P 2026-10-16] `tests/fixtures/api/monthly_tx_karpacz_20261016.json`: a small town has 60 months 2021-01..2025-12, i.e. no rows after the last month with data; median 1 transaction a month, 26 months with 0 (every measure 0), at most 7.
 - Sample: `api.monthly_tx.json`
 
 ### `GET /api/statystyki/powiat-price-trend?powiatId=` [P]
@@ -171,16 +175,19 @@ Starting suggestions of the search box.
 ### `GET /api/avg-price-trend/city/{citySlug}[?type=house[&metric=plot]]` [P]
 - Quarterly: `{ data: [{period, avgPriceSqm, count}], scope: "city", scopeName }`
 - Sample: `api.avg_trend_city.json`
+- [P 2026-10-16] `tests/fixtures/api/avg_trend_city_warszawa_20261016.json`: `scope` `city`, `scopeName` null, 39 quarters 2017-Q1..2026-Q3. Tail: 2025-Q3 3,902, 2025-Q4 3,605, 2026-Q1 3,721, 2026-Q2 1,034, 2026-Q3 37 with `avgPriceSqm` 33,176 (the same outlier as monthly 2026-07). Each quarter's `count` is about 2% above the sum of its months in `monthly-transaction-stats` (2026-Q1 3,721 vs 3,643) [P]; the cause is unknown [H].
 
 ### `GET /api/avg-price-trend/building/{investRcnId}[?type=house[&metric=plot]]` [P]
 - Trend for the building's neighborhood: `{ data: [...], radiusKm: 1 }`. Requires a **numeric** `invest_rcn_id`; a slug gives `400 {"error":"Valid investRcnId is required"}` [P].
 - Sample: `api.avg_trend_building.json`
+- [P 2026-10-15] `tests/fixtures/api/avg_trend_building_152198_20261015.json`: building 152198 (Cisna) gives 200 `{"data":[],"radiusKm":0}`, so a building with no neighbourhood trend is an empty `data` and a radius of 0, not an error.
 
 ### `GET /api/city-transaction-stats` [P]
 - City ranking (2,448): `[{city, city_slug, transaction_count, avg_price_sqm, avg_size, avg_amount, transaction_count_change, price_sqm_change, avg_size_change, amount_change}]`
 - The aggregation period and the base of `*_change` are unknown [H]. `avg_price_sqm`=16413 for Warsaw is nearly equal to the median 16414 from the statistics map, so the field may contain a median despite its name [H].
 - Warsaw `transaction_count` 3606 here vs 351,314 in `map/powiat-stats` (powiat 302); monthly stats give ~1.0-1.3k per month, so the city figure looks like about a quarter and the powiat figure like the whole RCN history; the powiat price seems to come from a different window than its count [W 2026-10-13] (T10 stays open).
 - 548 KB, cache 24 h. Sample: `api.city_tx_stats.json`
+- [P 2026-10-15] `tests/fixtures/api/city_tx_stats_20261015.json`: 2,529 places (2,448 in the earlier sample). `avg_price_sqm` and `avg_amount` are always integers, `avg_size` is fractional in 2,234 rows. Exactly one row (`Ignatki-osiedle`, 8 transactions) has `avg_price_sqm`, `avg_size` and `avg_amount` all 0: a zero means no value (T47 resolved); no `null`, empty or negative `avg_*`. 1,628 places have at most 2 transactions, 258 at least 20, 108 at least 50, so a price ranking needs a minimum count.
 
 ### `GET /api/announcement-stats?region=&propertyType=` [P]
 - Daily series from listing portals: `{ blueRent, blueSell, greenRent, greenSell: [{date: "<epoch ms as string>", value}] }`
@@ -197,7 +204,8 @@ Starting suggestions of the search box.
 - Comparative valuation based on RCN transactions within a radius.
 - Response: `{ estimatedValue, estimatedPricePerSqm, latitude, longitude, area, generatedAt, radiusKm, periodMonths, radiusLevel, areaElasticity, trendMonthlyPct, buildingTransactionCount, stats: {averagePricePerSqm, medianPricePerSqm, minPricePerSqm, maxPricePerSqm, count}, transactions: [{address, unitNumber, area, pricePerSqm, totalPrice, date, floor, distance, latitude, longitude, marketType, isSamePrimaryInvestment, saleRcnId, investRcnSlug, investRcnCitySlug, excluded}], buildings: [...], estimationContext: {pool, …}, radiusPool: [...], radiusCeilingM }`
 - 180 KB, mostly `radiusPool` (279 entries). To MCP we pass only the result and the top comparables.
-- `radiusLevel`: `sasiedztwo` [P]; other levels [H]
+- `radiusLevel`: `sasiedztwo` and `okolica` [P 2026-10-15]; other levels [H]
+- [P 2026-10-15] `radiusCeilingM` is 1000 in all three captures (`tests/fixtures/api/standalone_val_cisna_20261015.json`, `api.standalone_val`, `page.offer_report`); its meaning (the widest radius the service will try) is [W]. `radiusLevel` values seen: `sasiedztwo` (`radiusKm` 0.2, dense areas) and `okolica` (Cisna, 49.2167/22.3333, 50 m2: `radiusKm` 1 = the ceiling, `periodMonths` 24, `stats.count` 2, estimate 202,000 from 2,302 and 5,778 PLN/m2, both `excluded: false`, both in building `cisna` with an empty `address`). Small-pool behaviour: T49.
 - The server action `fetchStandaloneValuation` gives an identical result [P]
 - `distance` is rounded to the nearest 50 m (rawDistance 42 -> 50; 93.5 and 119.8 -> 100; 152 and 165 -> 150); `stats.count` == number of `transactions` == `estimationContext.pool` (9/9/9 and 26/26/26); no transaction with `excluded=true` in the samples [P 2026-10-13, samples `api.standalone_val` and `page.offer_report`].
 - Sample: `api.standalone_val.json`

@@ -7,11 +7,12 @@ statistics (``ValuationStatsDto``) and comparable transactions
 The response (about 180 KB) is mostly the service's working data: ``radiusPool`` (279
 entries in the sample), ``estimationContext`` and ``buildings``. The DTOs do not read
 them, so they never reach the models nor a result (D5); neither do fields whose meaning
-is not confirmed (``trendMonthlyPct``, ``areaElasticity``, ``radiusLevel`` beyond its one
-value, ``buildingTransactionCount``, and of a transaction ``excluded`` and
-``isSamePrimaryInvestment``) nor the register's ids of units (``unitNumber``,
-``saleRcnId``). Fields the models read are required where the contract tests rely on
-them, so a renamed one fails them.
+is not confirmed (``trendMonthlyPct``, ``areaElasticity``, ``radiusLevel``: only its
+values ``sasiedztwo`` and ``okolica`` are, ``buildingTransactionCount``, and of a
+transaction ``excluded`` and ``isSamePrimaryInvestment``) nor the register's ids of units
+(``unitNumber``, ``saleRcnId``). ``radiusCeilingM`` is read with its meaning [W] (the
+widest radius, ``Valuation.at_widest_radius``). Fields the models read are required where
+the contract tests rely on them, so a renamed one fails them.
 """
 
 from deweloperuch_mcp.api.dto.dto import DateText, Dto, Number
@@ -90,13 +91,15 @@ class ValuationStatsDto(Dto):
     def to_model(self) -> PricePerM2Stats:
         # [W] the service's own figures: in both samples ``count`` is the number of
         # transactions (9, 26) and none is ``excluded``, so whether excluded ones count is
-        # not known.
+        # not known. A price of 0 is none (``_positive``); a count of 0 is a count, one
+        # below 0 is none.
+        count = self._rounded(self.count)
         return PricePerM2Stats(
-            count=self._rounded(self.count),
-            median_price_per_m2=self._number(self.medianPricePerSqm),
-            average_price_per_m2=self._number(self.averagePricePerSqm),
-            min_price_per_m2=self._number(self.minPricePerSqm),
-            max_price_per_m2=self._number(self.maxPricePerSqm),
+            count=None if count is None or count < 0 else count,
+            median_price_per_m2=self._positive(self.medianPricePerSqm),
+            average_price_per_m2=self._positive(self.averagePricePerSqm),
+            min_price_per_m2=self._positive(self.minPricePerSqm),
+            max_price_per_m2=self._positive(self.maxPricePerSqm),
         )
 
 
@@ -106,22 +109,44 @@ class StandaloneValuationDto(Dto):
     estimatedValue: Number | None
     estimatedPricePerSqm: Number | None
     radiusKm: Number | None
+    radiusCeilingM: Number | None
     periodMonths: Number | None
     stats: ValuationStatsDto | None
     transactions: list[ValuationTransactionDto]
 
     def to_model(self, subject: ValuationSubject) -> Valuation:
         """The estimate for ``subject`` (what was asked for) with every comparable
-        transaction, in the service's order."""
+        transaction, in the service's order.
+
+        The value and the price per m² are one estimate: both or neither ([P] both
+        samples, asked for a whole 50 m², give them together, the value being the price
+        per m² times that area; which area a fractional request is valued at is not
+        confirmed, T41). A price of 0 or less is none (``_positive``): never seen here
+        ([H] that the service sends 0), but no flat costs 0."""
+        value = self._positive(self.estimatedValue)
+        per_m2 = self._positive(self.estimatedPricePerSqm)
+        estimated = value is not None and per_m2 is not None
         return Valuation(
             subject=subject,
-            estimated_value=self._number(self.estimatedValue),
-            price_per_m2=self._number(self.estimatedPricePerSqm),
+            estimated_value=value if estimated else None,
+            price_per_m2=per_m2 if estimated else None,
             radius_m=self._metres(self.radiusKm),
+            radius_ceiling_m=self._ceiling(self.radiusCeilingM),
             period_months=self._rounded(self.periodMonths),
             stats=None if self.stats is None else self.stats.to_model(),
             comparables=tuple(item.to_model() for item in self.transactions),
         )
+
+    @classmethod
+    def _ceiling(cls, metres: int | float | str | None) -> int | None:
+        """``radiusCeilingM`` in whole metres; one that rounds to 0 m or less is none."""
+        # [W] the meaning: the widest radius the service widens its comparable transactions
+        # to, read from the name and from Cisna, where radiusKm 1 reached it with only 2
+        # transactions. The field itself is in the response (docs/discovery/endpoints.md,
+        # "5. Valuation"), 1000 in every capture [P 2026-10-09 api.standalone_val,
+        # page.offer_report; P 2026-10-15 tests/fixtures/api/standalone_val_cisna_20261015.json].
+        found = cls._rounded(metres)
+        return found if found is not None and found > 0 else None
 
     @classmethod
     def _metres(cls, kilometres: int | float | str | None) -> int | None:

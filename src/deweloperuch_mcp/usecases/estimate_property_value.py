@@ -15,6 +15,15 @@ NO_ESTIMATE = "Serwis nie podał wyceny dla tego miejsca; w promieniu może nie 
 # T41: one fractional request matched a whole-area estimate; the general rule is unknown.
 FRACTIONAL_AREA = "Serwis może nie uwzględnić części ułamkowej powierzchni w wycenie."
 
+# [W] "the widest radius" is the meaning of the ceiling (models.valuation.Valuation.
+# at_widest_radius), read from its name and from Cisna.
+WIDEST_RADIUS = "(największego, jaki serwis bierze pod uwagę)"
+NO_TRANSACTIONS = "Serwis nie podał transakcji, na których oparł wycenę"
+LOW_CONFIDENCE = "to orientacyjna wartość o niskiej wiarygodności. Podaj ją z tym zastrzeżeniem"
+COMPARE = "porównaj też z cenami transakcyjnymi miasta (get_transaction_statistics)."
+"""The caveat of an estimate of low confidence: the facts, ``LOW_CONFIDENCE``, the spread
+of prices when there is one, ``COMPARE``."""
+
 
 @dataclass(frozen=True, kw_only=True)
 class EstimatePropertyValueRequest:
@@ -63,13 +72,72 @@ class EstimatePropertyValueResult:
 
     @property
     def hint(self) -> str | None:
-        """Valuation cautions and guidance about comparable transactions left out (D4)."""
-        hints = []
+        """The caveat of the estimate (``caveat``), guidance about comparable transactions
+        left out (D4) and the valuation cautions (``valuation_hint``), in this order;
+        ``None`` when none applies."""
+        hints = [self.caveat()]
         if self.listing.valuation.estimated and self.listing.truncated:
             hints.append(f"{self.nearest_shown()}; więcej pokaże większy limit.")
-        if self.valuation_hint:
-            hints.append(self.valuation_hint)
-        return " ".join(hints) or None
+        hints.append(self.valuation_hint)
+        return " ".join(hint for hint in hints if hint) or None
+
+    def caveat(self) -> str | None:
+        """What an estimate is to be given with, naming its facts; ``None`` when nothing:
+
+        - of low confidence (``Valuation.low_confidence``): ``Wycena oparta tylko na 2
+          transakcjach z promienia 1 000 m (największego, jaki serwis bierze pod uwagę) z
+          ostatnich 24 miesięcy: to orientacyjna wartość o niskiej wiarygodności. ...``;
+        - from the widest radius only: ``Transakcje porównawcze pochodzą z promienia
+          1 000 m (...), więc wycena opisuje szerszą okolicę i jest orientacyjna.``, no
+          word of low confidence.
+        """
+        valuation = self.listing.valuation
+        radius = valuation.radius_m
+        if valuation.low_confidence:
+            return self._low_confidence()
+        if valuation.estimated and valuation.at_widest_radius and radius is not None:
+            return (
+                f"Transakcje porównawcze pochodzą z promienia {self._grouped(radius)} m "
+                f"{WIDEST_RADIUS}, więc wycena opisuje szerszą okolicę i jest orientacyjna."
+            )
+        return None
+
+    def _low_confidence(self) -> str:
+        """The facts (how many transactions, the radius, the widest one, the months; the
+        words agreeing with the numbers), ``LOW_CONFIDENCE``, the spread of their prices
+        per m² and ``COMPARE``; ``NO_TRANSACTIONS`` instead of "na 0 transakcjach"."""
+        valuation = self.listing.valuation
+        count = valuation.counted_comparables
+        if count == 0:
+            return f"{NO_TRANSACTIONS}: {LOW_CONFIDENCE}; {COMPARE}"
+        transactions = "transakcji" if count == 1 else "transakcjach"
+        said = [f"Wycena oparta tylko na {count} {transactions}"]
+        if valuation.radius_m is not None:
+            said.append(f"z promienia {self._grouped(valuation.radius_m)} m")
+            if valuation.at_widest_radius:
+                said.append(WIDEST_RADIUS)
+        if valuation.period_months == 1:
+            said.append("z ostatniego miesiąca")
+        elif valuation.period_months is not None:
+            said.append(f"z ostatnich {valuation.period_months} miesięcy")
+        return f"{' '.join(said)}: {LOW_CONFIDENCE}{self._spread()}; {COMPARE}"
+
+    def _spread(self) -> str:
+        """`` i z rozpiętością cen za m² tych transakcji (2 302–5 778 PLN/m²)`` from the
+        statistics; ``""`` without a lowest and a higher highest price."""
+        stats = self.listing.valuation.stats
+        low = None if stats is None else stats.min_price_per_m2
+        high = None if stats is None else stats.max_price_per_m2
+        if low is None or high is None or low >= high:
+            return ""
+        prices = f"{self._grouped(low)}–{self._grouped(high)} PLN/m²"
+        return f" i z rozpiętością cen za m² tych transakcji ({prices})"
+
+    @staticmethod
+    def _grouped(value: float) -> str:
+        """``1000`` -> ``1 000``: whole numbers in Polish digit groups, as the CLI prints
+        them next to these texts."""
+        return f"{round(value):,}".replace(",", " ")
 
     def nearest_shown(self) -> str:
         """``Pokazano 1 najbliższą z 3 transakcji porównawczych``, the words agreeing with

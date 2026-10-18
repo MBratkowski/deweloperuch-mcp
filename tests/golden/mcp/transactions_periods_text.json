@@ -20,7 +20,7 @@
         "truncated": true,
         "available_from": "2021-01",
         "hint": "Pokazano ostatnie 2 z 3 okresów (dane od 2021-01); starsze pokaże większe periods (najwyżej 60).",
-        "note": "Ostatnie miesiące są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z pełnymi okresami.",
+        "note": "Ostatnie miesiące są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z okresami o zwykłej liczbie transakcji.",
         "stats_url": "https://deweloperuch.pl/statystyki/ceny-transakcyjne/mieszkania/warszawa",
         "periods": [
           {

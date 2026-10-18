@@ -2,8 +2,8 @@
 
 from support.golden.cli import BUILDINGS, INJECTED_BODY, Case, case
 from support.golden.routes import building_answer, trend_answer
+from support.providers.routes.buildings import CISNA, building_routes, cisna_routes
 from support.providers.routes.buildings import SLUG as BUILDING_SLUG
-from support.providers.routes.buildings import building_routes
 
 CASES: dict[str, Case] = {
     "help_buildings_get": case("buildings", "get", "--help"),
@@ -12,6 +12,11 @@ CASES: dict[str, Case] = {
     "buildings_get_trend": case(*BUILDINGS, BUILDING_SLUG, "--trend", service=building_routes),
     "buildings_get_trend_json": case(
         *BUILDINGS, BUILDING_SLUG, "--trend", "--json", service=building_routes
+    ),
+    # The building cisna as sent (tests/fixtures/api/): other transactions, no trend.
+    "buildings_get_cisna_trend": case(*BUILDINGS, CISNA, "--trend", service=cisna_routes),
+    "buildings_get_cisna_trend_json": case(
+        *BUILDINGS, CISNA, "--trend", "--json", service=cisna_routes
     ),
     "buildings_get_limit_1": case(
         *BUILDINGS, BUILDING_SLUG, "--limit", "1", service=building_routes

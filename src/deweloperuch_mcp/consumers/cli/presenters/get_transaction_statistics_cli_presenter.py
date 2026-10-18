@@ -23,6 +23,13 @@ _COLUMNS: tuple[tuple[str, Measure], ...] = (
     ("Mediana ceny PLN", lambda item: item.median_price),
 )
 
+# An incomplete period has this mark after its label, explained under the table.
+_MARK = "*"
+_LEGEND = (
+    f"{_MARK} okres niepełny: mniej niż połowa zwykłej liczby transakcji (dane RCN jeszcze "
+    "niepełne)."
+)
+
 
 class GetTransactionStatisticsCliPresenter:
     """The statistics: their view as JSON (``--json``) or as Polish text."""
@@ -33,9 +40,17 @@ class GetTransactionStatisticsCliPresenter:
     def present(self, result: GetTransactionStatisticsResult) -> None:
         show(TransactionStatisticsView.from_result(result), self._as_json, self._text)
 
+    @classmethod
+    def _text(cls, result: TransactionStatisticsView) -> str:
+        """Head lines, then the table; a legend under it when a period is marked."""
+        lines = [*cls._head(result), *cls._table(result.periods)]
+        if any(item.incomplete for item in result.periods):
+            lines.append(_LEGEND)
+        return "\n".join(lines)
+
     @staticmethod
-    def _text(result: TransactionStatisticsView) -> str:
-        """Head lines, then one row per period: the count and the measures it has."""
+    def _head(result: TransactionStatisticsView) -> list[str]:
+        """What the statistics are, how many periods, the hint, the note and the link."""
         lines = [
             f"Ceny transakcyjne mieszkań (RCN) · {result.city_slug} · "
             f"{result.granularity.frequency.polish}",
@@ -47,23 +62,33 @@ class GetTransactionStatisticsCliPresenter:
         lines.append(f"Uwaga: {result.note}")
         if result.stats_url:
             lines.append(f"Strona na deweloperuch.pl: {result.stats_url}")
+        return lines
+
+    @staticmethod
+    def _table(periods: list[TransactionPeriodView]) -> list[str]:
+        """One row per period: its label (marked when incomplete), the count and the
+        measures some period has."""
         columns = [
             (title, measure)
             for title, measure in _COLUMNS
-            if any(measure(item) is not None for item in result.periods)
+            if any(measure(item) is not None for item in periods)
         ]
         header = ["Okres", "Transakcje", *(title for title, _ in columns)]
         rows = [
             [
-                item.period,
+                f"{item.period} {_MARK}" if item.incomplete else item.period,
                 number_text(item.transactions),
                 *(cell_text(measure(item)) for _, measure in columns),
             ]
-            for item in result.periods
+            for item in periods
         ]
         widths = [max(len(row[column]) for row in [header, *rows]) for column in range(len(header))]
-        for row in [header, *rows]:
-            cells = [row[0].ljust(widths[0])]
-            cells += [cell.rjust(width) for cell, width in zip(row[1:], widths[1:], strict=True)]
-            lines.append("  ".join(cells))
-        return "\n".join(lines)
+        return [
+            "  ".join(
+                [
+                    row[0].ljust(widths[0]),
+                    *(cell.rjust(width) for cell, width in zip(row[1:], widths[1:], strict=True)),
+                ]
+            )
+            for row in [header, *rows]
+        ]

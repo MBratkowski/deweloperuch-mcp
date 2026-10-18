@@ -22,6 +22,16 @@ SLUG_SOURCE = (
 """Where a building's slug comes from. No lookup by address gives it [P]: the streets of
 the transaction search have no slugs (docs/discovery/endpoints.md, investment-streets)."""
 
+NO_TREND_QUARTERS = (
+    "Serwis nie ma kwartałów trendu cen w okolicy tego budynku; to nie błąd i ponowienie nic "
+    "nie zmieni. Szersze tło może dać get_transaction_statistics dla city_slug budynku (małe "
+    "miejscowości mogą nie mieć tych statystyk)."
+)
+"""A trend without quarters: the service answers so, not with a 404 [P 2026-10-15]. The
+statistics of the building's town are only a maybe: [W] whether the monthly statistics
+cover small towns is not known; ``cisna`` is not among the places of
+city-transaction-stats [P 2026-10-15] (tests/fixtures/api/city_tx_stats_20261015.json)."""
+
 
 @dataclass(frozen=True, kw_only=True)
 class GetBuildingRequest:
@@ -59,11 +69,19 @@ class GetBuildingRequest:
 @dataclass(frozen=True, kw_only=True)
 class GetBuildingResult:
     """The building as a result shows it, with its page (D12) and, when asked for, the
-    trend around it."""
+    trend around it; ``hint`` says what the numbers alone do not."""
 
     listing: UnitListing
     trend: NeighbourhoodTrend | None
     building_url: str | None
+
+    @property
+    def hint(self) -> str | None:
+        """That the service has no quarter of the trend asked for (the building stays);
+        ``None`` otherwise."""
+        if self.trend is not None and self.trend.empty:
+            return NO_TREND_QUARTERS
+        return None
 
 
 class GetBuilding:

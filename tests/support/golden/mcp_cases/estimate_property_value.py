@@ -1,9 +1,9 @@
 """The golden cases of the MCP tool ``estimate_property_value`` (tests/golden/mcp/<case>.json)."""
 
-from support.builders.valuation import valuation_with_comparables
+from support.builders.valuation import IN_CISNA, valuation_with_comparables
 from support.golden.mcp import INJECTED, POINT, VALUATION_TOOL, Case, case, valuation_is
 from support.golden.routes import valuation_answer, without_an_estimate
-from support.providers.routes.valuation import valuation_route
+from support.providers.routes.valuation import cisna_route, valuation_route
 
 CASES: dict[str, Case] = {
     # estimate_property_value
@@ -30,6 +30,8 @@ CASES: dict[str, Case] = {
     "valuation_without_an_estimate": case(
         VALUATION_TOOL, valuation_is(without_an_estimate()), **POINT
     ),
+    "valuation_low_confidence": case(VALUATION_TOOL, cisna_route, **IN_CISNA),
+    "valuation_low_confidence_limit_1": case(VALUATION_TOOL, cisna_route, **IN_CISNA, limit=1),
     "valuation_lat_outside_poland": case(VALUATION_TOOL, valuation_route, **dict(POINT, lat=60)),
     "valuation_lng_outside_poland": case(VALUATION_TOOL, valuation_route, **dict(POINT, lng=10)),
     "valuation_lat_true": case(VALUATION_TOOL, valuation_route, **dict(POINT, lat=True)),

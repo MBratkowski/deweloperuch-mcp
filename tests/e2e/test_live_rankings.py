@@ -1,14 +1,17 @@
 """Live: ``rank_locations`` (MCP) and ``deweloperuch stats cities`` (CLI), 3 live requests.
 
-One MCP server for the module: the ranking of cities (1 request; the second call with
-another order is answered by the cache), the ranking of powiats (1 request), and one
-CLI run (its own process, 1 request). Every call ends the session on a STOP or a
-service error and fails on backend details in the result (``live.McpLive``). Assertions
-are about structure, order and consistency, never about today's numbers.
+One MCP server for the module: the ranking of cities (1 request; the calls with the
+other orders are answered by the cache), the ranking of powiats (1 request; by price
+from the cache too), and one CLI run (its own process, 1 request). Every call ends the
+session on a STOP or a service error and fails on backend details in the result
+(``live.McpLive``). Assertions are about structure, order and consistency, never about
+today's numbers.
 
 [W] checked here: the same place counts far more transactions as a powiat than as a
-city (the description says "nie porównuj liczb między poziomami"), and the city slugs
-of the ranking have the format of search_locations.
+city (the description says "nie porównuj liczb między poziomami"), the city slugs of the
+ranking have the format of search_locations, and the price orders' default threshold
+(20 transactions, ``PRICE_ORDER_MIN_TRANSACTIONS``) keeps the cheapest place from being
+one of a handful of transactions or one without a price (0 PLN/m², live on 2026-10-15).
 """
 
 import re
@@ -84,6 +87,21 @@ def test_the_most_expensive_cities_come_from_the_cache(mcp: McpLive, cities: Cal
     assert all(item["transaction_count"] >= 50 for item in data["items"])
 
 
+def test_the_cheapest_cities_skip_small_places_by_default(mcp: McpLive, cities: Call) -> None:
+    call = mcp.call(TOOL, sort="price_per_m2_asc")
+    data = call.data
+
+    assert call.sent == 0
+    assert data["min_transactions"] == 20
+    assert 0 < data["total"] < cities.data["total"]
+    first = data["items"][0]
+    assert first.get("price_per_m2", 0) > 0 and first["transaction_count"] >= 20, first
+    assert all(item["transaction_count"] >= 20 for item in data["items"])
+    prices = [item["price_per_m2"] for item in data["items"] if "price_per_m2" in item]
+    assert prices == sorted(prices)
+    assert "min_transactions=0" in data["hint"]
+
+
 def test_powiats_by_transactions(powiats: Call, cities: Call) -> None:
     data = powiats.data
 
@@ -97,6 +115,22 @@ def test_powiats_by_transactions(powiats: Call, cities: Call) -> None:
     by_id = {item["powiat_id"]: item for item in data["items"]}
     city = next(i for i in cities.data["items"] if i["city_slug"] == "warszawa")
     assert by_id[POWIAT_WARSZAWA]["transaction_count"] > 2 * city["transaction_count"]
+
+
+def test_the_cheapest_powiats_come_from_the_cache(mcp: McpLive, powiats: Call) -> None:
+    """The default threshold applies to powiats too; the hint names it only when it left a
+    powiat out (one of 380 had fewer than 20 transactions on 2026-10-15)."""
+    call = mcp.call(TOOL, level="powiat", sort="price_per_m2_asc")
+    data = call.data
+
+    assert call.sent == 0
+    assert data["min_transactions"] == 20
+    assert 0 < data["total"] <= powiats.data["total"]
+    assert all(item["transaction_count"] >= 20 for item in data["items"])
+    prices = [item["price_per_m2"] for item in data["items"] if "price_per_m2" in item]
+    assert prices == sorted(prices)
+    left_out = data["total"] < powiats.data["total"]
+    assert ("min_transactions=0" in data.get("hint", "")) is left_out
 
 
 def test_stats_cities_as_text(budget: Budget, tmp_path_factory: pytest.TempPathFactory) -> None:

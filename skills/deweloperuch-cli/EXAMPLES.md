@@ -35,7 +35,7 @@ deweloperuch valuation estimate --lat 52.2297 --lng 21.0122 --area 50 --limit 5 
    - `suspicious_reduction`: a reduction within 30 days after a rise (a "promotion" after a price increase).
 2. `stats market` for the offer's `city_slug`, with `--area-min`/`--area-max` about ±10 m² around the offer's area: where the offer's price per m² falls against `price_per_m2.p25`, `.median` and `.p75`. It covers active offers only; for an archived offer you compare its last price with today's market.
 3. `investments get SLUG --limit 0`: the investment's `lat` and `lng` (no offers listed). Without coordinates skip the valuation and say so.
-4. `valuation estimate` with those coordinates and the offer's area: `estimated_value`, `price_per_m2`, `stats.median_price_per_m2`, `radius_m`, `period_months` and the nearest `comparables` (RCN transactions).
+4. `valuation estimate` with those coordinates and the offer's area: `estimated_value`, `price_per_m2`, `stats.median_price_per_m2`, `radius_m`, `period_months`, `low_confidence` and the nearest `comparables` (RCN transactions). With `low_confidence: true` pass on the caveat from `hint`.
 5. Verdict in one line (a bargain, in line with the market, or expensive) with the numbers: the offer's price per m², the city's median, the valuation. Add the history findings and `investment_url`, `developer_url`.
 6. Caveats to state: offers and market statistics are asking prices; the valuation comes from transaction prices registered months late; it is an approximation, not an appraisal; never average the two kinds of price.
 
@@ -70,7 +70,7 @@ deweloperuch stats government krakow wages --json
 
 1. City slugs: lowercase ASCII with hyphens (`krakow`, `wroclaw`, `gdansk`, `bielsko-biala`); check an unsure one with `locations search`.
 2. `stats market`: asking prices of active offers: `price_per_m2.median` (with `p25`, `p75`), `price.median`, `area_m2.median`, `offers`, `investments`, `developers`, `list_url`.
-3. `stats transactions`: RCN transaction prices per month (`--granularity quarter` for a longer history): per period `period`, `transactions`, `median_price_per_m2`. Read `note`: the newest months are incomplete because transactions reach the register months late; compare the cities on the same full periods.
+3. `stats transactions`: RCN transaction prices per month (`--granularity quarter` for a longer history): per period `period`, `transactions`, `median_price_per_m2`. The newest months are incomplete because transactions reach the register months late: skip periods with `incomplete: true` and compare the cities on the same periods, no newer than the earliest `last_complete_period` of them; a city without `last_complete_period` has too few transactions to judge (read `hint`).
 4. `stats government LOCATION wages` (or `unemployment`) only when the question is about affordability or the job market; it needs no search and covers `polska`, the aggregates `7-miast`, `10-miast`, `6-miast-bez-warszawy` and cities with powiat rights.
 5. One table, a row per city: median asking price per m², offers, transaction price per m² with its period, transactions (and wages or unemployment if asked). Asking and transaction prices in separate columns; write „brak” where data is missing.
 
@@ -82,7 +82,7 @@ deweloperuch stats government polska nbp_prices --json
 deweloperuch stats government polska dwellings_quarterly --periods 8 --json
 ```
 
-- `stats cities`: places (or powiats with `--level powiat`) ranked by RCN transactions or by price per m²; `--min-transactions` drops places with too few transactions to rank by price.
+- `stats cities`: places (or powiats with `--level powiat`) ranked by RCN transactions or by price per m²; `--min-transactions` drops places with too few transactions to rank by price (20 by default when sorting by price; `--min-transactions 0` ranks every place).
 - `stats government`: official series as periods and values (`series[].points`), with `source`, `frequency` and `stats_url`. Datasets: `dwellings_quarterly`, `dwellings_monthly`, `average_area`, `demography`, `population`, `unemployment`, `wages`, `nbp_prices`.
 
 ## 6. One building's transactions

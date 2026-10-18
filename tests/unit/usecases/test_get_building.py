@@ -11,7 +11,12 @@ from deweloperuch_mcp.models.errors import (
     NotFoundError,
     ServiceError,
 )
-from deweloperuch_mcp.usecases.get_building import SLUG_SOURCE, GetBuilding, GetBuildingRequest
+from deweloperuch_mcp.usecases.get_building import (
+    NO_TREND_QUARTERS,
+    SLUG_SOURCE,
+    GetBuilding,
+    GetBuildingRequest,
+)
 from support.fakes.buildings import FakeBuildingCatalog, FakeBuildingLinks
 from support.providers.routes.buildings import SLUG
 
@@ -42,6 +47,41 @@ def test_the_trend_when_asked_for_its_newest_quarters() -> None:
     assert [q.period for q in found.trend.quarters] == ["2025-Q1", "2025-Q2"]
     assert found.trend.total == 3
     assert len(found.listing.units) == 3
+
+
+def test_a_trend_without_quarters_says_so_and_keeps_the_building() -> None:
+    catalog = FakeBuildingCatalog(trend_periods=())
+
+    found = GetBuilding(catalog, FakeBuildingLinks()).execute(
+        GetBuildingRequest(building_slug=BuildingSlug(SLUG), include_trend=True, trend_quarters=2)
+    )
+
+    assert found.trend is not None and found.trend.empty
+    assert found.hint == (
+        "Serwis nie ma kwartałów trendu cen w okolicy tego budynku; to nie błąd i ponowienie "
+        "nic nie zmieni. Szersze tło może dać get_transaction_statistics dla city_slug "
+        "budynku (małe miejscowości mogą nie mieć tych statystyk)."
+    )
+    assert found.hint == NO_TREND_QUARTERS
+    assert len(found.listing.units) == 3
+
+
+@pytest.mark.parametrize(
+    ("include_trend", "periods"),
+    [(False, ()), (True, ("2025-Q1",)), (True, ("2024-Q4", "2025-Q1"))],
+)
+def test_no_hint_without_the_trend_or_with_its_quarters(
+    include_trend: bool, periods: tuple[str, ...]
+) -> None:
+    """Also when the result keeps none of the quarters (``trend_quarters`` 0): the
+    service has them."""
+    found = GetBuilding(FakeBuildingCatalog(trend_periods=periods), FakeBuildingLinks()).execute(
+        GetBuildingRequest(
+            building_slug=BuildingSlug(SLUG), include_trend=include_trend, trend_quarters=0
+        )
+    )
+
+    assert found.hint is None
 
 
 def test_an_unknown_building_says_where_slugs_come_from() -> None:

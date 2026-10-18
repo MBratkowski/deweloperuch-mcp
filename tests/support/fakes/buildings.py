@@ -29,6 +29,15 @@ def unit_sold(unit_id: int, *days: dt.date | None) -> Unit:
     return Unit(unit_id=unit_id, name=f"U{unit_id}", transactions=sold(*days))
 
 
+def unit_sold_as(unit_id: int, *classifications: str | None) -> Unit:
+    """A unit with a transaction of each class, all on one day."""
+    transactions = tuple(
+        Transaction(date=MID, price=1.0, price_per_m2=1.0, classification=classification)
+        for classification in classifications
+    )
+    return Unit(unit_id=unit_id, name=f"U{unit_id}", transactions=transactions)
+
+
 def building_of(*units: Unit) -> Building:
     return Building(
         building_id=1,
@@ -47,10 +56,12 @@ def trend_of(*periods: str) -> NeighbourhoodTrend:
 
 @dataclass
 class FakeBuildingCatalog:
-    """``BuildingCatalog`` that records what it was asked and fails when told to."""
+    """``BuildingCatalog`` that records what it was asked and fails when told to; the
+    trend has the quarters of ``trend_periods``."""
 
     building_error: Exception | None = None
     trend_error: Exception | None = None
+    trend_periods: tuple[str, ...] = ("2024-Q4", "2025-Q1", "2025-Q2")
     calls: list[str] = field(default_factory=list)
 
     def building(self, slug: BuildingSlug) -> Building:
@@ -63,7 +74,7 @@ class FakeBuildingCatalog:
         self.calls.append(f"trend {building.building_id}")
         if self.trend_error is not None:
             raise self.trend_error
-        return trend_of("2024-Q4", "2025-Q1", "2025-Q2")
+        return trend_of(*self.trend_periods)
 
 
 class FakeBuildingLinks:

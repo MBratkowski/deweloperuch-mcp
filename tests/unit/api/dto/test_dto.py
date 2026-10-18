@@ -26,6 +26,16 @@ def test_number(value: int | float | str | None, expected: float | None) -> None
 
 @pytest.mark.parametrize(
     ("value", "expected"),
+    [(0, None), ("0", None), (-1, None), ("", None), (None, None), (5, 5.0), ("5.5", 5.5)],
+)
+def test_positive_treats_zero_and_less_as_no_value(
+    value: int | float | str | None, expected: float | None
+) -> None:
+    assert Dto._positive(value) == expected
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
     [
         ("2026-10-03", dt.date(2026, 10, 3)),
         ("2025-02-25T00:00:00.000Z", dt.date(2025, 2, 25)),
