@@ -157,3 +157,57 @@ def test_the_price_change_counts_do_not_match_their_sums_so_they_are_not_read() 
     assert not {"priceIncreaseCount", "priceIncreaseSum"} & set(
         developer_page_dto.DeveloperFilteredStatsDto.model_fields
     )
+
+
+def test_a_zero_average_is_no_average() -> None:
+    """[P 2026-10-20] the service writes 0 for the averages of a developer without active
+    offers in that city (live: ``atal`` in ``bialystok``): 0 is no value, not a price.
+
+    The first investment and the first city of the real page of Warsaw with their
+    averages replaced by 0.
+    """
+    data, _ = developer_props(DEVELOPER_WARSZAWA)
+    stats = data["filteredStats"]
+    data["filteredStats"] = {
+        **stats,
+        "averagePrice": 0,
+        "averageSize": 0,
+        "avgAmountPerM2": 0,
+    }
+    data["investments"] = [
+        {**data["investments"][0], "avg_amount": 0, "avg_size": 0, "avg_price_sqm": 0}
+    ]
+    data["citiesStats"] = [{**data["citiesStats"][0], "avgPrice": 0, "avgPricePerM2": 0}]
+
+    parsed = developer_page_dto.DeveloperPageDto.model_validate(data)
+
+    summary = parsed.filteredStats.to_model()
+    assert (summary.avg_price, summary.avg_area_m2, summary.avg_price_per_m2) == (
+        None,
+        None,
+        None,
+    )
+    investment = parsed.investments[0].to_model(parsed.developer.to_model())
+    assert (investment.avg_price, investment.avg_area_m2, investment.avg_price_per_m2) == (
+        None,
+        None,
+        None,
+    )
+    city = parsed.citiesStats[0].to_model()
+    assert (city.avg_price, city.avg_price_per_m2) == (None, None)
+
+
+def test_the_averages_of_a_developer_with_offers_are_its_figures() -> None:
+    """The other way round: the averages of a developer with active offers are there."""
+    data, _ = developer_props(DEVELOPER_WARSZAWA)
+
+    parsed = developer_page_dto.DeveloperPageDto.model_validate(data)
+
+    summary = parsed.filteredStats.to_model()
+    assert (summary.avg_price, summary.avg_area_m2, summary.avg_price_per_m2) == (
+        1001962.0,
+        62.7,
+        16111.0,
+    )
+    city = parsed.citiesStats[0].to_model()
+    assert None not in (city.avg_price, city.avg_price_per_m2)
