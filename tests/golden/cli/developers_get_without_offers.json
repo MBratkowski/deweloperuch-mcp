@@ -1,0 +1,39 @@
+{
+  "args": [
+    "developers",
+    "get",
+    "atal",
+    "--city",
+    "bialystok"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "ATAL S.A. [atal] · [bialystok]",
+    "Profil dewelopera: https://deweloperuch.pl/ceny-ofertowe/bialystok/deweloperzy/atal",
+    "Aktywne oferty: 0 · inwestycje: 0 · miasta: 0 · średnio: ? PLN · ? m² · ? PLN/m²",
+    "Inwestycje: pokazano 0 z 0.",
+    "Wskazówka: Deweloper nie ma inwestycji z aktywnymi ofertami w 'bialystok'. Spróbuj city=polska (cała Polska).",
+    "Miasta dewelopera (cała Polska):",
+    "  Poznań [poznan] · inwestycje 4 · aktywne oferty 736 · 709 389 PLN · 11 823 PLN/m²",
+    "  Kraków [krakow] · inwestycje 7 · aktywne oferty 736 · 779 580 PLN · 13 950 PLN/m²",
+    "  Łódź [lodz] · inwestycje 5 · aktywne oferty 698 · 555 358 PLN · 10 059 PLN/m²",
+    "  Szczecin [szczecin] · inwestycje 2 · aktywne oferty 529 · 660 533 PLN · 12 652 PLN/m²",
+    "  Katowice [katowice] · inwestycje 3 · aktywne oferty 390 · 800 020 PLN · 12 603 PLN/m²",
+    "  Gdańsk [gdansk] · inwestycje 6 · aktywne oferty 282 · 807 056 PLN · 13 683 PLN/m²",
+    "  Wrocław [wroclaw] · inwestycje 5 · aktywne oferty 221 · 787 421 PLN · 12 644 PLN/m²",
+    "  Piastów [piastow] · inwestycje 1 · aktywne oferty 124 · 891 840 PLN · 13 405 PLN/m²",
+    "  Gliwice [gliwice] · inwestycje 1 · aktywne oferty 96 · 581 922 PLN · 9 560 PLN/m²",
+    "  Gdynia [gdynia] · inwestycje 1 · aktywne oferty 74 · 785 459 PLN · 12 217 PLN/m²",
+    "  Warszawa [warszawa] · inwestycje 4 · aktywne oferty 69 · 1 001 962 PLN · 16 111 PLN/m²",
+    "  Kowale [kowale] · inwestycje 1 · aktywne oferty 66 · 674 962 PLN · 10 496 PLN/m²",
+    "  Swarzędz [swarzedz] · inwestycje 1 · aktywne oferty 36 · 550 909 PLN · 8 590 PLN/m²",
+    "  Reda [reda] · inwestycje 1 · aktywne oferty 21 · 510 349 PLN · 9 652 PLN/m²",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/bialystok/deweloperzy/atal?_rsc=75785a8a [rsc: 1] [accept: */*]"
+  ]
+}
