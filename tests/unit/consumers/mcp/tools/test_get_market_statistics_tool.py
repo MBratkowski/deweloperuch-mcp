@@ -7,7 +7,7 @@ from mcp.server.mcpserver import MCPServer
 from deweloperuch_mcp import bootstrap
 from support.checks.leaks import SIZE_BUDGET
 from support.providers.mcp import call, data, keys, text
-from support.providers.routes.city_sales import city_sales_routes
+from support.providers.routes.offer_snapshot import offer_snapshot_routes
 from support.providers.service import PAGES
 
 # The MCP server runs behind the SDK's in-memory client: its event loop needs Unix sockets.
@@ -17,7 +17,7 @@ pytestmark = pytest.mark.usefixtures("unix_sockets_for_the_event_loop")
 def test_get_market_statistics_of_a_city(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
-    routes = city_sales_routes(service)
+    routes = offer_snapshot_routes(service)
 
     result = data(call(server, "get_market_statistics", city="sopot", top_developers=1))
 
@@ -58,7 +58,7 @@ def test_the_market_never_shows_single_offers_and_fits_its_budget(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     """D5, D15: 7325 offers of Kraków, only aggregates and 30 developers at most."""
-    city_sales_routes(service)
+    offer_snapshot_routes(service)
 
     result = call(
         server, "get_market_statistics", city="krakow", price_max=900_000, top_developers=30
@@ -95,8 +95,7 @@ def test_the_market_of_the_whole_country_or_an_unknown_city(
     message: str,
     sent: int,
 ) -> None:
-    city_sales_routes(service)
-    service.get("/api/offers/city-sales/nieznane").respond(400, json={"error": "Invalid citySlug"})
+    offer_snapshot_routes(service)
 
     result = call(server, "get_market_statistics", city=city)
 

@@ -10,10 +10,10 @@
   ],
   "stderr": [
     "Błąd: Serwis nie zna miasta 'nieznane'. Podaj city_slug z search_locations (statystyki rynku są tylko dla jednego miasta).",
-    "Szczegóły: /api/offers/city-sales/nieznane: {\"error\":\"Invalid citySlug\"}",
+    "Szczegóły: /api/map/offer-snapshot/nieznane",
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/offers/city-sales/nieznane [accept: application/json]"
+    "GET https://deweloperuch.pl/api/map/offer-snapshot/nieznane [accept: application/json]"
   ]
 }

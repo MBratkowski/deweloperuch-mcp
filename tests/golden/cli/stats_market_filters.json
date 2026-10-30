@@ -31,6 +31,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/offers/city-sales/krakow [accept: application/json]"
+    "GET https://deweloperuch.pl/api/map/offer-snapshot/krakow [accept: application/json]"
   ]
 }

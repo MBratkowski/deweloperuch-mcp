@@ -1,0 +1,82 @@
+{
+  "calls": [
+    {
+      "tool": "get_market_statistics",
+      "arguments": {
+        "city": "wroclaw",
+        "top_developers": 4
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "city_slug": "wroclaw",
+        "offers": 5836,
+        "investments": 110,
+        "developers": 46,
+        "price": {
+          "min": 362820,
+          "p25": 612092,
+          "median": 729665,
+          "p75": 900202,
+          "max": 7451048
+        },
+        "price_per_m2": {
+          "min": 8389,
+          "p25": 12976,
+          "median": 14600,
+          "p75": 16499,
+          "max": 45400
+        },
+        "area_m2": {
+          "min": 24.94,
+          "p25": 39.55,
+          "median": 50.05,
+          "p75": 62.81,
+          "max": 228.61
+        },
+        "top_developers": [
+          {
+            "developer_slug": "develia",
+            "offers": 818,
+            "investments": 8,
+            "median_price_per_m2": 13400,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/develia"
+          },
+          {
+            "developer_slug": "robyg",
+            "offers": 694,
+            "investments": 6,
+            "median_price_per_m2": 15325,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/robyg"
+          },
+          {
+            "developer_slug": "lokum-deweloper",
+            "offers": 591,
+            "investments": 4,
+            "median_price_per_m2": 16056,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/lokum-deweloper"
+          },
+          {
+            "developer_slug": "dom-development",
+            "offers": 436,
+            "investments": 18,
+            "median_price_per_m2": 14000,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/dom-development"
+          }
+        ],
+        "developers_returned": 4,
+        "developers_omitted": 42,
+        "truncated": true,
+        "list_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/mieszkania?page=1&perPage=10"
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/offer-snapshot/wroclaw [accept: application/json]"
+  ]
+}

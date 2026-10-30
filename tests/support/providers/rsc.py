@@ -54,7 +54,12 @@ CITY_SALES = {
     "sopot": API_FIXTURES / "city_sales_sopot.json",
     "krakow": API_FIXTURES / "city_sales_krakow.json",
 }
-"""City -> its real ``/api/offers/city-sales/{city}`` body (tests/fixtures/api/)."""
+"""City -> its real ``/api/offers/city-sales/{city}`` body (tests/fixtures/api/), from
+before the 2.0 build; ``routes.offer_snapshot`` serves the same offers as snapshot rows."""
+
+OFFER_SNAPSHOT_WROCLAW = API_FIXTURES / "offer_snapshot_wroclaw_20261030.json"
+"""The real ``/api/map/offer-snapshot/wroclaw`` body of 2026-10-30: 110 investments, 5,836
+offers, every one with status 0."""
 
 _PROP = b'"initialData":'
 

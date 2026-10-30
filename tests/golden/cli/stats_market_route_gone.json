@@ -1,0 +1,19 @@
+{
+  "args": [
+    "stats",
+    "market",
+    "sopot"
+  ],
+  "exit_code": 6,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Statystyki rynku w 'sopot': Źródło danych tego narzędzia nie jest już dostępne w serwisie (HTTP 404). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+    "Szczegóły: /api/map/offer-snapshot/sopot: HTTP 404, kanał odczytu zniknął z serwisu",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/offer-snapshot/sopot [accept: application/json]"
+  ]
+}
