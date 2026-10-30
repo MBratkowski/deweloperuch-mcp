@@ -33,7 +33,7 @@ A structured result and the same compact JSON in the content; `null` fields are 
 - The statistics are computed in the process from the service's compact list of the city's active offers ([decisions.md](../../decisions.md)): the list itself never reaches the output. Only active offers; `polska` is refused before any request.
 - The counts can differ slightly from `total` in `search_offers` (Kraków: 7 325 vs 7 307 on 2026-10-13, verified; Wrocław: 5 836 in both on 2026-10-30). The channel and its limits: [endpoints.md](../../discovery/endpoints.md) (`map/offer-snapshot`; until the service's redesign of 2026-10-29 `offers/city-sales`).
 - Asking prices of the primary market, not transaction prices.
-- A repeat within 5 minutes comes from the cache; the service's cache headers for this channel are not checked yet ([configuration](../../configuration.md#package-client)).
+- The service sends `s-maxage=3600` for this channel, so a repeat within 5 minutes comes from the cache ([configuration](../../configuration.md#package-client)).
 
 ## Errors
 | Situation | Message |
