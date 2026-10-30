@@ -51,7 +51,7 @@ Result (`tests/golden/mcp/stats_polska_unemployment.json`, shortened to 3 of 12 
   "source": "GUS", "frequency": "month",
   "total": 188, "returned": 12, "truncated": true, "available_from": "2011-01",
   "hint": "Pokazano ostatnie 12 z 188 okresów (dane od 2011-01); starsze pokaże większe periods (najwyżej 120).",
-  "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-bezrobocie",
+  "stats_url": "https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-bezrobocie",
   "periods": ["2025-09", "2025-10", "...", "2026-08"],
   "series": [{"series_id": "rate", "label": "Stopa bezrobocia", "unit": "%",
               "values": [5.6, 5.6, "...", 5.8]}]

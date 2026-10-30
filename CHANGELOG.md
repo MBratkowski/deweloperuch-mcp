@@ -22,6 +22,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - `rank_locations` / `stats cities`: a price or area of 0 from the service is no value. The place sorts last on price and shows no price fields (CLI text `?`, `--json` `null`); before, Ignatki-osiedle (listed with 0) ranked as the cheapest place [P 2026-10-15].
 - `get_developer` / `developers get`: a price or area of 0 from the service is no value. The service writes 0 for the averages of a developer without active offers in that city; the result showed an average price of 0 PLN next to "0 active offers" (now CLI text `?`, `--json` `null`). The averages of the page's investments and its cities follow the same rule.
 - `get_building` / `buildings get`: units with an unknown floor no longer show "piętro 0".
+- `search_offers`, `get_developer` and `get_government_statistics` (CLI `offers search`, `developers get`, `stats government`) work again after the service's redesign of 2026-10-29, which answered every request of these tools with a redirect. The pages are requested with the empty `_rsc` the service now expects, page 1 without `page=1` (the service redirects it to that address), and the government statistics at `/statystyki/{location}/dane-rzadowe`. The links to these pages (`list_url`, `stats_url`) changed the same way. The pages of the build before the redesign are still read.
+- `get_developer` / `developers get`: the redesigned profile page has no totals and lists only investments with active offers, so `summary` is computed from them (averages weighted by active offers, as the page's own averages per city) and `developer` has no `website` or `description`. On a city's profile the other cities have no average price.
 
 ## [0.1.3] - 2026-10-16
 

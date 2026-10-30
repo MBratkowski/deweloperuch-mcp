@@ -34,7 +34,7 @@ Output of the first call (`tests/golden/cli/stats_market.json`):
 
 ```
 Rynek ofert [sopot] · aktywne oferty: 6 · inwestycje: 2 · deweloperzy: 1.
-Te oferty na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/sopot/mieszkania?page=1&perPage=10
+Te oferty na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/sopot/mieszkania?perPage=10
                         min        p25    mediana        p75        max
 Cena (PLN)        1 399 205  1 588 164  1 616 463  1 646 230  1 679 796
 Cena za m² (PLN)     22 931     23 559     24 533     25 309     27 037
