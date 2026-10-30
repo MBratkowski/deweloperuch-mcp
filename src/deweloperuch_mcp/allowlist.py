@@ -35,7 +35,10 @@ API_PATHS = (
     # 2. Oferty deweloperów
     "/api/developers",
     "/api/investments",
+    # 404 for every city since 2.0 (2026-10-29); kept to see that, the package reads
+    # /api/map/offer-snapshot/{citySlug} instead.
     "/api/offers/city-sales/{citySlug}",
+    "/api/map/offer-snapshot/{citySlug}",
     "/api/map/investments",
     "/api/map/investments/visible/{investmentSlug}",
     "/api/investments/{investId}/sale-events",

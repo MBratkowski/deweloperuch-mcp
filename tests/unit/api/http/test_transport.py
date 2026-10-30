@@ -740,6 +740,40 @@ def test_404_is_not_found(client: HttpClient, service: respx.MockRouter) -> None
         client.get(TARGET, headers={}, decode=raw)
 
 
+@pytest.mark.parametrize(
+    ("answer", "unknown"),
+    [
+        ({"json": {"error": "Not found"}}, ()),
+        ({"text": "<!DOCTYPE html><html></html>", "headers": {"Content-Type": "text/html"}}, ()),
+        (
+            {"text": "<!DOCTYPE html><html></html>", "headers": {"Content-Type": "text/html"}},
+            (404,),
+        ),
+    ],
+)
+def test_a_gone_channel_is_an_unavailable_source(
+    client: HttpClient, service: respx.MockRouter, answer: dict[str, Any], unknown: tuple[int, ...]
+) -> None:
+    """``gone``: a 404 means the channel itself is no longer there; with 404 also in
+    ``unknown``, only an HTML page (no such route) means that."""
+    service.get(URL).respond(404, **answer)
+
+    with pytest.raises(UnexpectedResponseError, match="nie jest już dostępne") as caught:
+        client.get(TARGET, headers={}, decode=raw, unknown=unknown, gone=(404,))
+
+    assert caught.value.detail == f"{TARGET}: HTTP 404, kanał odczytu zniknął z serwisu"
+
+
+def test_a_json_404_of_a_gone_channel_that_also_means_unknown_is_not_found(
+    client: HttpClient, service: respx.MockRouter
+) -> None:
+    """The endpoint's own JSON 404 (e.g. an unknown city) stays ``NotFoundError``."""
+    service.get(URL).respond(404, json={"error": "Unknown city"})
+
+    with pytest.raises(NotFoundError):
+        client.get(TARGET, headers={}, decode=raw, unknown=(404,), gone=(404,))
+
+
 def test_400_keeps_the_service_message_in_the_detail(
     client: HttpClient, service: respx.MockRouter
 ) -> None:

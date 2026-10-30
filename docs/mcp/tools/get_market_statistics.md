@@ -31,15 +31,16 @@ A structured result and the same compact JSON in the content; `null` fields are 
 
 ## Data limitations
 - The statistics are computed in the process from the service's compact list of the city's active offers ([decisions.md](../../decisions.md)): the list itself never reaches the output. Only active offers; `polska` is refused before any request.
-- The counts can differ slightly from `total` in `search_offers` (Kraków: 7 325 vs 7 307 on 2026-10-13, verified). The channel and its limits: [endpoints.md](../../discovery/endpoints.md) (`offers/city-sales`).
+- The counts can differ slightly from `total` in `search_offers` (Kraków: 7 325 vs 7 307 on 2026-10-13, verified; Wrocław: 5 836 in both on 2026-10-30). The channel and its limits: [endpoints.md](../../discovery/endpoints.md) (`map/offer-snapshot`; until the service's redesign of 2026-10-29 `offers/city-sales`).
 - Asking prices of the primary market, not transaction prices.
-- The service sends `s-maxage=300` for this channel, so a repeat after a few minutes is a new request ([configuration](../../configuration.md#package-client)).
+- The service sends `s-maxage=3600` for this channel, so a repeat within 5 minutes comes from the cache ([configuration](../../configuration.md#package-client)).
 
 ## Errors
 | Situation | Message |
 |---|---|
 | `city=polska` | `city: statystyki rynku są tylko dla jednego miasta; podaj city_slug miasta z search_locations (np. warszawa), a nie polska; podano 'polska'.` |
 | Unknown city | `Serwis nie zna miasta 'nieznane'. Podaj city_slug z search_locations (statystyki rynku są tylko dla jednego miasta).` |
+| The service no longer has the data source (HTML 404) | `Statystyki rynku w 'sopot': Źródło danych tego narzędzia nie jest już dostępne w serwisie (HTTP 404). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.` |
 | `area_min` > `area_max` (likewise for price) | `area_min (60) jest większe niż area_max (40); zamień je miejscami.` |
 | `top_developers` outside 1-30 | `Błędny argument narzędzia get_market_statistics: top_developers musi być liczbą całkowitą z zakresu 1–30, podano 31. Popraw i ponów; nic nie zostało wysłane.` |
 | Nothing matches the filters | Not an error: `offers=0` and a `hint`: `Brak aktywnych ofert spełniających kryteria w 'sopot'. Sprawdź slug miasta (search_locations) i poluzuj filtry (cena, metraż).` |

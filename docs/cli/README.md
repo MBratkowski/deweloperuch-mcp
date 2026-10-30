@@ -93,7 +93,7 @@ The `ExitCode` constants (`src/deweloperuch_mcp/consumers/cli/support/common.py`
 | 3 | `STOP` | `ServiceBlockedError` / `RateLimitedError` (401, 403, 429, challenge) or an earlier STOP written by any process (the command sends nothing); also `stop status` with an active lock. Stop and report to the user. |
 | 4 | `SERVICE_ERROR` | A service error: 5xx, network, a redirect, another 4xx, a response too large or too slow. |
 | 5 | `LIMITER_WAIT` | The shared limiter requires a longer pause than allowed (60 s); nothing was sent. Applies to pauses without a STOP record (502/503/504) and the rest of a 429 pause after the record is cleared by hand; while STOP is active it is code 3. |
-| 6 | `UNEXPECTED_RESPONSE` | A 2xx response not matching the contract (the service may have changed). |
+| 6 | `UNEXPECTED_RESPONSE` | A 2xx response not matching the contract, or a data source the service no longer has (the service may have changed). |
 | 7 | `NOT_FOUND` | No such investment, offer, developer, building or city, or no estimate or transaction prices for the place. |
 
 ## Configuration

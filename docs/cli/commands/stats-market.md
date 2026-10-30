@@ -21,7 +21,7 @@ deweloperuch stats market [OPTIONS] CITY
 | `--help` | flag | | Show the help. |
 
 ## Exit codes
-See the [exit code table](../README.md#exit-codes). Most common: 0 (also when no offer matches the filters), 2 (`CITY=polska` or not a slug, a reversed range, `--top` outside 1–30), 3 STOP, 4 service error, 7 unknown city (`Błąd: Serwis nie zna miasta 'nieznane'. …`).
+See the [exit code table](../README.md#exit-codes). Most common: 0 (also when no offer matches the filters), 2 (`CITY=polska` or not a slug, a reversed range, `--top` outside 1–30), 3 STOP, 4 service error, 6 the data source is no longer on the service, 7 unknown city (`Błąd: Serwis nie zna miasta 'nieznane'. …`).
 
 ## Examples
 ```

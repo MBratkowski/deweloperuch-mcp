@@ -17,6 +17,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/offers/city-sales/sopot [accept: application/json]"
+    "GET https://deweloperuch.pl/api/map/offer-snapshot/sopot [accept: application/json]"
   ]
 }

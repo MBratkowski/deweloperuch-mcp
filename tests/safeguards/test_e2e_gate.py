@@ -42,7 +42,6 @@ from e2e import (
 from support.e2e import live
 from support.fakes.pytest_objects import FakeItem, fake_config
 from support.paths import TESTS
-from support.providers.routes.city_sales import city_sales_routes
 from support.providers.routes.developer_profiles import developer_routes
 from support.providers.routes.government_statistics import (
     UNKNOWN_LOCATION,
@@ -51,6 +50,7 @@ from support.providers.routes.government_statistics import (
 )
 from support.providers.routes.investments import investment_routes
 from support.providers.routes.locations import location_routes
+from support.providers.routes.offer_snapshot import offer_snapshot_routes
 from support.providers.routes.offers import offers_route, unknown_city_route
 from support.providers.rsc import UNKNOWN_CITY, UNKNOWN_DEVELOPER
 
@@ -416,7 +416,7 @@ def test_real_results_pass_the_leak_check(tmp_path: Path, unix_sockets: None) ->
         location_routes(router)
         unknown_city_route(router)
         developer_routes(router)
-        city_sales_routes(router)
+        offer_snapshot_routes(router)
         offers_route(router)
         investment_routes(router)
         stats_routes(router)

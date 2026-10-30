@@ -37,7 +37,7 @@ def test_every_adapter_requests_a_documented_read_channel(
         lambda: InvestmentsApi(http).investment_sale_events(33),
         lambda: OffersApi(http).sale_events(2377),
         lambda: offers_list(http, "warszawa", [("page", 2)]),
-        lambda: CitySalesApi(http).city_sales("krakow"),
+        lambda: CitySalesApi(http).offer_snapshot("krakow"),
         lambda: DeveloperProfileApi(http).developer_page("polska", "atal"),
     ]
     service.route(path__startswith="/ceny-ofertowe/").respond(200, content=offers_payload({}))

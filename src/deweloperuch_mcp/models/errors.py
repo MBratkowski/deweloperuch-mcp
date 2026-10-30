@@ -282,7 +282,8 @@ class ServiceError(DeweloperuchError):
 
 
 class UnexpectedResponseError(ServiceError):
-    """A 2xx whose data does not match the contract (not JSON, missing prop, other shape).
+    """A 2xx whose data does not match the contract (not JSON, missing prop, other shape), or
+    a read channel the service no longer has (``HttpClient.get``, ``gone``).
 
     Usually the service changed after a deploy: run the drift check (flow C).
     """

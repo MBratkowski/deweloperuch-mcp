@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "get_market_statistics",
+      "arguments": {
+        "city": "sopot"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Statystyki rynku w 'sopot': Źródło danych tego narzędzia nie jest już dostępne w serwisie (HTTP 404). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "UnexpectedResponseError: Statystyki rynku w 'sopot': Źródło danych tego narzędzia nie jest już dostępne w serwisie (HTTP 404). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi. Szczegóły: /api/map/offer-snapshot/sopot: HTTP 404, kanał odczytu zniknął z serwisu"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/offer-snapshot/sopot [accept: application/json]"
+  ]
+}

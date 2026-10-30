@@ -82,6 +82,14 @@ Starting suggestions of the search box.
 - Cache-Control: `public, max-age=28800, s-maxage=300, stale-while-revalidate=3600` [P 2026-10-10]. Used in the layouts of offer lists (`ceny-ofertowe/[city]/mieszkania|inwestycje`).
 - Sample: `api.city_sales_sopot.json`
 
+### `GET /api/map/offer-snapshot/{citySlug}` [P 2026-10-30]
+- The 2.0 successor of `/api/offers/city-sales/{citySlug}` (which answers 404 for every city since 2026-10-29): every active offer of a city, compact. Used by `get_market_statistics` for aggregates only (D15).
+- Response: `{ citySlug, asOf: "YYYY-MM-DD", investments: [{id, slug, name, street, lat, lng, district, developerId, developer, developerSlug}], sales: [[id, investId, status, amount, priceSqm, size, startAmountDifference]] }`.
+- Wrocław [P 2026-10-30]: 261,340 B, 110 investments, 5,836 rows; status 0 in every row; `priceSqm` = `amount`/`size` in every row; medians 14,600 PLN/m² and 50.04 m², Develia 818 offers, the same as the summary of `/statystyki/wroclaw/oferty`.
+- Unknown city: `HTTP 404 {"error":"Unknown city"}` (JSON) [P 2026-10-30, `nieistniejace-miasto`].
+- Cache-Control: `public, max-age=172800, s-maxage=3600, stale-while-revalidate=86400` [P 2026-10-30].
+- Sample: `api.offer_snapshot_wroclaw.json`
+
 ### `GET /api/map/investments?…` [P]
 - Investments with aggregates for the map.
 - Query (UI): `citySlug`, `developer` (slug), `project` (investment slug), `price`, `size`, `pricePerM2` (`min-max` ranges), `rooms`, `floor`, `priceChange` (`decrease,increase,no_change`), `includeArchived=true`

@@ -23,14 +23,21 @@ JSON_HEADERS = {"Accept": "application/json"}
 class JsonEndpoint:
     """``target`` (a path with its encoded query) read through ``http`` with the JSON
     headers: the one JSON path of the client. ``unknown``: the statuses that mean the
-    service does not know what was asked for (``HttpClient.get``)."""
+    service does not know what was asked for, ``gone``: those that mean the endpoint is no
+    longer there (``HttpClient.get``)."""
 
     def __init__(
-        self, http: HttpClient, target: str, *, unknown: Collection[int] = (NOT_FOUND,)
+        self,
+        http: HttpClient,
+        target: str,
+        *,
+        unknown: Collection[int] = (NOT_FOUND,),
+        gone: Collection[int] = (),
     ) -> None:
         self._http = http
         self._target = target
         self._unknown = unknown
+        self._gone = gone
 
     def get(self, model: type[M]) -> M:
         """The reply as ``model``; a mismatch is an ``UnexpectedResponseError``."""
@@ -40,6 +47,7 @@ class JsonEndpoint:
             headers=JSON_HEADERS,
             decode=lambda reply: Dto.validated(model, self.body(reply, self._target), path),
             unknown=self._unknown,
+            gone=self._gone,
         )
 
     @staticmethod

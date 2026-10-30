@@ -121,6 +121,8 @@ Documentation is written in English. Product text (tool descriptions, messages, 
 - `city-sales` stays a documented read channel under the D2 client (limiter, cache, body limit).
 - Known limits: active offers only (`includeArchived` is ignored) [P 2026-10-10]; `polska` gives `400 Invalid citySlug` [P 2026-10-10], so the whole country is refused before any request; counts may differ slightly from the offer list (Kraków 7,325 vs 7,307 [P 2026-10-13]).
 
+**Update 2026-10-30.** Since the service's redesign of 2026-10-29 `city-sales` answers 404 for every city. The source is now `GET /api/map/offer-snapshot/{citySlug}` [P 2026-10-30]: the same active offers of a city, each a row of numbers (Wrocław: 110 investments, 5,836 offers, 261 KB), read into the same aggregates. The rest of the decision holds for it: the snapshot stays inside the process, under the D2 client. An unknown city answers a JSON 404 (`Unknown city`); an HTML 404 means the source is gone again.
+
 ## D16. Visible layers: api → models → usecases → consumers (accepted 2026-10-13)
 
 **Context.** The D13 layers existed under names (`infrastructure`, `domain`, `application`, `interfaces`) that did not read as the usual split, and each capability was spread thinly over them.
