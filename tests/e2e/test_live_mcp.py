@@ -289,9 +289,9 @@ def from_cache(call: Call, *, sent: int = 0) -> None:
     Cloudflare's ``Age`` is within 300 s below 28800; an ``Age`` at or above 28800 (the
     GUS page ``polska``: ``age: 69574`` [P 2026-10-13]) gives ``DEFAULT_TTL`` too (D2,
     clarification of 2026-10-13; ``transport._ttl``). This module takes about two
-    minutes. No tolerance, then. ``offer-snapshot`` (``get_market_statistics``) has cache
-    headers not checked yet (its predecessor ``city-sales`` had ``s-maxage=300``): its
-    repeat is not checked with this (``Age`` may use up its TTL).
+    minutes. No tolerance, then. ``offer-snapshot`` (``get_market_statistics``) has
+    ``s-maxage=3600`` [P 2026-10-30]: its repeat is not checked with this (``Age`` may use
+    up its TTL).
     """
     assert call.sent == sent, (
         f"{call.tool} {call.arguments}: {call.sent} zapytań zamiast {sent}; odpowiedź nie "
@@ -1132,20 +1132,12 @@ def test_market_of_the_whole_country_is_refused_without_a_request(mcp: McpLive) 
 
 
 def test_market_of_an_unknown_city(mcp: McpLive) -> None:
-    """[P 2026-10-30] an unknown city: a JSON 404 (the model reads "no such city"); a 200
-    without offers (an empty summary with a hint) is accepted too. Anything else is a
-    finding."""
+    """[P 2026-10-30] an unknown city: ``offer-snapshot`` answers a JSON 404
+    ``{"error":"Unknown city"}``, which the model reads as "no such city"."""
     call = mcp.call_network("get_market_statistics", city=UNKNOWN_CITY)
 
-    if call.error and "Serwis nie zna miasta" in call.text:
-        assert "search_locations" in call.text
-    elif not call.error and call.data["offers"] == 0:
-        assert "Brak aktywnych ofert" in call.data["hint"]
-    else:
-        pytest.xfail(
-            f"Ustalenie: offer-snapshot nieznanego miasta odpowiada inaczej niż 404/pusty 200 "
-            f"(komunikat: {call.text[:160]!r}). Pozycja do docs/open-questions.md."
-        )
+    assert call.error and "Serwis nie zna miasta" in call.text
+    assert "search_locations" in call.text
     assert call.sent == 1
 
 

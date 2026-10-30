@@ -45,7 +45,7 @@ Each MCP module starts its own server, so repeated requests within a module come
 - When `Age` already exceeds the freshness (Cloudflare serving its copy past `max-age`, e.g. the GUS page `polska` with `age: 69574` [P 2026-10-13]), the reply is kept for 300 s.
 - `no-store`, `no-cache` or `max-age=0` turn the cache off.
 
-See `_ttl` in `deweloperuch_mcp.api.http.transport`. Most pages and endpoints the tools read send `max-age=28800` without `s-maxage` [P 2026-10-10; [W] for the government statistics page and the developer profile]. During a run (minutes), a repeat of those always comes from the cache, so tests marked "cache" require exactly the stated number of requests. Two repeats are tolerated: `offer-snapshot` (cache headers not checked yet; its predecessor `city-sales` sent `s-maxage=300` [P 2026-10-10]) behind `test_market_with_filters`, and the city's investment list behind `search_investments`, whose `Cache-Control` is unknown. Each may send 1 request.
+See `_ttl` in `deweloperuch_mcp.api.http.transport`. Most pages and endpoints the tools read send `max-age=28800` without `s-maxage` [P 2026-10-10; [W] for the government statistics page and the developer profile]. During a run (minutes), a repeat of those always comes from the cache, so tests marked "cache" require exactly the stated number of requests. Two repeats are tolerated: `offer-snapshot` (`s-maxage=3600` [P 2026-10-30]) behind `test_market_with_filters`, and the city's investment list behind `search_investments`, whose `Cache-Control` is unknown. Each may send 1 request.
 
 If a cache test fails, check `Age` and `Cache-Control` of that response. The computed TTL is logged at DEBUG level (`TTL cache …`).
 
@@ -149,7 +149,7 @@ Only two links are opened, through `probe`: `test_the_investment_link_leads_to_i
 | `test_market_of_a_city` | `get_market_statistics` of Kraków (fixture): counts, spreads in order, plausible medians, the top developers in order with their links, `list_url`, no single offers, < 8000 characters; a total more than 2% off `search_offers` is a warning | 1 |
 | `test_market_with_filters` | `price_max=700000`, `area_min=40`: fewer offers, spreads within the filters, `list_url` with them | 0 (cache; 1 if the TTL of `offer-snapshot` ran out) |
 | `test_market_of_the_whole_country_is_refused_without_a_request` | `city=polska`: `isError` „tylko dla jednego miasta” | 0 |
-| `test_market_of_an_unknown_city` | [H] an unknown city: „Serwis nie zna miasta” (400/404) or an empty summary with a hint; anything else is an xfail whose reason records the finding | 1 |
+| `test_market_of_an_unknown_city` | [P 2026-10-30] an unknown city: „Serwis nie zna miasta” (`offer-snapshot` answers a JSON 404) | 1 |
 | `test_developer_of_the_whole_country` | `get_developer` of the first offer's developer (`city` defaults to `polska`): counters, investments by active offers, links, < 15,000 characters | 1 |
 | `test_developer_in_a_city` | the same developer, `city=krakow`, `limit=100`: only investments in Kraków; the offer's investment missing is a warning | 1 |
 | `test_developer_unknown` | [P 2026-10-13] „Nie znaleziono dewelopera” (the page's heading), not „Serwis mógł się zmienić” | 1 |
