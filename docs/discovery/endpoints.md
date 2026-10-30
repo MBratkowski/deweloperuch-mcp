@@ -87,6 +87,8 @@ Starting suggestions of the search box.
 - Response: `{ citySlug, asOf: "YYYY-MM-DD", investments: [{id, slug, name, street, lat, lng, district, developerId, developer, developerSlug}], sales: [[id, investId, status, amount, priceSqm, size, startAmountDifference]] }`.
 - Wrocław [P 2026-10-30]: 261,340 B, 110 investments, 5,836 rows; status 0 in every row; `priceSqm` = `amount`/`size` in every row; medians 14,600 PLN/m² and 50.04 m², Develia 818 offers, the same as the summary of `/statystyki/wroclaw/oferty`.
 - Unknown city: `HTTP 404 {"error":"Unknown city"}` (JSON) [P 2026-10-30, `nieistniejace-miasto`].
+- Cache-Control: `public, max-age=172800, s-maxage=3600, stale-while-revalidate=86400` [P 2026-10-30].
+- Sample: `api.offer_snapshot_wroclaw.json`
 
 ### `GET /api/map/investments?…` [P]
 - Investments with aggregates for the map.

@@ -9,7 +9,10 @@ import respx
 from support.providers.rsc import CITY_SALES, OFFER_SNAPSHOT_WROCLAW
 
 OFFER_SNAPSHOT_PATH = "/api/map/offer-snapshot/"
-SNAPSHOT_HEADERS = {"Content-Type": "application/json"}
+SNAPSHOT_HEADERS = {
+    "Content-Type": "application/json",
+    "Cache-Control": "public, max-age=172800, s-maxage=3600, stale-while-revalidate=86400",
+}
 UNKNOWN_CITY_ANSWER = {"error": "Unknown city"}
 """[P 2026-10-30] the JSON 404 body for ``nieistniejace-miasto``."""
 GONE_PAGE = b"<!DOCTYPE html><html><body><h1>404</h1></body></html>"
