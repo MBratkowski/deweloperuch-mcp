@@ -17,6 +17,9 @@ CASES: dict[str, Case] = {
     ),
     "developers_get_whole_country": case(*DEVELOPERS, "atal", service=developer_routes),
     "developers_get_limit_3": case(*DEVELOPERS, "atal", "--limit", "3", service=developer_routes),
+    "developers_get_without_offers": case(
+        *DEVELOPERS, "atal", "--city", "bialystok", service=developer_routes
+    ),
     "developers_get_unknown": case(
         *DEVELOPERS, UNKNOWN_DEVELOPER, "--city", "warszawa", service=developer_routes
     ),

@@ -7,6 +7,11 @@ tests/contract/api/dto/test_developer_page_dto.py. Not read:
 ``priceIncrease*``/``priceDecrease*`` (the counts are 0 while the sums are not: unclear),
 ``allCities``, ``allCitiesWithSlugs``, ``allInvestmentNames``, the ``sale`` list and the
 daily change axis (prop ``data`` as a list).
+
+The averages of the page (``filteredStats``, its investments and its cities) are 0 where
+the service has no value: a developer without active offers in that city gets
+``averagePrice``, ``averageSize`` and ``avgAmountPerM2`` 0 [P 2026-10-20] (live: ``atal``
+in ``bialystok``). 0 is no value, not a price (``Dto._positive``).
 """
 
 from pydantic import Field
@@ -48,9 +53,9 @@ class DeveloperInvestmentDto(Dto):
             status=self.status,
             active_offers=self.active_offers,
             total_offers=self.total_offers,
-            avg_price=self._number(self.avg_amount),
-            avg_area_m2=self._number(self.avg_size),
-            avg_price_per_m2=self._number(self.avg_price_sqm),
+            avg_price=self._positive(self.avg_amount),
+            avg_area_m2=self._positive(self.avg_size),
+            avg_price_per_m2=self._positive(self.avg_price_sqm),
             developer=developer,
         )
 
@@ -70,9 +75,9 @@ class DeveloperFilteredStatsDto(Dto):
             investments=self.totalProjects,
             active_offers=self.totalSales,
             cities=self.totalCities,
-            avg_price=self._number(self.averagePrice),
-            avg_area_m2=self._number(self.averageSize),
-            avg_price_per_m2=self._number(self.avgAmountPerM2),
+            avg_price=self._positive(self.averagePrice),
+            avg_area_m2=self._positive(self.averageSize),
+            avg_price_per_m2=self._positive(self.avgAmountPerM2),
         )
 
 
@@ -92,8 +97,8 @@ class DeveloperCityStatsDto(Dto):
             city_slug=self.citySlug,
             investments=self.investmentCount,
             active_offers=self.activeOffersCount,
-            avg_price=self._number(self.avgPrice),
-            avg_price_per_m2=self._number(self.avgPricePerM2),
+            avg_price=self._positive(self.avgPrice),
+            avg_price_per_m2=self._positive(self.avgPricePerM2),
         )
 
 
