@@ -48,7 +48,7 @@ def test_get_market_statistics_of_a_city(
         "developers_returned": 1,
         "developers_omitted": 0,
         "truncated": False,
-        "list_url": f"{PAGES}/sopot/mieszkania?page=1&perPage=10",
+        "list_url": f"{PAGES}/sopot/mieszkania?perPage=10",
     }
     assert all(isinstance(v, int) for v in result["price_per_m2"].values())
     assert routes["sopot"].call_count == 1
@@ -66,7 +66,7 @@ def test_the_market_never_shows_single_offers_and_fits_its_budget(
 
     found = data(result)
     assert found["offers"] < 7325 and found["developers_returned"] == 30
-    assert found["list_url"].endswith("/krakow/mieszkania?filterPrice=0-900000&page=1&perPage=10")
+    assert found["list_url"].endswith("/krakow/mieszkania?filterPrice=0-900000&perPage=10")
     assert not {"offer_id", "items", "offers_list", "sales"} & keys(found)
     assert len(text(result)) < SIZE_BUDGET
 

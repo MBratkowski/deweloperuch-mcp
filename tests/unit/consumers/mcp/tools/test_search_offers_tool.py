@@ -99,7 +99,8 @@ def test_search_offers_with_defaults_lists_compact_offers(
     result = data(call(server, "search_offers", city="warszawa"))
 
     params = route.calls.last.request.url.params
-    assert (params["perPage"], params["page"], "sortBy" in params) == ("10", "1", False)
+    # page 1 is the canonical URL without ``page`` (the service redirects ``page=1``)
+    assert (params["perPage"], "page" in params, "sortBy" in params) == ("10", False, False)
     assert (result["total"], result["returned"], result["truncated"]) == (13324, 10, True)
     assert result["items"][0] == {
         "offer_id": 4397,
@@ -117,7 +118,7 @@ def test_search_offers_with_defaults_lists_compact_offers(
         "last_price_change_pct": 5.89,
         "price_change_since_start_pct": -0.6,
     }
-    assert result["list_url"] == PAGES + "/warszawa/mieszkania?page=1&perPage=10"
+    assert result["list_url"] == PAGES + "/warszawa/mieszkania?perPage=10"
     assert all(set(item) <= COMPACT_OFFER for item in result["items"])
     assert not has_null(result)
 
@@ -204,7 +205,7 @@ def test_search_offers_trims_spaces_around_the_city(
 
     assert route.calls.last.request.url.path == "/ceny-ofertowe/warszawa/mieszkania"
     # The link is built from the slug as normalized, like the request: no %20.
-    assert result["list_url"] == PAGES + "/warszawa/mieszkania?page=1&perPage=10"
+    assert result["list_url"] == PAGES + "/warszawa/mieszkania?perPage=10"
 
 
 def test_search_offers_of_an_unknown_city_is_an_error_that_says_so(
@@ -259,13 +260,12 @@ def test_search_offers_sends_the_new_filters(
         ("filterStatus", "archived"),
         ("sortBy", "size"),
         ("sortOrder", "desc"),
-        ("page", "1"),
         ("perPage", "10"),
     ]
     assert result["list_url"] == (
         f"{PAGES}/warszawa/mieszkania?filterPricePerM2=12000-999999&filterDistrict="
         "Mokot%C3%B3w&filterPriceChange=decrease&filterStatus=archived&sortBy=size"
-        "&sortOrder=desc&page=1&perPage=10"
+        "&sortOrder=desc&perPage=10"
     )
 
 
@@ -293,7 +293,6 @@ def test_search_offers_new_arguments_as_models_send_them(
     if message is None:
         assert result.is_error is False
         assert route.calls.last.request.url.params.multi_items()[:-1] == [
-            ("page", "1"),
             ("perPage", "10"),
         ]
     else:

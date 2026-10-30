@@ -5,7 +5,7 @@ import httpx
 from support.builders.offers import offers_page
 from support.golden.cli import FILTERS, INJECTED_BODY, NEW_FILTERS, OFFERS, Case, case, offers_fail
 from support.golden.routes import offers_answer, offers_page_with, offers_with
-from support.providers.routes.offers import offers_route, unknown_city_route
+from support.providers.routes.offers import offers_route, unknown_city_route, wroclaw_offers_route
 from support.providers.rsc import (
     UNKNOWN_CITY,
 )
@@ -15,6 +15,7 @@ CASES: dict[str, Case] = {
     "help_offers_search": case("offers", "search", "--help"),
     # offers search
     "offers_search": case(*OFFERS, "warszawa", service=offers_route),
+    "offers_search_wroclaw_2_0": case(*OFFERS, "wroclaw", service=wroclaw_offers_route),
     "offers_search_json": case(*OFFERS, "warszawa", "--json", service=offers_route),
     "offers_search_every_option": case(
         *OFFERS, "warszawa", *FILTERS, service=offers_with(offers_page("page.offers_list.filtered"))

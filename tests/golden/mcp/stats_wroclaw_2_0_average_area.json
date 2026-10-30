@@ -1,0 +1,53 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "wroclaw",
+        "dataset": "average_area",
+        "periods": 3
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "wroclaw",
+        "location_name": "Wrocław",
+        "dataset": "average_area",
+        "title": "Średnia powierzchnia użytkowa mieszkania lub domu oddanego przez deweloperów",
+        "source": "GUS",
+        "frequency": "year",
+        "total": 22,
+        "returned": 3,
+        "truncated": true,
+        "available_from": "2005",
+        "hint": "Pokazano ostatnie 3 z 22 okresów (dane od 2005); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe#gus-srednia-powierzchnia",
+        "periods": [
+          "2024",
+          "2025",
+          "2026"
+        ],
+        "series": [
+          {
+            "series_id": "average_area",
+            "label": "Średnia powierzchnia",
+            "unit": "m²",
+            "values": [
+              54.7,
+              59.6,
+              66.6
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
+  ]
+}

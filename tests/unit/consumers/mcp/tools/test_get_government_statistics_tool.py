@@ -7,21 +7,19 @@ import respx
 from mcp import Client
 from mcp.server.mcpserver import MCPServer
 
-from deweloperuch_mcp import bootstrap, identity
+from deweloperuch_mcp import bootstrap
 from deweloperuch_mcp.models.government_statistics import Dataset
 from support.checks.leaks import LEAKS, SIZE_BUDGET
 from support.providers.mcp import call, data, has_null, text, tools, with_client
 from support.providers.routes.government_statistics import (
     UNKNOWN_LOCATION,
     stats_routes,
+    stats_url,
     unknown_location_route,
 )
 
 # The MCP server runs behind the SDK's in-memory client: its event loop needs Unix sockets.
 pytestmark = pytest.mark.usefixtures("unix_sockets_for_the_event_loop")
-
-
-STATS = identity.BASE_URL + "/statystyki/statystyki-rzadowe"
 
 
 def test_government_statistics_input_schema(server: MCPServer[bootstrap.Session]) -> None:
@@ -75,7 +73,7 @@ def test_government_statistics_as_a_table(
             "Pokazano ostatnie 2 z 80 okresów (dane od 2006-Q3); starsze pokaże większe "
             "periods (najwyżej 120)."
         ),
-        "stats_url": STATS + "/warszawa#nbp",
+        "stats_url": stats_url("warszawa", "#nbp"),
         "periods": ["2026-Q1", "2026-Q2"],
         "series": [
             {
@@ -118,7 +116,7 @@ def test_government_statistics_with_the_defaults(
     assert (result["total"], result["returned"], result["truncated"]) == (22, 12, True)
     assert result["periods"] == [str(year) for year in range(2015, 2027)]
     assert result["series"][0]["values"][-1] == 62.5
-    assert result["stats_url"] == STATS + "/polska#gus-srednia-powierzchnia"
+    assert result["stats_url"] == stats_url("polska", "#gus-srednia-powierzchnia")
     assert "note" not in result  # no null fields
     assert not has_null(result)
 
@@ -257,7 +255,7 @@ def test_government_statistics_location_in_capitals_is_the_slug(
     result = data(call(server, "get_government_statistics", location=location, dataset="wages"))
 
     assert (result["location_slug"], routes["warszawa"].call_count) == ("warszawa", 1)
-    assert result["stats_url"] == STATS + "/warszawa#gus-wynagrodzenia"
+    assert result["stats_url"] == stats_url("warszawa", "#gus-wynagrodzenia")
 
 
 @pytest.mark.parametrize(

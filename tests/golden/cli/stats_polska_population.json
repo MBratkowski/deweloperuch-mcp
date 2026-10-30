@@ -10,7 +10,7 @@
     "Ludność według płci (stan na 31 grudnia) · Polska [polska]",
     "Źródło: GUS · rocznie · okresy: pokazano 12 z 21 (dane od 2005).",
     "Wskazówka: Pokazano ostatnie 12 z 21 okresów (dane od 2005); starsze pokaże większa wartość periods.",
-    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-wiek",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-wiek",
     "Kolumny:",
     "  [1] Razem (osoby)",
     "  [2] Kobiety (osoby)",
@@ -34,6 +34,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

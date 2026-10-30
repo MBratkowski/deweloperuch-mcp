@@ -8,7 +8,6 @@ import respx
 
 from deweloperuch_mcp import bootstrap
 from deweloperuch_mcp.errors import SERVICE_CHANGED, InvalidInputError, NotFoundError
-from deweloperuch_mcp.flight import rsc_token
 from support.providers import operations
 from support.providers.routes.government_statistics import stats_routes
 from support.providers.routes.offers import sample_offers_route
@@ -23,8 +22,8 @@ def sent_query(route: respx.Route) -> str:
     """The query the service got, without the ``_rsc`` token."""
     url = route.calls.last.request.url
     query = url.query.decode()
-    assert query.endswith(f"_rsc={url.params['_rsc']}")
-    return query.rsplit("_rsc=", 1)[0].rstrip("&")
+    assert query.endswith("_rsc") and url.params["_rsc"] == ""
+    return query.removesuffix("_rsc").rstrip("&")
 
 
 UNKNOWN_CITY_MESSAGE = (
@@ -61,10 +60,10 @@ def test_the_list_link_is_the_request_without_its_token(
 
     sent = route.calls.last.request.url
     query = sent.query.decode()
-    assert query.endswith(f"&_rsc={sent.params['_rsc']}")
+    assert query.endswith("&_rsc")
     assert (
         result.list_url
-        == f"{BASE}{sent.raw_path.decode().split('?')[0]}?{query.rsplit('&_rsc=', 1)[0]}"
+        == f"{BASE}{sent.raw_path.decode().split('?')[0]}?{query.removesuffix('&_rsc')}"
     )
 
 
@@ -76,7 +75,7 @@ def test_the_statistics_link_is_the_request_without_its_token(session: bootstrap
         result = operations.get_government_statistics(session, "warszawa", "unemployment")
 
     sent = route.calls.last.request.url
-    assert sent.query.decode() == f"_rsc={sent.params['_rsc']}"
+    assert sent.query.decode() == "_rsc"
     assert result.stats_url == f"{BASE}{sent.raw_path.decode().split('?')[0]}#gus-bezrobocie"
     assert "_rsc" not in result.stats_url
 
@@ -99,7 +98,7 @@ def test_search_offers_sends_the_filters_of_the_filtered_sample(
     )
 
     target = request_target("page.offers_list.filtered")
-    assert str(route.calls.last.request.url) == f"{BASE}{target}&_rsc={rsc_token(target)}"
+    assert str(route.calls.last.request.url) == f"{BASE}{target}&_rsc"
     assert route.calls.last.request.headers["rsc"] == "1"
     assert (result.total, result.returned, result.page, result.per_page) == (1192, 3, 2, 50)
     assert (result.truncated, result.pages_available) == (True, 20)
@@ -115,7 +114,7 @@ def test_search_offers_defaults(session: bootstrap.Session, service: respx.MockR
 
     assert route.calls.last.request.url.path == OFFERS_PAGE
     # No sortBy: the service's default order [P]; page 1 and the service's default 10.
-    assert sent_query(route) == "page=1&perPage=10"
+    assert sent_query(route) == "perPage=10"
     assert result.total == 13324
 
 
@@ -140,7 +139,7 @@ def test_search_offers_builds_ranges_and_sort(
 
     operations.search_offers(session, "warszawa", **filters)
 
-    assert sent_query(route) == f"{query}&page=1&perPage=10"
+    assert sent_query(route) == f"{query}&perPage=10"
 
 
 @pytest.mark.parametrize("per_page", [10, 50, 100])

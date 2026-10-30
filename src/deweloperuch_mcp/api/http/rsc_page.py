@@ -1,8 +1,7 @@
 """Reading a page as React Server Components (channel B, D1): ``RscPage``.
 
-A page is requested with ``RSC: 1`` and a deterministic ``_rsc`` token (the same rule
-as ``recon/probe.py``, ``deweloperuch_mcp.flight.with_rsc_token``); the response is flight
-text (``text/x-component``) whose client components carry the data in props
+A page is requested with ``RSC: 1`` and an empty ``_rsc`` (``RSC_QUERY``); the response
+is flight text (``text/x-component``) whose client components carry the data in props
 (docs/discovery/pages-rsc.md). If Cloudflare answers with the cached HTML page instead,
 the same flight text is read from its ``self.__next_f.push`` scripts.
 
@@ -17,7 +16,7 @@ contract (``UnexpectedResponseError``).
 """
 
 import json
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
 from typing import TypeVar
 
 from pydantic import BaseModel
@@ -30,7 +29,6 @@ from deweloperuch_mcp.flight import (
     error_digests,
     flight_from_html,
     rows,
-    with_rsc_token,
 )
 from deweloperuch_mcp.http_policy import is_html
 from deweloperuch_mcp.models.errors import SERVICE_CHANGED, NotFoundError, UnexpectedResponseError
@@ -39,6 +37,14 @@ M = TypeVar("M", bound=BaseModel)
 T = TypeVar("T")
 
 RSC_HEADERS = {"RSC": "1"}
+
+# [P 2026-10-30] Since the 2.0 build (Next.js 15.5, 2026-10-29) the server checks `_rsc`
+# against a hash of the router headers; with none of them sent (only `RSC: 1`) the
+# expected value is empty, and any other value gets a 307 to the same URL with a bare
+# `_rsc` (docs/discovery/pages-rsc.md, 2.0 section). The bare parameter is that target,
+# so the request needs no redirect. The URL still differs from the page's HTML one, so
+# Cloudflare does not answer it with cached HTML.
+RSC_QUERY = "_rsc"
 
 
 class RscPage:
@@ -60,9 +66,25 @@ class RscPage:
         """
         return self.read(lambda payload: self._prop(payload, name, model, missing))
 
+    def props(
+        self,
+        names: Collection[str],
+        decode: Callable[[Mapping[str, list[object]]], T],
+        *,
+        missing: str | None = None,
+    ) -> T:
+        """Every value of each prop in ``names`` (in the stream's order, references such as
+        ``$undefined`` left out), decoded by ``decode``: a page whose data is spread over
+        several props (the 2.0 pages).
+
+        When none of ``names`` is on the page: the errors of ``prop``.
+        """
+        return self.read(lambda payload: decode(self._props(payload, names, missing)))
+
     def read(self, decode: Callable[[str | bytes], T]) -> T:
         """The page's flight stream decoded by ``decode`` (a page with several props)."""
-        target = with_rsc_token(HttpClient.target(self._path, self._params))
+        target = HttpClient.target(self._path, self._params)
+        target += ("&" if "?" in target else "?") + RSC_QUERY
         return self._http.get(
             target, headers=RSC_HEADERS, decode=lambda reply: decode(self._payload(reply))
         )
@@ -94,18 +116,40 @@ class RscPage:
                 return Dto.validated(model, value, f"{path} (prop {name})")
             if isinstance(value, dict | list) and prop not in found:
                 found.append(prop)
+        raise self._absent(payload, name, missing, found)
+
+    def _props(
+        self, payload: str | bytes, names: Collection[str], missing: str | None
+    ) -> dict[str, list[object]]:
+        values: dict[str, list[object]] = {}
+        found: list[str] = []
+        for prop, value in component_props(payload):
+            if isinstance(value, dict | list) and prop not in found:
+                found.append(prop)
+            if prop in names and not (isinstance(value, str) and value.startswith("$")):
+                values.setdefault(prop, []).append(value)
+        if not values:
+            raise self._absent(payload, "/".join(names), missing, found)
+        return values
+
+    def _absent(
+        self, payload: str | bytes, name: str, missing: str | None, found: Sequence[str]
+    ) -> NotFoundError | UnexpectedResponseError:
+        """The error of a page without the prop ``name``: one the service does not know
+        (Next.js's 404 marker, or the heading ``missing``), or one that changed."""
+        path = self._path
         if NOT_FOUND_DIGEST in error_digests(payload):
-            raise NotFoundError(
+            return NotFoundError(
                 "Serwis nie zna żądanych danych (strona nie istnieje).",
                 detail=f"{path}: brak propsa {name!r}, strona zgłasza {NOT_FOUND_DIGEST}",
             )
         if missing is not None and missing in self.headings(payload):
-            raise NotFoundError(
+            return NotFoundError(
                 "Serwis nie zna żądanych danych (strona nie istnieje).",
                 detail=f"{path}: brak propsa {name!r}, strona ma nagłówek {missing!r}",
             )
         names = ", ".join(found[:10]) or "brak"
-        raise UnexpectedResponseError(
+        return UnexpectedResponseError(
             f"Na stronie serwisu brakuje oczekiwanych danych. {SERVICE_CHANGED}",
             detail=f"{path} nie zawiera danych w propsie {name!r} (propsy z danymi: {names})",
         )

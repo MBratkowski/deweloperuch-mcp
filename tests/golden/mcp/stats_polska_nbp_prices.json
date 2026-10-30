@@ -22,6 +22,6 @@
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

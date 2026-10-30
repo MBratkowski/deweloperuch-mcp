@@ -1,0 +1,37 @@
+{
+  "args": [
+    "developers",
+    "get",
+    "archicom"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Archicom S.A. [archicom] · cała Polska",
+    "Profil dewelopera: https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/archicom",
+    "Aktywne oferty: 547 · inwestycje: 6 · miasta: 3 · średnio: 831 382 PLN · 51,87 m² · 16 038 PLN/m²",
+    "Inwestycje: pokazano 6 z 6.",
+    "[atrium-nowy-szczepin-wroclaw] Atrium - Nowy Szczepin · Wrocław · aktywna · aktywne oferty 139 z 234 · 742 646 PLN · 50,92 m² · 14 586 PLN/m²",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/archicom/atrium-nowy-szczepin-wroclaw",
+    "[przystan-reymonta-wroclaw] Przystań Reymonta · Wrocław · aktywna · aktywne oferty 132 z 200 · 807 982 PLN · 51,7 m² · 15 629 PLN/m²",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/archicom/przystan-reymonta-wroclaw",
+    "[moje-iwiny-iwiny] Moje Iwiny · Iwiny · aktywna · aktywne oferty 102 z 102 · 644 191 PLN · 54,34 m² · 11 855 PLN/m²",
+    "    https://deweloperuch.pl/ceny-ofertowe/iwiny/deweloperzy/archicom/moje-iwiny-iwiny",
+    "[modern-mokotow-etap-5-budynek-e-warszawa] Modern Mokotów etap 5 budynek E · Warszawa · aktywna · aktywne oferty 100 z 100 · 1 177 199 PLN · 53,04 m² · 22 196 PLN/m²",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/archicom/modern-mokotow-etap-5-budynek-e-warszawa",
+    "[bulwar-polnocny-wroclaw] Bulwar Północny · Wrocław · aktywna · aktywne oferty 63 z 117 · 855 212 PLN · 49,76 m² · 17 186 PLN/m²",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/archicom/bulwar-polnocny-wroclaw",
+    "[poludnik-17-budynek-k2] Południk 17 - budynek K2 · Wrocław · aktywna · aktywne oferty 11 z 115 · 688 998 PLN · 44,33 m² · 15 542 PLN/m²",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/archicom/poludnik-17-budynek-k2",
+    "Miasta dewelopera (cała Polska):",
+    "  Warszawa [warszawa] · inwestycje 1 · aktywne oferty 100 · 1 177 199 PLN · 22 196 PLN/m²",
+    "  Wrocław [wroclaw] · inwestycje 4 · aktywne oferty 345 · 786 489 PLN · 15 490 PLN/m²",
+    "  Iwiny [iwiny] · inwestycje 1 · aktywne oferty 102 · 644 191 PLN · 11 855 PLN/m²",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/archicom?_rsc [rsc: 1] [accept: */*]"
+  ]
+}

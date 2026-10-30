@@ -24,7 +24,7 @@
         "truncated": true,
         "available_from": "2005",
         "hint": "Pokazano ostatnie 12 z 22 okresów (dane od 2005); starsze pokaże większe periods (najwyżej 120).",
-        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-srednia-powierzchnia",
+        "stats_url": "https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#gus-srednia-powierzchnia",
         "periods": [
           "2015",
           "2016",
@@ -65,6 +65,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

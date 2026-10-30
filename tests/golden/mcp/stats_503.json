@@ -18,10 +18,10 @@
   "log": [
     [
       "INFO",
-      "ServiceError: Statystyki rządowe dla 'warszawa': Serwis odpowiedział błędem HTTP 503. Nic nie ponawiam; spróbuj później. Limiter wstrzyma następne zapytanie o 10 s. Szczegóły: /statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c: "
+      "ServiceError: Statystyki rządowe dla 'warszawa': Serwis odpowiedział błędem HTTP 503. Nic nie ponawiam; spróbuj później. Limiter wstrzyma następne zapytanie o 10 s. Szczegóły: /statystyki/warszawa/dane-rzadowe?_rsc: "
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

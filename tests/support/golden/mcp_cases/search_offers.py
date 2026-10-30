@@ -5,13 +5,15 @@ import httpx
 from support.builders.offers import offers_page
 from support.golden.mcp import FILTERED, INJECTED, OFFERS, WARSZAWA, Case, case
 from support.golden.routes import offers_answer, offers_page_with, offers_with
-from support.providers.routes.offers import offers_route, unknown_city_route
+from support.providers.routes.offers import offers_route, unknown_city_route, wroclaw_offers_route
 from support.providers.rsc import UNKNOWN_CITY
 from support.providers.samples import rsc_payload
 
 CASES: dict[str, Case] = {
     # search_offers
     "offers": case(OFFERS, offers_route, **WARSZAWA),
+    # the 2.0 build: `sales` and `serverPaginationData`; page 1 is sent without `page`
+    "offers_wroclaw_2_0": case(OFFERS, wroclaw_offers_route, city="wroclaw"),
     "offers_whole_country": case(OFFERS, offers_route, city="polska"),
     "offers_every_argument": case(
         OFFERS,

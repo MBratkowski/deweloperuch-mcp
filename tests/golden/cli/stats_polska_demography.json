@@ -10,7 +10,7 @@
     "Urodzenia żywe, zgony i przyrost naturalny · Polska [polska]",
     "Źródło: Eurostat · miesięcznie · okresy: pokazano 12 z 357 (dane od 1996-01).",
     "Wskazówka: Pokazano ostatnie 12 z 357 okresów (dane od 1996-01); starsze pokaże większa wartość periods.",
-    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#eurostat-demografia",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/polska/dane-rzadowe#eurostat-demografia",
     "Kolumny:",
     "  [1] Urodzenia żywe (osoby)",
     "  [2] Zgony (osoby)",
@@ -34,6 +34,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

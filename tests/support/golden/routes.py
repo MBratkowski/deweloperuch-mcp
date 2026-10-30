@@ -15,7 +15,7 @@ from support.providers.routes.buildings import BUILDING, building_routes
 from support.providers.routes.buildings import TREND as BUILDING_TREND
 from support.providers.routes.developer_search import developer_search_route
 from support.providers.routes.government_statistics import (
-    STATS_PATH,
+    stats_path,
 )
 from support.providers.routes.investment_search import CITY_INVESTMENTS, investment_search_routes
 from support.providers.routes.investments import (
@@ -78,7 +78,7 @@ def many_cities(router: respx.MockRouter) -> None:
 
 
 def stats_answer(location: str, status: int, **kw: Any) -> Router:
-    return lambda router: router.get(path=STATS_PATH + location).respond(status, **kw)
+    return lambda router: router.get(path=stats_path(location)).respond(status, **kw)
 
 
 def valuation_answer(status: int, **kw: Any) -> Router:

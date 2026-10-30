@@ -7,7 +7,13 @@ from typing import Any
 
 import respx
 
-from support.providers.rsc import OFFERS_UNKNOWN_CITY, UNKNOWN_CITY, offers_payload, raw
+from support.providers.rsc import (
+    OFFERS_UNKNOWN_CITY,
+    OFFERS_WROCLAW_2_0,
+    UNKNOWN_CITY,
+    offers_payload,
+    raw,
+)
 from support.providers.samples import body
 
 RSC_HEADERS = {"Content-Type": "text/x-component"}
@@ -26,6 +32,14 @@ def unknown_city_route(router: respx.MockRouter) -> respx.Route:
     Next.js's 404 marker. Add it before ``offers_route`` (the first match answers)."""
     return router.route(method="GET", path=f"/ceny-ofertowe/{UNKNOWN_CITY}/mieszkania").respond(
         200, content=raw(OFFERS_UNKNOWN_CITY), headers=RSC_HEADERS
+    )
+
+
+def wroclaw_offers_route(router: respx.MockRouter) -> respx.Route:
+    """The offers list of Wrocław as the 2.0 build serves it (``sales``,
+    ``serverPaginationData``), byte for byte. Add it before ``offers_route``."""
+    return router.route(method="GET", path="/ceny-ofertowe/wroclaw/mieszkania").respond(
+        200, content=raw(OFFERS_WROCLAW_2_0), headers=RSC_HEADERS
     )
 
 

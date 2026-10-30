@@ -25,7 +25,7 @@
         "truncated": true,
         "available_from": "2006-Q3",
         "hint": "Pokazano ostatnie 2 z 80 okresów (dane od 2006-Q3); starsze pokaże większe periods (najwyżej 120).",
-        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#nbp",
+        "stats_url": "https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#nbp",
         "periods": [
           "2026-Q1",
           "2026-Q2"
@@ -73,6 +73,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

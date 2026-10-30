@@ -17,8 +17,8 @@ from deweloperuch_mcp.errors import (
 )
 from support.providers import operations
 from support.providers.routes.government_statistics import (
-    STATS_PATH,
     UNKNOWN_LOCATION,
+    stats_path,
     stats_routes,
     unknown_location_route,
 )
@@ -51,7 +51,7 @@ def test_government_statistics_the_latest_periods_of_a_dataset(
     assert (result.total, result.returned, result.truncated) == (80, 2, True)
     assert result.periods == ("2026-Q1", "2026-Q2")
     assert result.available_from == "2006-Q3"
-    assert result.stats_url == BASE + "/statystyki/statystyki-rzadowe/warszawa#nbp"
+    assert result.stats_url == BASE + "/statystyki/warszawa/dane-rzadowe#nbp"
     assert [(s.series_id, [p.value for p in s.points]) for s in result.series] == [
         ("primary_asking", [18056.0, 18488.0]),
         ("primary_transaction", [16471.0, 16783.0]),
@@ -141,7 +141,7 @@ def test_government_statistics_of_a_page_about_another_location_are_unexpected(
     session: bootstrap.Session, service: respx.MockRouter
 ) -> None:
     """The root page served for an unknown location (a fallback, [H]): never its data."""
-    service.get(path=STATS_PATH + "krakow").respond(200, content=raw(STATS_POLSKA))
+    service.get(path=stats_path("krakow")).respond(200, content=raw(STATS_POLSKA))
 
     with pytest.raises(UnexpectedResponseError) as caught:
         operations.get_government_statistics(session, "krakow", "average_area")
@@ -156,7 +156,7 @@ def test_government_statistics_of_a_page_about_another_location_are_unexpected(
 def test_government_statistics_errors_name_the_location(
     session: bootstrap.Session, service: respx.MockRouter
 ) -> None:
-    service.get(path=STATS_PATH + "warszawa").respond(503, headers={"Retry-After": "10"})
+    service.get(path=stats_path("warszawa")).respond(503, headers={"Retry-After": "10"})
 
     with pytest.raises(ServiceError) as caught:
         operations.get_government_statistics(session, "warszawa", "wages")

@@ -21,7 +21,7 @@
     "  \"available_from\": \"2002\",",
     "  \"hint\": \"Pokazano ostatnie 12 z 24 okresów (dane od 2002); starsze pokaże większa wartość periods.\",",
     "  \"note\": null,",
-    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-demografia\",",
+    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#gus-demografia\",",
     "  \"series\": [",
     "    {",
     "      \"series_id\": \"births\",",
@@ -196,6 +196,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

@@ -22,7 +22,7 @@
         "developers_omitted": 0,
         "truncated": false,
         "hint": "Brak aktywnych ofert spełniających kryteria w 'sopot'. Sprawdź slug miasta (search_locations) i poluzuj filtry (cena, metraż).",
-        "list_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/mieszkania?filterPrice=0-1000&page=1&perPage=10"
+        "list_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/mieszkania?filterPrice=0-1000&perPage=10"
       }
     }
   ],

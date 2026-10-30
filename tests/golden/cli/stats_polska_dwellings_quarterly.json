@@ -11,7 +11,7 @@
     "Źródło: GUS · kwartalnie · okresy: pokazano 12 z 87 (dane od 2005-Q1).",
     "Wskazówka: Pokazano ostatnie 12 z 87 okresów (dane od 2005-Q1); starsze pokaże większa wartość periods.",
     "Uwaga: Ostatni kwartał (2026-Q3) obejmuje tylko 2 z 3 miesięcy (dane miesięczne do 2026-08); nie porównuj go z pełnymi kwartałami.",
-    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-mieszkania",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-mieszkania",
     "Kolumny:",
     "  [1] Oddane do użytkowania: razem (mieszkania)",
     "  [2] Oddane: deweloperskie (mieszkania)",
@@ -47,6 +47,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

@@ -21,7 +21,7 @@
         "per_page": 10,
         "pages_available": 20,
         "hint": "Pasujących ofert jest 13324, a można przejrzeć najwyżej 20 stron po 10 (200). Zawęź filtry (cena, metraż).",
-        "list_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/mieszkania?filterSize=0-9999&page=1&perPage=10",
+        "list_url": "https://deweloperuch.pl/ceny-ofertowe/krakow/mieszkania?filterSize=0-9999&perPage=10",
         "items": [
           {
             "offer_id": 4397,
@@ -189,6 +189,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/krakow/mieszkania?filterSize=0-9999&page=1&perPage=10&_rsc=d0800563 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/krakow/mieszkania?filterSize=0-9999&perPage=10&_rsc [rsc: 1] [accept: */*]"
   ]
 }

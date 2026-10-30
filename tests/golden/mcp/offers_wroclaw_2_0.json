@@ -1,0 +1,192 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "wroclaw"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 5836,
+        "returned": 10,
+        "truncated": true,
+        "page": 1,
+        "per_page": 10,
+        "pages_available": 20,
+        "hint": "Pasujących ofert jest 5836, a można przejrzeć najwyżej 20 stron po 10 (200). Zawęź filtry (cena, metraż).",
+        "list_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/mieszkania?perPage=10",
+        "items": [
+          {
+            "offer_id": 2044,
+            "investment_slug": "legnicka-vita",
+            "name": "L1/9/96",
+            "price": 985757.0,
+            "area_m2": 80.8,
+            "price_per_m2": 12199.96,
+            "status": "active",
+            "investment_name": "Legnicka Vita",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/develia/legnicka-vita",
+            "developer_name": "Develia",
+            "developer_slug": "develia",
+            "last_price_change_kind": "decrease",
+            "last_price_change_pct": -10.95,
+            "price_change_since_start_pct": -10.48
+          },
+          {
+            "offer_id": 2085,
+            "investment_slug": "legnicka-vita",
+            "name": "L2/15/123",
+            "price": 1133377.0,
+            "area_m2": 86.52,
+            "price_per_m2": 13099.6,
+            "status": "active",
+            "investment_name": "Legnicka Vita",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/develia/legnicka-vita",
+            "developer_name": "Develia",
+            "developer_slug": "develia",
+            "last_price_change_kind": "decrease",
+            "last_price_change_pct": -10.27,
+            "price_change_since_start_pct": -10.76
+          },
+          {
+            "offer_id": 2129,
+            "investment_slug": "legnicka-vita",
+            "name": "L2/9/79",
+            "price": 1001429.0,
+            "area_m2": 80.12,
+            "price_per_m2": 12499.11,
+            "status": "active",
+            "investment_name": "Legnicka Vita",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/develia/legnicka-vita",
+            "developer_name": "Develia",
+            "developer_slug": "develia",
+            "last_price_change_kind": "decrease",
+            "last_price_change_pct": -10.71,
+            "price_change_since_start_pct": -11.38
+          },
+          {
+            "offer_id": 2150,
+            "investment_slug": "legnicka-vita",
+            "name": "L1/12/121",
+            "price": 1094798.0,
+            "area_m2": 87.59,
+            "price_per_m2": 12499.12,
+            "status": "active",
+            "investment_name": "Legnicka Vita",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/develia/legnicka-vita",
+            "developer_name": "Develia",
+            "developer_slug": "develia",
+            "last_price_change_kind": "decrease",
+            "last_price_change_pct": -10.71,
+            "price_change_since_start_pct": -10.99
+          },
+          {
+            "offer_id": 2186,
+            "investment_slug": "legnicka-vita",
+            "name": "L1/15/148",
+            "price": 1101150.0,
+            "area_m2": 80.23,
+            "price_per_m2": 13724.92,
+            "status": "active",
+            "investment_name": "Legnicka Vita",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/develia/legnicka-vita",
+            "developer_name": "Develia",
+            "developer_slug": "develia",
+            "last_price_change_kind": "decrease",
+            "last_price_change_pct": -9.85,
+            "price_change_since_start_pct": -8.24
+          },
+          {
+            "offer_id": 36342,
+            "investment_slug": "atal-strachowicka-ii",
+            "name": "B8-K1-0-4",
+            "price": 521964.0,
+            "area_m2": 41.86,
+            "price_per_m2": 12469.28,
+            "status": "active",
+            "investment_name": "ATAL Strachowicka II",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/atal/atal-strachowicka-ii",
+            "developer_name": "ATAL S.A.",
+            "developer_slug": "atal",
+            "last_price_change_kind": "no_change",
+            "last_price_change_pct": 0.0,
+            "price_change_since_start_pct": -1.52
+          },
+          {
+            "offer_id": 36523,
+            "investment_slug": "atal-strachowicka-ii",
+            "name": "B8-K1-0-7",
+            "price": 605298.0,
+            "area_m2": 48.52,
+            "price_per_m2": 12475.23,
+            "status": "active",
+            "investment_name": "ATAL Strachowicka II",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/atal/atal-strachowicka-ii",
+            "developer_name": "ATAL S.A.",
+            "developer_slug": "atal",
+            "last_price_change_kind": "no_change",
+            "last_price_change_pct": 0.0,
+            "price_change_since_start_pct": -0.77
+          },
+          {
+            "offer_id": 42733,
+            "investment_slug": "murapol-osiedle-ferrovia",
+            "name": "1-12.A.1.2",
+            "price": 1107373.0,
+            "area_m2": 97.48,
+            "price_per_m2": 11360.0,
+            "status": "active",
+            "investment_name": "Murapol Osiedle Ferrovia",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/murapol/murapol-osiedle-ferrovia",
+            "developer_name": "Murapol S.A.",
+            "developer_slug": "murapol",
+            "last_price_change_kind": "increase",
+            "last_price_change_pct": 1.07,
+            "price_change_since_start_pct": -14.16
+          },
+          {
+            "offer_id": 42749,
+            "investment_slug": "murapol-osiedle-ferrovia",
+            "name": "43-48.A.1.47",
+            "price": 1106157.0,
+            "area_m2": 97.89,
+            "price_per_m2": 11300.0,
+            "status": "active",
+            "investment_name": "Murapol Osiedle Ferrovia",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/murapol/murapol-osiedle-ferrovia",
+            "developer_name": "Murapol S.A.",
+            "developer_slug": "murapol",
+            "last_price_change_kind": "increase",
+            "last_price_change_pct": 1.07,
+            "price_change_since_start_pct": -13.58
+          },
+          {
+            "offer_id": 42758,
+            "investment_slug": "murapol-osiedle-ferrovia",
+            "name": "13-21.A.1.20",
+            "price": 1319965.0,
+            "area_m2": 90.1,
+            "price_per_m2": 14650.0,
+            "status": "active",
+            "investment_name": "Murapol Osiedle Ferrovia",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/murapol/murapol-osiedle-ferrovia",
+            "developer_name": "Murapol S.A.",
+            "developer_slug": "murapol",
+            "last_price_change_kind": "increase",
+            "last_price_change_pct": 1.03,
+            "price_change_since_start_pct": 5.6
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/wroclaw/mieszkania?perPage=10&_rsc [rsc: 1] [accept: */*]"
+  ]
+}

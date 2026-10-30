@@ -1,0 +1,73 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "wroclaw",
+        "dataset": "population",
+        "periods": 3
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "wroclaw",
+        "location_name": "Wrocław",
+        "dataset": "population",
+        "title": "Ludność według płci (stan na 31 grudnia)",
+        "source": "GUS",
+        "frequency": "year",
+        "total": 21,
+        "returned": 3,
+        "truncated": true,
+        "available_from": "2005",
+        "hint": "Pokazano ostatnie 3 z 21 okresów (dane od 2005); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe#gus-wiek",
+        "periods": [
+          "2023",
+          "2024",
+          "2025"
+        ],
+        "series": [
+          {
+            "series_id": "total",
+            "label": "Razem",
+            "unit": "osoby",
+            "values": [
+              673743,
+              672882,
+              672601
+            ]
+          },
+          {
+            "series_id": "women",
+            "label": "Kobiety",
+            "unit": "osoby",
+            "values": [
+              356782,
+              356287,
+              355973
+            ]
+          },
+          {
+            "series_id": "men",
+            "label": "Mężczyźni",
+            "unit": "osoby",
+            "values": [
+              316961,
+              316595,
+              316628
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
+  ]
+}

@@ -25,7 +25,7 @@
         "truncated": true,
         "available_from": "2010-01",
         "hint": "Pokazano ostatnie 3 z 199 okresów (dane od 2010-01); starsze pokaże większe periods (najwyżej 120).",
-        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-wynagrodzenia",
+        "stats_url": "https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-wynagrodzenia",
         "periods": [
           "2026-05",
           "2026-06",
@@ -48,6 +48,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }
