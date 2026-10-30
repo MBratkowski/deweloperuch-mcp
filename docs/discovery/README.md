@@ -72,7 +72,7 @@ The service has four channels with different stability and cost:
 
 Lists (flats, investments, developers, transactions, addresses) and detail pages have no JSON API of their own. The data is rendered on the server and passed as props of client components (`initialData`, `investments`, `sales`, `data`…). The UI changes filters, sorting and page through `router.push(?…)`, that is a new RSC request, not a `fetch` to the API.
 
-- Request: `GET <page path>?<filters>&_rsc=<anything>` with the `RSC: 1` header → `content-type: text/x-component`, ~10× less data than HTML.
+- Request: `GET <page path>?<filters>&_rsc` (an empty `_rsc`; since the redesign of 2026-10-29 any other value gets a 307 to that URL) with the `RSC: 1` header → `content-type: text/x-component`, ~10× less data than HTML.
 - The `_rsc` parameter is needed because Cloudflare ignores `Vary: RSC`: without it we get cached HTML [P].
 - Format: rows `<id>:<json>` (up to `\n`) and `<id>:T<hexlen>,<text>` (length in bytes, no `\n`; binary tags work the same way); props are in elements `["$","$L<id>",null,{...props}]`. Unknown city: HTTP 200 + an `E` row with digest `NEXT_HTTP_ERROR_FALLBACK;404` [P 2026-10-10]. Details: [pages-rsc.md](pages-rsc.md). Reference parser: [`src/deweloperuch_mcp/flight.py`](../../src/deweloperuch_mcp/flight.py) (`rows`, `component_props`, `error_digests`; `recon/flight.py` re-exports it).
 - Pagination has a hard limit of **20 pages** (`page=21` → returns page 20) [P]. `perPage` ∈ {10, 25, 50, 100} accepted (20 and 500 → 10) [P].

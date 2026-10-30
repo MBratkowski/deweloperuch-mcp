@@ -5,7 +5,7 @@ Search with filters, sorting and pagination, and most detail views, exist **only
 ## How to fetch [P]
 
 ```
-GET https://deweloperuch.pl<path>?<filters>&_rsc=<random token>
+GET https://deweloperuch.pl<path>?<filters>&_rsc
 RSC: 1
 → 200 text/x-component
 ```

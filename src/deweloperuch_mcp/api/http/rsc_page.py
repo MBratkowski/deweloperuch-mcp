@@ -1,6 +1,6 @@
 """Reading a page as React Server Components (channel B, D1): ``RscPage``.
 
-A page is requested with ``RSC: 1`` and an empty ``_rsc`` (``RSC_QUERY``); the response
+A page is requested with ``RSC: 1`` and an empty ``_rsc`` (``flight.RSC_QUERY``); the response
 is flight text (``text/x-component``) whose client components carry the data in props
 (docs/discovery/pages-rsc.md). If Cloudflare answers with the cached HTML page instead,
 the same flight text is read from its ``self.__next_f.push`` scripts.
@@ -29,6 +29,7 @@ from deweloperuch_mcp.flight import (
     error_digests,
     flight_from_html,
     rows,
+    with_rsc_query,
 )
 from deweloperuch_mcp.http_policy import is_html
 from deweloperuch_mcp.models.errors import SERVICE_CHANGED, NotFoundError, UnexpectedResponseError
@@ -37,14 +38,6 @@ M = TypeVar("M", bound=BaseModel)
 T = TypeVar("T")
 
 RSC_HEADERS = {"RSC": "1"}
-
-# [P 2026-10-30] Since the 2.0 build (Next.js 15.5, 2026-10-29) the server checks `_rsc`
-# against a hash of the router headers; with none of them sent (only `RSC: 1`) the
-# expected value is empty, and any other value gets a 307 to the same URL with a bare
-# `_rsc` (docs/discovery/pages-rsc.md, 2.0 section). The bare parameter is that target,
-# so the request needs no redirect. The URL still differs from the page's HTML one, so
-# Cloudflare does not answer it with cached HTML.
-RSC_QUERY = "_rsc"
 
 
 class RscPage:
@@ -83,8 +76,7 @@ class RscPage:
 
     def read(self, decode: Callable[[str | bytes], T]) -> T:
         """The page's flight stream decoded by ``decode`` (a page with several props)."""
-        target = HttpClient.target(self._path, self._params)
-        target += ("&" if "?" in target else "?") + RSC_QUERY
+        target = with_rsc_query(HttpClient.target(self._path, self._params))
         return self._http.get(
             target, headers=RSC_HEADERS, decode=lambda reply: decode(self._payload(reply))
         )

@@ -58,8 +58,7 @@ from deweloperuch_mcp.flight import (  # noqa: E402
     find_json_after,
     flight,
     flight_from_html,
-    rsc_token,
-    with_rsc_token,
+    with_rsc_query,
 )
 from deweloperuch_mcp.http_policy import (  # noqa: E402
     MAX_BODY_BYTES,
@@ -119,8 +118,7 @@ __all__ = [
     "match_page",
     "parse_retry_after",
     "pause_seconds",
-    "rsc_token",
     "stop_cause",
     "stop_reason",
-    "with_rsc_token",
+    "with_rsc_query",
 ]
