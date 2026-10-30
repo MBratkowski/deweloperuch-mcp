@@ -222,7 +222,7 @@ def test_government_statistics_nbp_prices_of_poland_point_to_cities(
 
     assert result.is_error is True
     assert text(result).startswith("NBP nie podaje jednej ceny dla całej Polski")
-    assert "warszawa, krakow" in text(result) and "sopot" not in text(result)
+    assert "6-miast-bez-warszawy, krakow" in text(result) and "sopot" not in text(result)
     assert not LEAKS.search(text(result))
 
 

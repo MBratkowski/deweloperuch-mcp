@@ -17,7 +17,6 @@ from deweloperuch_mcp.flight import component_props, error_digests
 from deweloperuch_mcp.models.government_statistics import Dataset
 from deweloperuch_mcp.models.values import LocationSlug
 from support.providers.rsc import (
-    STATS_FIXTURES,
     STATS_POLSKA,
     STATS_POLSKA_2_0,
     STATS_WARSZAWA,
@@ -49,10 +48,13 @@ def test_the_page_has_several_props_called_data() -> None:
         assert len([v for v in datas if isinstance(v, list)]) == count
 
 
-@pytest.mark.parametrize("location", ["polska", "warszawa"])
-def test_every_linked_section_is_in_the_table_of_contents(location: str) -> None:
-    """The fragments are ids of the page's own table of contents [P]."""
-    toc = next(v for n, v in component_props(raw(STATS_FIXTURES[location])) if n == "tocItems")
+@pytest.mark.parametrize(
+    ("location", "path"), [("polska", STATS_POLSKA), ("warszawa", STATS_WARSZAWA)]
+)
+def test_every_linked_section_is_in_the_table_of_contents(location: str, path: Path) -> None:
+    """The fragments are ids of the page's own table of contents [P] (the pages of the
+    build before 2.0)."""
+    toc = next(v for n, v in component_props(raw(path)) if n == "tocItems")
     ids = {item["id"] for item in toc}
 
     for dataset, sections in SECTIONS.items():

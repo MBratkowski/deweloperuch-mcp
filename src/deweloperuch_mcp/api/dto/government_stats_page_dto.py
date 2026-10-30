@@ -510,6 +510,12 @@ MAPPINGS = (
 
 # --- the page --------------------------------------------------------------------------------
 
+# [P 2026-10-30] the NBP grid of `polska` (section `nbp-grid`): series of the locations with
+# their own NBP prices, 9 on the 2.0 page (Warszawa, the aggregates, Kraków, Gdańsk,
+# Wrocław, Gdynia, Poznań); the page's own list of all 69 locations is gone with 2.0, so
+# these are the locations it still names as having NBP prices.
+NBP_GRID_PROPS = ("seriesList", "tableRows")
+
 STATS_WHOLE_COUNTRY = "polska"
 """The location of the root page of these statistics; its ``currentSlug`` is ``null`` [P]."""
 
@@ -628,6 +634,7 @@ class _PageProps:
         self._sections: list[Any] | None = None
         self._city_slugs: list[str] = []
         self._city_name: str | None = None
+        self._nbp_locations: dict[str, dict[str, Any]] = {}
         self._spec_tables: dict[str, list[Any]] = {}
         self._tables: dict[str, list[Any]] = {}
         self._groups: dict[str, str] = {}
@@ -658,6 +665,8 @@ class _PageProps:
             self._add_spec(value)
         elif name in ("citySlug", "cityName") and isinstance(value, str):
             self._add_location(name, value)
+        elif name in NBP_GRID_PROPS and isinstance(value, list):
+            self._add_nbp_locations(value)
         else:
             return False
         return True
@@ -692,7 +701,26 @@ class _PageProps:
         data: dict[str, Any] = {"tocItems": toc, **tables}
         if self._city_name is not None and location != STATS_WHOLE_COUNTRY:
             data["sortedLocations"] = [self._own_location(location, "nbp_quarterly" in tables)]
+        elif self._nbp_locations:
+            data["sortedLocations"] = list(self._nbp_locations.values())
         return data
+
+    def _add_nbp_locations(self, series: list[Any]) -> None:
+        """The locations of the NBP grid (``NBP_GRID_PROPS``): each has its own prices."""
+        for item in series:
+            if not isinstance(item, dict) or not isinstance(item.get("data"), list):
+                continue
+            slug, name = item.get("locationSlug"), item.get("locationDisplayName")
+            if isinstance(slug, str) and isinstance(name, str):
+                self._nbp_locations.setdefault(
+                    slug,
+                    {
+                        "slug": slug,
+                        "displayName": name,
+                        "isAggregate": item.get("isAggregate") is True,
+                        "nbp": {},
+                    },
+                )
 
     def _spec_tables_without_data(self) -> dict[str, list[Any]]:
         """The tables of the chart specs whose dataset has no ``data`` prop on the page."""

@@ -41,8 +41,15 @@ STATS_WROCLAW_2_0 = FIXTURES / "stats_gov_wroclaw_20261030.rsc"
 STATS_POLSKA_2_0 = FIXTURES / "stats_gov_polska_20261030.rsc"
 """``/statystyki/polska/dane-rzadowe`` of the 2.0 build: no ``citySlug``, no NBP rows."""
 
-STATS_FIXTURES = {"polska": STATS_POLSKA, "warszawa": STATS_WARSZAWA, "wroclaw": STATS_WROCLAW_2_0}
-"""Location -> its real page (``polska`` and ``warszawa`` of the build before 2.0)."""
+STATS_FIXTURES = {
+    "polska": STATS_POLSKA_2_0,
+    "wroclaw": STATS_WROCLAW_2_0,
+    "warszawa": STATS_WARSZAWA,
+}
+"""Location -> the real page the routes serve: ``polska`` and ``wroclaw`` as the 2.0 build
+serves them; ``warszawa`` is the page of the build before 2.0 (the only city page with
+the old shape), kept for compatibility. ``STATS_POLSKA`` is the old ``polska``, for the
+tests of that shape only."""
 
 OFFERS_WROCLAW_2_0 = FIXTURES / "offers_wroclaw_perPage10_20261030.rsc"
 """``/ceny-ofertowe/wroclaw/mieszkania?perPage=10`` of the 2.0 build: ``sales`` with 10

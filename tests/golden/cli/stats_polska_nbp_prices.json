@@ -10,7 +10,7 @@
     ""
   ],
   "stderr": [
-    "Błąd: NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj jedną z lokalizacji: 7-miast, 10-miast, 6-miast-bez-warszawy, warszawa, krakow, gdansk, wroclaw, gdynia, poznan, katowice, opole, szczecin, bialystok, lublin, bydgoszcz, olsztyn, kielce, rzeszow, lodz, zielona-gora.",
+    "Błąd: NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj jedną z lokalizacji: warszawa, 10-miast, 7-miast, 6-miast-bez-warszawy, krakow, gdansk, wroclaw, gdynia, poznan.",
     ""
   ],
   "requests": [

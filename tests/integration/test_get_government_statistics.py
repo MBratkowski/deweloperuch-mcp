@@ -29,10 +29,9 @@ from support.providers.rsc import (
 from support.providers.service import BASE
 
 NBP_LOCATIONS = (
-    "7-miast, 10-miast, 6-miast-bez-warszawy, warszawa, krakow, gdansk, wroclaw, gdynia, "
-    "poznan, katowice, opole, szczecin, bialystok, lublin, bydgoszcz, olsztyn, kielce, "
-    "rzeszow, lodz, zielona-gora"
+    "warszawa, 10-miast, 7-miast, 6-miast-bez-warszawy, krakow, gdansk, wroclaw, gdynia, poznan"
 )
+"""[P 2026-10-30] the locations of the NBP grid of the 2.0 page of ``polska``."""
 
 
 def test_government_statistics_the_latest_periods_of_a_dataset(

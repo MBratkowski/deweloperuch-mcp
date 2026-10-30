@@ -8,13 +8,12 @@
   "exit_code": 0,
   "stdout": [
     "Przeciętne miesięczne wynagrodzenie brutto w sektorze przedsiębiorstw · Polska [polska]",
-    "Źródło: GUS · miesięcznie · okresy: pokazano 12 z 199 (dane od 2010-01).",
-    "Wskazówka: Pokazano ostatnie 12 z 199 okresów (dane od 2010-01); starsze pokaże większa wartość periods.",
+    "Źródło: GUS · miesięcznie · okresy: pokazano 12 z 200 (dane od 2010-01).",
+    "Wskazówka: Pokazano ostatnie 12 z 200 okresów (dane od 2010-01); starsze pokaże większa wartość periods.",
     "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-wynagrodzenia",
     "Kolumny:",
     "  [1] Wynagrodzenie brutto (PLN)",
     "Okres         [1]",
-    "2025-08  8 769,08",
     "2025-09  8 750,34",
     "2025-10  8 865,12",
     "2025-11  9 078,16",
@@ -26,6 +25,7 @@
     "2026-05  9 173,24",
     "2026-06  9 401,58",
     "2026-07  9 509,02",
+    "2026-08  9 259,54",
     ""
   ],
   "stderr": [

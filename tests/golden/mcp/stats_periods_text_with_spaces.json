@@ -20,18 +20,18 @@
         "title": "Przeciętne miesięczne wynagrodzenie brutto w sektorze przedsiębiorstw",
         "source": "GUS",
         "frequency": "month",
-        "total": 199,
+        "total": 200,
         "returned": 5,
         "truncated": true,
         "available_from": "2010-01",
-        "hint": "Pokazano ostatnie 5 z 199 okresów (dane od 2010-01); starsze pokaże większe periods (najwyżej 120).",
+        "hint": "Pokazano ostatnie 5 z 200 okresów (dane od 2010-01); starsze pokaże większe periods (najwyżej 120).",
         "stats_url": "https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-wynagrodzenia",
         "periods": [
-          "2026-03",
           "2026-04",
           "2026-05",
           "2026-06",
-          "2026-07"
+          "2026-07",
+          "2026-08"
         ],
         "series": [
           {
@@ -39,11 +39,11 @@
             "label": "Wynagrodzenie brutto",
             "unit": "PLN",
             "values": [
-              9652.19,
               9530.74,
               9173.24,
               9401.58,
-              9509.02
+              9509.02,
+              9259.54
             ]
           }
         ]

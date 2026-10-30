@@ -11,14 +11,14 @@
   "results": [
     {
       "is_error": true,
-      "text": "NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj jedną z lokalizacji: 7-miast, 10-miast, 6-miast-bez-warszawy, warszawa, krakow, gdansk, wroclaw, gdynia, poznan, katowice, opole, szczecin, bialystok, lublin, bydgoszcz, olsztyn, kielce, rzeszow, lodz, zielona-gora.",
+      "text": "NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj jedną z lokalizacji: warszawa, 10-miast, 7-miast, 6-miast-bez-warszawy, krakow, gdansk, wroclaw, gdynia, poznan.",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "NotFoundError: NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj jedną z lokalizacji: 7-miast, 10-miast, 6-miast-bez-warszawy, warszawa, krakow, gdansk, wroclaw, gdynia, poznan, katowice, opole, szczecin, bialystok, lublin, bydgoszcz, olsztyn, kielce, rzeszow, lodz, zielona-gora. Szczegóły: None"
+      "NotFoundError: NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj jedną z lokalizacji: warszawa, 10-miast, 7-miast, 6-miast-bez-warszawy, krakow, gdansk, wroclaw, gdynia, poznan. Szczegóły: None"
     ]
   ],
   "requests": [
