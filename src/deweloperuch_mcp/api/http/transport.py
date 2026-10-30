@@ -62,12 +62,14 @@ from deweloperuch_mcp.http_policy import (
     MAX_BODY_BYTES,
     PAUSE_AFTER_429,
     body_length,
+    is_html,
     pause_seconds,
     stop_cause,
     stop_reason,
 )
 from deweloperuch_mcp.identity import BASE_URL, USER_AGENT
 from deweloperuch_mcp.models.errors import (
+    SERVICE_CHANGED,
     InvalidInputError,
     LimiterWaitError,
     NotFoundError,
@@ -75,6 +77,7 @@ from deweloperuch_mcp.models.errors import (
     ServiceBlockedError,
     ServiceError,
     SessionClosedError,
+    UnexpectedResponseError,
 )
 from deweloperuch_mcp.retry_after import parse_retry_after
 from deweloperuch_mcp.throttle import (
@@ -298,11 +301,15 @@ class HttpClient:
         headers: Mapping[str, str],
         decode: Callable[[Reply], T],
         unknown: Collection[int] = (NOT_FOUND,),
+        gone: Collection[int] = (),
     ) -> T:
         """GET ``target`` (path with an encoded query) and ``decode`` the 2xx reply.
 
         ``unknown``: the statuses that mean the service does not know what was asked for
-        (``NotFoundError``); 404 unless the endpoint answers so in another way.
+        (``NotFoundError``); 404 unless the endpoint answers so in another way. ``gone``:
+        the statuses that mean the channel itself is no longer there, whatever was asked
+        (``UnexpectedResponseError``: the data source is unavailable, not the object); a
+        status in both is ``unknown`` unless the reply is an HTML page.
 
         Served from the cache when a reply for the same target and headers is fresh.
         Raises the errors of ``deweloperuch_mcp.errors``, checked in this order:
@@ -327,7 +334,7 @@ class HttpClient:
         stopped = _stopped()
         if stopped is not None:
             raise _still_stopped(stopped)
-        reply, ttl = self._fetch(target, sent, unknown)
+        reply, ttl = self._fetch(target, sent, unknown, gone)
         value = decode(reply)
         self._cache.put(key, reply, ttl)
         return value
@@ -335,7 +342,11 @@ class HttpClient:
     # --- one request -------------------------------------------------------------------
 
     def _fetch(
-        self, target: str, headers: Mapping[str, str], unknown: Collection[int]
+        self,
+        target: str,
+        headers: Mapping[str, str],
+        unknown: Collection[int],
+        gone: Collection[int],
     ) -> tuple[Reply, float]:
         try:
             with self._limiter.slot(max_wait=self._max_wait) as slot:
@@ -347,7 +358,7 @@ class HttpClient:
                 response, body, problem, pause = self._exchange(slot, target, headers)
                 reply = Reply(response.status_code, response.headers, body)
                 try:
-                    _check(target, reply, problem, pause, unknown)
+                    _check(target, reply, problem, pause, unknown, gone=gone)
                 except ServiceBlockedError as err:
                     # Both before the slot is released: the latch for the threads of this
                     # process (see above), the record for every other process.
@@ -578,12 +589,14 @@ def _stop_error(
     return ServiceBlockedError(message, detail=detail)
 
 
-def _check(
+def _check(  # noqa: PLR0913 - the reply, then what its statuses mean for this channel
     target: str,
     reply: Reply,
     problem: Problem | None,
     pause: float | None,
     unknown: Collection[int] = (NOT_FOUND,),
+    *,
+    gone: Collection[int] = (),
 ) -> None:
     """Raise for anything but a complete 2xx. STOP first, whatever else is wrong.
 
@@ -607,6 +620,12 @@ def _check(
             pause,
             detail=f"{target} -> {location}",
         )
+    if _is_gone(reply, unknown, gone):
+        raise UnexpectedResponseError(
+            f"Źródło danych tego narzędzia nie jest już dostępne w serwisie (HTTP {status}). "
+            f"{SERVICE_CHANGED}",
+            detail=f"{target}: HTTP {status}, kanał odczytu zniknął z serwisu",
+        )
     if status == NOT_FOUND and status in unknown:
         raise NotFoundError("Serwis nie zna żądanych danych (HTTP 404).", detail=target)
     if status in unknown:
@@ -620,6 +639,15 @@ def _check(
             pause,
             detail=f"{target}: {_excerpt(reply.body)}",
         )
+
+
+def _is_gone(reply: Reply, unknown: Collection[int], gone: Collection[int]) -> bool:
+    """The reply says the channel itself is no longer there. A status both in ``gone`` and
+    in ``unknown`` is the endpoint's own answer (e.g. its JSON error) unless an HTML page
+    came instead: then the route itself is missing."""
+    if reply.status not in gone:
+        return False
+    return reply.status not in unknown or is_html(reply.headers, reply.body)
 
 
 def _ttl(headers: httpx.Headers) -> float:
