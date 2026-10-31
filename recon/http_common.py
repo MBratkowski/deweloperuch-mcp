@@ -16,7 +16,8 @@ too; this module adds what needs urllib and the limiter:
   or 429 (Ctrl+C, SIGTERM, a timeout of the caller) leaves no record, though the next
   run still waits ``min_interval``. Closing it needs a headers callback in ``Fetch``,
   which every transport and test double would have to take;
-- ``check_reply``: anything but a usable 2xx raises ``ReplyError``.
+- ``check_reply``: anything but a usable 2xx raises ``ReplyError``;
+- ``printable``: text from the service (a ``Location``) made safe to print.
 
 Imported after config by the scripts, so it may use syntax newer than Python 3.9.
 """
@@ -286,7 +287,7 @@ def check_reply(reply: Response) -> None:
     if reply.body_error is not None:
         raise ReplyError("http", f"HTTP {status}. {reply.body_error}")
     if 300 <= status < 400:
-        location = reply.headers.get("location", "?")
+        location = printable(reply.headers.get("location", "?"))
         raise ReplyError("redirect", f"HTTP {status}: przekierowanie na {location}.")
     if not 200 <= status < 300:
         raise ReplyError("http", f"HTTP {status}. Treść: {excerpt(reply.body)}")
@@ -296,6 +297,14 @@ def excerpt(body: bytes, limit: int = 300) -> str:
     """The start of a body on one line, for error messages."""
     text = " ".join(body[: limit * 4].decode("utf-8", "replace").split())
     return text[:limit] + ("…" if len(text) > limit or len(body) > limit * 4 else "")
+
+
+def printable(text: str, limit: int = 300) -> str:
+    """``text`` from the service, safe to print: every non-printable character (ESC, CSI,
+    line breaks, bidi controls) escaped as in ``repr``, at most ``limit`` characters plus
+    "…"."""
+    shown = "".join(char if char.isprintable() else repr(char)[1:-1] for char in text[:limit])
+    return shown[:limit] + ("…" if len(text) > limit or len(shown) > limit else "")
 
 
 def status_line(reply: Response) -> str:

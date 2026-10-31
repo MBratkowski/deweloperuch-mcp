@@ -1,0 +1,24 @@
+{
+  "_request": "GET /api/city-districts?citySlug=krakow&variant=transactions",
+  "_captured": "2026-10-30",
+  "response": {
+    "districts": [
+      {
+        "name": "Prądnik Biały",
+        "slug": "pradnik-bialy",
+        "count": 31851
+      },
+      {
+        "name": "Podgórze",
+        "slug": "podgorze",
+        "count": 27247
+      },
+      {
+        "name": "Dębniki",
+        "slug": "debniki",
+        "count": 25617
+      },
+      "... (15 more, 18 total)"
+    ]
+  }
+}

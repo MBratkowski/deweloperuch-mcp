@@ -1,0 +1,137 @@
+{
+  "_request": "GET /api/map/investments/visible/nowy-czechow?v=2",
+  "_captured": "2026-10-30",
+  "response": {
+    "invest_id": 447,
+    "developer_id": 296,
+    "city": "Lublin",
+    "city_slug": "lublin",
+    "street": "",
+    "latitude": "51.26328209",
+    "longitude": "22.55313028",
+    "year_construction": 0,
+    "name": "Nowy Czechów",
+    "slug": "nowy-czechow",
+    "status": "active",
+    "currency": "PLN",
+    "description": "",
+    "avg_amount": 837533.3,
+    "avg_size": 64.66,
+    "avg_price_sqm": 12952.13,
+    "avg_amount_archived": 752792.66,
+    "avg_size_archived": 57.74,
+    "avg_price_sqm_archived": 13037.15,
+    "avg_amount_total": 806172.59,
+    "avg_size_total": 62.1,
+    "avg_price_sqm_total": 12981.38,
+    "active_offers": 80,
+    "total_offers": 127,
+    "developer": {
+      "developer_id": 296,
+      "name": "Immobilia Polska",
+      "description": "",
+      "website": "",
+      "slug": "immobilia-polska"
+    },
+    "sale": [
+      {
+        "sale_id": 33103,
+        "invest_id": 447,
+        "name": "B.203",
+        "type": "",
+        "status": "active",
+        "amount": "1426400",
+        "currency": "PLN",
+        "size": "85.56",
+        "start_amount_difference": "226400",
+        "start_amount_difference_percent": "18.87",
+        "last_event_date": "2026-10-24",
+        "last_change_event_date": "2026-08-09",
+        "creation_date": "2025-02-25",
+        "floor": "10",
+        "ev": [
+          [
+            "2025-02-25",
+            1200000,
+            0,
+            "... (1 more, 4 total)"
+          ],
+          [
+            "2025-09-11",
+            1196984,
+            0,
+            "... (1 more, 4 total)"
+          ],
+          [
+            "2025-10-21",
+            1635984,
+            0,
+            "... (1 more, 4 total)"
+          ],
+          "... (4 more, 7 total)"
+        ]
+      },
+      {
+        "sale_id": 33177,
+        "invest_id": 447,
+        "name": "B.241",
+        "type": "",
+        "status": "active",
+        "amount": "1274886",
+        "currency": "PLN",
+        "size": "92.45",
+        "start_amount_difference": "-5114",
+        "start_amount_difference_percent": "-0.4",
+        "last_event_date": "2026-10-24",
+        "last_change_event_date": "2025-09-11",
+        "creation_date": "2025-02-25",
+        "floor": "9",
+        "ev": [
+          [
+            "2025-02-25",
+            1280000,
+            0,
+            "... (1 more, 4 total)"
+          ],
+          [
+            "2025-09-11",
+            1274886,
+            0,
+            "... (1 more, 4 total)"
+          ]
+        ]
+      },
+      {
+        "sale_id": 33122,
+        "invest_id": 447,
+        "name": "B.238",
+        "type": "",
+        "status": "active",
+        "amount": "1256396",
+        "currency": "PLN",
+        "size": "92.45",
+        "start_amount_difference": "-3604",
+        "start_amount_difference_percent": "-0.29",
+        "last_event_date": "2026-10-24",
+        "last_change_event_date": "2025-09-11",
+        "creation_date": "2025-02-25",
+        "floor": "8",
+        "ev": [
+          [
+            "2025-02-25",
+            1260000,
+            0,
+            "... (1 more, 4 total)"
+          ],
+          [
+            "2025-09-11",
+            1256396,
+            0,
+            "... (1 more, 4 total)"
+          ]
+        ]
+      },
+      "... (124 more, 127 total)"
+    ]
+  }
+}

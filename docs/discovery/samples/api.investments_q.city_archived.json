@@ -1,0 +1,21 @@
+{
+  "_request": "GET /api/investments?q=browar&city=gliwice&includeArchived=true&limit=5",
+  "_captured": "2026-10-30",
+  "response": {
+    "investments": [
+      {
+        "name": "Browar HUGO SCOBEL",
+        "slug": "browar-hugo-scobel",
+        "city": "Gliwice",
+        "city_slug": "gliwice",
+        "district": null,
+        "powiatId": null,
+        "archived": false,
+        "offerCount": 5
+      }
+    ],
+    "hasMore": false,
+    "total": 1,
+    "page": 1
+  }
+}

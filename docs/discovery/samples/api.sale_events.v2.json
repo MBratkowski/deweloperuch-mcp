@@ -1,0 +1,40 @@
+{
+  "_request": "GET /api/sale-events?saleId=33103",
+  "_captured": "2026-10-30",
+  "response": {
+    "success": true,
+    "saleData": {
+      "name": "B.203",
+      "amount": "1426400",
+      "size": "85.56",
+      "currency": "PLN"
+    },
+    "events": [
+      {
+        "sale_event_id": 191071,
+        "event_type": "OFFER_EVENT",
+        "event_data": "",
+        "amount": "1200000",
+        "event_date": "2025-02-25T00:00:00.000Z",
+        "source": "ANNOUCMENT"
+      },
+      {
+        "sale_event_id": 285853,
+        "event_type": "OFFER_EVENT",
+        "event_data": "{\"source\":\"scraper_pr\"}",
+        "amount": "1196984",
+        "event_date": "2025-09-11T00:00:00.000Z",
+        "source": "ANNOUCMENT_PR"
+      },
+      {
+        "sale_event_id": 402273,
+        "event_type": "OFFER_EVENT",
+        "event_data": "{\"source\":\"scraper_pr\"}",
+        "amount": "1635984",
+        "event_date": "2025-10-21T00:00:00.000Z",
+        "source": "ANNOUCMENT_PR"
+      },
+      "... (4 more, 7 total)"
+    ]
+  }
+}

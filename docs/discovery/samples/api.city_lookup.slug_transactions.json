@@ -1,0 +1,8 @@
+{
+  "_request": "GET /api/city-lookup?slug=krakow&source=transactions",
+  "_captured": "2026-10-30",
+  "response": {
+    "city": "Kraków",
+    "city_slug": "krakow"
+  }
+}

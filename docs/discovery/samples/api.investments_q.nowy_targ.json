@@ -1,0 +1,20 @@
+{
+  "_request": "GET /api/investments?q=nowy%20targ&limit=5",
+  "_captured": "2026-10-30",
+  "response": {
+    "investments": [
+      {
+        "name": "Nowy Targówek VI",
+        "slug": "nowy-targowek-vi",
+        "city": "Warszawa",
+        "city_slug": "warszawa",
+        "district": "Targówek",
+        "powiatId": null,
+        "offerCount": 21
+      }
+    ],
+    "hasMore": false,
+    "total": 1,
+    "page": 1
+  }
+}
