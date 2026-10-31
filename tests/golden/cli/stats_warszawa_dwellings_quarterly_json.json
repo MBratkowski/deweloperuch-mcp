@@ -21,7 +21,7 @@
     "  \"available_from\": \"2005-Q1\",",
     "  \"hint\": \"Pokazano ostatnie 12 z 87 okresów (dane od 2005-Q1); starsze pokaże większa wartość periods.\",",
     "  \"note\": \"Ostatni kwartał (2026-Q3) obejmuje tylko 2 z 3 miesięcy (dane miesięczne do 2026-08); nie porównuj go z pełnymi kwartałami.\",",
-    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-mieszkania\",",
+    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#gus-mieszkania\",",
     "  \"series\": [",
     "    {",
     "      \"series_id\": \"completed_total\",",
@@ -856,6 +856,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

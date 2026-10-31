@@ -1,6 +1,7 @@
 """``GovernmentStatisticsApi``: the government statistics (GUS, NBP) of a location, the
-``GovernmentStatisticsSource`` port: the page ``/statystyki/statystyki-rzadowe/{location}``
-(RSC, D1) [P], read into ``GovernmentStatsPageDto``."""
+``GovernmentStatisticsSource`` port: the page ``/statystyki/{location}/dane-rzadowe``
+(RSC, D1) [P 2026-10-30], read into ``GovernmentStatsPageDto``. Until the 2.0 build
+(2026-10-29) it was ``/statystyki/statystyki-rzadowe/{location}``, which now answers 308."""
 
 from functools import partial
 
@@ -32,9 +33,9 @@ class GovernmentStatisticsApi:
 
     @staticmethod
     def path(location: str) -> str:
-        """``/statystyki/statystyki-rzadowe/{location}`` [P]: ``polska``, an aggregate or a
-        city of the page's list (``sortedLocations``).
+        """``/statystyki/{location}/dane-rzadowe`` [P 2026-10-30]: ``polska``, an aggregate
+        or a city.
 
         Also the path of the link to these statistics (``links``, D12).
         """
-        return f"/statystyki/statystyki-rzadowe/{HttpClient.segment(location)}"
+        return f"/statystyki/{HttpClient.segment(location)}/dane-rzadowe"

@@ -72,7 +72,7 @@ The service has four channels with different stability and cost:
 
 Lists (flats, investments, developers, transactions, addresses) and detail pages have no JSON API of their own. The data is rendered on the server and passed as props of client components (`initialData`, `investments`, `sales`, `data`…). The UI changes filters, sorting and page through `router.push(?…)`, that is a new RSC request, not a `fetch` to the API.
 
-- Request: `GET <page path>?<filters>&_rsc=<anything>` with the `RSC: 1` header → `content-type: text/x-component`, ~10× less data than HTML.
+- Request: `GET <page path>?<filters>&_rsc` (an empty `_rsc`; since the redesign of 2026-10-29 any other value gets a 307 to that URL) with the `RSC: 1` header → `content-type: text/x-component`, ~10× less data than HTML.
 - The `_rsc` parameter is needed because Cloudflare ignores `Vary: RSC`: without it we get cached HTML [P].
 - Format: rows `<id>:<json>` (up to `\n`) and `<id>:T<hexlen>,<text>` (length in bytes, no `\n`; binary tags work the same way); props are in elements `["$","$L<id>",null,{...props}]`. Unknown city: HTTP 200 + an `E` row with digest `NEXT_HTTP_ERROR_FALLBACK;404` [P 2026-10-10]. Details: [pages-rsc.md](pages-rsc.md). Reference parser: [`src/deweloperuch_mcp/flight.py`](../../src/deweloperuch_mcp/flight.py) (`rows`, `component_props`, `error_digests`; `recon/flight.py` re-exports it).
 - Pagination has a hard limit of **20 pages** (`page=21` → returns page 20) [P]. `perPage` ∈ {10, 25, 50, 100} accepted (20 and 500 → 10) [P].
@@ -102,7 +102,7 @@ Lists (flats, investments, developers, transactions, addresses) and detail pages
 
 | Domain | Primary source | Main channels |
 |---|---|---|
-| **Developer offers** (asking prices, change history) | developer sites / listings (`source: ANNOUCMENT`, `ANNOUCMENT_PR`, `scraper_pr`) | B (lists, details), A (`map/*`, `offers/city-sales`, `sale-events`, counters, distributions) |
+| **Developer offers** (asking prices, change history) | developer sites / listings (`source: ANNOUCMENT`, `ANNOUCMENT_PR`, `scraper_pr`) | B (lists, details), A (`map/*` (including `map/offer-snapshot/{city}`), `sale-events`, counters, distributions) |
 | **RCN transactions** (transaction prices) | Real Estate Price Register / GUGiK (`transactionId: "PL.PZGIK.…"`) | B (lists, addresses), A (`map/powiat-*`, `map/transactions/visible`, statistics) |
 | **Market statistics** | aggregates from RCN and offers | A (`monthly-transaction-stats`, `powiat-price-trend`, `avg-price-trend`, `city-transaction-stats`, distributions), B (`/statystyki/...`) |
 | **Government statistics** | GUS (flats completed/started, demographics, unemployment, wages), NBP (asking/transaction prices, primary/secondary market) | B only (`/statystyki/statystyki-rzadowe/{loc}`) |
@@ -117,7 +117,7 @@ Entity and ID model: [entities.md](entities.md).
 ## 4. Key findings for the project
 
 1. **There is no single API for everything.** Search with filters and pagination exists only as RSC pages. The JSON API covers autocomplete, maps, statistics and history.
-2. **Search via RSC has a ceiling of 20 × perPage(100) = 2000 results** per query [P]. Larger sets have to be narrowed with filters or fetched in bulk through the JSON API (e.g. `offers/city-sales/{city}`: 1.3 MB for Warsaw, 13,351 offers; CF cache 5 min).
+2. **Search via RSC has a ceiling of 20 × perPage(100) = 2000 results** per query [P]. Larger sets have to be narrowed with filters or fetched in bulk through the JSON API (e.g. `map/offer-snapshot/{city}`: 261 KB for Wrocław, 5,836 active offers [P 2026-10-30]; replaces the removed `offers/city-sales/{city}` source).
 3. **Transaction data per county is huge.** `map/powiat-sales/{id}` for Sopot is 1.6 MB with 6,636 transactions; for Warsaw an estimated ~80 MB [W]. Not suitable for passing to a model. Better to use RCN lists with filters.
 4. **Valuation has a stable GET** (`/api/standalone-valuation`), so we do not need the server action.
 5. **The investment slug is effectively a global ID.** The investment page ignores the city and developer segments in the URL [P], and `map/investments/visible/{slug}` takes the slug alone [P].

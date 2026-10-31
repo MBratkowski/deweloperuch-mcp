@@ -16,6 +16,9 @@ from support.providers.samples import rsc_payload
 
 CASES: dict[str, Case] = {
     "help_stats_government": case("stats", "government", "--help"),
+    "stats_government_wroclaw_2_0_wages": case(
+        "stats", "government", "wroclaw", "wages", "--periods", "3", service=stats_routes
+    ),
     # stats government: the real pages
     **{
         f"stats_{location}_{dataset.value}": case(

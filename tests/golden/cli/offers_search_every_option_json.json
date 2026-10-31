@@ -114,6 +114,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?filterPrice=500000-700000&filterSize=40-60&sortBy=amount&sortOrder=asc&page=2&perPage=50&_rsc=f100e92a [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?filterPrice=500000-700000&filterSize=40-60&sortBy=amount&sortOrder=asc&page=2&perPage=50&_rsc [rsc: 1] [accept: */*]"
   ]
 }

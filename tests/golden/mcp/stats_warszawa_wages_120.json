@@ -24,7 +24,7 @@
         "returned": 21,
         "truncated": false,
         "available_from": "2005",
-        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-wynagrodzenia",
+        "stats_url": "https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#gus-wynagrodzenia",
         "periods": [
           "2005",
           "2006",
@@ -111,6 +111,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

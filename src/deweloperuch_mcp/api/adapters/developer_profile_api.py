@@ -2,11 +2,14 @@
 port.
 
 - the profile in a city or the whole country: the object prop ``data`` of
-  ``/ceny-ofertowe/{city}/deweloperzy/{developerSlug}`` (RSC) [P]; an unknown developer is
-  a page with a heading instead (``DEVELOPER_NOT_FOUND``).
+  ``/ceny-ofertowe/{city}/deweloperzy/{developerSlug}`` (RSC) [P], since 2.0 several props
+  (``DeveloperPageDto.from_props``) [P 2026-10-30]; an unknown developer is a page with a
+  heading instead (``DEVELOPER_NOT_FOUND``).
 """
 
-from deweloperuch_mcp.api.dto.developer_page_dto import DeveloperPageDto
+from functools import partial
+
+from deweloperuch_mcp.api.dto.developer_page_dto import DEVELOPER_PROPS, DeveloperPageDto
 from deweloperuch_mcp.api.http.rsc_page import RscPage
 from deweloperuch_mcp.api.http.transport import HttpClient
 from deweloperuch_mcp.models.developer_profile import DeveloperProfile
@@ -36,8 +39,9 @@ class DeveloperProfileApi:
         ``NotFoundError`` for the page of an unknown developer (``DEVELOPER_NOT_FOUND``)
         and for Next.js's 404 marker (an unknown city may answer so, [H]).
         """
-        page = RscPage(self._http, self.path(city, developer_slug))
-        return page.prop("data", DeveloperPageDto, missing=DEVELOPER_NOT_FOUND)
+        path = self.path(city, developer_slug)
+        decode = partial(DeveloperPageDto.from_props, path=path, slug=developer_slug)
+        return RscPage(self._http, path).props(DEVELOPER_PROPS, decode, missing=DEVELOPER_NOT_FOUND)
 
     @staticmethod
     def path(city: str, developer_slug: str) -> str:

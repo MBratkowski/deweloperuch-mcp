@@ -17,10 +17,10 @@
   "log": [
     [
       "WARNING",
-      "STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi. Szczegóły: /ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10&_rsc=cc6e11f9: HTTP 403"
+      "STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi. Szczegóły: /ceny-ofertowe/warszawa/mieszkania?perPage=10&_rsc: HTTP 403"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10&_rsc=cc6e11f9 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?perPage=10&_rsc [rsc: 1] [accept: */*]"
   ]
 }

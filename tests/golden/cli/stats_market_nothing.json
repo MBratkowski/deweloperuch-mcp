@@ -10,7 +10,7 @@
   "stdout": [
     "Rynek ofert [sopot] · aktywne oferty: 0 · inwestycje: 0 · deweloperzy: 0.",
     "Wskazówka: Brak aktywnych ofert spełniających kryteria w 'sopot'. Sprawdź slug miasta (search_locations) i poluzuj filtry (cena, metraż).",
-    "Te oferty na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/sopot/mieszkania?filterPrice=0-1000&page=1&perPage=10",
+    "Te oferty na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/sopot/mieszkania?filterPrice=0-1000&perPage=10",
     ""
   ],
   "stderr": [

@@ -12,6 +12,7 @@ CASES: dict[str, Case] = {
     # developers get
     "help_developers_get": case(*DEVELOPERS, "--help"),
     "developers_get": case(*DEVELOPERS, "atal", "--city", "warszawa", service=developer_routes),
+    "developers_get_archicom_2_0": case(*DEVELOPERS, "archicom", service=developer_routes),
     "developers_get_json": case(
         *DEVELOPERS, "atal", "--city", "warszawa", "--json", service=developer_routes
     ),

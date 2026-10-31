@@ -1,0 +1,73 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "wroclaw",
+        "dataset": "demography",
+        "periods": 3
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "wroclaw",
+        "location_name": "Wrocław",
+        "dataset": "demography",
+        "title": "Urodzenia żywe, zgony i przyrost naturalny",
+        "source": "GUS",
+        "frequency": "year",
+        "total": 31,
+        "returned": 3,
+        "truncated": true,
+        "available_from": "1995",
+        "hint": "Pokazano ostatnie 3 z 31 okresów (dane od 1995); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe#gus-demografia",
+        "periods": [
+          "2023",
+          "2024",
+          "2025"
+        ],
+        "series": [
+          {
+            "series_id": "births",
+            "label": "Urodzenia żywe",
+            "unit": "osoby",
+            "values": [
+              5711,
+              5372,
+              5327
+            ]
+          },
+          {
+            "series_id": "deaths",
+            "label": "Zgony",
+            "unit": "osoby",
+            "values": [
+              6902,
+              6672,
+              6522
+            ]
+          },
+          {
+            "series_id": "natural_increase",
+            "label": "Przyrost naturalny",
+            "unit": "osoby",
+            "values": [
+              -1191,
+              -1300,
+              -1195
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
+  ]
+}

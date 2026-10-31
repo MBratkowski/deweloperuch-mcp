@@ -1,0 +1,83 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "wroclaw",
+        "dataset": "nbp_prices",
+        "periods": 3
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "wroclaw",
+        "location_name": "Wrocław",
+        "dataset": "nbp_prices",
+        "title": "Średnie ceny mieszkań za m² według NBP",
+        "source": "NBP",
+        "frequency": "quarter",
+        "total": 80,
+        "returned": 3,
+        "truncated": true,
+        "available_from": "2006-Q3",
+        "hint": "Pokazano ostatnie 3 z 80 okresów (dane od 2006-Q3); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe#nbp",
+        "periods": [
+          "2025-Q4",
+          "2026-Q1",
+          "2026-Q2"
+        ],
+        "series": [
+          {
+            "series_id": "primary_asking",
+            "label": "Rynek pierwotny: cena ofertowa",
+            "unit": "PLN/m²",
+            "values": [
+              15511,
+              15444,
+              15575
+            ]
+          },
+          {
+            "series_id": "primary_transaction",
+            "label": "Rynek pierwotny: cena transakcyjna",
+            "unit": "PLN/m²",
+            "values": [
+              14062,
+              13903,
+              14312
+            ]
+          },
+          {
+            "series_id": "secondary_asking",
+            "label": "Rynek wtórny: cena ofertowa",
+            "unit": "PLN/m²",
+            "values": [
+              13552,
+              13547,
+              13529
+            ]
+          },
+          {
+            "series_id": "secondary_transaction",
+            "label": "Rynek wtórny: cena transakcyjna",
+            "unit": "PLN/m²",
+            "values": [
+              12546,
+              12632,
+              12590
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
+  ]
+}

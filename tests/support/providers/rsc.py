@@ -27,14 +27,37 @@ UNKNOWN_CITY = "nieistniejace-miasto"
 """The city slug the unknown-city payload was requested with."""
 
 STATS_POLSKA = FIXTURES / "stats_gov_polska.rsc"
-"""``/statystyki/statystyki-rzadowe/polska``: the root page of the government statistics
-(GUS, NBP grid of cities), ``currentSlug`` null."""
+"""``/statystyki/statystyki-rzadowe/polska`` (build before 2.0): the root page of the
+government statistics (GUS, NBP grid of cities), ``currentSlug`` null."""
 
 STATS_WARSZAWA = FIXTURES / "stats_gov_warszawa.rsc"
-"""``/statystyki/statystyki-rzadowe/warszawa``: a city with its own NBP prices."""
+"""``/statystyki/statystyki-rzadowe/warszawa`` (build before 2.0): a city with its own NBP
+prices."""
 
-STATS_FIXTURES = {"polska": STATS_POLSKA, "warszawa": STATS_WARSZAWA}
-"""Location -> its real page."""
+STATS_WROCLAW_2_0 = FIXTURES / "stats_gov_wroclaw_20261030.rsc"
+"""``/statystyki/wroclaw/dane-rzadowe`` of the 2.0 build: ``blocks.govSections``,
+``citySlug``, ``data`` rows of dwellings, population and NBP, chart specs for the rest."""
+
+STATS_POLSKA_2_0 = FIXTURES / "stats_gov_polska_20261030.rsc"
+"""``/statystyki/polska/dane-rzadowe`` of the 2.0 build: no ``citySlug``, no NBP rows."""
+
+STATS_FIXTURES = {
+    "polska": STATS_POLSKA_2_0,
+    "wroclaw": STATS_WROCLAW_2_0,
+    "warszawa": STATS_WARSZAWA,
+}
+"""Location -> the real page the routes serve: ``polska`` and ``wroclaw`` as the 2.0 build
+serves them; ``warszawa`` is the page of the build before 2.0 (the only city page with
+the old shape), kept for compatibility. ``STATS_POLSKA`` is the old ``polska``, for the
+tests of that shape only."""
+
+OFFERS_WROCLAW_2_0 = FIXTURES / "offers_wroclaw_perPage10_20261030.rsc"
+"""``/ceny-ofertowe/wroclaw/mieszkania?perPage=10`` of the 2.0 build: ``sales`` with 10
+offers and ``serverPaginationData`` (5,836 offers, 20 pages), no ``initialData``."""
+
+DEVELOPER_ARCHICOM_2_0 = FIXTURES / "developer_archicom_polska_20261030.rsc"
+"""``/ceny-ofertowe/polska/deweloperzy/archicom`` of the 2.0 build: ``developerName``,
+``developerId``, ``investments`` ×6, the chart ``ceny-w-miastach`` with 3 cities."""
 
 DEVELOPER_WARSZAWA = FIXTURES / "developer_atal_warszawa.rsc"
 """``/ceny-ofertowe/warszawa/deweloperzy/atal``: 4 investments, 14 cities."""

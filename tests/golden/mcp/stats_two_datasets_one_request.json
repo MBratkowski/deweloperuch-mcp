@@ -31,7 +31,7 @@
         "truncated": true,
         "available_from": "2005",
         "hint": "Pokazano ostatnie 12 z 22 okresów (dane od 2005); starsze pokaże większe periods (najwyżej 120).",
-        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-srednia-powierzchnia",
+        "stats_url": "https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-srednia-powierzchnia",
         "periods": [
           "2015",
           "2016",
@@ -84,7 +84,7 @@
         "truncated": true,
         "available_from": "2011-01",
         "hint": "Pokazano ostatnie 12 z 188 okresów (dane od 2011-01); starsze pokaże większe periods (najwyżej 120).",
-        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-bezrobocie",
+        "stats_url": "https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-bezrobocie",
         "periods": [
           "2025-09",
           "2025-10",
@@ -125,6 +125,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

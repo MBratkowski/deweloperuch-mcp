@@ -10,7 +10,7 @@
     "Urodzenia żywe, zgony i przyrost naturalny · Warszawa [warszawa]",
     "Źródło: GUS · rocznie · okresy: pokazano 12 z 24 (dane od 2002).",
     "Wskazówka: Pokazano ostatnie 12 z 24 okresów (dane od 2002); starsze pokaże większa wartość periods.",
-    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-demografia",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#gus-demografia",
     "Kolumny:",
     "  [1] Urodzenia żywe (osoby)",
     "  [2] Zgony (osoby)",
@@ -34,6 +34,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

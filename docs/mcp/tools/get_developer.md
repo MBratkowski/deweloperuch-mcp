@@ -29,6 +29,7 @@ A structured result and the same compact JSON in the content; `null` fields are 
 
 ## Data limitations
 - Source is the developer profile page of the service (RSC): [pages-rsc.md](../../discovery/pages-rsc.md). Its consistency between the `polska` and city variants was verified on 2026-10-13 (fixtures `developer_atal_*.rsc`).
+- Since the service's redesign of 2026-10-29 the page lists only the investments with active offers and has no totals: `summary` is computed from those investments (sums, averages weighted by active offers, which gives the page's own averages per city), and `developer` has no `website` or `description`. A city's `avg_price` is known only when the profile lists that city's investments, so on a city profile the other cities have none.
 - Single offers are not here; use `get_investment` with an `investment_slug`.
 - Asking prices of the primary market, not transaction prices.
 

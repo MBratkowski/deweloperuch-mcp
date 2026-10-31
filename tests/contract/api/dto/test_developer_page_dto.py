@@ -9,7 +9,9 @@ import pytest
 
 from deweloperuch_mcp.api.dto import developer_page_dto
 from deweloperuch_mcp.flight import component_props
-from support.providers.rsc import DEVELOPER_POLSKA, DEVELOPER_WARSZAWA, raw
+from deweloperuch_mcp.models.values import CitySlug
+from support.providers.rsc import DEVELOPER_ARCHICOM_2_0, DEVELOPER_POLSKA, DEVELOPER_WARSZAWA, raw
+from support.providers.samples import body
 
 
 def developer_props(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
@@ -211,3 +213,63 @@ def test_the_averages_of_a_developer_with_offers_are_its_figures() -> None:
     )
     city = parsed.citiesStats[0].to_model()
     assert None not in (city.avg_price, city.avg_price_per_m2)
+
+
+# --- the 2.0 build (2026-10-29): no `data`, several props --------------------------------
+
+
+def props_2_0() -> dict[str, list[Any]]:
+    """The props ``DeveloperPageDto.from_props`` reads, from the real 2.0 page of Archicom
+    in the whole country, as ``RscPage.props`` gives them."""
+    found: dict[str, list[Any]] = {}
+    for name, value in component_props(raw(DEVELOPER_ARCHICOM_2_0)):
+        if name in developer_page_dto.DEVELOPER_PROPS and not (
+            isinstance(value, str) and value.startswith("$")
+        ):
+            found.setdefault(name, []).append(value)
+    return found
+
+
+def test_the_2_0_profile_is_read_from_its_props() -> None:
+    """[P 2026-10-30] ``archicom`` in ``polska``: 6 investments in 3 cities."""
+    props = props_2_0()
+
+    profile = developer_page_dto.DeveloperPageDto.from_props(
+        props, path="/x", slug="archicom"
+    ).to_model(CitySlug("polska"))
+
+    assert "data" not in props
+    assert (profile.developer.developer_slug, profile.developer.name) == (
+        "archicom",
+        "Archicom S.A.",
+    )
+    assert len(profile.investments) == 6
+    assert [city.city_slug for city in profile.cities] == ["warszawa", "wroclaw", "iwiny"]
+
+
+def test_the_2_0_summary_is_computed_from_the_investments() -> None:
+    """``filteredStats`` has no 2.0 counterpart: the sums of the investments, the averages
+    weighted by their active offers, which gives the page's own average of a city
+    (Wrocław 15,490 PLN/m² in ``ceny-w-miastach``)."""
+    profile = developer_page_dto.DeveloperPageDto.from_props(
+        props_2_0(), path="/x", slug="archicom"
+    ).to_model(CitySlug("polska"))
+
+    summary = profile.summary
+    assert (summary.investments, summary.active_offers, summary.cities) == (6, 547, 3)
+    wroclaw = next(city for city in profile.cities if city.city_slug == "wroclaw")
+    own = [i for i in profile.investments if i.city_slug == "wroclaw"]
+    weighted = sum((i.avg_price_per_m2 or 0) * (i.active_offers or 0) for i in own) / sum(
+        i.active_offers or 0 for i in own
+    )
+    assert wroclaw.avg_price_per_m2 == 15490
+    assert round(weighted) == 15490
+    assert (wroclaw.investments, wroclaw.active_offers) == (4, 345)
+
+
+def test_the_2_0_sample_rows_are_investments_of_the_profile() -> None:
+    rows = body("page.developer.v2")
+
+    parsed = [developer_page_dto.DeveloperInvestmentDto.model_validate(row) for row in rows]
+
+    assert [item.slug for item in parsed] == [row["slug"] for row in rows]

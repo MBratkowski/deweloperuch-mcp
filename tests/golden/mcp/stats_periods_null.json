@@ -20,14 +20,13 @@
         "title": "Przeciętne miesięczne wynagrodzenie brutto w sektorze przedsiębiorstw",
         "source": "GUS",
         "frequency": "month",
-        "total": 199,
+        "total": 200,
         "returned": 12,
         "truncated": true,
         "available_from": "2010-01",
-        "hint": "Pokazano ostatnie 12 z 199 okresów (dane od 2010-01); starsze pokaże większe periods (najwyżej 120).",
-        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-wynagrodzenia",
+        "hint": "Pokazano ostatnie 12 z 200 okresów (dane od 2010-01); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-wynagrodzenia",
         "periods": [
-          "2025-08",
           "2025-09",
           "2025-10",
           "2025-11",
@@ -38,7 +37,8 @@
           "2026-04",
           "2026-05",
           "2026-06",
-          "2026-07"
+          "2026-07",
+          "2026-08"
         ],
         "series": [
           {
@@ -46,7 +46,6 @@
             "label": "Wynagrodzenie brutto",
             "unit": "PLN",
             "values": [
-              8769.08,
               8750.34,
               8865.12,
               9078.16,
@@ -57,7 +56,8 @@
               9530.74,
               9173.24,
               9401.58,
-              9509.02
+              9509.02,
+              9259.54
             ]
           }
         ]
@@ -66,6 +66,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

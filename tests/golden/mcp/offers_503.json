@@ -17,10 +17,10 @@
   "log": [
     [
       "INFO",
-      "ServiceError: Wyszukiwanie ofert w 'warszawa': Serwis odpowiedział błędem HTTP 503. Nic nie ponawiam; spróbuj później. Limiter wstrzyma następne zapytanie o 10 s. Szczegóły: /ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10&_rsc=cc6e11f9: busy"
+      "ServiceError: Wyszukiwanie ofert w 'warszawa': Serwis odpowiedział błędem HTTP 503. Nic nie ponawiam; spróbuj później. Limiter wstrzyma następne zapytanie o 10 s. Szczegóły: /ceny-ofertowe/warszawa/mieszkania?perPage=10&_rsc: busy"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=10&_rsc=cc6e11f9 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?perPage=10&_rsc [rsc: 1] [accept: */*]"
   ]
 }

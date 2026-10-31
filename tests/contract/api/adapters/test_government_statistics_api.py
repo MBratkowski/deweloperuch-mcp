@@ -34,6 +34,7 @@ from deweloperuch_mcp.models.government_statistics import (
 from deweloperuch_mcp.models.values import LocationSlug
 from deweloperuch_mcp.throttle import RequestLimiter
 from deweloperuch_mcp.usecases.ports import GovernmentStatisticsSource
+from support.providers.routes.government_statistics import stats_path, stats_url
 from support.providers.rsc import (
     OFFERS_UNKNOWN_CITY,
     STATS_FIXTURES,
@@ -44,10 +45,6 @@ from support.providers.rsc import (
     rows_with,
     swap_props,
 )
-from support.providers.service import BASE
-
-STATS = BASE + "/statystyki/statystyki-rzadowe"
-
 
 RSC = {"Content-Type": "text/x-component"}
 
@@ -56,9 +53,7 @@ NOT_FOUND_ROW = b'f:E{"digest":"NEXT_HTTP_ERROR_FALLBACK;404"}\n'
 
 
 def serve(service: respx.MockRouter, location: str, payload: bytes) -> respx.Route:
-    return service.get(path=f"/statystyki/statystyki-rzadowe/{location}").respond(
-        200, content=payload, headers=RSC
-    )
+    return service.get(path=stats_path(location)).respond(200, content=payload, headers=RSC)
 
 
 def published(
@@ -167,7 +162,7 @@ def test_the_page_is_requested_as_rsc_with_the_token_of_the_fixture(
     GovernmentStatisticsApi(http).statistics_page(location)
 
     request = route.calls.last.request
-    assert str(request.url) == f"{STATS}/{location}?_rsc={token}"
+    assert str(request.url) == stats_url(location, "?_rsc")
     assert request.headers["rsc"] == "1"
     assert request.headers.get_list("user-agent") == [identity.USER_AGENT]
 
@@ -176,7 +171,7 @@ def test_the_page_is_a_documented_read_channel_and_no_dump() -> None:
     """D1, D5: on the allowlist (pages-rsc.md), not a dump; ~400 KB, far below 32 MiB."""
     path = GovernmentStatisticsApi.path("polska")
 
-    assert match_page(path) == "/statystyki/statystyki-rzadowe/{location}"
+    assert match_page(path) == "/statystyki/{location}/dane-rzadowe"
     assert match_dump(path) is None
     assert max(len(raw(p)) for p in STATS_FIXTURES.values()) < 1024 * 1024
 
@@ -222,7 +217,7 @@ def test_warszawa_has_every_dataset(http: HttpClient, service: respx.MockRouter)
         ("polska", Dataset.DEMOGRAPHY, Frequency.MONTH, "Eurostat", 357, "1996-01", "2025-09"),
         ("polska", Dataset.POPULATION, Frequency.YEAR, "GUS", 21, "2005", "2025"),
         ("polska", Dataset.UNEMPLOYMENT, Frequency.MONTH, "GUS", 188, "2011-01", "2026-08"),
-        ("polska", Dataset.WAGES, Frequency.MONTH, "GUS", 199, "2010-01", "2026-07"),
+        ("polska", Dataset.WAGES, Frequency.MONTH, "GUS", 200, "2010-01", "2026-08"),
         (
             "warszawa",
             Dataset.DWELLINGS_QUARTERLY,
@@ -332,10 +327,11 @@ def test_wages_of_the_whole_country_have_no_ratio_to_it(
     assert [s.series_id for s in table.series] == ["gross"]
 
 
-def test_the_list_of_locations(http: HttpClient, service: respx.MockRouter) -> None:
-    """69 locations [P]: 3 aggregates, 66 cities; NBP for 17 cities and the aggregates.
-    ``polska`` (the root page) and the documented ``9-miast`` are not on it."""
-    locations = published(http, service, "polska").locations
+def test_the_list_of_locations_before_2_0(http: HttpClient, service: respx.MockRouter) -> None:
+    """The page of the build before 2.0 (compatibility): 69 locations [P], 3 aggregates, 66
+    cities; NBP for 17 cities and the aggregates. ``polska`` (the root page) and the
+    documented ``9-miast`` are not on it."""
+    locations = published(http, service, "polska", raw(STATS_POLSKA)).locations
 
     slugs = [loc.slug for loc in locations]
     assert len(slugs) == 69 and len(set(slugs)) == 69
@@ -347,6 +343,32 @@ def test_the_list_of_locations(http: HttpClient, service: respx.MockRouter) -> N
     assert by_slug["jastrzebie"].name == "Jastrzębie-Zdrój"
     assert by_slug["7-miast"].name == "Top 7 miast Polski"
     assert by_slug["krakow"].has_nbp_prices and not by_slug["sopot"].has_nbp_prices
+
+
+def test_the_2_0_page_of_polska_lists_the_locations_of_its_nbp_grid(
+    http: HttpClient, service: respx.MockRouter
+) -> None:
+    """[P 2026-10-30] the 2.0 page has no list of locations: the NBP grid names the 9
+    locations it shows, all with NBP prices."""
+    locations = published(http, service, "polska").locations
+
+    assert [loc.slug for loc in locations] == [
+        "warszawa",
+        "10-miast",
+        "7-miast",
+        "6-miast-bez-warszawy",
+        "krakow",
+        "gdansk",
+        "wroclaw",
+        "gdynia",
+        "poznan",
+    ]
+    assert all(loc.has_nbp_prices for loc in locations)
+    assert [loc.slug for loc in locations if loc.is_aggregate] == [
+        "10-miast",
+        "7-miast",
+        "6-miast-bez-warszawy",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -368,7 +390,7 @@ def test_each_table_links_to_its_section_of_the_page(
 
     assert table.section == section
     link = ServicePageLinks().government_statistics(LocationSlug(location), table.section)
-    assert link == f"{STATS}/{location}#{section}"
+    assert link == stats_url(location, f"#{section}")
 
 
 def test_datasets_are_recognized_by_their_rows_not_their_order(
@@ -693,7 +715,7 @@ def test_a_page_with_nextjs_404_marker_is_not_found(
         GovernmentStatisticsApi(http).statistics_page("nieistniejaca-lokalizacja")
 
     assert caught.value.detail == (
-        "/statystyki/statystyki-rzadowe/nieistniejaca-lokalizacja: brak propsa 'tocItems', "
+        "/statystyki/nieistniejaca-lokalizacja/dane-rzadowe: brak propsa 'tocItems', "
         "strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
     )
 
@@ -742,7 +764,7 @@ def test_the_page_served_as_html_is_read_from_its_scripts(
 ) -> None:
     push = json.dumps(raw(STATS_WARSZAWA).decode(), ensure_ascii=False)
     html = f"<!DOCTYPE html><html><script>self.__next_f.push([1,{push}])</script></html>"
-    service.get(path="/statystyki/statystyki-rzadowe/warszawa").respond(
+    service.get(path=stats_path("warszawa")).respond(
         200, content=html.encode(), headers={"Content-Type": "text/html; charset=utf-8"}
     )
 

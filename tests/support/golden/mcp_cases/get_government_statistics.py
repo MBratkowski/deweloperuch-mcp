@@ -28,6 +28,13 @@ CASES: dict[str, Case] = {
         for dataset in Dataset
         if (location, dataset) != ("polska", Dataset.NBP_PRICES)
     },
+    # the 2.0 build: the page of a city with `data` rows and chart specs
+    **{
+        f"stats_wroclaw_2_0_{dataset.value}": case(
+            STATS, stats_routes, location="wroclaw", dataset=dataset.value, periods=3
+        )
+        for dataset in Dataset
+    },
     "stats_warszawa_nbp_prices_2": case(
         STATS, stats_routes, location="warszawa", dataset="nbp_prices", periods=2
     ),

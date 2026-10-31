@@ -1,0 +1,53 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "wroclaw",
+        "dataset": "wages",
+        "periods": 3
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "wroclaw",
+        "location_name": "Wrocław",
+        "dataset": "wages",
+        "title": "Przeciętne miesięczne wynagrodzenie brutto w sektorze przedsiębiorstw",
+        "source": "GUS",
+        "frequency": "year",
+        "total": 21,
+        "returned": 3,
+        "truncated": true,
+        "available_from": "2005",
+        "hint": "Pokazano ostatnie 3 z 21 okresów (dane od 2005); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe#gus-wynagrodzenia",
+        "periods": [
+          "2023",
+          "2024",
+          "2025"
+        ],
+        "series": [
+          {
+            "series_id": "gross",
+            "label": "Wynagrodzenie brutto",
+            "unit": "PLN",
+            "values": [
+              8334.84,
+              9425.25,
+              10147.9
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
+  ]
+}

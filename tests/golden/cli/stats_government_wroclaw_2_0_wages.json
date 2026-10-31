@@ -1,0 +1,30 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "wroclaw",
+    "wages",
+    "--periods",
+    "3"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Przeciętne miesięczne wynagrodzenie brutto w sektorze przedsiębiorstw · Wrocław [wroclaw]",
+    "Źródło: GUS · rocznie · okresy: pokazano 3 z 21 (dane od 2005).",
+    "Wskazówka: Pokazano ostatnie 3 z 21 okresów (dane od 2005); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe#gus-wynagrodzenia",
+    "Kolumny:",
+    "  [1] Wynagrodzenie brutto (PLN)",
+    "Okres       [1]",
+    "2023   8 334,84",
+    "2024   9 425,25",
+    "2025   10 147,9",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
+  ]
+}

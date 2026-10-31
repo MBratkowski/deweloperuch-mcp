@@ -29,7 +29,7 @@ print(json.dumps({{
     "policy_is_shared": config.stop_reason is http_policy.stop_reason
         and config.stop_cause is http_policy.stop_cause,
     "flight_is_shared": config.component_props is flight.component_props
-        and config.with_rsc_token is flight.with_rsc_token,
+        and config.with_rsc_query is flight.with_rsc_query,
     "allowlist_is_shared": config.match_api is allowlist.match_api
         and config.API_PATHS is allowlist.API_PATHS,
     "default_lock_dir": str(config.default_lock_dir()),

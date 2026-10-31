@@ -10,7 +10,7 @@
     "Przeciętne miesięczne wynagrodzenie brutto w sektorze przedsiębiorstw · Warszawa [warszawa]",
     "Źródło: GUS · rocznie · okresy: pokazano 12 z 21 (dane od 2005).",
     "Wskazówka: Pokazano ostatnie 12 z 21 okresów (dane od 2005); starsze pokaże większa wartość periods.",
-    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-wynagrodzenia",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#gus-wynagrodzenia",
     "Kolumny:",
     "  [1] Wynagrodzenie brutto (PLN)",
     "  [2] Relacja do średniej krajowej (Polska = 100) (%)",
@@ -33,6 +33,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

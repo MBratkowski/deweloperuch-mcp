@@ -34,6 +34,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/bialystok/deweloperzy/atal?_rsc=75785a8a [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/bialystok/deweloperzy/atal?_rsc [rsc: 1] [accept: */*]"
   ]
 }

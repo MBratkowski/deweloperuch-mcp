@@ -3,8 +3,7 @@
 The one implementation, shared by the package's RSC adapter and the ``recon/`` scripts
 (through ``recon/config.py``; ``recon/flight.py`` re-exports it and adds a CLI)::
 
-    rsc_token(target)            -> ``_rsc`` value for a path with query (deterministic)
-    with_rsc_token(target)       -> the path with ``_rsc=<token>`` appended to its query
+    with_rsc_query(target)       -> the path with an empty ``_rsc`` appended to its query
     flight_from_html(html)       -> concatenated flight text from the inline scripts of a page
                                     (``self.__next_f.push``)
     flight(path)                 -> the same for a saved HTML page
@@ -21,7 +20,6 @@ Keep this module free of imports outside the standard library: ``recon/`` script
 it without installing the package or its dependencies.
 """
 
-import hashlib
 import json
 import os
 import re
@@ -46,20 +44,22 @@ _ROW_ID = re.compile(rb"([0-9a-fA-F]*):")
 _LENGTH = re.compile(rb"([0-9a-fA-F]+),")
 
 
-def rsc_token(target: str) -> str:
-    """``_rsc`` for a path with query: stable, so Cloudflare can cache the RSC response.
+RSC_QUERY = "_rsc"
+"""The empty ``_rsc`` parameter of an RSC request.
 
-    Cloudflare ignores ``Vary: RSC``, so without ``_rsc`` the page comes back as cached
-    HTML (docs/discovery/pages-rsc.md). ``target`` is the percent-encoded path and query
-    without the token, e.g. ``/ceny-ofertowe/warszawa/mieszkania?page=2``; non-ASCII
-    raises ``UnicodeEncodeError``.
-    """
-    return hashlib.sha256(target.encode("ascii")).hexdigest()[:8]
+Cloudflare ignores ``Vary: RSC``, so without ``_rsc`` the page comes back as cached HTML
+(docs/discovery/pages-rsc.md). [P 2026-10-30] Since the 2.0 build (Next.js 15.5,
+2026-10-29) the server checks ``_rsc`` against a hash of the router headers; with none of
+them sent (only ``RSC: 1``) the expected value is empty, and any other value gets a 307
+to the same URL with a bare ``_rsc``. The bare parameter is that target, so the request
+needs no redirect.
+"""
 
 
-def with_rsc_token(target: str) -> str:
-    """``target`` with ``_rsc=<rsc_token(target)>`` as the last query parameter."""
-    return target + ("&" if "?" in target else "?") + "_rsc=" + rsc_token(target)
+def with_rsc_query(target: str) -> str:
+    """``target`` (percent-encoded path and query) with ``RSC_QUERY`` as the last query
+    parameter."""
+    return target + ("&" if "?" in target else "?") + RSC_QUERY
 
 
 def flight_from_html(html: str) -> str:

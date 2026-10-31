@@ -18,10 +18,10 @@
   "log": [
     [
       "INFO",
-      "NotFoundError: Serwis nie ma statystyk rządowych dla lokalizacji 'nieistniejaca-lokalizacja'. Podaj polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta na prawach powiatu bez polskich znaków, np. warszawa, krakow. Jeśli nie znasz sluga miasta, spróbuj city_slug z search_locations (zwykle jest taki sam, ale nie zawsze, np. dla Jastrzębia-Zdroju użyj jastrzebie). Statystyki są tylko dla miast na prawach powiatu. Szczegóły: /statystyki/statystyki-rzadowe/nieistniejaca-lokalizacja: brak propsa 'tocItems', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
+      "NotFoundError: Serwis nie ma statystyk rządowych dla lokalizacji 'nieistniejaca-lokalizacja'. Podaj polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta na prawach powiatu bez polskich znaków, np. warszawa, krakow. Jeśli nie znasz sluga miasta, spróbuj city_slug z search_locations (zwykle jest taki sam, ale nie zawsze, np. dla Jastrzębia-Zdroju użyj jastrzebie). Statystyki są tylko dla miast na prawach powiatu. Szczegóły: /statystyki/nieistniejaca-lokalizacja/dane-rzadowe: brak propsa 'tocItems', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/nieistniejaca-lokalizacja?_rsc=25884c8a [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/nieistniejaca-lokalizacja/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

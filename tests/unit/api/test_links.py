@@ -85,7 +85,7 @@ def test_the_list_link_keeps_the_parameters_in_order() -> None:
 
     assert url == (
         BASE + "/ceny-ofertowe/krakow/mieszkania"
-        "?filterPrice=0-700000&sortBy=amount&sortOrder=asc&page=1&perPage=10"
+        "?filterPrice=0-700000&sortBy=amount&sortOrder=asc&perPage=10"
     )
     assert match_page(path_of(url).split("?")[0]) == "/ceny-ofertowe/{city}/mieszkania"
 
@@ -94,16 +94,13 @@ def test_the_list_link_encodes_the_query_as_the_client_does() -> None:
     """The client's query builder (``HttpClient.target``): a space is %20, not +."""
     url = offers_list(city="warszawa", district="Mokotów Górny") or ""
 
-    query: list[tuple[str, str | int]] = [("filterDistrict", "Mokotów Górny"), ("page", 1)]
-    query.append(("perPage", 10))
+    query: list[tuple[str, str | int]] = [("filterDistrict", "Mokotów Górny"), ("perPage", 10)]
     assert url == BASE + HttpClient.target("/ceny-ofertowe/warszawa/mieszkania", query)
-    assert "?filterDistrict=Mokot%C3%B3w%20G%C3%B3rny&page=1" in url
+    assert "?filterDistrict=Mokot%C3%B3w%20G%C3%B3rny&perPage=10" in url
 
 
 def test_the_list_link_of_the_whole_country() -> None:
-    assert offers_list(city="polska") == (
-        BASE + "/ceny-ofertowe/polska/mieszkania?page=1&perPage=10"
-    )
+    assert offers_list(city="polska") == (BASE + "/ceny-ofertowe/polska/mieszkania?perPage=10")
 
 
 def test_the_samples_were_captured_at_these_routes() -> None:
@@ -118,16 +115,16 @@ def test_the_samples_were_captured_at_these_routes() -> None:
 def test_government_stats_url_points_to_a_section() -> None:
     url = ServicePageLinks._government_stats_url("polska", "gus-srednia-powierzchnia")
 
-    assert url == BASE + "/statystyki/statystyki-rzadowe/polska#gus-srednia-powierzchnia"
+    assert url == BASE + "/statystyki/polska/dane-rzadowe#gus-srednia-powierzchnia"
     page, fragment = path_of(url).split("#")
-    assert match_page(page) == "/statystyki/statystyki-rzadowe/{location}"
+    assert match_page(page) == "/statystyki/{location}/dane-rzadowe"
     assert fragment == "gus-srednia-powierzchnia"
 
 
 @pytest.mark.parametrize("section", [None, "", "Gus", "a#b", "../x", "x y", "nbp?x=1", "-nbp"])
 def test_government_stats_url_without_a_section_id_has_no_fragment(section: str | None) -> None:
     assert ServicePageLinks._government_stats_url("warszawa", section) == (
-        BASE + "/statystyki/statystyki-rzadowe/warszawa"
+        BASE + "/statystyki/warszawa/dane-rzadowe"
     )
 
 
@@ -138,7 +135,7 @@ def test_no_government_stats_url_without_a_location(location: str | None) -> Non
 
 def test_government_stats_url_encodes_the_location_like_the_client() -> None:
     assert ServicePageLinks._government_stats_url("a/b?c", "nbp") == (
-        BASE + "/statystyki/statystyki-rzadowe/a%2Fb%3Fc#nbp"
+        BASE + "/statystyki/a%2Fb%3Fc/dane-rzadowe#nbp"
     )
 
 

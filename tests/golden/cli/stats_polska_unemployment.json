@@ -10,7 +10,7 @@
     "Stopa bezrobocia rejestrowanego · Polska [polska]",
     "Źródło: GUS · miesięcznie · okresy: pokazano 12 z 188 (dane od 2011-01).",
     "Wskazówka: Pokazano ostatnie 12 z 188 okresów (dane od 2011-01); starsze pokaże większa wartość periods.",
-    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-bezrobocie",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-bezrobocie",
     "Kolumny:",
     "  [1] Stopa bezrobocia (%)",
     "Okres    [1]",
@@ -32,6 +32,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

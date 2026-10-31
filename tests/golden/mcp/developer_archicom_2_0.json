@@ -1,0 +1,145 @@
+{
+  "calls": [
+    {
+      "tool": "get_developer",
+      "arguments": {
+        "developer_slug": "archicom"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "developer": {
+          "developer_slug": "archicom",
+          "name": "Archicom S.A."
+        },
+        "developer_url": "https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/archicom",
+        "city_slug": "polska",
+        "summary": {
+          "active_offers": 547,
+          "cities": 3,
+          "avg_price": 831382.33,
+          "avg_area_m2": 51.87,
+          "avg_price_per_m2": 16038.34
+        },
+        "investments_total": 6,
+        "investments_returned": 6,
+        "investments_omitted": 0,
+        "truncated": false,
+        "investments": [
+          {
+            "investment_slug": "atrium-nowy-szczepin-wroclaw",
+            "name": "Atrium - Nowy Szczepin",
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "status": "active",
+            "active_offers": 139,
+            "total_offers": 234,
+            "avg_price": 742645.74,
+            "avg_area_m2": 50.92,
+            "avg_price_per_m2": 14586.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/archicom/atrium-nowy-szczepin-wroclaw"
+          },
+          {
+            "investment_slug": "przystan-reymonta-wroclaw",
+            "name": "Przystań Reymonta",
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "status": "active",
+            "active_offers": 132,
+            "total_offers": 200,
+            "avg_price": 807981.89,
+            "avg_area_m2": 51.7,
+            "avg_price_per_m2": 15629.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/archicom/przystan-reymonta-wroclaw"
+          },
+          {
+            "investment_slug": "moje-iwiny-iwiny",
+            "name": "Moje Iwiny",
+            "city": "Iwiny",
+            "city_slug": "iwiny",
+            "status": "active",
+            "active_offers": 102,
+            "total_offers": 102,
+            "avg_price": 644191.23,
+            "avg_area_m2": 54.34,
+            "avg_price_per_m2": 11855.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/iwiny/deweloperzy/archicom/moje-iwiny-iwiny"
+          },
+          {
+            "investment_slug": "modern-mokotow-etap-5-budynek-e-warszawa",
+            "name": "Modern Mokotów etap 5 budynek E",
+            "city": "Warszawa",
+            "city_slug": "warszawa",
+            "status": "active",
+            "active_offers": 100,
+            "total_offers": 100,
+            "avg_price": 1177199.27,
+            "avg_area_m2": 53.04,
+            "avg_price_per_m2": 22196.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/archicom/modern-mokotow-etap-5-budynek-e-warszawa"
+          },
+          {
+            "investment_slug": "bulwar-polnocny-wroclaw",
+            "name": "Bulwar Północny",
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "status": "active",
+            "active_offers": 63,
+            "total_offers": 117,
+            "avg_price": 855212.08,
+            "avg_area_m2": 49.76,
+            "avg_price_per_m2": 17186.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/archicom/bulwar-polnocny-wroclaw"
+          },
+          {
+            "investment_slug": "poludnik-17-budynek-k2",
+            "name": "Południk 17 - budynek K2",
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "status": "active",
+            "active_offers": 11,
+            "total_offers": 115,
+            "avg_price": 688997.73,
+            "avg_area_m2": 44.33,
+            "avg_price_per_m2": 15542.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/archicom/poludnik-17-budynek-k2"
+          }
+        ],
+        "cities": [
+          {
+            "city": "Warszawa",
+            "city_slug": "warszawa",
+            "investments": 1,
+            "active_offers": 100,
+            "avg_price": 1177199.27,
+            "avg_price_per_m2": 22196.0
+          },
+          {
+            "city": "Wrocław",
+            "city_slug": "wroclaw",
+            "investments": 4,
+            "active_offers": 345,
+            "avg_price": 786489.0,
+            "avg_price_per_m2": 15490.0
+          },
+          {
+            "city": "Iwiny",
+            "city_slug": "iwiny",
+            "investments": 1,
+            "active_offers": 102,
+            "avg_price": 644191.23,
+            "avg_price_per_m2": 11855.0
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/archicom?_rsc [rsc: 1] [accept: */*]"
+  ]
+}

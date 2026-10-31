@@ -5,7 +5,6 @@ import json
 import respx
 
 from deweloperuch_mcp.consumers.cli.support.common import ExitCode
-from deweloperuch_mcp.flight import rsc_token
 from support.builders.investments import DEVELOPER_PAGE, SMOLNA_PAGE
 from support.builders.offers import offers_page
 from support.providers.cli import Cli, ok
@@ -35,7 +34,7 @@ def test_offers_search_prints_the_page_with_the_limits_of_d4(
     ) in lines
     assert "    Nowy Targówek VI [nowy-targowek-vi] · ATAL S.A. · Warszawa" in lines
     # Links (D12): the list as requested, then each offer's investment under it.
-    assert lines[2] == f"Ta lista na deweloperuch.pl: {PAGES}/warszawa/mieszkania?page=1&perPage=10"
+    assert lines[2] == f"Ta lista na deweloperuch.pl: {PAGES}/warszawa/mieszkania?perPage=10"
     where = lines.index("    Nowy Targówek VI [nowy-targowek-vi] · ATAL S.A. · Warszawa")
     assert lines[where + 1] == f"    {PAGES}/warszawa/deweloperzy/atal/nowy-targowek-vi"
     assert sum(line.startswith(f"    {PAGES}/") for line in lines) == 10
@@ -73,7 +72,7 @@ def test_offers_search_passes_every_option_to_the_service(
     )
 
     target = request_target("page.offers_list.filtered")
-    assert str(route.calls.last.request.url) == f"{BASE}{target}&_rsc={rsc_token(target)}"
+    assert str(route.calls.last.request.url) == f"{BASE}{target}&_rsc"
 
 
 def test_offers_search_json_is_the_domain_model(run: Cli, service: respx.MockRouter) -> None:
@@ -86,7 +85,7 @@ def test_offers_search_json_is_the_domain_model(run: Cli, service: respx.MockRou
     assert data["items"][0]["offer_id"] == 4397
     assert data["items"][0]["investment_slug"] == "nowy-targowek-vi"
     assert data["items"][0]["last_price_change_kind"] == "increase"
-    assert data["list_url"] == f"{PAGES}/warszawa/mieszkania?page=1&perPage=10"
+    assert data["list_url"] == f"{PAGES}/warszawa/mieszkania?perPage=10"
     assert (
         data["items"][0]["investment_url"] == f"{PAGES}/warszawa/deweloperzy/atal/nowy-targowek-vi"
     )
@@ -119,8 +118,8 @@ def test_offers_search_of_an_unknown_city_ends_with_not_found(
     assert result.stderr.splitlines() == [
         f"Błąd: Serwis nie zna miasta {UNKNOWN_CITY!r}. Podaj city_slug z search_locations "
         "albo polska (cały kraj).",
-        f"Szczegóły: /ceny-ofertowe/{UNKNOWN_CITY}/mieszkania: brak propsa 'initialData', "
-        "strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404",
+        f"Szczegóły: /ceny-ofertowe/{UNKNOWN_CITY}/mieszkania: brak propsa "
+        "'initialData/sales/serverPaginationData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404",
     ]
 
 

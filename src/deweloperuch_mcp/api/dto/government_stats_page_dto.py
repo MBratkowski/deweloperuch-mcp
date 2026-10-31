@@ -1,6 +1,18 @@
 """``GovernmentStatsPageDto``: the data of ``/statystyki/statystyki-rzadowe/{location}``
-(RSC) [P], read from the page's props (``from_payload``) and mapped to the models
-(``to_model``, ``models.government_statistics``).
+(RSC) [P], since the 2.0 build (2026-10-29) ``/statystyki/{location}/dane-rzadowe``, read
+from the page's props (``from_payload``) and mapped to the models (``to_model``,
+``models.government_statistics``).
+
+The 2.0 page [P 2026-10-30, live RSC payloads of the package client, ``wroclaw`` and
+``polska``] keeps the ``data`` rows of the dwellings (quarterly; ``monthlyData`` monthly),
+of the population and of NBP's prices, but shows the average area, the demography, the
+unemployment and the wages only as chart specs (prop ``spec``: ``datasets`` of
+``points`` ``{period, values}``); ``SPEC_ROWS`` turns those into rows of the old shapes.
+Its table of contents is ``blocks.govSections`` (the same section ids), its location
+``citySlug`` (absent on ``polska``) and its name ``cityName`` (kept as the one entry of
+``sortedLocations``); there is no ``tocItems``, ``sortedLocations`` or ``currentSlug``.
+The wages' ratio to the national average is only a note of each point
+(``"108,3 % średniej krajowej"``) and is not read.
 
 Several props of the page are called ``data``; they are told apart by the keys of their
 rows (``STATS_SHAPES``) and kept under the field names of the DTO, which are this
@@ -17,7 +29,7 @@ from the domain) from one it shows but whose data cannot be read: the latter mea
 service changed (``UnexpectedResponseError``), not that the location lacks the data.
 """
 
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Annotated, Any, Self
 
@@ -257,6 +269,59 @@ STATS_SHAPES = (
     ),
 )
 
+# [P 2026-10-30] the chart specs of the 2.0 page that carry a dataset with no `data` prop:
+# spec id -> (the period key of its rows, {dataset key of the spec: {value key: row key}}).
+# The rows merge the datasets by period, so they match `STATS_SHAPES` like the old props.
+SPEC_ROWS: Mapping[str, tuple[str, Mapping[str, Mapping[str, str]]]] = {
+    "gus-powierzchnia-wykres": ("year", {"": {"powierzchnia": "averageSizeM2"}}),
+    "gus-demografia-wykres": (
+        "year",
+        {
+            "ruch": {"urodzenia": "urodzenia", "zgony": "zgony"},
+            "przyrost": {"przyrost": "przyrostNaturalny"},
+        },
+    ),
+    "eurostat-demografia-wykres": (
+        "month",
+        {
+            "ruch|mies": {"urodzenia": "urodzeniaZywe", "zgony": "zgony"},
+            "przyrost|mies": {"przyrost": "przyrostNaturalny"},
+        },
+    ),
+    # `miejsce` is the page's location; `polska` the country, for comparison.
+    "gus-bezrobocie-wykres": ("month", {"": {"miejsce": "rate"}}),
+    "gus-wynagrodzenia-wykres": ("month", {"": {"brutto": "brutto"}}),
+    "gus-wynagrodzenia-roczne-wykres": ("year", {"": {"brutto": "brutto"}}),
+}
+
+
+def _spec_rows(spec: Mapping[str, Any]) -> list[dict[str, Any]] | None:
+    """The rows of a ``SPEC_ROWS`` chart spec, oldest period first; ``None`` for another
+    spec or one without points."""
+    known = SPEC_ROWS.get(str(spec.get("id")))
+    datasets = spec.get("datasets")
+    if known is None or not isinstance(datasets, dict):
+        return None
+    period_key, wanted = known
+    keys = [key for columns in wanted.values() for key in columns.values()]
+    rows: dict[str, dict[str, Any]] = {}
+    for name, columns in wanted.items():
+        for period, values in _spec_points(datasets.get(name)):
+            row = rows.setdefault(period, dict.fromkeys(keys))
+            row[period_key] = period
+            row.update({row_key: values.get(value_key) for value_key, row_key in columns.items()})
+    return [rows[period] for period in sorted(rows)] or None
+
+
+def _spec_points(dataset: object) -> Iterator[tuple[str, Mapping[str, Any]]]:
+    """``(period, values)`` of each point of a chart spec's dataset with both."""
+    points = dataset.get("points") if isinstance(dataset, dict) else None
+    for point in points if isinstance(points, list) else ():
+        values = point.get("values") if isinstance(point, dict) else None
+        if isinstance(values, dict) and isinstance(point.get("period"), str):
+            yield point["period"], values
+
+
 # --- the rows as series of the models --------------------------------------------------------
 
 WHOLE_COUNTRY_NAME = "Polska"
@@ -445,6 +510,12 @@ MAPPINGS = (
 
 # --- the page --------------------------------------------------------------------------------
 
+# [P 2026-10-30] the NBP grid of `polska` (section `nbp-grid`): series of the locations with
+# their own NBP prices, 9 on the 2.0 page (Warszawa, the aggregates, Kraków, Gdańsk,
+# Wrocław, Gdynia, Poznań); the page's own list of all 69 locations is gone with 2.0, so
+# these are the locations it still names as having NBP prices.
+NBP_GRID_PROPS = ("seriesList", "tableRows")
+
 STATS_WHOLE_COUNTRY = "polska"
 """The location of the root page of these statistics; its ``currentSlug`` is ``null`` [P]."""
 
@@ -560,6 +631,11 @@ class _PageProps:
         self._toc: list[Any] | None = None
         self._locations: list[Any] | None = None
         self._current: list[object] = []
+        self._sections: list[Any] | None = None
+        self._city_slugs: list[str] = []
+        self._city_name: str | None = None
+        self._nbp_locations: dict[str, dict[str, Any]] = {}
+        self._spec_tables: dict[str, list[Any]] = {}
         self._tables: dict[str, list[Any]] = {}
         self._groups: dict[str, str] = {}
         self._found: list[str] = []
@@ -573,12 +649,39 @@ class _PageProps:
             self._locations = value
         elif name == "currentSlug" and (value is None or isinstance(value, str)):
             self._current.append(value)
+        elif self._add_2_0(name, value):
+            return
         elif shape := self._shape(name, value):
             self._add_rows(shape, name, value)
+
+    def _add_2_0(self, name: str, value: Any) -> bool:
+        """A prop of the 2.0 page (sections, location, name, chart spec): ``True`` when
+        ``name`` and ``value`` are one."""
+        if name == "blocks" and isinstance(value, dict):
+            sections = value.get("govSections")
+            if self._sections is None and isinstance(sections, list):
+                self._sections = sections
+        elif name == "spec" and isinstance(value, dict):
+            self._add_spec(value)
+        elif name in ("citySlug", "cityName") and isinstance(value, str):
+            self._add_location(name, value)
+        elif name in NBP_GRID_PROPS and isinstance(value, list):
+            self._add_nbp_locations(value)
+        else:
+            return False
+        return True
+
+    def _add_location(self, name: str, value: str) -> None:
+        if name == "citySlug":
+            self._city_slugs.append(value)
+        else:
+            self._city_name = self._city_name or value
 
     def data(self, payload: str | bytes, location: str) -> dict[str, Any]:
         """The props under the DTO's field names, once the page proves to be the one of
         ``location`` (its ``payload`` tells a page Next.js does not know)."""
+        if self._toc is None and self._sections is not None:
+            return self._data_2_0(location)
         if self._toc is None:
             raise self._without_toc(payload)
         self._check_location(location)
@@ -586,6 +689,59 @@ class _PageProps:
         if self._locations is not None:
             data["sortedLocations"] = self._locations
         return data
+
+    def _data_2_0(self, location: str) -> dict[str, Any]:
+        """The data of the 2.0 page: the sections of ``blocks.govSections``, the ``data``
+        props and, for a dataset without one, its chart spec (``SPEC_ROWS``)."""
+        # [P 2026-10-30] `citySlug` is the requested city (wroclaw); `polska` has none.
+        self._current = list(self._city_slugs) or [None]
+        self._check_location(location)
+        tables = {**self._spec_tables_without_data(), **self._tables}
+        toc = [{"id": section} for section in self._sections or () if isinstance(section, str)]
+        data: dict[str, Any] = {"tocItems": toc, **tables}
+        if self._city_name is not None and location != STATS_WHOLE_COUNTRY:
+            data["sortedLocations"] = [self._own_location(location, "nbp_quarterly" in tables)]
+        elif self._nbp_locations:
+            data["sortedLocations"] = list(self._nbp_locations.values())
+        return data
+
+    def _add_nbp_locations(self, series: list[Any]) -> None:
+        """The locations of the NBP grid (``NBP_GRID_PROPS``): each has its own prices."""
+        for item in series:
+            if not isinstance(item, dict) or not isinstance(item.get("data"), list):
+                continue
+            slug, name = item.get("locationSlug"), item.get("locationDisplayName")
+            if isinstance(slug, str) and isinstance(name, str):
+                self._nbp_locations.setdefault(
+                    slug,
+                    {
+                        "slug": slug,
+                        "displayName": name,
+                        "isAggregate": item.get("isAggregate") is True,
+                        "nbp": {},
+                    },
+                )
+
+    def _spec_tables_without_data(self) -> dict[str, list[Any]]:
+        """The tables of the chart specs whose dataset has no ``data`` prop on the page."""
+        groups = {shape.field: shape.group for shape in STATS_SHAPES}
+        return {
+            field: rows
+            for field, rows in self._spec_tables.items()
+            if groups[field] not in self._groups
+        }
+
+    def _own_location(self, location: str, with_nbp: bool) -> dict[str, Any]:
+        """The page's location as the one entry of ``sortedLocations``: the 2.0 page lists
+        no other locations."""
+        nbp: dict[str, Any] | None = {} if with_nbp else None
+        return {"slug": location, "displayName": self._city_name, "nbp": nbp}
+
+    def _add_spec(self, spec: Mapping[str, Any]) -> None:
+        rows = _spec_rows(spec)
+        shape = self._shape("spec", rows) if rows else None
+        if rows and shape is not None and shape.field not in self._spec_tables:
+            self._spec_tables[shape.field] = rows
 
     def _add_rows(self, shape: StatsShape, name: str, rows: list[Any]) -> None:
         if shape.group in self._groups:

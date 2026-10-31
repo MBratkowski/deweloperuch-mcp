@@ -8,6 +8,8 @@ CASES: dict[str, Case] = {
     # get_developer
     "developer_warszawa": case(DEVELOPER, developer_routes, developer_slug="atal", city="warszawa"),
     "developer_whole_country": case(DEVELOPER, developer_routes, developer_slug="atal"),
+    # the 2.0 build: no `data` prop, the summary computed from the investments
+    "developer_archicom_2_0": case(DEVELOPER, developer_routes, developer_slug="archicom"),
     "developer_limit_100_from_the_cache": case(
         DEVELOPER,
         developer_routes,

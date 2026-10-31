@@ -11,6 +11,10 @@ Complete `text/x-component` response bodies of three kinds of the service's page
 | `developer_atal_warszawa.rsc` | `/ceny-ofertowe/warszawa/deweloperzy/atal?_rsc=682178ac` | 200: the object prop `data` (`developer`, `investments` ×4, `filteredStats` with `totalProjects` 4, `totalSales` 69, `totalCities` 1, `allCities`, `allCitiesWithSlugs` as a `$f:…` reference, `citiesStats` ×14, `allInvestmentNames`), `sale` ×227 (active and archived), `data` as a list (the daily change axis) | 134,532 B (original 134,539 B) |
 | `developer_atal_polska.rsc` | `/ceny-ofertowe/polska/deweloperzy/atal?_rsc=b92176ca` | 200: the same shape for the whole country: `investments` ×42, `filteredStats` with `totalProjects` 42, `totalSales` 4,078, `totalCities` 14, `sale` ×6,587 | 1,956,906 B (original 1,956,913 B) |
 | `developer_unknown_warszawa.rsc` | `/ceny-ofertowe/warszawa/deweloperzy/nieistniejacy-deweloper?_rsc=448d0288` | 200 without developer data and **without** the 404 digest (unlike the offers list); row `f` renders `h1` „Deweloper nie znaleziony” and `p` „Nie znaleziono dewelopera o podanym adresie”, and the title (row `13`) is „Deweloper nie znaleziony \| Deweloperuch” [P 2026-10-13] | 27,663 B (original 27,670 B) |
+| `offers_wroclaw_perPage10_20261030.rsc` | `/ceny-ofertowe/wroclaw/mieszkania?perPage=10&_rsc` | 200 from the 2.0 build: no `initialData`; `sales` with 10 offers (the fields of the old `initialData.data`) and `serverPaginationData` (`currentPage` 1, `perPage` 10, `totalCount` 5,836, `totalPages` 20) | 66,731 B (original 66,743 B) |
+| `developer_archicom_polska_20261030.rsc` | `/ceny-ofertowe/polska/deweloperzy/archicom?_rsc` | 200 from the 2.0 build: no `data`; `developerName` „Archicom S.A.”, `developerId` 86, `investments` ×6 (all active), chart specs `spec` with `ceny-w-miastach` (3 cities: Warszawa 22,196, Wrocław 15,490, Iwiny 11,855 PLN/m²), `timeline` | 165,117 B (original 165,129 B) |
+| `stats_gov_wroclaw_20261030.rsc` | `/statystyki/wroclaw/dane-rzadowe?_rsc` | 200 from the 2.0 build: no `tocItems`, `sortedLocations` or `currentSlug`; `blocks.govSections` (8 sections), `citySlug` `wroclaw`, `cityName` „Wrocław”, `data` rows of dwellings (87 quarters), population (21 years) and NBP (80 quarters), `monthlyData` (260 months), chart specs for average area, demography, unemployment and yearly wages | 386,092 B (original 386,104 B) |
+| `stats_gov_polska_20261030.rsc` | `/statystyki/polska/dane-rzadowe?_rsc` | 200 from the 2.0 build: as Wrocław without `citySlug` and without NBP rows (`nbp-grid` instead of `nbp`); monthly wages and monthly demography (`eurostat-demografia`) as chart specs | 625,422 B (original 625,434 B) |
 
 ## Provenance
 
@@ -19,6 +23,7 @@ Each file is one request made with the package's own client (`deweloperuch_mcp`,
 - offers lists: 2026-10-10, while diagnosing a `search_offers` failure;
 - government statistics: 2026-10-11, before `get_government_statistics` was built;
 - developer profiles: 2026-10-13, before `get_developer` was built, for the contract and the consistency checks of `filteredStats` and `citiesStats` (`tests/contract/api/dto/test_developer_page_dto.py`), the unknown developer and the size of a result for the whole country.
+- the four `*_20261030.rsc` files: 2026-10-30, after the redesign of 2026-10-29, with an empty `_rsc` (the deterministic token gets a 307 since then), to repair `search_offers`, `get_developer` and `get_government_statistics`.
 
 Content:
 
@@ -26,7 +31,7 @@ Content:
 - statistics pages: GUS and NBP series, the table of contents, the list of locations, texts and JSON-LD in the model row (no `T` rows);
 - developer profiles: the developer (name, empty `description` and `website`), its investments with their figures, the list of its offers (name, price, area, status; no personal data) and the daily change axis.
 
-The only change from the original is the service's contact address in the page footer (row `0:`, which ends with `\n` and comes before any `T` rows). It was replaced with `"[usunięte]"`, as in the samples, which accounts for the 7-byte difference in the Size column. No other personal data is present (e-mail addresses, phone numbers and `Person` entries were checked).
+The only change from the original is the service's contact address in the page footer (row `0:`, which ends with `\n` and comes before any `T` rows). It was replaced with `"[usunięte]"`, as in the samples, which accounts for the 7-byte difference in the Size column (12 bytes in the `*_20261030.rsc` files, where the address sits in a model row in the middle of the stream, also ending with `\n`). No other personal data is present (e-mail addresses, phone numbers and `Person` entries were checked).
 
 ## Rules
 

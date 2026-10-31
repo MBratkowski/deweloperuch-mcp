@@ -320,6 +320,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=20&perPage=100&_rsc=a2af2ae6 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=20&perPage=100&_rsc [rsc: 1] [accept: */*]"
   ]
 }

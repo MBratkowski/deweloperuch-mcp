@@ -1,0 +1,101 @@
+{
+  "_request": "GET /ceny-ofertowe/wroclaw/mieszkania?perPage=10 (RSC)",
+  "_prop": "sales",
+  "_captured": "2026-10-30",
+  "value": [
+    {
+      "sale_id": 2044,
+      "name": "L1/9/96",
+      "amount": "985757",
+      "start_amount_difference": "-115433",
+      "start_amount_difference_percent": "-10.48",
+      "last_amount_difference": "-121187",
+      "last_amount_difference_percent": "-10.95",
+      "last_event_type": "PRICE_DECREASE",
+      "total_events": 3,
+      "currency": "PLN",
+      "size": "80.8",
+      "status": "active",
+      "last_event_date": "2026-10-24",
+      "last_change_event_date": "2026-10-24",
+      "creation_date": "2025-05-01",
+      "invest": {
+        "invest_id": 23,
+        "name": "Legnicka Vita",
+        "city": "Wrocław",
+        "city_slug": "wroclaw",
+        "slug": "legnicka-vita",
+        "district": "Gądów-Popowice Południowe",
+        "street": "Fabryczna",
+        "developer": {
+          "developer_id": 23,
+          "name": "Develia",
+          "slug": "develia"
+        }
+      }
+    },
+    {
+      "sale_id": 2085,
+      "name": "L2/15/123",
+      "amount": "1133377",
+      "start_amount_difference": "-136623",
+      "start_amount_difference_percent": "-10.76",
+      "last_amount_difference": "-129767",
+      "last_amount_difference_percent": "-10.27",
+      "last_event_type": "PRICE_DECREASE",
+      "total_events": 4,
+      "currency": "PLN",
+      "size": "86.52",
+      "status": "active",
+      "last_event_date": "2026-10-24",
+      "last_change_event_date": "2026-10-24",
+      "creation_date": "2025-05-01",
+      "invest": {
+        "invest_id": 23,
+        "name": "Legnicka Vita",
+        "city": "Wrocław",
+        "city_slug": "wroclaw",
+        "slug": "legnicka-vita",
+        "district": "Gądów-Popowice Południowe",
+        "street": "Fabryczna",
+        "developer": {
+          "developer_id": 23,
+          "name": "Develia",
+          "slug": "develia"
+        }
+      }
+    },
+    {
+      "sale_id": 2129,
+      "name": "L2/9/79",
+      "amount": "1001429",
+      "start_amount_difference": "-128571",
+      "start_amount_difference_percent": "-11.38",
+      "last_amount_difference": "-120168",
+      "last_amount_difference_percent": "-10.71",
+      "last_event_type": "PRICE_DECREASE",
+      "total_events": 4,
+      "currency": "PLN",
+      "size": "80.12",
+      "status": "active",
+      "last_event_date": "2026-10-24",
+      "last_change_event_date": "2026-10-24",
+      "creation_date": "2025-05-01",
+      "invest": {
+        "invest_id": 23,
+        "name": "Legnicka Vita",
+        "city": "Wrocław",
+        "city_slug": "wroclaw",
+        "slug": "legnicka-vita",
+        "district": "Gądów-Popowice Południowe",
+        "street": "Fabryczna",
+        "developer": {
+          "developer_id": 23,
+          "name": "Develia",
+          "slug": "develia"
+        }
+      }
+    },
+    "... (7 more, 10 total)"
+  ]
+}

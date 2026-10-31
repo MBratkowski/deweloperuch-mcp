@@ -107,7 +107,7 @@ _SECTION = r"[a-z0-9][a-z0-9-]*"
 PAGE_LINK = re.compile(
     rf"{re.escape(BASE_URL)}/(?:ceny-ofertowe/{_SEGMENT}/"
     rf"(?:mieszkania(?:\?[^\s#]*)?|deweloperzy/{_SEGMENT}(?:/{_SEGMENT})?)"
-    rf"|statystyki/statystyki-rzadowe/{_SEGMENT}(?:#{_SECTION})?"
+    rf"|statystyki/{_SEGMENT}/dane-rzadowe(?:#{_SECTION})?"
     rf"|statystyki/ceny-transakcyjne/mieszkania/{_SEGMENT}"
     r"|ceny-transakcyjne/polska/miasta"
     rf"|ceny-transakcyjne/{_SEGMENT}/adresy/{_SEGMENT})"

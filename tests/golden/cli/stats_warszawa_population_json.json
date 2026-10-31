@@ -21,7 +21,7 @@
     "  \"available_from\": \"2005\",",
     "  \"hint\": \"Pokazano ostatnie 12 z 21 okresów (dane od 2005); starsze pokaże większa wartość periods.\",",
     "  \"note\": null,",
-    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-wiek\",",
+    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#gus-wiek\",",
     "  \"series\": [",
     "    {",
     "      \"series_id\": \"total\",",
@@ -196,6 +196,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

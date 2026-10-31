@@ -18,10 +18,10 @@
   "log": [
     [
       "INFO",
-      "NotFoundError: Nie znaleziono dewelopera 'nieistniejacy-deweloper' w 'warszawa'. Slug dewelopera podaje search_developers (po nazwie) albo pole developer_slug w search_offers, get_investment i get_offer; city to city_slug z search_locations albo polska (cała Polska). Szczegóły: /ceny-ofertowe/warszawa/deweloperzy/nieistniejacy-deweloper: brak propsa 'data', strona ma nagłówek 'Deweloper nie znaleziony'"
+      "NotFoundError: Nie znaleziono dewelopera 'nieistniejacy-deweloper' w 'warszawa'. Slug dewelopera podaje search_developers (po nazwie) albo pole developer_slug w search_offers, get_investment i get_offer; city to city_slug z search_locations albo polska (cała Polska). Szczegóły: /ceny-ofertowe/warszawa/deweloperzy/nieistniejacy-deweloper: brak propsa 'data/developerName/developerId/investments/spec', strona ma nagłówek 'Deweloper nie znaleziony'"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/nieistniejacy-deweloper?_rsc=448d0288 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/nieistniejacy-deweloper?_rsc [rsc: 1] [accept: */*]"
   ]
 }

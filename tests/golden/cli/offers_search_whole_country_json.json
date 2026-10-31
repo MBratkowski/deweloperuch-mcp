@@ -15,7 +15,7 @@
     "  \"per_page\": 10,",
     "  \"pages_available\": 20,",
     "  \"hint\": \"Pasujących ofert jest 13324, a serwis pozwala przejrzeć najwyżej 20 stron po 10 (200). Zawęź filtry (cena, metraż) albo zwiększ per_page do 100.\",",
-    "  \"list_url\": \"https://deweloperuch.pl/ceny-ofertowe/polska/mieszkania?page=1&perPage=10\",",
+    "  \"list_url\": \"https://deweloperuch.pl/ceny-ofertowe/polska/mieszkania?perPage=10\",",
     "  \"items\": [",
     "    {",
     "      \"offer_id\": 4397,",
@@ -275,6 +275,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/polska/mieszkania?page=1&perPage=10&_rsc=44166513 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/polska/mieszkania?perPage=10&_rsc [rsc: 1] [accept: */*]"
   ]
 }

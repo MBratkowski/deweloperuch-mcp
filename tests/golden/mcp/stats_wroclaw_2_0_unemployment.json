@@ -1,0 +1,53 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "wroclaw",
+        "dataset": "unemployment",
+        "periods": 3
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "wroclaw",
+        "location_name": "Wrocław",
+        "dataset": "unemployment",
+        "title": "Stopa bezrobocia rejestrowanego",
+        "source": "GUS",
+        "frequency": "month",
+        "total": 188,
+        "returned": 3,
+        "truncated": true,
+        "available_from": "2011-01",
+        "hint": "Pokazano ostatnie 3 z 188 okresów (dane od 2011-01); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe#gus-bezrobocie",
+        "periods": [
+          "2026-06",
+          "2026-07",
+          "2026-08"
+        ],
+        "series": [
+          {
+            "series_id": "rate",
+            "label": "Stopa bezrobocia",
+            "unit": "%",
+            "values": [
+              2.5,
+              2.5,
+              2.5
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
+  ]
+}

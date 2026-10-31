@@ -10,7 +10,6 @@ from deweloperuch_mcp.api.adapters.developer_profile_api import (
 from deweloperuch_mcp.api.http.rsc_page import RscPage
 from deweloperuch_mcp.api.http.transport import HttpClient
 from deweloperuch_mcp.errors import SERVICE_CHANGED, NotFoundError, UnexpectedResponseError
-from deweloperuch_mcp.flight import rsc_token
 from support.providers.rsc import (
     DEVELOPER_UNKNOWN,
     DEVELOPER_WARSZAWA,
@@ -31,7 +30,7 @@ def test_the_developer_page_requests_the_profile_as_rsc(
 
     request = route.calls.last.request
     target = "/ceny-ofertowe/warszawa/deweloperzy/atal"
-    assert request.url.raw_path.decode() == f"{target}?_rsc={rsc_token(target)}"
+    assert request.url.raw_path.decode() == f"{target}?_rsc"
     assert request.headers["rsc"] == "1"
     assert [item.slug for item in page.investments] == [
         "nowy-targowek-vi",

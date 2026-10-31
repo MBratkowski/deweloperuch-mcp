@@ -7,7 +7,6 @@ are written to a temporary directory, never to docs/discovery/samples/.
 
 import ast
 import copy
-import hashlib
 import http.client
 import io
 import json
@@ -159,11 +158,7 @@ def test_query_is_percent_encoded_and_existing_escapes_are_kept(env: ProbeEnv) -
     )
 
 
-def rsc_token(target: str) -> str:
-    return hashlib.sha256(target.encode()).hexdigest()[:8]
-
-
-def test_page_sends_rsc_header_and_deterministic_rsc_token(env: ProbeEnv) -> None:
+def test_page_sends_rsc_header_and_an_empty_rsc(env: ProbeEnv) -> None:
     path = "/ceny-ofertowe/warszawa/mieszkania?perPage=100&sortBy=amount"
     service = FakeProbeService([rsc_response({"initialData": {}})] * 2)
 
@@ -171,12 +166,12 @@ def test_page_sends_rsc_header_and_deterministic_rsc_token(env: ProbeEnv) -> Non
     env.run(["page", path, "--prop", "initialData"], service)
 
     (url, headers, _), again = service.requests
-    assert url == f"{identity.BASE_URL}{path}&_rsc={rsc_token(path)}"
+    assert url == f"{identity.BASE_URL}{path}&_rsc"
     assert again[0] == url
     assert headers == {"User-Agent": identity.USER_AGENT, "RSC": "1"}
 
 
-def test_rsc_token_depends_on_path_and_query(env: ProbeEnv) -> None:
+def test_the_rsc_parameter_is_empty_whatever_the_path(env: ProbeEnv) -> None:
     paths = [
         "/ceny-ofertowe/warszawa/mieszkania",
         "/ceny-ofertowe/warszawa/mieszkania?page=2",
@@ -188,8 +183,11 @@ def test_rsc_token_depends_on_path_and_query(env: ProbeEnv) -> None:
         env.run(["page", path, "--prop", "initialData"], service)
 
     urls = [url for url, _, _ in service.requests]
-    assert urls[0] == f"{identity.BASE_URL}{paths[0]}?_rsc={rsc_token(paths[0])}"
-    assert len({url.rsplit("_rsc=", 1)[1] for url in urls}) == 3
+    assert urls == [
+        f"{identity.BASE_URL}{paths[0]}?_rsc",
+        f"{identity.BASE_URL}{paths[1]}&_rsc",
+        f"{identity.BASE_URL}{paths[2]}?_rsc",
+    ]
 
 
 @pytest.fixture

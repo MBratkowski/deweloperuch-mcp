@@ -71,7 +71,7 @@
         "developers_returned": 4,
         "developers_omitted": 42,
         "truncated": true,
-        "list_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/mieszkania?page=1&perPage=10"
+        "list_url": "https://deweloperuch.pl/ceny-ofertowe/wroclaw/mieszkania?perPage=10"
       }
     }
   ],
