@@ -54,7 +54,7 @@ First example output (`tests/golden/cli/stats_polska_unemployment.json`, shorten
 Stopa bezrobocia rejestrowanego · Polska [polska]
 Źródło: GUS · miesięcznie · okresy: pokazano 12 z 188 (dane od 2011-01).
 Wskazówka: Pokazano ostatnie 12 z 188 okresów (dane od 2011-01); starsze pokaże większa wartość periods.
-Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-bezrobocie
+Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-bezrobocie
 Kolumny:
   [1] Stopa bezrobocia (%)
 Okres    [1]
