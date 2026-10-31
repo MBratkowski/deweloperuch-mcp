@@ -3,6 +3,7 @@
 from support.builders.buildings import building_with_units
 from support.golden.mcp import BUILDING_TOOL, INJECTED, Case, building_is, case
 from support.golden.routes import building_answer, trend_answer
+from support.providers.error_answers import unknown_entity
 from support.providers.routes.buildings import CISNA, building_routes, cisna_routes
 from support.providers.routes.buildings import SLUG as BUILDING_SLUG
 
@@ -43,7 +44,9 @@ CASES: dict[str, Case] = {
         building_slug=BUILDING_SLUG,
     ),
     "building_404": case(
-        BUILDING_TOOL, building_answer(404, text=INJECTED), building_slug=BUILDING_SLUG
+        BUILDING_TOOL,
+        building_answer(404, **unknown_entity({"error": INJECTED})),
+        building_slug=BUILDING_SLUG,
     ),
     "building_500": case(
         BUILDING_TOOL, building_answer(500, text=INJECTED), building_slug=BUILDING_SLUG

@@ -9,7 +9,7 @@
     ""
   ],
   "stderr": [
-    "Błąd: Inwestycja 'smolna': Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+    "Błąd: Inwestycja 'smolna': Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.",
     "Szczegóły: /api/map/investments/visible/smolna: invest_id: Field required; city: Field required; city_slug: Field required (i 5 innych)",
     ""
   ],

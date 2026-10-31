@@ -4,10 +4,9 @@ The ``PageLinks`` port of the domain (``ServicePageLinks``) and the one place th
 the addresses: from the page routes confirmed [P] in docs/discovery/pages-rsc.md, on
 ``identity.BASE_URL``. The path and the query of the offers list are the request's
 (``queries.offers_query.OffersQuery``), so the link to a list is the request the client
-sent, without ``_rsc``; the same holds for the government statistics
-(``GovernmentStatisticsApi.path``). The transaction statistics page is linked only,
-never requested (a dump, D5). Each address has one private builder (``_*_url``); the
-port's methods hand them the identities of the models.
+sent, without ``_rsc``. Both statistics pages moved on 2026-10-29 (the old routes answer
+308): their links are the 2.0 routes, which no adapter requests yet. Each address has one
+private builder (``_*_url``); the port's methods hand them the identities of the models.
 
 - Segments are percent-encoded as the transport encodes them (``HttpClient.segment``).
 - A missing slug (or one that would move the path: ``.``, ``..``, or one that cannot be
@@ -22,7 +21,6 @@ cases ask this port for them (D13).
 import re
 
 from deweloperuch_mcp.api.adapters.developer_profile_api import DeveloperProfileApi
-from deweloperuch_mcp.api.adapters.government_statistics_api import GovernmentStatisticsApi
 from deweloperuch_mcp.api.http.transport import HttpClient
 from deweloperuch_mcp.api.queries.offers_query import OffersQuery
 from deweloperuch_mcp.identity import BASE_URL
@@ -102,30 +100,41 @@ class ServicePageLinks:
 
     @staticmethod
     def _government_stats_url(location: str | None, section: str | None = None) -> str | None:
-        """``/statystyki/statystyki-rzadowe/{location}`` [P], at ``#section`` when given.
+        """``/statystyki/{location}/dane-rzadowe``, at ``#section`` when given.
 
-        ``section`` is the id of a section in the page's table of contents (``tocItems``
-        [P]); one that is not such an id is left out (the page without a fragment).
+        pages-rsc.md: the page answers for ``warszawa`` [P 2026-10-30], and the old route
+        ``/statystyki/statystyki-rzadowe/{location}`` (``GovernmentStatisticsApi.path``, still
+        the page the adapter reads) answers 308 here for every location tried, an unknown
+        one too [P 2026-10-29]. ``section`` is a section id of the page: the old ``tocItems``
+        ids [P], which the 2.0 page lists as ``govSections``, the same 8 [P 2026-10-31,
+        sample ``page.stats_gov.v2_sections``], and each is the ``id`` of an element of the
+        page [P 2026-10-31, the HTML of ``warszawa`` saved on 2026-10-30]. Both were read on
+        ``warszawa`` only; that other locations keep the ids is [W] (one page template). A
+        value that is not such an id is left out (the page without a fragment).
         """
-        if location is None or _segments(location) is None:
+        segments = _segments(location)
+        if segments is None:
             return None
-        url = BASE_URL + GovernmentStatisticsApi.path(location)
+        url = f"{BASE_URL}/statystyki/{segments[0]}/dane-rzadowe"
         if section is not None and _SECTION.fullmatch(section):
             url += f"#{section}"
         return url
 
     @staticmethod
     def _transaction_stats_url(city_slug: str | None) -> str | None:
-        """``/statystyki/ceny-transakcyjne/mieszkania/{city}`` [P] (pages-rsc.md, sample
-        ``page.stats_transactions``): the transaction prices of flats in a city, for people.
+        """``/statystyki/{city}/transakcje`` (pages-rsc.md): the transaction statistics of a
+        city, for people.
 
-        A link, never a request: the page carries every transaction of the city (D5), so it
-        stays in ``allowlist.DUMP_PATHS`` and the transport refuses to fetch it.
+        Confirmed for ``warszawa`` [P 2026-10-30, the scan; P 2026-10-31, as RSC]; for other
+        cities the route is [W], the same pattern. [P 2026-10-29] the old
+        ``/statystyki/ceny-transakcyjne/mieszkania/{city}/mapa`` answers 308 here; the 2.0
+        page has no ``rawTransactions`` (no dump). A link only: the client reads the
+        statistics elsewhere.
         """
         segments = _segments(city_slug)
         if segments is None:
             return None
-        return f"{BASE_URL}/statystyki/ceny-transakcyjne/mieszkania/{segments[0]}"
+        return f"{BASE_URL}/statystyki/{segments[0]}/transakcje"
 
     @staticmethod
     def _city_ranking_url() -> str:

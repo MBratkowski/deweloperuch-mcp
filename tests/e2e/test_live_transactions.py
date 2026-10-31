@@ -55,8 +55,9 @@ FEW_TRANSACTIONS = "Transakcji jest za mało, by ocenić"
 PRICE_PER_M2 = (1_000, 100_000)
 """PLN per m² of a flat in a Polish city: far wider than any real median or mean."""
 SIZE_BUDGET = 8_000
-STATS_PAGE = BASE_URL + "/statystyki/ceny-transakcyjne/mieszkania"
-"""The page ``stats_url`` points to (D12, 2026-10-13); never opened here (a D5 dump)."""
+STATS = BASE_URL + "/statystyki"
+"""``stats_url`` is ``{STATS}/{city}/transakcje``, the page of a city's transaction
+statistics (D12, 2026-10-13; moved there on 2026-10-29); never opened here."""
 
 
 @pytest.fixture(scope="module")
@@ -155,7 +156,7 @@ def test_months_of_a_city(months: Call) -> None:
     # before the incomplete ones is judged, and usual.
     assert PERIOD["month"].fullmatch(result.get("last_complete_period", "")), result
     assert result["note"].startswith("Ostatnie miesiące są niepełne")
-    assert result["stats_url"] == f"{STATS_PAGE}/{CITY}"
+    assert result["stats_url"] == f"{STATS}/{CITY}/transakcje"
     assert len(months.text) < SIZE_BUDGET
 
 
@@ -216,7 +217,7 @@ def test_quarters_of_a_city(quarters: Call, months: Call) -> None:
     check_incomplete(result, compact=True)
     assert {key for item in result["periods"] for key in item} <= QUARTER_FIELDS | {FLAG}
     assert result["note"].startswith("Ostatnie kwartały są niepełne")
-    assert result["stats_url"] == f"{STATS_PAGE}/{CITY}"
+    assert result["stats_url"] == f"{STATS}/{CITY}/transakcje"
     # [W] the quarters reach further back than the months (2017 vs 2021 in the samples).
     assert result["available_from"][:4] <= months.data["available_from"][:4]
 
@@ -237,4 +238,4 @@ def test_the_cli_shows_another_city(
     check_periods(shown["periods"], "month")
     check_incomplete(shown, compact=False)
     assert {"average_area_m2", "average_price"} <= set(shown["periods"][-1])
-    assert shown["stats_url"] == f"{STATS_PAGE}/{OTHER_CITY}"
+    assert shown["stats_url"] == f"{STATS}/{OTHER_CITY}/transakcje"

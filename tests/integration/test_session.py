@@ -8,6 +8,7 @@ import respx
 from deweloperuch_mcp import bootstrap, identity
 from deweloperuch_mcp.errors import NotFoundError, ServiceError, UnexpectedResponseError
 from support.providers import operations
+from support.providers.error_answers import unknown_entity
 from support.providers.routes.government_statistics import stats_routes
 from support.providers.routes.investments import (
     INVESTMENT,
@@ -19,12 +20,16 @@ from support.providers.routes.locations import location_routes
 from support.providers.routes.offers import sample_offers_route
 from support.providers.samples import body, request_target
 
+UNKNOWN_ANSWER = ": HTTP 404, application/json"
+"""What the detail says of the service's "unknown" answer: its status and media type, not
+its text."""
+
 
 def test_an_offer_without_history_is_not_found_in_domain_terms(
     session: bootstrap.Session, service: respx.MockRouter
 ) -> None:
     service.get(INVESTMENT).respond(200, json=body("api.map_inv_visible"))
-    service.get(SALE_EVENTS).respond(404)
+    service.get(SALE_EVENTS).respond(404, **unknown_entity())
 
     with pytest.raises(NotFoundError) as caught:
         operations.get_offer(session, 2377, "smolna")
@@ -32,20 +37,20 @@ def test_an_offer_without_history_is_not_found_in_domain_terms(
     assert str(caught.value).startswith(
         "Serwis nie ma historii ceny oferty 2377 z inwestycji 'smolna'."
     )
-    assert caught.value.detail == request_target("api.sale_events")
+    assert caught.value.detail == request_target("api.sale_events") + UNKNOWN_ANSWER
 
 
 def test_an_investment_without_history_is_not_found_in_domain_terms(
     session: bootstrap.Session, service: respx.MockRouter
 ) -> None:
     service.get(INVESTMENT).respond(200, json=body("api.map_inv_visible"))
-    service.get(INVESTMENT_EVENTS).respond(404)
+    service.get(INVESTMENT_EVENTS).respond(404, **unknown_entity())
 
     with pytest.raises(NotFoundError, match="get_offer") as caught:
         operations.get_investment(session, "smolna", include_history=True)
 
     assert "/api/" not in str(caught.value)
-    assert caught.value.detail == request_target("api.inv_sale_events")
+    assert caught.value.detail == request_target("api.inv_sale_events") + UNKNOWN_ANSWER
 
 
 def test_service_errors_name_what_failed_and_keep_type_pause_and_detail(

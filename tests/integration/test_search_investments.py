@@ -12,6 +12,7 @@ from deweloperuch_mcp.consumers.shared.investment_search_views import Investment
 from deweloperuch_mcp.models.errors import NotFoundError, ServiceError, UnexpectedResponseError
 from deweloperuch_mcp.usecases.search_investments import SearchInvestmentsRequest
 from support.builders.investment_search import city_with_investments
+from support.providers.error_answers import CHANGED_SERVICE, removed_route
 from support.providers.routes.investment_search import (
     CITY_INVESTMENTS,
     NAMED_INVESTMENTS,
@@ -97,7 +98,16 @@ def test_a_large_city_is_cut_and_ordered_in_the_domain(
 @pytest.mark.parametrize(
     ("answer", "kind", "start"),
     [
-        (httpx.Response(404, text=INJECTED), NotFoundError, "Serwis nie zna miasta 'sopot'."),
+        (
+            httpx.Response(404, json={"error": INJECTED}),
+            NotFoundError,
+            "Serwis nie zna miasta 'sopot'.",
+        ),
+        (
+            httpx.Response(404, **removed_route()),
+            UnexpectedResponseError,
+            f"Wyszukiwanie inwestycji w 'sopot': {CHANGED_SERVICE}",
+        ),
         (
             httpx.Response(400, json={"error": "Invalid citySlug"}),
             ServiceError,

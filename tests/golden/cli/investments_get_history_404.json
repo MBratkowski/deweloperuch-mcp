@@ -11,7 +11,7 @@
   ],
   "stderr": [
     "Błąd: Serwis nie ma historii cen ofert inwestycji 'smolna'. Pobierz inwestycję bez include_history, a historię pojedynczej oferty przez get_offer.",
-    "Szczegóły: /api/investments/33/sale-events",
+    "Szczegóły: /api/investments/33/sale-events: HTTP 404, application/json",
     ""
   ],
   "requests": [

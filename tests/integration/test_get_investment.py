@@ -9,6 +9,7 @@ import respx
 from deweloperuch_mcp import bootstrap
 from deweloperuch_mcp.errors import InvalidInputError, NotFoundError
 from support.providers import operations
+from support.providers.error_answers import unknown_entity
 from support.providers.routes.investments import (
     investment_routes,
 )
@@ -44,7 +45,8 @@ def test_get_investment_with_history_and_limit(
 def test_get_investment_unknown_slug_says_where_slugs_come_from(
     session: bootstrap.Session, service: respx.MockRouter
 ) -> None:
-    service.get(BASE + "/api/map/investments/visible/nie-ma").respond(404)
+    # [P 2026-10-30] docs/discovery/endpoints.md section 9: an unknown slug.
+    service.get(BASE + "/api/map/investments/visible/nie-ma").respond(404, **unknown_entity())
 
     with pytest.raises(NotFoundError, match="search_offers"):
         operations.get_investment(session, "nie-ma")

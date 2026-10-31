@@ -24,6 +24,7 @@ from support.fakes.clocks import FixedClock
 from support.golden.routes import (
     Router,
 )
+from support.providers.error_answers import unknown_entity
 from support.providers.routes.buildings import building_routes
 from support.providers.routes.developer_search import developer_search_route
 from support.providers.routes.government_statistics import (
@@ -73,8 +74,8 @@ def case(
 
 def history_missing(router: respx.MockRouter) -> None:
     router.get(INVESTMENT).respond(200, json=body("api.map_inv_visible"))
-    router.get(INVESTMENT_EVENTS).respond(404, text=INJECTED)
-    router.get(SALE_EVENTS).respond(404, text=INJECTED)
+    router.get(INVESTMENT_EVENTS).respond(404, **unknown_entity({"error": INJECTED}))
+    router.get(SALE_EVENTS).respond(404, **unknown_entity({"error": INJECTED}))
 
 
 def search_names_are(names: Any) -> Router:

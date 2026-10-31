@@ -1,0 +1,9 @@
+{
+  "_request": "GET /api/sale-events?saleId=999999999",
+  "_captured": "2026-10-30",
+  "response": {
+    "success": true,
+    "saleData": null,
+    "events": []
+  }
+}

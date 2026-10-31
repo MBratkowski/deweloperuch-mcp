@@ -10,14 +10,14 @@
   "results": [
     {
       "is_error": true,
-      "text": "Inwestycja 'smolna': Serwis zwrócił stronę HTML zamiast danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+      "text": "Inwestycja 'smolna': Serwis zwrócił stronę HTML zamiast danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "UnexpectedResponseError: Inwestycja 'smolna': Serwis zwrócił stronę HTML zamiast danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi. Szczegóły: /api/map/investments/visible/smolna: oczekiwano JSON, przyszedł HTML"
+      "UnexpectedResponseError: Inwestycja 'smolna': Serwis zwrócił stronę HTML zamiast danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi. Szczegóły: /api/map/investments/visible/smolna: oczekiwano JSON, przyszedł HTML"
     ]
   ],
   "requests": [

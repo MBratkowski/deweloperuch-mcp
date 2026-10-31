@@ -19,7 +19,7 @@
     "  \"last_complete_period\": null,",
     "  \"hint\": null,",
     "  \"note\": \"Ostatnie kwartały są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z okresami o zwykłej liczbie transakcji.\",",
-    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/ceny-transakcyjne/mieszkania/warszawa\",",
+    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/warszawa/transakcje\",",
     "  \"periods\": [",
     "    {",
     "      \"period\": \"2017-Q1\",",

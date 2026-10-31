@@ -5,7 +5,6 @@ tests/fixtures/rsc/ pin it (text rows without a newline, lengths in bytes).
 """
 
 import ast
-import hashlib
 import json
 import re
 import subprocess
@@ -22,7 +21,12 @@ from deweloperuch_mcp.api.dto.offers_page_dto import OffersPageDto
 from deweloperuch_mcp.flight import Row, error_digests, rows
 from flight import component_props, find_json_after, flight, flight_from_html
 from support.paths import REPO
-from support.providers.rsc import OFFERS_UNKNOWN_CITY, OFFERS_WARSZAWA, raw
+from support.providers.rsc import (
+    DEVELOPER_WARSZAWA_20261031,
+    OFFERS_UNKNOWN_CITY,
+    OFFERS_WARSZAWA,
+    raw,
+)
 
 FLIGHT = REPO / "recon" / "flight.py"
 
@@ -187,31 +191,54 @@ def test_recon_flight_defines_no_decoder_of_its_own() -> None:
     assert defined == {"_main"}
 
 
-def test_rsc_token_is_a_short_hash_of_path_and_query() -> None:
-    target = "/ceny-ofertowe/warszawa/mieszkania?page=2&perPage=50"
-
-    assert package_flight.rsc_token(target) == hashlib.sha256(target.encode()).hexdigest()[:8]
-    assert package_flight.rsc_token(target) != package_flight.rsc_token(target + "0")
-
-
 @pytest.mark.parametrize(
-    ("target", "expected_separator"),
+    ("target", "expected"),
     [
-        ("/ceny-ofertowe/warszawa/mieszkania", "?"),
-        ("/ceny-ofertowe/warszawa/mieszkania?page=2", "&"),
+        ("/ceny-ofertowe/warszawa/mieszkania", "/ceny-ofertowe/warszawa/mieszkania?_rsc="),
+        (
+            "/ceny-ofertowe/warszawa/mieszkania?page=2&perPage=50",
+            "/ceny-ofertowe/warszawa/mieszkania?page=2&perPage=50&_rsc=",
+        ),
     ],
 )
-def test_with_rsc_token_appends_the_token_as_the_last_parameter(
-    target: str, expected_separator: str
+def test_with_rsc_token_appends_an_empty_rsc_as_the_last_parameter(
+    target: str, expected: str
 ) -> None:
-    token = package_flight.rsc_token(target)
+    """[P z kodu 2026-10-30] the 2.0 client sends an empty ``_rsc`` when it sends none of
+    the router headers; [P 2026-10-29] the server redirects any other value to the empty
+    one, which returns the payload [P 2026-10-31] (T63, resolved)."""
+    assert package_flight.with_rsc_token(target) == expected
 
-    assert package_flight.with_rsc_token(target) == f"{target}{expected_separator}_rsc={token}"
+
+def test_the_rsc_target_is_never_the_address_of_the_html_page() -> None:
+    """Cloudflare ignores ``Vary: RSC``: the RSC request needs an address of its own, or it
+    gets the cached HTML page (docs/discovery/pages-rsc.md)."""
+    target = "/ceny-ofertowe/warszawa/mieszkania?perPage=10"
+
+    assert package_flight.with_rsc_token(target) != target
+    assert package_flight.with_rsc_token(target).startswith(target + "&")
 
 
-def test_rsc_token_refuses_unencoded_targets() -> None:
-    with pytest.raises(UnicodeEncodeError):
-        package_flight.rsc_token("/ceny-ofertowe/kraków/mieszkania")
+def test_the_rsc_value_no_longer_depends_on_the_target() -> None:
+    """The token of the old service (a hash of the target) is gone; every page gets the
+    same empty value."""
+    first = package_flight.with_rsc_token("/ceny-ofertowe/warszawa/mieszkania")
+    second = package_flight.with_rsc_token("/ceny-ofertowe/krakow/mieszkania?page=2")
+
+    assert first.rsplit("_rsc=", 1)[1] == second.rsplit("_rsc=", 1)[1] == ""
+
+
+def test_the_props_of_a_client_element_inside_another_ones_props_are_yielded() -> None:
+    """[P 2026-10-31] the 2.0 developer page keeps its data in the ``hero`` element, the
+    value of a prop of another client element: its props come too, after that prop."""
+    props = list(component_props(raw(DEVELOPER_WARSZAWA_20261031)))
+    names = [name for name, _ in props]
+
+    hero = next(value for name, value in props if name == "hero")
+    assert hero[0] == "$" and str(hero[1]).startswith("$L")
+    assert {"investments", "developerSlug", "developerName", "developerId"} <= set(hero[3])
+    assert names.index("hero") < names.index("developerName")
+    assert ("developerName", "ATAL S.A.") in props and ("developerId", 43) in props
 
 
 def test_rows_split_ids_tags_and_data() -> None:

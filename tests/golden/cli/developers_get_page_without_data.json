@@ -11,11 +11,11 @@
     ""
   ],
   "stderr": [
-    "Błąd: Deweloper 'atal' w 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+    "Błąd: Deweloper 'atal' w 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.",
     "Szczegóły: /ceny-ofertowe/warszawa/deweloperzy/atal nie zawiera danych w propsie 'data' (propsy z danymi: segmentPath, errorStyles, errorScripts, template, notFound)",
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal?_rsc=682178ac [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/atal?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

@@ -12,13 +12,14 @@ from deweloperuch_mcp.consumers.shared.transaction_views import (
 )
 from deweloperuch_mcp.throttle import RequestLimiter
 from support.builders.transactions import (
-    STATS_PAGE,
     ZERO_MONTH,
     karpacz_months,
     months,
+    stats_page,
     warszawa_months,
 )
 from support.providers.cli import Cli, ok
+from support.providers.error_answers import UNKNOWN_CITY_ERROR, removed_route, unknown_entity
 from support.providers.routes.transactions import (
     MONTHLY_PATH,
     transaction_routes,
@@ -42,7 +43,7 @@ def test_cli_prints_months_as_a_table(run: Cli, service: respx.MockRouter) -> No
     assert lines[0] == "Ceny transakcyjne mieszkań (RCN) · warszawa · miesięcznie"
     assert lines[1] == "Okresy: pokazano 3 z 3 (dane od 2021-01)."
     assert lines[2].startswith("Uwaga: Ostatnie miesiące są niepełne")
-    assert lines[3] == f"Strona na deweloperuch.pl: {STATS_PAGE}/warszawa"
+    assert lines[3] == f"Strona na deweloperuch.pl: {stats_page('warszawa')}"
     assert lines[4:] == [
         "Okres    Transakcje  Mediana PLN/m²  Średnia PLN/m²  Mediana m²  Mediana ceny PLN",
         "2021-01         963          10 651          10 876        49,4           502 000",
@@ -88,7 +89,7 @@ def test_cli_prints_quarters_with_their_columns_only(run: Cli, service: respx.Mo
         "Wskazówka: Pokazano ostatnie 2 z 3 okresów (dane od 2017-Q1); starsze pokaże większa "
         "wartość periods."
     )
-    assert lines[4] == f"Strona na deweloperuch.pl: {STATS_PAGE}/warszawa"
+    assert lines[4] == f"Strona na deweloperuch.pl: {stats_page('warszawa')}"
     assert lines[5:] == [
         "Okres    Transakcje  Średnia PLN/m²",
         "2017-Q2       2 854           7 695",
@@ -103,7 +104,7 @@ def test_cli_json_is_the_whole_view(run: Cli, service: respx.MockRouter) -> None
 
     assert list(shown) == list(TransactionStatisticsView.model_fields)
     assert shown["granularity"] == "month"
-    assert shown["stats_url"] == STATS_PAGE + "/warszawa"
+    assert shown["stats_url"] == stats_page("warszawa")
     # Three months are too little history to judge any of them.
     assert shown["last_complete_period"] is None
     assert shown["periods"] == [
@@ -185,7 +186,9 @@ def test_cli_input_errors_exit_with_2_without_a_request(
 @pytest.mark.parametrize(
     ("answer", "code"),
     [
-        ({"status_code": 404}, ExitCode.NOT_FOUND),
+        ({"status_code": 404, **unknown_entity(UNKNOWN_CITY_ERROR)}, ExitCode.NOT_FOUND),
+        # D21: the route is gone (it is, since 2026-10-29): a changed service
+        ({"status_code": 404, **removed_route()}, ExitCode.UNEXPECTED_RESPONSE),
         (
             {"status_code": 200, "json": {"scope": {"label": "city"}, "data": []}},
             ExitCode.NOT_FOUND,
@@ -202,8 +205,8 @@ def test_cli_input_errors_exit_with_2_without_a_request(
 def test_cli_service_answers_map_to_exit_codes(
     run: Cli, service: respx.MockRouter, answer: dict[str, Any], code: ExitCode
 ) -> None:
-    status = answer.pop("status_code")
-    service.get(path=MONTHLY_PATH).respond(status, **answer)
+    rest = dict(answer)
+    service.get(path=MONTHLY_PATH).respond(rest.pop("status_code"), **rest)
 
     result = run("warszawa")
 

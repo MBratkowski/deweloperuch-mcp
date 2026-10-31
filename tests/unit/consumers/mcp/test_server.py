@@ -19,6 +19,7 @@ from mcp.types import CallToolResult
 
 from deweloperuch_mcp import bootstrap
 from deweloperuch_mcp.consumers.mcp import server as mcp_server
+from deweloperuch_mcp.errors import SERVICE_CHANGED
 from deweloperuch_mcp.usecases.get_government_statistics import GetGovernmentStatistics
 from deweloperuch_mcp.usecases.get_investment import GetInvestment
 from deweloperuch_mcp.usecases.get_offer import GetOffer
@@ -322,6 +323,14 @@ def test_server_info_and_instructions(server: MCPServer[bootstrap.Session]) -> N
     # Nothing that reads as "the STOP can be lifted" or "restart the server and go on".
     assert not re.search(r"zdejm|zdjęci|restart|dopóki", instructions, re.I)
     assert "Gdy narzędzie odrzuci argumenty, popraw wskazane pola" in instructions
+    # D21: a changed service ends the call, not the session; the sentence names the words
+    # the error begins with (errors.SERVICE_CHANGED).
+    assert (
+        "Gdy narzędzie odrzuci argumenty, popraw wskazane pola zgodnie z komunikatem i ponów. "
+        "Gdy błąd mówi, że serwis mógł się zmienić, nie ponawiaj tego wywołania i powiedz o tym "
+        "użytkownikowi; inne narzędzia mogą nadal działać." in instructions
+    )
+    assert SERVICE_CHANGED.startswith("Serwis mógł się zmienić")
     assert "po angielsku" not in instructions
     assert "najnowsze okresy są niepełne, get_transaction_statistics oznacza je incomplete" in (
         instructions

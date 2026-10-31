@@ -21,6 +21,7 @@ from support.golden.routes import (
     Router,
 )
 from support.providers.clients import shared_limiter
+from support.providers.error_answers import unknown_entity
 from support.providers.routes.investments import (
     INVESTMENT,
     INVESTMENT_EVENTS,
@@ -129,8 +130,8 @@ def mixed_statuses() -> Any:
 
 def history_missing(router: respx.MockRouter) -> None:
     router.get(INVESTMENT).respond(200, json=body("api.map_inv_visible"))
-    router.get(INVESTMENT_EVENTS).respond(404)
-    router.get(SALE_EVENTS).respond(404)
+    router.get(INVESTMENT_EVENTS).respond(404, **unknown_entity())
+    router.get(SALE_EVENTS).respond(404, **unknown_entity())
 
 
 def sale_events_answer(status: int) -> Router:

@@ -1,0 +1,130 @@
+{
+  "_request": "GET /ceny-ofertowe/warszawa/deweloperzy/atal (RSC)",
+  "_prop": "spec",
+  "_captured": "2026-10-31",
+  "value": {
+    "id": "ceny-w-miastach",
+    "title": "Ceny w miastach",
+    "headingLevel": 2,
+    "span": 1,
+    "domain": "oferty",
+    "info": [
+      "Średnia cena za m² w aktywnej ofercie dewelopera w każdym mieście; nazwa innego miasta prowadzi do strony dewelopera w tamtym mieście."
+    ],
+    "summary": "Najwyższa średnia cena za m² w ofercie ATAL: Warszawa (16 110 zł/m²), najniższa: Swarzędz (8 907 zł/m²).",
+    "source": "Oferty dewelopera w bazie Deweloperucha",
+    "sourceNote": "Dane przedstawione na wykresie pochodzą z publicznie dostępnych źródeł, dlatego nie odpowiadamy za ich poprawność, kompletność ani aktualność.",
+    "switches": [],
+    "views": {
+      "": {
+        "rows": [
+          {
+            "key": "warszawa",
+            "label": "Warszawa",
+            "href": null,
+            "sub": "4 inwestycje",
+            "value": 16110,
+            "text": "16 110 zł/m²",
+            "extra": "60",
+            "current": true,
+            "tip": {
+              "title": "Warszawa",
+              "rows": [
+                {
+                  "key": "cena",
+                  "label": "Średnia zł/m²",
+                  "value": "16 110 zł/m²"
+                },
+                {
+                  "key": "oferty",
+                  "label": "Aktywne oferty",
+                  "value": "60"
+                },
+                {
+                  "key": "inwestycje",
+                  "label": "Inwestycje",
+                  "value": "4"
+                }
+              ]
+            }
+          },
+          {
+            "key": "gdansk",
+            "label": "Gdańsk",
+            "href": "/ceny-ofertowe/gdansk/deweloperzy/atal",
+            "sub": "6 inwestycji",
+            "value": 14036,
+            "text": "14 036 zł/m²",
+            "extra": "251",
+            "current": false,
+            "tip": {
+              "title": "Gdańsk",
+              "rows": [
+                {
+                  "key": "cena",
+                  "label": "Średnia zł/m²",
+                  "value": "14 036 zł/m²"
+                },
+                {
+                  "key": "oferty",
+                  "label": "Aktywne oferty",
+                  "value": "251"
+                },
+                {
+                  "key": "inwestycje",
+                  "label": "Inwestycje",
+                  "value": "6"
+                }
+              ]
+            }
+          },
+          {
+            "key": "krakow",
+            "label": "Kraków",
+            "href": "/ceny-ofertowe/krakow/deweloperzy/atal",
+            "sub": "7 inwestycji",
+            "value": 13757,
+            "text": "13 757 zł/m²",
+            "extra": "705",
+            "current": false,
+            "tip": {
+              "title": "Kraków",
+              "rows": [
+                {
+                  "key": "cena",
+                  "label": "Średnia zł/m²",
+                  "value": "13 757 zł/m²"
+                },
+                {
+                  "key": "oferty",
+                  "label": "Aktywne oferty",
+                  "value": "705"
+                },
+                {
+                  "key": "inwestycje",
+                  "label": "Inwestycje",
+                  "value": "7"
+                }
+              ]
+            }
+          },
+          "... (11 more, 14 total)"
+        ],
+        "max": 16110,
+        "columns": {
+          "value": "Średnia",
+          "extra": "Oferty"
+        },
+        "reference": null,
+        "headline": null,
+        "table": null
+      }
+    },
+    "collapsed": 10,
+    "rankNumbers": false,
+    "shares": null,
+    "categories": null,
+    "footnote": null,
+    "emptyText": "Brak cen w aktywnej ofercie."
+  }
+}

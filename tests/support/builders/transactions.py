@@ -124,7 +124,10 @@ WARSZAWA_LAST_7_QUARTERS = (3105, 3483, 3902, 3605, 3721, 1034, 37)
 and 2026-Q3 (37) after about 3,700 a quarter."""
 
 
-STATS_PAGE = BASE + "/statystyki/ceny-transakcyjne/mieszkania"
+def stats_page(city: str) -> str:
+    """The page ``stats_url`` points to: the transaction statistics of ``city``, moved to
+    ``/statystyki/{city}/transakcje`` by the 2.0 service [P 2026-10-30]."""
+    return f"{BASE}/statystyki/{city}/transakcje"
 
 
 # [P 2026-10-13] live observation (Warsaw 2026-05/06): no transactions, every measure 0.

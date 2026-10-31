@@ -13,11 +13,11 @@ from mcp.types import CallToolResult
 
 from deweloperuch_mcp import bootstrap
 from support.builders.transactions import (
-    STATS_PAGE,
     ZERO_MONTH,
     karpacz_months,
     months,
     quarters,
+    stats_page,
     warszawa_months,
     warszawa_quarters,
 )
@@ -187,7 +187,7 @@ def test_months_with_the_defaults(
     assert (result["total"], result["returned"], result["truncated"]) == (3, 3, False)
     assert "hint" not in result
     assert result["note"].startswith("Ostatnie miesiące są niepełne")
-    assert result["stats_url"] == STATS_PAGE + "/warszawa"
+    assert result["stats_url"] == stats_page("warszawa")
     # Three months are too little history to judge any of them.
     assert "last_complete_period" not in result
     assert "incomplete" not in keys(result["periods"])

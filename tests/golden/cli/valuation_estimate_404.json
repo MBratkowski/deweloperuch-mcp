@@ -15,7 +15,7 @@
   ],
   "stderr": [
     "Błąd: Serwis nie podał wyceny dla tego miejsca; w promieniu może nie być transakcji.",
-    "Szczegóły: /api/standalone-valuation?area=50&lat=52.2297&lng=21.0122",
+    "Szczegóły: /api/standalone-valuation?area=50&lat=52.2297&lng=21.0122: HTTP 404, application/json",
     ""
   ],
   "requests": [

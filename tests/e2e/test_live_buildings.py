@@ -8,11 +8,12 @@ have none, docs/discovery/endpoints.md), so the suite takes a known one. A secon
 among its transactions and no trend around it. Assertions are about structure, ranges
 and consistency, never about today's numbers.
 
-[H] What the service answers for an unknown slug is not documented: the client takes a
-404, or a 200 with null or with an error object, as "not found"
-(api.adapters.buildings_api), and ``test_an_unknown_building_is_not_found``
-finds out which one it is. A 5xx or a 400 there ends the session as a service error
-(``live.unavailable_exit``), so that test comes last in this module.
+[P 2026-10-30] docs/discovery/endpoints.md section 9 (``map/transactions/visible``): an
+unknown slug is a ``404`` ``application/json`` ``{"error":"Investment not found"}``, which
+the client takes as "not found" (api.adapters.buildings_api);
+``test_an_unknown_building_is_not_found`` checks it live. A 5xx or a 400 there ends the
+session as a service error (``live.unavailable_exit``), so that test comes last in this
+module.
 """
 
 import json
@@ -179,7 +180,7 @@ def test_a_building_with_transactions_that_are_no_regular_sale(mcp: McpLive) -> 
 
 
 def test_an_unknown_building_is_not_found(mcp: McpLive) -> None:
-    """[H] (module docstring): the last test of the module."""
+    """[P 2026-10-30] (module docstring): the last test of the module."""
     call = mcp.call("get_building", building_slug=UNKNOWN_BUILDING)
 
     assert call.sent == 1

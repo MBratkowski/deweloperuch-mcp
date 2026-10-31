@@ -7,9 +7,14 @@ import pytest
 import respx
 
 from deweloperuch_mcp import bootstrap
-from deweloperuch_mcp.errors import SERVICE_CHANGED, InvalidInputError, NotFoundError
-from deweloperuch_mcp.flight import rsc_token
+from deweloperuch_mcp.errors import (
+    SERVICE_CHANGED,
+    InvalidInputError,
+    NotFoundError,
+    UnexpectedResponseError,
+)
 from support.providers import operations
+from support.providers.error_answers import removed_route
 from support.providers.routes.government_statistics import stats_routes
 from support.providers.routes.offers import sample_offers_route
 from support.providers.rsc import OFFERS_UNKNOWN_CITY, UNKNOWN_CITY, offers_payload, raw
@@ -68,16 +73,17 @@ def test_the_list_link_is_the_request_without_its_token(
     )
 
 
-def test_the_statistics_link_is_the_request_without_its_token(session: bootstrap.Session) -> None:
-    """The page the service read, at the section of the dataset (D12)."""
+def test_the_statistics_link_is_the_moved_page_at_the_section(session: bootstrap.Session) -> None:
+    """The page of the location, at the section of the dataset (D12), where the 2.0 service
+    moved it (``/statystyki/{location}/dane-rzadowe``, [P 2026-10-29]): without ``_rsc``,
+    which only the request carries (an empty one)."""
     with respx.mock(assert_all_called=False, assert_all_mocked=True) as router:
         route = stats_routes(router)["warszawa"]
 
         result = operations.get_government_statistics(session, "warszawa", "unemployment")
 
-    sent = route.calls.last.request.url
-    assert sent.query.decode() == f"_rsc={sent.params['_rsc']}"
-    assert result.stats_url == f"{BASE}{sent.raw_path.decode().split('?')[0]}#gus-bezrobocie"
+    assert route.calls.last.request.url.query.decode() == "_rsc="
+    assert result.stats_url == f"{BASE}/statystyki/warszawa/dane-rzadowe#gus-bezrobocie"
     assert "_rsc" not in result.stats_url
 
 
@@ -99,7 +105,7 @@ def test_search_offers_sends_the_filters_of_the_filtered_sample(
     )
 
     target = request_target("page.offers_list.filtered")
-    assert str(route.calls.last.request.url) == f"{BASE}{target}&_rsc={rsc_token(target)}"
+    assert str(route.calls.last.request.url) == f"{BASE}{target}&_rsc="
     assert route.calls.last.request.headers["rsc"] == "1"
     assert (result.total, result.returned, result.page, result.per_page) == (1192, 3, 2, 50)
     assert (result.truncated, result.pages_available) == (True, 20)
@@ -114,8 +120,9 @@ def test_search_offers_defaults(session: bootstrap.Session, service: respx.MockR
     result = operations.search_offers(session, "warszawa")
 
     assert route.calls.last.request.url.path == OFFERS_PAGE
-    # No sortBy: the service's default order [P]; page 1 and the service's default 10.
-    assert sent_query(route) == "page=1&perPage=10"
+    # No sortBy: the service's default order [P]; page 1 (no `page`, [P 2026-10-29]) and
+    # the service's default 10.
+    assert sent_query(route) == "perPage=10"
     assert result.total == 13324
 
 
@@ -140,7 +147,7 @@ def test_search_offers_builds_ranges_and_sort(
 
     operations.search_offers(session, "warszawa", **filters)
 
-    assert sent_query(route) == f"{query}&page=1&perPage=10"
+    assert sent_query(route) == f"{query}&perPage=10"
 
 
 @pytest.mark.parametrize("per_page", [10, 50, 100])
@@ -213,19 +220,29 @@ def test_search_offers_rejects_bad_input_without_requests(
     assert service.calls.call_count == 0
 
 
-def test_search_offers_unknown_city_points_to_search_locations(
+def test_search_offers_of_a_removed_page_is_a_changed_service(
     session: bootstrap.Session, service: respx.MockRouter
 ) -> None:
-    service.route(method="GET").respond(404)
+    """D21: an HTML 404, the Next.js not-found page of a removed route ([P 2026-10-30] on
+    the /api routes; on a page route never seen, [W]), is a changed service, never an
+    unknown city: the offers list answers an unknown city with a 200 and the 404 marker
+    (below), and only the statistics pages answer theirs with a 404, as a flight stream."""
+    service.route(method="GET").respond(404, **removed_route())
 
-    with pytest.raises(NotFoundError, match="search_locations"):
+    with pytest.raises(UnexpectedResponseError) as caught:
         operations.search_offers(session, "atlantyda")
+
+    assert str(caught.value).endswith(SERVICE_CHANGED)
+    assert "search_locations" not in str(caught.value)
 
 
 def test_search_offers_of_an_unknown_city_says_so(
     session: bootstrap.Session, service: respx.MockRouter
 ) -> None:
-    """What the service really answers (HTTP 200, the 404 marker), not a 404."""
+    """What the service answers for an unknown city on the offers list: HTTP 200 with
+    Next.js's 404 marker (``NEXT_HTTP_ERROR_FALLBACK;404``), not a 404, in 1.0
+    [P 2026-10-10, the fixture's payload] and in 2.0 [P 2026-10-31, endpoints.md section 9,
+    "Pages"]."""
     service.route(method="GET").respond(
         200, content=raw(OFFERS_UNKNOWN_CITY), headers={"Content-Type": "text/x-component"}
     )

@@ -18,7 +18,8 @@ from support.providers.routes.government_statistics import (
 )
 from support.providers.rsc import STATS_POLSKA, raw
 
-STATS = identity.BASE_URL + "/statystyki/statystyki-rzadowe"
+STATS = identity.BASE_URL + "/statystyki"
+"""The statistics pages; the government ones are ``{STATS}/{location}/dane-rzadowe``."""
 
 
 def test_stats_government_prints_a_table_of_periods_and_values(
@@ -33,7 +34,7 @@ def test_stats_government_prints_a_table_of_periods_and_values(
         "Źródło: NBP · kwartalnie · okresy: pokazano 2 z 80 (dane od 2006-Q3).",
         "Wskazówka: Pokazano ostatnie 2 z 80 okresów (dane od 2006-Q3); starsze pokaże "
         "większa wartość periods.",
-        f"Strona na deweloperuch.pl: {STATS}/warszawa#nbp",
+        f"Strona na deweloperuch.pl: {STATS}/warszawa/dane-rzadowe#nbp",
         "Kolumny:",
         "  [1] Rynek pierwotny: cena ofertowa (PLN/m²)",
         "  [2] Rynek pierwotny: cena transakcyjna (PLN/m²)",
@@ -85,7 +86,7 @@ def test_stats_government_json_is_the_domain_model(run: Cli, service: respx.Mock
             "wartość periods."
         ),
         "note": None,
-        "stats_url": f"{STATS}/polska#gus-bezrobocie",
+        "stats_url": f"{STATS}/polska/dane-rzadowe#gus-bezrobocie",
         "series": [
             {
                 "series_id": "rate",

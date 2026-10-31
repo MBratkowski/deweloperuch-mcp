@@ -2,6 +2,7 @@
 
 from support.golden.cli import BUILDINGS, INJECTED_BODY, Case, case
 from support.golden.routes import building_answer, trend_answer
+from support.providers.error_answers import unknown_entity
 from support.providers.routes.buildings import CISNA, building_routes, cisna_routes
 from support.providers.routes.buildings import SLUG as BUILDING_SLUG
 
@@ -24,7 +25,9 @@ CASES: dict[str, Case] = {
     "buildings_get_limit_0_json": case(
         *BUILDINGS, BUILDING_SLUG, "--limit", "0", "--json", service=building_routes
     ),
-    "buildings_get_404": case(*BUILDINGS, BUILDING_SLUG, service=building_answer(404)),
+    "buildings_get_404": case(
+        *BUILDINGS, BUILDING_SLUG, service=building_answer(404, **unknown_entity())
+    ),
     "buildings_get_500": case(
         *BUILDINGS, BUILDING_SLUG, service=building_answer(500, text=INJECTED_BODY)
     ),

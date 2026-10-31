@@ -51,7 +51,7 @@ def test_government_statistics_the_latest_periods_of_a_dataset(
     assert (result.total, result.returned, result.truncated) == (80, 2, True)
     assert result.periods == ("2026-Q1", "2026-Q2")
     assert result.available_from == "2006-Q3"
-    assert result.stats_url == BASE + "/statystyki/statystyki-rzadowe/warszawa#nbp"
+    assert result.stats_url == BASE + "/statystyki/warszawa/dane-rzadowe#nbp"
     assert [(s.series_id, [p.value for p in s.points]) for s in result.series] == [
         ("primary_asking", [18056.0, 18488.0]),
         ("primary_transaction", [16471.0, 16783.0]),

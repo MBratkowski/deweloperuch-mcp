@@ -10,14 +10,14 @@
   "results": [
     {
       "is_error": true,
-      "text": "Inwestycja 'smolna': Serwis przekierował zapytanie gdzie indziej (HTTP 301); klient nie podąża za przekierowaniami.",
+      "text": "Inwestycja 'smolna': Narzędzie nie może pobrać tych danych, bo serwis przeniósł je w inne miejsce albo przestał je udostępniać. To nie musi znaczyć, że argumenty są błędne ani że szukanego obiektu nie ma. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "ServiceError: Inwestycja 'smolna': Serwis przekierował zapytanie gdzie indziej (HTTP 301); klient nie podąża za przekierowaniami. Szczegóły: /api/map/investments/visible/smolna -> /api/elsewhere"
+      "UnexpectedResponseError: Inwestycja 'smolna': Narzędzie nie może pobrać tych danych, bo serwis przeniósł je w inne miejsce albo przestał je udostępniać. To nie musi znaczyć, że argumenty są błędne ani że szukanego obiektu nie ma. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi. Szczegóły: /api/map/investments/visible/smolna: HTTP 301 -> /api/elsewhere"
     ]
   ],
   "requests": [

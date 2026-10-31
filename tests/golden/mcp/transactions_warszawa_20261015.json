@@ -21,7 +21,7 @@
         "last_complete_period": "2026-04",
         "hint": "Pokazano ostatnie 12 z 67 okresów (dane od 2021-01); starsze pokaże większe periods (najwyżej 60). Okresy 2026-05, 2026-06 i 2026-07 mają mniej niż połowę zwykłej liczby transakcji (dane RCN jeszcze niepełne): nie wyciągaj wniosków z ich cen ani liczby transakcji. Ostatni okres ze zwykłą liczbą transakcji: 2026-04 (jego dane też mogą się jeszcze zmienić).",
         "note": "Ostatnie miesiące są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z okresami o zwykłej liczbie transakcji.",
-        "stats_url": "https://deweloperuch.pl/statystyki/ceny-transakcyjne/mieszkania/warszawa",
+        "stats_url": "https://deweloperuch.pl/statystyki/warszawa/transakcje",
         "periods": [
           {
             "period": "2025-08",

@@ -49,6 +49,33 @@ and without the 404 digest, the heading „Deweloper nie znaleziony”."""
 UNKNOWN_DEVELOPER = "nieistniejacy-deweloper"
 """The developer slug the unknown-developer payload was requested with."""
 
+# The 2.0 service, captured on 2026-10-31 (tests/fixtures/rsc/README.md: one row each).
+OFFERS_WARSZAWA_20261031 = FIXTURES / "offers_warszawa_20261031.rsc"
+"""``/ceny-ofertowe/warszawa/mieszkania``: ``sales`` ×25 and ``serverPaginationData``."""
+OFFERS_UNKNOWN_CITY_20261031 = FIXTURES / "offers_unknown_city_20261031.rsc"
+"""``/ceny-ofertowe/nieistniejace-miasto/mieszkania``: 200, no ``sales``, the 404 digest."""
+OFFERS_WARSZAWA_MOKOTOW_20261031 = FIXTURES / "offers_warszawa_mokotow_20261031.rsc"
+"""``/ceny-ofertowe/warszawa/mokotow/mieszkania``: the offer list of a district."""
+OFFERS_UNKNOWN_DISTRICT_20261031 = FIXTURES / "offers_warszawa_unknown_district_20261031.rsc"
+"""``/ceny-ofertowe/warszawa/nieistniejaca-dzielnica/mieszkania``: 200, the 404 digest."""
+DEVELOPER_WARSZAWA_20261031 = FIXTURES / "developer_atal_warszawa_20261031.rsc"
+"""``/ceny-ofertowe/warszawa/deweloperzy/atal``: the ``hero`` element's props
+(``investments`` ×4, ``developerSlug``, ``developerName``, ``developerId``), four ``spec``."""
+DEVELOPER_POLSKA_20261031 = FIXTURES / "developer_atal_polska_20261031.rsc"
+"""``/ceny-ofertowe/polska/deweloperzy/atal``: the same shape, ``investments`` ×42."""
+DEVELOPER_UNKNOWN_20261031 = FIXTURES / "developer_unknown_warszawa_20261031.rsc"
+"""``/ceny-ofertowe/warszawa/deweloperzy/nieistniejacy-deweloper``: 200, the 404 digest."""
+STATS_GOV_WARSZAWA_20261031 = FIXTURES / "stats_gov_warszawa_20261031.rsc"
+"""``/statystyki/warszawa/dane-rzadowe``: ``blocks.govSections`` ×8, ``data``, ``monthlyData``."""
+STATS_GOV_POLSKA_20261031 = FIXTURES / "stats_gov_polska_20261031.rsc"
+"""``/statystyki/polska/dane-rzadowe``: ``govSections`` ×9, the NBP grid of cities."""
+STATS_GOV_7_MIAST_20261031 = FIXTURES / "stats_gov_7_miast_20261031.rsc"
+"""``/statystyki/7-miast/dane-rzadowe``: an aggregate, ``govSections`` ×8."""
+STATS_TX_WARSZAWA_20261031 = FIXTURES / "stats_tx_warszawa_20261031.rsc"
+"""``/statystyki/warszawa/transakcje``: ``view`` (``monthly`` ×118), ``latestSummary``."""
+STATS_TX_KARPACZ_20261031 = FIXTURES / "stats_tx_karpacz_20261031.rsc"
+"""``/statystyki/karpacz/transakcje``: a small town, ``latestSummary`` null."""
+
 API_FIXTURES = FIXTURES.parent / "api"
 CITY_SALES = {
     "sopot": API_FIXTURES / "city_sales_sopot.json",

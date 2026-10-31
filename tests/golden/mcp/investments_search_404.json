@@ -17,7 +17,7 @@
   "log": [
     [
       "INFO",
-      "NotFoundError: Serwis nie zna miasta 'sopot'. Podaj city_slug z search_locations. Szczegóły: /api/map/investments?citySlug=sopot"
+      "NotFoundError: Serwis nie zna miasta 'sopot'. Podaj city_slug z search_locations. Szczegóły: /api/map/investments?citySlug=sopot: HTTP 404, application/json"
     ]
   ],
   "requests": [

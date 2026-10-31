@@ -14,7 +14,7 @@ The one place that knows the page's path and parameters; the request
 - ``filterStatus=archived`` [P] or ``includeArchived=true`` [P]; active offers (the
   default) send neither;
 - ``sortBy`` with ``sortOrder`` (``SORT_PARAMS``); no sort keeps the service's order;
-- ``page`` and ``perPage``, always.
+- ``page`` from the second page on (``FIRST_PAGE``), ``perPage`` always.
 
 The order: the ranges, the district, the change, the status, the order, the page. The UI's
 own order of the parameters added after the ranges is not known [W]; the service does not
@@ -80,6 +80,12 @@ SORT_PARAMS: Mapping[OfferSort, tuple[str, str]] = {
 }
 """``sortBy`` and ``sortOrder`` of each order."""
 
+# [P 2026-10-29] pages-rsc.md: the 2.0 service answers `page=1` with 308 to the same address
+# without `page` (and without `_rsc`), so the first page is the address without it. With an
+# empty `_rsc` `page=1` was not tried (T77); the client never sends it.
+FIRST_PAGE = 1
+"""The page sent without a ``page`` parameter."""
+
 
 class OffersQuery:
     """The address of the offers list for ``criteria``: ``path()`` and ``params()``."""
@@ -112,7 +118,8 @@ class OffersQuery:
         if criteria.sort is not None:
             sort_by, sort_order = SORT_PARAMS[criteria.sort]
             params += [("sortBy", sort_by), ("sortOrder", sort_order)]
-        params.append(("page", criteria.page.value))
+        if criteria.page.value > FIRST_PAGE:
+            params.append(("page", criteria.page.value))
         params.append(("perPage", criteria.per_page.value))
         return params
 

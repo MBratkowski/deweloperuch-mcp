@@ -6,6 +6,7 @@ from mcp.server.mcpserver import MCPServer
 
 from deweloperuch_mcp import bootstrap
 from support.builders.investments import investment_with_offers
+from support.providers.error_answers import unknown_entity
 from support.providers.mcp import call, data, has_null, text
 from support.providers.routes.investments import INVESTMENT, investment_routes
 
@@ -77,7 +78,7 @@ def test_get_investment_with_every_offer_is_not_truncated(
 def test_not_found_points_to_the_tool_with_the_slugs(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
-    service.get(INVESTMENT).respond(404)
+    service.get(INVESTMENT).respond(404, **unknown_entity())
 
     result = call(server, "get_investment", investment_slug="smolna")
 

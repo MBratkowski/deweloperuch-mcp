@@ -24,6 +24,19 @@ def test_the_query_of_the_criteria(given: dict[str, Any], query: str) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("given", "query"),
+    [({}, "perPage=10"), ({"page": 1}, "perPage=10"), ({"page": 2}, "page=2&perPage=10")],
+)
+def test_the_first_page_is_sent_without_a_page_parameter(given: dict[str, Any], query: str) -> None:
+    """[P 2026-10-29] docs/discovery/pages-rsc.md: the service answers ``page=1`` with 308 to
+    the same address without it (and without ``_rsc``), so the first page is the address
+    without ``page``."""
+    criteria = SearchOffersRequest.parse(city="krakow", **given).criteria
+
+    assert query_of(OffersQuery(criteria).params()) == query
+
+
 def test_open_ends_are_the_ui_sentinels() -> None:
     """[P z kodu] pages-rsc.md: the UI's own ends of an open range; this mapping owns them
     (the domain's open end is ``None``). They equal the largest values the domain accepts,

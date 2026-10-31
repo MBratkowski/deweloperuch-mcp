@@ -7,7 +7,8 @@ import respx
 
 from deweloperuch_mcp.api.adapters.city_sales_api import CitySalesApi
 from deweloperuch_mcp.api.http.transport import HttpClient
-from deweloperuch_mcp.errors import NotFoundError
+from deweloperuch_mcp.errors import SERVICE_CHANGED, NotFoundError, UnexpectedResponseError
+from support.providers.error_answers import removed_route
 from support.providers.rsc import CITY_SALES
 
 
@@ -39,6 +40,19 @@ def test_city_sales_of_a_city_the_service_does_not_know(
         CitySalesApi(http).city_sales("nieznane")
 
     assert str(caught.value) == f"Serwis nie zna żądanych danych (HTTP {answer['status_code']})."
+
+
+def test_the_removed_route_is_a_changed_service_not_an_unknown_city(
+    http: HttpClient, service: respx.MockRouter
+) -> None:
+    """[P 2026-10-29/30] endpoints.md: the route is gone, every city gets the Next.js
+    not-found page (404, HTML); D20 replaces the route, D21 says how this reads."""
+    service.get("/api/offers/city-sales/krakow").respond(404, **removed_route())
+
+    with pytest.raises(UnexpectedResponseError) as caught:
+        CitySalesApi(http).city_sales("krakow")
+
+    assert str(caught.value).endswith(SERVICE_CHANGED)
 
 
 def test_an_empty_city_is_read_as_it_is(http: HttpClient, service: respx.MockRouter) -> None:

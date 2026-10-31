@@ -1,0 +1,13 @@
+{
+  "_request": "GET /ceny-ofertowe/warszawa/mieszkania (RSC)",
+  "_prop": "serverPaginationData",
+  "_captured": "2026-10-31",
+  "value": {
+    "currentPage": 1,
+    "perPage": 25,
+    "totalCount": 11672,
+    "totalPages": 20,
+    "startItem": 1,
+    "endItem": 25
+  }
+}

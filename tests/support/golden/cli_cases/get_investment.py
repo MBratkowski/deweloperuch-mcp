@@ -14,6 +14,7 @@ from support.golden.cli import (
     mixed_statuses,
 )
 from support.golden.routes import investment_answer, investment_is
+from support.providers.error_answers import removed_route, unknown_entity
 from support.providers.routes.investments import (
     investment_routes,
 )
@@ -73,7 +74,12 @@ CASES: dict[str, Case] = {
         "smolna",
         service=investment_is(investment_changed(currency="", avg_amount="", avg_size=None)),
     ),
-    "investments_get_404": case("investments", "get", "smolna", service=investment_answer(404)),
+    "investments_get_404": case(
+        "investments", "get", "smolna", service=investment_answer(404, **unknown_entity())
+    ),
+    "investments_get_removed_route": case(
+        "investments", "get", "smolna", service=investment_answer(404, **removed_route())
+    ),
     "investments_get_500": case(
         "investments", "get", "smolna", service=investment_answer(500, text=INJECTED_BODY)
     ),

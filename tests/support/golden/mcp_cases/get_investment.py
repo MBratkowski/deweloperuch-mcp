@@ -14,6 +14,7 @@ from support.golden.mcp import (
     history_missing,
 )
 from support.golden.routes import investment_answer, investment_is
+from support.providers.error_answers import removed_route, unknown_entity
 from support.providers.routes.investments import (
     INVESTMENT,
     investment_routes,
@@ -57,9 +58,12 @@ CASES: dict[str, Case] = {
     "investment_history_text": case(
         INVESTMENT_TOOL, investment_routes, investment_slug="smolna", include_history="yes"
     ),
-    "investment_404": case(INVESTMENT_TOOL, investment_answer(404), **SMOLNA),
+    "investment_404": case(INVESTMENT_TOOL, investment_answer(404, **unknown_entity()), **SMOLNA),
     "investment_404_with_a_body": case(
-        INVESTMENT_TOOL, investment_answer(404, text=INJECTED), **SMOLNA
+        INVESTMENT_TOOL, investment_answer(404, **unknown_entity({"error": INJECTED})), **SMOLNA
+    ),
+    "investment_removed_route": case(
+        INVESTMENT_TOOL, investment_answer(404, **removed_route()), **SMOLNA
     ),
     "investment_500": case(INVESTMENT_TOOL, investment_answer(500, text=INJECTED), **SMOLNA),
     "investment_redirect": case(

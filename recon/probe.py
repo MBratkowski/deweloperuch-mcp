@@ -218,7 +218,7 @@ def _check_page(path: str, query: str) -> None:
         )
     # Decoded first: `%5Frsc=x` and `_rsc%3Dx` reach the server as `_rsc` too.
     if any(urllib.parse.unquote_plus(item).split("=", 1)[0] == "_rsc" for item in query.split("&")):
-        raise _usage("Nie podawaj _rsc: probe dokłada go sam (deterministyczny token).")
+        raise _usage("Nie podawaj _rsc: probe dokłada go sam (pusty, jak klient pakietu).")
 
 
 def encode_query(query: str) -> str:
@@ -265,7 +265,7 @@ def make_plan(
         headers["Accept"] = "application/json"
     else:
         headers["RSC"] = "1"
-        # The same deterministic token as the package's RSC adapter (deweloperuch_mcp.flight).
+        # The same empty _rsc as the package's RSC adapter (deweloperuch_mcp.flight).
         target = with_rsc_token(target)
     return Plan(mode, given, BASE_URL + target, headers, prop, save_to)
 
@@ -517,7 +517,7 @@ def build_parser() -> argparse.ArgumentParser:
         "page",
         parents=[common],
         help="GET strony z docs/discovery/pages-rsc.md jako RSC",
-        description="GET strony jako RSC (nagłówek RSC: 1, deterministyczny _rsc). Bez "
+        description="GET strony jako RSC (nagłówek RSC: 1, pusty _rsc). Bez "
         "--prop wypisuje propsy z danymi (nazwa, typ, rozmiar).",
         epilog=EXIT_CODES_HELP,
         formatter_class=formatter,

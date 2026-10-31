@@ -108,8 +108,10 @@ INSTRUCTIONS = (
     "nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z "
     "komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie "
     "uruchamiaj ponownie. Gdy narzędzie odrzuci argumenty, popraw wskazane pola zgodnie z "
-    "komunikatem i ponów. Pola kończące się na _url to linki do stron deweloperuch.pl: "
-    "podawaj je użytkownikowi, np. w tabeli ofert."
+    "komunikatem i ponów. Gdy błąd mówi, że serwis mógł się zmienić, nie ponawiaj tego "
+    "wywołania i powiedz o tym użytkownikowi; inne narzędzia mogą nadal działać. Pola "
+    "kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w "
+    "tabeli ofert."
 )
 
 

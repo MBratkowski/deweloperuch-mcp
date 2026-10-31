@@ -15,6 +15,7 @@ from support.builders.buildings import NOT_FOUND, UNKNOWN, building_with_units, 
 from support.checks.leaks import BACKEND_NAMES, LEAKS, SIZE_BUDGET
 from support.e2e import live
 from support.providers.cli import buildings_cli
+from support.providers.error_answers import CHANGED_SERVICE, removed_route, unknown_entity
 from support.providers.mcp import call, data, keys, listing, text
 from support.providers.routes.buildings import (
     BUILDING,
@@ -384,7 +385,7 @@ def test_the_page_of_a_building_is_a_link_only_in_its_field() -> None:
 def test_an_unknown_building_says_where_its_slug_comes_from(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
-    service.get(UNKNOWN).respond(404, text=INJECTED)
+    service.get(UNKNOWN).respond(404, **unknown_entity({"error": INJECTED}))
 
     assert error_of(server, building_slug=UNKNOWN_BUILDING) == NOT_FOUND
 
@@ -424,7 +425,16 @@ def test_wrong_arguments_say_what_to_fix_and_send_nothing(
         ),
         (BUILDING, dict(status_code=200, json=dict(other=INJECTED)), f"Budynek '{SLUG}': Dane"),
         (TREND, dict(status_code=500, text=INJECTED), "Trend cen w okolicy budynku"),
-        (TREND, dict(status_code=404), "Serwis nie ma trendu cen w okolicy budynku"),
+        (
+            TREND,
+            dict(status_code=404, **unknown_entity({"error": INJECTED})),
+            "Serwis nie ma trendu cen w okolicy budynku",
+        ),
+        (
+            TREND,
+            dict(status_code=404, **removed_route()),
+            f"Trend cen w okolicy budynku '{SLUG}': {CHANGED_SERVICE}",
+        ),
     ],
 )
 def test_failures_of_the_service_are_worded_for_the_model(

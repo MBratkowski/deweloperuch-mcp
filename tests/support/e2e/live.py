@@ -78,7 +78,8 @@ UNAVAILABLE = "spróbuj później"
 """What every message of a service error tells the model (``errors.ServiceError``)."""
 
 SERVICE_CHANGED = "Serwis mógł się zmienić"
-"""Start of ``errors.SERVICE_CHANGED``: data that does not match the contract."""
+"""Start of ``errors.SERVICE_CHANGED``: an answer that does not match the contract (also a
+redirect or a removed route, D21)."""
 
 # D3, D12: what a model must never read. Anywhere in a result or a tool listing: paths,
 # props, Next.js internals, the service's addresses, HTML, Python and its libraries.
@@ -97,18 +98,18 @@ KEY_LEAKS = re.compile(r"sale|invest(?!ment)|rcn|amount|rsc", re.IGNORECASE)
 # in another field nor in an error message. Only the routes links.py builds [P]: the list
 # of offers (with a query), a developer's profile, an investment, the government
 # statistics of a location (with the id of a section as its fragment), the transaction
-# statistics of flats in a city (2026-10-13, the user's decision: a link for people
-# only; the client never requests that page, a D5 dump), the ranking of cities (one
-# fixed page) and a building of the price register. A segment has no ``/``, ``?``,
-# ``#``, is not ``.`` or ``..`` and holds no ``%2e`` (a browser would read it as a dot);
-# a section id is lowercase letters, digits, hyphens.
+# statistics of a city (2026-10-13, the user's decision: a link for people only), the
+# ranking of cities (one fixed page) and a building of the price register. Both
+# statistics pages moved on 2026-10-29 (``/statystyki/{location}/dane-rzadowe`` and
+# ``/statystyki/{city}/transakcje``; the old routes answer 308 there). A segment has no
+# ``/``, ``?``, ``#``, is not ``.`` or ``..`` and holds no ``%2e`` (a browser would read
+# it as a dot); a section id is lowercase letters, digits, hyphens.
 _SEGMENT = r"(?!\.\.?(?:[/?#]|$))(?:(?!%2[eE])[^/?#\s])+"
 _SECTION = r"[a-z0-9][a-z0-9-]*"
 PAGE_LINK = re.compile(
     rf"{re.escape(BASE_URL)}/(?:ceny-ofertowe/{_SEGMENT}/"
     rf"(?:mieszkania(?:\?[^\s#]*)?|deweloperzy/{_SEGMENT}(?:/{_SEGMENT})?)"
-    rf"|statystyki/statystyki-rzadowe/{_SEGMENT}(?:#{_SECTION})?"
-    rf"|statystyki/ceny-transakcyjne/mieszkania/{_SEGMENT}"
+    rf"|statystyki/{_SEGMENT}/(?:dane-rzadowe(?:#{_SECTION})?|transakcje)"
     r"|ceny-transakcyjne/polska/miasta"
     rf"|ceny-transakcyjne/{_SEGMENT}/adresy/{_SEGMENT})"
 )

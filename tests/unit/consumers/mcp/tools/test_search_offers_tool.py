@@ -23,6 +23,7 @@ from deweloperuch_mcp.models.values import (
 )
 from support.builders.offers import COMPACT_OFFER, UNKNOWN_CITY_MESSAGE, offers_page
 from support.checks.leaks import LEAKS
+from support.providers.error_answers import CHANGED_SERVICE, removed_route
 from support.providers.mcp import call, data, has_null, text, tools, with_client
 from support.providers.routes.offers import offers_route, unknown_city_route
 from support.providers.rsc import UNKNOWN_CITY
@@ -99,7 +100,8 @@ def test_search_offers_with_defaults_lists_compact_offers(
     result = data(call(server, "search_offers", city="warszawa"))
 
     params = route.calls.last.request.url.params
-    assert (params["perPage"], params["page"], "sortBy" in params) == ("10", "1", False)
+    # [P 2026-10-29] the first page goes without `page` (the service redirects `page=1`).
+    assert (params["perPage"], "page" in params, "sortBy" in params) == ("10", False, False)
     assert (result["total"], result["returned"], result["truncated"]) == (13324, 10, True)
     assert result["items"][0] == {
         "offer_id": 4397,
@@ -117,7 +119,7 @@ def test_search_offers_with_defaults_lists_compact_offers(
         "last_price_change_pct": 5.89,
         "price_change_since_start_pct": -0.6,
     }
-    assert result["list_url"] == PAGES + "/warszawa/mieszkania?page=1&perPage=10"
+    assert result["list_url"] == PAGES + "/warszawa/mieszkania?perPage=10"
     assert all(set(item) <= COMPACT_OFFER for item in result["items"])
     assert not has_null(result)
 
@@ -204,7 +206,7 @@ def test_search_offers_trims_spaces_around_the_city(
 
     assert route.calls.last.request.url.path == "/ceny-ofertowe/warszawa/mieszkania"
     # The link is built from the slug as normalized, like the request: no %20.
-    assert result["list_url"] == PAGES + "/warszawa/mieszkania?page=1&perPage=10"
+    assert result["list_url"] == PAGES + "/warszawa/mieszkania?perPage=10"
 
 
 def test_search_offers_of_an_unknown_city_is_an_error_that_says_so(
@@ -219,6 +221,28 @@ def test_search_offers_of_an_unknown_city_is_an_error_that_says_so(
     assert result.is_error is True
     assert text(result) == UNKNOWN_CITY_MESSAGE
     assert not LEAKS.search(text(result))
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        # [P 2026-10-29] what an RSC request with another `_rsc` got from the 2.0 service
+        {"status_code": 307, "headers": {"Location": "/ceny-ofertowe/warszawa/mieszkania?_rsc="}},
+        {"status_code": 404, **removed_route()},
+        {"status_code": 410, **removed_route()},
+    ],
+)
+def test_a_moved_or_removed_list_is_a_changed_service_not_a_wrong_city(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter, answer: dict[str, Any]
+) -> None:
+    """D21: one text for a redirect, a removed route and a 410. It names the operation and
+    casts no doubt on the city: the model reports the change instead of trying other slugs."""
+    service.route(method="GET", path__startswith="/ceny-ofertowe/").respond(**answer)
+
+    result = call(server, "search_offers", city="warszawa")
+
+    assert result.is_error is True
+    assert text(result) == f"Wyszukiwanie ofert w 'warszawa': {CHANGED_SERVICE}"
 
 
 def test_invalid_input_is_a_tool_error_that_says_what_to_fix(
@@ -259,13 +283,12 @@ def test_search_offers_sends_the_new_filters(
         ("filterStatus", "archived"),
         ("sortBy", "size"),
         ("sortOrder", "desc"),
-        ("page", "1"),
         ("perPage", "10"),
     ]
     assert result["list_url"] == (
         f"{PAGES}/warszawa/mieszkania?filterPricePerM2=12000-999999&filterDistrict="
         "Mokot%C3%B3w&filterPriceChange=decrease&filterStatus=archived&sortBy=size"
-        "&sortOrder=desc&page=1&perPage=10"
+        "&sortOrder=desc&perPage=10"
     )
 
 
@@ -292,10 +315,7 @@ def test_search_offers_new_arguments_as_models_send_them(
 
     if message is None:
         assert result.is_error is False
-        assert route.calls.last.request.url.params.multi_items()[:-1] == [
-            ("page", "1"),
-            ("perPage", "10"),
-        ]
+        assert route.calls.last.request.url.params.multi_items()[:-1] == [("perPage", "10")]
     else:
         assert result.is_error is True and text(result).startswith(message)
         assert service.calls.call_count == 0

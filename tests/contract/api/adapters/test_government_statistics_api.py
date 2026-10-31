@@ -47,6 +47,7 @@ from support.providers.rsc import (
 from support.providers.service import BASE
 
 STATS = BASE + "/statystyki/statystyki-rzadowe"
+"""The page the adapter still reads (the fixtures' route); its link is the 2.0 route."""
 
 
 RSC = {"Content-Type": "text/x-component"}
@@ -157,17 +158,19 @@ def dwellings_rows(prop: str, period: str) -> Callable[[Any], bool]:
     return lambda value: rows_with(period)(value) and rows_with("oddane")(value)
 
 
-@pytest.mark.parametrize(("location", "token"), [("polska", "b3d11c70"), ("warszawa", "cc0b509c")])
-def test_the_page_is_requested_as_rsc_with_the_token_of_the_fixture(
-    http: HttpClient, service: respx.MockRouter, location: str, token: str
+@pytest.mark.parametrize("location", ["polska", "warszawa"])
+def test_the_page_is_requested_as_rsc_with_an_empty_rsc(
+    http: HttpClient, service: respx.MockRouter, location: str
 ) -> None:
-    """The same target the fixtures were fetched with (tests/fixtures/rsc/README.md)."""
+    """The fixtures were fetched with the old service's token (tests/fixtures/rsc/README.md);
+    the 2.0 service redirects it to an empty ``_rsc`` [P 2026-10-29], which the client sends
+    now (``flight.with_rsc_token``; T63, resolved 2026-10-31)."""
     route = serve(service, location, raw(STATS_FIXTURES[location]))
 
     GovernmentStatisticsApi(http).statistics_page(location)
 
     request = route.calls.last.request
-    assert str(request.url) == f"{STATS}/{location}?_rsc={token}"
+    assert str(request.url) == f"{STATS}/{location}?_rsc="
     assert request.headers["rsc"] == "1"
     assert request.headers.get_list("user-agent") == [identity.USER_AGENT]
 
@@ -363,12 +366,13 @@ def test_the_list_of_locations(http: HttpClient, service: respx.MockRouter) -> N
 def test_each_table_links_to_its_section_of_the_page(
     http: HttpClient, service: respx.MockRouter, location: str, dataset: Dataset, section: str
 ) -> None:
-    """The table names its section; the links adapter turns it into the page's anchor."""
+    """The table names its section; the links adapter turns it into the anchor of the page,
+    which has moved to ``/statystyki/{location}/dane-rzadowe`` [P 2026-10-29]."""
     table = published(http, service, location).tables[dataset]
 
     assert table.section == section
     link = ServicePageLinks().government_statistics(LocationSlug(location), table.section)
-    assert link == f"{STATS}/{location}#{section}"
+    assert link == f"{BASE}/statystyki/{location}/dane-rzadowe#{section}"
 
 
 def test_datasets_are_recognized_by_their_rows_not_their_order(

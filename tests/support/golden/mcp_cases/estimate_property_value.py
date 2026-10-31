@@ -3,6 +3,7 @@
 from support.builders.valuation import IN_CISNA, valuation_with_comparables
 from support.golden.mcp import INJECTED, POINT, VALUATION_TOOL, Case, case, valuation_is
 from support.golden.routes import valuation_answer, without_an_estimate
+from support.providers.error_answers import unknown_entity
 from support.providers.routes.valuation import cisna_route, valuation_route
 
 CASES: dict[str, Case] = {
@@ -42,7 +43,9 @@ CASES: dict[str, Case] = {
     "valuation_address_too_short": case(VALUATION_TOOL, valuation_route, **POINT, address="ab"),
     "valuation_limit_51": case(VALUATION_TOOL, valuation_route, **POINT, limit=51),
     "valuation_without_lat": case(VALUATION_TOOL, valuation_route, lng=21.0122, area_m2=50),
-    "valuation_404": case(VALUATION_TOOL, valuation_answer(404, text=INJECTED), **POINT),
+    "valuation_404": case(
+        VALUATION_TOOL, valuation_answer(404, **unknown_entity({"error": INJECTED})), **POINT
+    ),
     "valuation_500": case(VALUATION_TOOL, valuation_answer(500, text=INJECTED), **POINT),
     "valuation_403": case(VALUATION_TOOL, valuation_answer(403), **POINT),
     "valuation_another_shape": case(

@@ -22,6 +22,6 @@
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/nieistniejaca-lokalizacja?_rsc=25884c8a [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/nieistniejaca-lokalizacja?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

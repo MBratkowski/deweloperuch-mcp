@@ -69,8 +69,8 @@ Links to the service's public pages are the one exception. A full address is all
 - `…/ceny-ofertowe/{city}/mieszkania?…`
 - `…/ceny-ofertowe/{city}/deweloperzy/{developer}`
 - `…/ceny-ofertowe/{city}/deweloperzy/{developer}/{investment}`
-- `…/statystyki/statystyki-rzadowe/{location}`, optionally with `#{section}` (an id from the page's table of contents: lowercase letters, digits, hyphens)
-- `…/statystyki/ceny-transakcyjne/mieszkania/{city}`
+- `…/statystyki/{location}/dane-rzadowe`, optionally with `#{section}` (an id of a section of the page: lowercase letters, digits, hyphens)
+- `…/statystyki/{city}/transakcje`
 - `…/ceny-transakcyjne/polska/miasta`
 - `…/ceny-transakcyjne/{city}/adresy/{building}`
 
@@ -138,7 +138,7 @@ Only two links are opened, through `probe`: `test_the_investment_link_leads_to_i
 | `test_government_dwellings_fit_the_size_budget` | `polska` + `dwellings_quarterly` (15 series, 12 periods) < 8000 characters | 0 (cache) |
 | `test_government_unknown_location` | [H] an unknown location: „nie ma statystyk rządowych”, i.e. Next.js's 404 marker; „Serwis mógł się zmienić” (no marker) is an xfail whose reason records the finding | 1 |
 | `test_government_location_that_is_not_a_slug_is_refused_without_a_request` ×3 | „Kraków”, „kraków”, „”: `isError` saying what to give (capitals alone are lowercased, so „Warszawa” would be a valid location) | 0 |
-| `test_the_statistics_link_leads_to_its_section` | `probe page <path of stats_url without the anchor> --prop tocItems --full` (untrimmed): code 0, the table of contents contains the section of the anchor | 1 (probe) |
+| `test_the_statistics_link_leads_to_its_section` | `probe page <path of stats_url without the anchor> --prop govSections --full` (untrimmed): code 0, the page's section ids contain the section of the anchor | 1 (probe) |
 | `test_two_calls_at_once_go_one_by_one_through_the_limiter` | two calls at once: both correct, requests in the log ≥ 0.9 s apart | 2 |
 | `test_offers_unknown_argument_is_refused_without_a_request` | `max_price`: `isError` naming the argument and the allowed ones (`price_max`) | 0 |
 | `test_offers_in_a_district_cheaper_than_their_first_price` | [P 2026-10-10] `district` „Mokotów” (from the `mokot` search) and `price_dropped`: the query in `list_url`, every `price_change_since_start_pct` < 0, `total` ≤ the district's `offer_count` | 1 |

@@ -73,8 +73,9 @@ SLUG = re.compile(r"[a-z0-9][a-z0-9-]*")
 PAGES = BASE_URL + "/ceny-ofertowe"
 """Public pages of the service: the only addresses a result may hold (D12, 2026-10-11)."""
 EVENT_KINDS = {"offer", "archived", "restored"}
-STATS = BASE_URL + "/statystyki/statystyki-rzadowe"
-"""The government statistics pages (D12): a stats_url is one of them at a section."""
+STATS = BASE_URL + "/statystyki"
+"""The statistics pages (D12): a government stats_url is ``{STATS}/{location}/dane-rzadowe``
+at a section (moved there on 2026-10-29)."""
 PERIOD = {
     "year": re.compile(r"\d{4}"),
     "quarter": re.compile(r"\d{4}-Q[1-4]"),
@@ -239,7 +240,10 @@ def list_query(
     if given(sort):
         sort_by, sort_order = SORTS[str(sort)]
         query += [("sortBy", sort_by), ("sortOrder", sort_order)]
-    query += [("page", str(int(str(page)))), ("perPage", str(int(str(per_page))))]
+    # [P 2026-10-29] the first page goes without `page`: the service redirects `page=1`.
+    if int(str(page)) > 1:
+        query.append(("page", str(int(str(page)))))
+    query.append(("perPage", str(int(str(per_page)))))
     return query
 
 
@@ -801,7 +805,7 @@ def check_statistics(result: dict[str, Any], location: str, dataset: str, sectio
     assert result["series"]
     for series in result["series"]:
         assert len(series["values"]) == returned, series
-    assert result["stats_url"] == f"{STATS}/{location}#{section}"
+    assert result["stats_url"] == f"{STATS}/{location}/dane-rzadowe#{section}"
 
 
 def values(result: dict[str, Any]) -> list[float]:
@@ -851,7 +855,7 @@ def test_government_average_area_of_an_aggregate(mcp: McpLive) -> None:
     assert (result["location_slug"], result["dataset"]) == ("7-miast", "average_area")
     assert result["returned"] == min(12, result["total"]) == len(result["periods"]) > 0
     assert all(30 <= v <= 150 for v in values(result)), values(result)
-    assert result["stats_url"].startswith(f"{STATS}/7-miast")
+    assert result["stats_url"].startswith(f"{STATS}/7-miast/dane-rzadowe")
     assert call.sent == 1
 
 
@@ -917,15 +921,17 @@ def test_government_location_that_is_not_a_slug_is_refused_without_a_request(
 
 def test_the_statistics_link_leads_to_its_section(budget: Budget, polska_area: Call) -> None:
     """1 request (probe): the page of stats_url, without its fragment, lists the section
-    the fragment names in its table of contents. --full: probe trims lists on stdout
-    (3 items and a marker string), and the section may be past them."""
+    the fragment names among its sections. The 2.0 page has no ``tocItems``; its section
+    ids are the strings of ``govSections`` [P 2026-10-31, sample
+    page.stats_gov.v2_sections, ``warszawa``]. --full: probe trims lists on stdout (3 items
+    and a marker string), and the section may be past them."""
     page, section = polska_area.data["stats_url"].removeprefix(BASE_URL).split("#")
 
-    run = run_probe(budget, "page", page, "--prop", "tocItems", "--full")
+    run = run_probe(budget, "page", page, "--prop", "govSections", "--full")
 
     assert run.code == 0, (run.code, run.stderr)
-    items = [item for item in json.loads(run.stdout) if isinstance(item, dict)]
-    assert section in [item.get("id") for item in items], items
+    sections = json.loads(run.stdout)
+    assert section in sections, sections
 
 
 # --- two calls at once -----------------------------------------------------------------
@@ -1097,7 +1103,7 @@ def test_market_of_a_city(market: Call, city_slug: str, first_page: Call) -> Non
     assert offers == sorted(offers, reverse=True) and sum(offers) <= result["offers"]
     for share in top:
         assert share["developer_url"] == page_url(city_slug, "deweloperzy", share["developer_slug"])
-    assert result["list_url"] == page_url(city_slug, "mieszkania") + "?page=1&perPage=10"
+    assert result["list_url"] == page_url(city_slug, "mieszkania") + "?perPage=10"
     assert not {"offer_id", "items", "investment_slug"} & keys(result)
     assert len(market.text) < SIZE_BUDGET
     assert market.sent == 1
@@ -1119,7 +1125,7 @@ def test_market_with_filters(mcp: McpLive, city_slug: str, market: Call) -> None
     assert result["offers"] <= market.data["offers"]
     if result["offers"]:
         assert result["price"]["max"] <= 700_000 and result["area_m2"]["min"] >= 40
-    assert result["list_url"].endswith("?filterPrice=0-700000&filterSize=40-9999&page=1&perPage=10")
+    assert result["list_url"].endswith("?filterPrice=0-700000&filterSize=40-9999&perPage=10")
     assert call.sent <= 1
 
 

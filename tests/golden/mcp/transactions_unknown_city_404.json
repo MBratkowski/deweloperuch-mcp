@@ -17,7 +17,7 @@
   "log": [
     [
       "INFO",
-      "NotFoundError: Serwis nie ma cen transakcyjnych mieszkań dla miasta 'nieistniejace-miasto'. Sprawdź city_slug w search_locations (np. warszawa, krakow); statystyki są dla całych miast, nie dla dzielnic ani ulic. Szczegóły: /api/monthly-transaction-stats?propertyType=mieszkania&citySlug=nieistniejace-miasto"
+      "NotFoundError: Serwis nie ma cen transakcyjnych mieszkań dla miasta 'nieistniejace-miasto'. Sprawdź city_slug w search_locations (np. warszawa, krakow); statystyki są dla całych miast, nie dla dzielnic ani ulic. Szczegóły: /api/monthly-transaction-stats?propertyType=mieszkania&citySlug=nieistniejace-miasto: HTTP 404, application/json"
     ]
   ],
   "requests": [

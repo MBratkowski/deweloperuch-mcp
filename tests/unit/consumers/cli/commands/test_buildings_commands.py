@@ -9,6 +9,7 @@ import respx
 from deweloperuch_mcp.usecases.get_building import NO_TREND_QUARTERS
 from support.builders.buildings import NOT_FOUND, UNKNOWN, trend_with_quarters
 from support.providers.cli import buildings_cli
+from support.providers.error_answers import unknown_entity
 from support.providers.routes.buildings import (
     BUILDING_PAGE,
     CISNA,
@@ -137,7 +138,7 @@ def test_the_cli_json_carries_the_other_transactions_and_the_hint(
 def test_the_cli_errors_and_their_exit_codes(
     tmp_path: Path, service: respx.MockRouter, args: tuple[str, ...], code: int, message: str
 ) -> None:
-    service.get(UNKNOWN).respond(404)
+    service.get(UNKNOWN).respond(404, **unknown_entity())
     building_routes(service)
 
     run = buildings_cli(tmp_path, *args)

@@ -7,6 +7,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp.types import CallToolResult
 
 from deweloperuch_mcp import bootstrap
+from support.providers.error_answers import removed_route
 from support.providers.mcp import call, data, text, with_client
 from support.providers.routes.developer_profiles import developer_routes
 from support.providers.service import PAGES
@@ -97,6 +98,24 @@ def test_get_developer_of_the_whole_country_is_cut_and_fits_its_budget(
     assert data(everything)["investments_returned"] == 42
     assert len(text(everything)) < 42 * 400 + 3_000
     assert len(service.calls) == 1  # the second call came from the cache
+
+
+def test_a_removed_profile_page_is_a_changed_service_not_an_unknown_developer(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    """D21: the developer is named as the subject, and the text says in so many words that
+    it does not mean the developer is gone (the whole text, as the model reads it)."""
+    service.get(path="/ceny-ofertowe/warszawa/deweloperzy/atal").respond(404, **removed_route())
+
+    result = call(server, "get_developer", developer_slug="atal", city="warszawa")
+
+    assert result.is_error is True
+    assert text(result) == (
+        "Deweloper 'atal' w 'warszawa': Narzędzie nie może pobrać tych danych, bo serwis "
+        "przeniósł je w inne miejsce albo przestał je udostępniać. To nie musi znaczyć, że "
+        "argumenty są błędne ani że szukanego obiektu nie ma. Serwis mógł się zmienić po "
+        "aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi."
+    )
 
 
 def test_an_unknown_developer_says_where_its_slug_comes_from(

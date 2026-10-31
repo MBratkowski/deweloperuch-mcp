@@ -18,7 +18,7 @@
   "log": [
     [
       "INFO",
-      "NotFoundError: Serwis nie ma historii ceny oferty 2377 z inwestycji 'smolna'. Sprawdź offer_id i investment_slug (oba podaje search_offers); ofertę bez historii pokazuje get_investment. Szczegóły: /api/sale-events?saleId=2377"
+      "NotFoundError: Serwis nie ma historii ceny oferty 2377 z inwestycji 'smolna'. Sprawdź offer_id i investment_slug (oba podaje search_offers); ofertę bez historii pokazuje get_investment. Szczegóły: /api/sale-events?saleId=2377: HTTP 404, application/json"
     ]
   ],
   "requests": [

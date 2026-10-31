@@ -1,11 +1,14 @@
 """Tests of ``deweloperuch_mcp.consumers.cli.support.common``."""
 
+from typing import Any
+
 import pytest
 import respx
 
 from deweloperuch_mcp.api.http import transport
 from deweloperuch_mcp.consumers.cli.support.common import STOP_ADVICE, ExitCode
 from deweloperuch_mcp.errors import (
+    SERVICE_CHANGED,
     DeweloperuchError,
     InvalidInputError,
     LimiterWaitError,
@@ -19,6 +22,7 @@ from deweloperuch_mcp.errors import (
 from deweloperuch_mcp.usecases.get_investment import GetInvestment
 from support.providers.cli import Cli, ok
 from support.providers.clients import record_stop
+from support.providers.error_answers import removed_route, unknown_location_page
 from support.providers.routes.investments import INVESTMENT, investment_routes
 from support.providers.routes.locations import location_routes
 
@@ -94,18 +98,38 @@ def test_another_exception_exits_with_1(run: Cli, monkeypatch: pytest.MonkeyPatc
 
 
 @pytest.mark.parametrize(
-    ("status", "code", "message"),
+    ("status", "body", "code", "message"),
     [
-        (403, ExitCode.STOP, "STOP: "),
-        (429, ExitCode.STOP, "STOP: "),
-        (500, ExitCode.SERVICE_ERROR, "500"),
-        (404, ExitCode.NOT_FOUND, "Nie znaleziono inwestycji 'smolna'"),
+        (403, {"text": "the body"}, ExitCode.STOP, "STOP: "),
+        (429, {"text": "the body"}, ExitCode.STOP, "STOP: "),
+        (500, {"text": "the body"}, ExitCode.SERVICE_ERROR, "500"),
+        # [P 2026-10-30] the service's "unknown" answer (endpoints.md section 9), and
+        # [P 2026-10-31] a page's own 404 (a flight stream, section 9 "Pages")
+        (404, {"json": {"error": "the body"}}, ExitCode.NOT_FOUND, "Nie znaleziono inwestycji"),
+        (404, unknown_location_page(), ExitCode.NOT_FOUND, "Nie znaleziono inwestycji"),
+        # D21: a removed route, a 410 and a redirect are a changed service, not unknown data
+        (404, removed_route(), ExitCode.UNEXPECTED_RESPONSE, SERVICE_CHANGED),
+        (404, {"text": "the body"}, ExitCode.UNEXPECTED_RESPONSE, SERVICE_CHANGED),
+        (410, removed_route(), ExitCode.UNEXPECTED_RESPONSE, SERVICE_CHANGED),
+        (
+            308,
+            {"headers": {"Location": "/elsewhere"}},
+            ExitCode.UNEXPECTED_RESPONSE,
+            SERVICE_CHANGED,
+        ),
     ],
 )
 def test_service_answers_map_to_exit_codes(
-    run: Cli, service: respx.MockRouter, status: int, code: int, message: str
+    run: Cli,
+    service: respx.MockRouter,
+    status: int,
+    body: dict[str, Any],
+    code: int,
+    message: str,
 ) -> None:
-    service.get(INVESTMENT).respond(status, headers={"Retry-After": "1"}, text="the body")
+    rest_of_body = dict(body)
+    headers = {"Retry-After": "1", **rest_of_body.pop("headers", {})}
+    service.get(INVESTMENT).respond(status, headers=headers, **rest_of_body)
 
     result = run("investments", "get", "smolna")
 

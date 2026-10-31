@@ -46,6 +46,15 @@ from deweloperuch_mcp.throttle import (
 from support.checks.locks import lock_is_held
 from support.fakes.clocks import MonotonicClock
 from support.fakes.transport import ChunkedBody, InterruptedBody, RaceLimiter, SpyCache
+from support.providers.error_answers import (
+    CHANGED_SERVICE,
+    INVESTMENT_NOT_FOUND_ERROR,
+    NOT_FOUND_PAGE,
+    UNKNOWN_CITY_ERROR,
+    removed_route,
+    unknown_entity,
+    unknown_location_page,
+)
 
 TARGET = "/api/city-lookup?city=warszawa"
 
@@ -150,12 +159,30 @@ DETAIL_CASES: dict[
     ),
     # _check: the other statuses
     "redirect": (
-        ServiceError,
+        UnexpectedResponseError,
         MAX_BODY_BYTES,
         _answer(301, headers={"Location": f"/{SECRET}"}),
         f"-> /{SECRET}",
     ),
-    "404": (NotFoundError, MAX_BODY_BYTES, _answer(404, text=SECRET), TARGET),
+    "404 of unknown data": (
+        NotFoundError,
+        MAX_BODY_BYTES,
+        _answer(404, json={"error": SECRET}),
+        "application/json",
+    ),
+    "404 of a removed route": (
+        UnexpectedResponseError,
+        MAX_BODY_BYTES,
+        _answer(404, text=NOT_FOUND_PAGE, headers={"Content-Type": "text/html"}),
+        "text/html",
+    ),
+    "404 of another kind": (
+        UnexpectedResponseError,
+        MAX_BODY_BYTES,
+        _answer(404, text=SECRET),
+        SECRET,
+    ),
+    "410": (UnexpectedResponseError, MAX_BODY_BYTES, _answer(410, text=SECRET), "HTTP 410"),
     "400": (ServiceError, MAX_BODY_BYTES, _answer(400, json={"error": SECRET}), SECRET),
     "500": (ServiceError, MAX_BODY_BYTES, _answer(500, text=SECRET), SECRET),
     # _read_body
@@ -733,11 +760,179 @@ def test_500_is_an_error_without_pause(
     assert pause_after_last_request(lock_dir) == 0
 
 
-def test_404_is_not_found(client: HttpClient, service: respx.MockRouter) -> None:
-    service.get(URL).respond(404, json={"error": "Not found"})
+@pytest.mark.parametrize(
+    ("error", "media_type"),
+    [
+        (INVESTMENT_NOT_FOUND_ERROR, "application/json"),
+        (UNKNOWN_CITY_ERROR, "application/json"),
+        (UNKNOWN_CITY_ERROR, "application/json; charset=utf-8"),
+        (UNKNOWN_CITY_ERROR, "Application/JSON"),
+    ],
+)
+def test_a_404_with_the_services_error_is_unknown_data(
+    client: HttpClient, service: respx.MockRouter, error: dict[str, str], media_type: str
+) -> None:
+    """[P 2026-10-30] docs/discovery/endpoints.md section 9: an unknown investment, RCN
+    building or city on a live route is a JSON 404 with an ``error`` text."""
+    service.get(URL).respond(404, json=error, headers={"Content-Type": media_type})
 
-    with pytest.raises(NotFoundError):
-        client.get(TARGET, headers={}, decode=raw)
+    with pytest.raises(NotFoundError) as caught:
+        client.get(TARGET, headers=JSON_HEADERS, decode=raw)
+
+    assert str(caught.value) == "Serwis nie zna żądanych danych (HTTP 404)."
+    assert caught.value.detail == f"{TARGET}: HTTP 404, application/json"
+
+
+UNKNOWN_LOCATION = "/statystyki/nieistniejace-miasto/dane-rzadowe?_rsc="
+"""A statistics page of a location the service does not know, as the RSC adapter asks."""
+
+
+@pytest.mark.parametrize(
+    "media_type", ["text/x-component", "text/x-component; charset=utf-8", "Text/X-Component"]
+)
+def test_a_404_of_a_page_is_unknown_data(
+    client: HttpClient, service: respx.MockRouter, media_type: str
+) -> None:
+    """[P 2026-10-31] endpoints.md section 9, "Pages": the statistics pages answer an
+    unknown location with a 404 whose body is a flight stream (2 of 2 routes), the
+    application's own answer, unlike the HTML not-found page of a removed route."""
+    answer = unknown_location_page()
+    service.get(identity.BASE_URL + UNKNOWN_LOCATION).respond(
+        404, text=answer["text"], headers={"Content-Type": media_type}
+    )
+
+    with pytest.raises(NotFoundError) as caught:
+        client.get(UNKNOWN_LOCATION, headers={"RSC": "1"}, decode=raw)
+
+    assert str(caught.value) == "Serwis nie zna żądanych danych (HTTP 404)."
+    assert caught.value.detail == f"{UNKNOWN_LOCATION}: HTTP 404, text/x-component"
+
+
+@pytest.mark.parametrize("answer", [unknown_location_page(), unknown_entity()])
+def test_a_404_is_unknown_data_only_where_the_route_says_so(
+    client: HttpClient, service: respx.MockRouter, answer: dict[str, Any]
+) -> None:
+    """D21: a route that does not answer 404 for "unknown" (404 not in its ``unknown``)
+    gives a 404 only when it is gone or was rebuilt: a changed service, whatever the body,
+    also the service's own kinds of "unknown" answer."""
+    service.get(identity.BASE_URL + UNKNOWN_LOCATION).respond(404, **answer)
+
+    with pytest.raises(UnexpectedResponseError) as caught:
+        client.get(UNKNOWN_LOCATION, headers={"RSC": "1"}, decode=raw, unknown=())
+
+    assert str(caught.value) == CHANGED_SERVICE
+    assert caught.value.detail is not None
+    assert caught.value.detail.startswith(f"{UNKNOWN_LOCATION}: HTTP 404, ")
+
+
+def test_the_text_of_an_unknown_answer_reaches_neither_the_message_nor_the_detail(
+    client: HttpClient, service: respx.MockRouter
+) -> None:
+    """The ``error`` text says nothing the route does not (the texts differ per route,
+    endpoints.md section 9), and the CLI prints the detail for agents: it stays out."""
+    service.get(URL).respond(404, json={"error": SECRET})
+
+    with pytest.raises(NotFoundError) as caught:
+        client.get(TARGET, headers=JSON_HEADERS, decode=raw)
+
+    assert SECRET not in str(caught.value)
+    assert caught.value.detail is not None and SECRET not in caught.value.detail
+
+
+@pytest.mark.parametrize("headers", [JSON_HEADERS, {"RSC": "1"}])
+def test_a_removed_route_reads_as_a_changed_service(
+    client: HttpClient, service: respx.MockRouter, headers: dict[str, str]
+) -> None:
+    """[P 2026-10-30] endpoints.md section 9: a removed route answers 404 with the Next.js
+    not-found page, also to a request that asks for JSON. Not an unknown city or entity
+    (D21): the message says the arguments may be right, and not to retry."""
+    service.get(URL).respond(404, **removed_route())
+
+    with pytest.raises(UnexpectedResponseError) as caught:
+        client.get(TARGET, headers=headers, decode=raw)
+
+    assert str(caught.value) == CHANGED_SERVICE
+    assert caught.value.detail == f"{TARGET}: HTTP 404, text/html, {len(NOT_FOUND_PAGE)} B"
+    assert caught.value.pause_seconds is None
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        # [W] endpoints.md section 9: never seen, read as a changed service as well.
+        {"json": {}},
+        {"json": {"message": "Not found"}},
+        {"json": []},
+        {"json": {"error": None}},
+        {"json": {"error": {"code": 404}}},
+        {"content": b'{"error": "Not found"', "headers": {"Content-Type": "application/json"}},
+        {"content": b'{"error": "Not found"}'},  # JSON without a media type
+        {"text": '{"error": "Not found"}', "headers": {"Content-Type": "text/plain"}},
+        {"json": {"error": "Not found"}, "headers": {"Content-Type": "application/problem+json"}},
+        {},
+        # JSON nested too deep to read (RecursionError)
+        {
+            "content": b"[" * 100_000 + b"]" * 100_000,
+            "headers": {"Content-Type": "application/json"},
+        },
+    ],
+)
+def test_a_404_of_another_kind_reads_as_a_changed_service(
+    client: HttpClient, service: respx.MockRouter, answer: dict[str, Any]
+) -> None:
+    service.get(URL).respond(404, **answer)
+
+    with pytest.raises(UnexpectedResponseError) as caught:
+        client.get(TARGET, headers=JSON_HEADERS, decode=raw)
+
+    assert str(caught.value) == CHANGED_SERVICE
+    assert caught.value.detail is not None and caught.value.detail.startswith(f"{TARGET}: HTTP 404")
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        # [P 2026-10-30] pages-rsc.md: the removed report pages answer 410 with an HTML page.
+        {
+            "text": "<!DOCTYPE html><html><body>Gone</body></html>",
+            "headers": {"Content-Type": "text/html"},
+        },
+        {"json": {"error": "Gone"}},
+        {},
+    ],
+)
+def test_a_410_reads_as_a_changed_service_whatever_its_media_type(
+    client: HttpClient, service: respx.MockRouter, answer: dict[str, Any]
+) -> None:
+    service.get(URL).respond(410, **answer)
+
+    with pytest.raises(UnexpectedResponseError) as caught:
+        client.get(TARGET, headers=JSON_HEADERS, decode=raw)
+
+    assert str(caught.value) == CHANGED_SERVICE
+    assert caught.value.detail is not None and caught.value.detail.startswith(f"{TARGET}: HTTP 410")
+
+
+@pytest.mark.parametrize(
+    ("answer", "media_type"),
+    [
+        ({"json": {"error": "Invalid citySlug"}}, "application/json"),
+        ({"text": "Invalid citySlug", "headers": {"Content-Type": "text/plain"}}, "text/plain"),
+    ],
+)
+def test_another_status_of_unknown_data_keeps_its_meaning(
+    client: HttpClient, service: respx.MockRouter, answer: dict[str, Any], media_type: str
+) -> None:
+    """An endpoint may name other statuses of unknown data (``city-sales``: 400 for
+    ``polska`` [P 2026-10-10]): the media type tells a removed route apart for a 404
+    only, so such a status means unknown data whatever its body."""
+    service.get(URL).respond(400, **answer)
+
+    with pytest.raises(NotFoundError) as caught:
+        client.get(TARGET, headers=JSON_HEADERS, decode=raw, unknown=(400, transport.NOT_FOUND))
+
+    assert str(caught.value) == "Serwis nie zna żądanych danych (HTTP 400)."
+    assert caught.value.detail == f"{TARGET}: HTTP 400, {media_type}"
 
 
 def test_400_keeps_the_service_message_in_the_detail(
@@ -755,17 +950,36 @@ def test_400_keeps_the_service_message_in_the_detail(
     assert TARGET not in str(caught.value)
 
 
-def test_redirects_are_not_followed(client: HttpClient, service: respx.MockRouter) -> None:
+@pytest.mark.parametrize("status", [301, 307, 308])
+def test_redirects_are_not_followed_and_read_as_a_changed_service(
+    client: HttpClient, service: respx.MockRouter, status: int
+) -> None:
+    """D21: a redirect means the service changed (moved routes answer 308, RSC requests
+    with the old token 307 [P 2026-10-29]); never followed, never retried."""
     elsewhere = service.get(identity.BASE_URL + "/elsewhere").respond(200, json={})
-    route = service.get(URL).respond(301, headers={"Location": "/elsewhere"})
+    route = service.get(URL).respond(status, headers={"Location": "/elsewhere"})
 
-    with pytest.raises(ServiceError, match="przekierowa") as caught:
+    with pytest.raises(UnexpectedResponseError) as caught:
         client.get(TARGET, headers={}, decode=raw)
 
-    assert caught.value.detail is not None and "/elsewhere" in caught.value.detail
-    assert "/elsewhere" not in str(caught.value)
+    assert str(caught.value) == CHANGED_SERVICE
+    assert caught.value.detail == f"{TARGET}: HTTP {status} -> /elsewhere"
     assert route.call_count == 1
     assert elsewhere.call_count == 0
+
+
+def test_a_long_location_is_cut_in_the_detail(
+    client: HttpClient, service: respx.MockRouter
+) -> None:
+    """Where the service moved the data is worth a log line, not 20 kB of it: the start of
+    ``Location``, as much as probe and the scanner show of an answer (300 characters)."""
+    location = "/" + "x" * 20_000
+    service.get(URL).respond(308, headers={"Location": location})
+
+    with pytest.raises(UnexpectedResponseError) as caught:
+        client.get(TARGET, headers={}, decode=raw)
+
+    assert caught.value.detail == f"{TARGET}: HTTP 308 -> {location[:300]}…"
 
 
 def test_network_error_is_not_retried_and_releases_the_slot(
@@ -1293,7 +1507,7 @@ def test_an_error_past_its_freshness_is_still_never_cached(
     client: HttpClient, service: respx.MockRouter
 ) -> None:
     route = service.get(URL).respond(
-        404, json={}, headers={"Cache-Control": "max-age=28800", "Age": "69574"}
+        404, **unknown_entity(), headers={"Cache-Control": "max-age=28800", "Age": "69574"}
     )
 
     for _ in range(2):

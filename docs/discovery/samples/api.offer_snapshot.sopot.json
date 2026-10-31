@@ -1,0 +1,55 @@
+{
+  "_request": "GET /api/map/offer-snapshot/sopot",
+  "_captured": "2026-10-31",
+  "response": {
+    "citySlug": "sopot",
+    "asOf": "2026-10-31",
+    "investments": [
+      {
+        "id": 33,
+        "slug": "smolna",
+        "name": "Smolna",
+        "street": "Świemirowo",
+        "lat": 54.42735985,
+        "lng": 18.55839032,
+        "district": "",
+        "developerId": 32,
+        "developer": "Invest Komfort Spółka Akcyjna Sp.K.",
+        "developerSlug": "invest-komfort-spolka-akcyjna"
+      },
+      {
+        "id": 1276,
+        "slug": "nowe-kolibki-etap-4",
+        "name": "Nowe Kolibki etap 4",
+        "street": "",
+        "lat": 54.46388413,
+        "lng": 18.55138082,
+        "district": "",
+        "developerId": 32,
+        "developer": "Invest Komfort Spółka Akcyjna Sp.K.",
+        "developerSlug": "invest-komfort-spolka-akcyjna"
+      }
+    ],
+    "sales": [
+      [
+        206523,
+        33,
+        0,
+        "... (4 more, 7 total)"
+      ],
+      [
+        2386,
+        33,
+        0,
+        "... (4 more, 7 total)"
+      ],
+      [
+        2377,
+        33,
+        0,
+        "... (4 more, 7 total)"
+      ],
+      "... (5 more, 8 total)"
+    ]
+  }
+}
