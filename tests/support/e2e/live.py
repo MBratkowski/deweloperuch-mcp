@@ -57,9 +57,9 @@ BIN = Path(sys.executable).parent  # the scripts of the environment running the 
 # Assembled in code: the repo does not carry ready-to-paste service addresses.
 HOST = "deweloperuch" + ".pl"
 
-MAX_REQUESTS = 120
-"""Live requests one full run may send: the plan is 87, the worst case 116
-(tests/e2e/README.md), about two minutes at 1 per second."""
+MAX_REQUESTS = 140
+"""Live requests one full run may send: the plan is 100, the worst case 137
+(tests/e2e/README.md), about two and a half minutes at 1 per second."""
 
 REQUEST_LINE = "HTTP Request:"
 """How httpx logs each request it sends (INFO)."""
@@ -96,7 +96,8 @@ KEY_LEAKS = re.compile(r"sale|invest(?!ment)|rcn|amount|rsc", re.IGNORECASE)
 # The one exception (D12, 2026-10-11): a full address of a public page of the service,
 # as the whole value of a field named ``*_url``; never with ``_rsc`` or ``/api/``, never
 # in another field nor in an error message. Only the routes links.py builds [P]: the list
-# of offers (with a query), a developer's profile, an investment, the government
+# of offers of a city or of its district (with a query; the district's own route since
+# 2026-10-31), a developer's profile, an investment, the government
 # statistics of a location (with the id of a section as its fragment), the transaction
 # statistics of a city (2026-10-13, the user's decision: a link for people only), the
 # ranking of cities (one fixed page) and a building of the price register. Both
@@ -106,9 +107,11 @@ KEY_LEAKS = re.compile(r"sale|invest(?!ment)|rcn|amount|rsc", re.IGNORECASE)
 # it as a dot); a section id is lowercase letters, digits, hyphens.
 _SEGMENT = r"(?!\.\.?(?:[/?#]|$))(?:(?!%2[eE])[^/?#\s])+"
 _SECTION = r"[a-z0-9][a-z0-9-]*"
+_DISTRICT = r"[a-z0-9]+(?:-[a-z0-9]+)*"
+"""A district's slug as the service writes it [P 2026-10-31] and links.py builds it."""
 PAGE_LINK = re.compile(
     rf"{re.escape(BASE_URL)}/(?:ceny-ofertowe/{_SEGMENT}/"
-    rf"(?:mieszkania(?:\?[^\s#]*)?|deweloperzy/{_SEGMENT}(?:/{_SEGMENT})?)"
+    rf"(?:(?:{_DISTRICT}/)?mieszkania(?:\?[^\s#]*)?|deweloperzy/{_SEGMENT}(?:/{_SEGMENT})?)"
     rf"|statystyki/{_SEGMENT}/(?:dane-rzadowe(?:#{_SECTION})?|transakcje)"
     r"|ceny-transakcyjne/polska/miasta"
     rf"|ceny-transakcyjne/{_SEGMENT}/adresy/{_SEGMENT})"

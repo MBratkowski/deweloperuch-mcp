@@ -9,8 +9,8 @@
     ""
   ],
   "stderr": [
-    "Błąd: Serwis nie zna miasta 'nieistniejace-miasto'. Podaj city_slug z search_locations albo polska (cały kraj).",
-    "Szczegóły: /ceny-ofertowe/nieistniejace-miasto/mieszkania: brak propsa 'initialData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404",
+    "Błąd: Serwis nie zna miasta 'nieistniejace-miasto'. Podaj city_slug miasta z search_locations.",
+    "Szczegóły: /ceny-ofertowe/nieistniejace-miasto/mieszkania: brak propsów 'sales', 'serverPaginationData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404",
     ""
   ],
   "requests": [

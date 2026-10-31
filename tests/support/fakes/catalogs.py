@@ -8,11 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from deweloperuch_mcp.models.developer_profile import (
-    DeveloperInvestment,
-    DeveloperProfile,
-    DeveloperSummary,
-)
+from deweloperuch_mcp.models.developer_profile import DeveloperInvestment, DeveloperProfile
 from deweloperuch_mcp.models.government_statistics import (
     Dataset,
     Frequency,
@@ -57,7 +53,6 @@ def offer(offer_id: int, status: str = "active") -> Offer:
 
 
 INVESTMENT = Investment(
-    investment_id=33,
     investment_slug="smolna",
     name="Smolna",
     status="active",
@@ -109,11 +104,14 @@ class FakeCatalogs:
         self._call(f"investment {slug.value}")
         return INVESTMENT
 
-    def price_events_of_offers(
-        self, investment: Investment
-    ) -> Mapping[int, tuple[PriceEvent, ...]]:
-        self._call(f"price_events_of_offers {investment.investment_id}")
-        return {2: EVENTS}
+    def price_events_of_offers(self, slug: InvestmentSlug) -> Mapping[int, tuple[PriceEvent, ...]]:
+        self._call(f"price_events_of_offers {slug.value}")
+        return self.histories
+
+    histories: Mapping[int, tuple[PriceEvent, ...]] = field(
+        default_factory=lambda: {1: (), 2: EVENTS, 3: ()}
+    )
+    """An entry for every offer of ``INVESTMENT``, as one answer of the service has."""
 
     # GovernmentStatisticsSource
     def location_statistics(self, location: LocationSlug, dataset: Dataset) -> LocationStatistics:
@@ -132,18 +130,7 @@ class FakeCatalogs:
     def developer(self, slug: DeveloperSlug, city: CitySlug) -> DeveloperProfile:
         self._call(f"developer {slug.value} {city.value}")
         return DeveloperProfile(
-            developer=DEVELOPER,
-            city=city,
-            summary=DeveloperSummary(
-                investments=len(self.projects),
-                active_offers=None,
-                cities=None,
-                avg_price=None,
-                avg_area_m2=None,
-                avg_price_per_m2=None,
-            ),
-            investments=self.projects,
-            cities=(),
+            developer=DEVELOPER, city=city, investments=self.projects, cities=()
         )
 
     projects: tuple[DeveloperInvestment, ...] = ()

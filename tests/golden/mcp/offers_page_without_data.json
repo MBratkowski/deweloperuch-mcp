@@ -17,7 +17,7 @@
   "log": [
     [
       "INFO",
-      "UnexpectedResponseError: Wyszukiwanie ofert w 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi. Szczegóły: /ceny-ofertowe/warszawa/mieszkania nie zawiera danych w propsie 'initialData' (propsy z danymi: other)"
+      "UnexpectedResponseError: Wyszukiwanie ofert w 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi. Szczegóły: /ceny-ofertowe/warszawa/mieszkania nie zawiera danych w propsach 'sales', 'serverPaginationData' (propsy z danymi: other)"
     ]
   ],
   "requests": [

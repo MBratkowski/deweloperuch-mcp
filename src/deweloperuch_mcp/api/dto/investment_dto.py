@@ -1,5 +1,9 @@
 """``InvestmentDto``: ``GET /api/map/investments/visible/{slug}`` [P] (sample
-``api.map_inv_visible``), an investment with every offer."""
+``api.map_inv_visible``), an investment with every offer.
+
+The 2.0 answer [P 2026-10-30] adds ``description`` and, to each offer, ``floor`` and
+``ev``; none is read here (the offers' price events, ``ev``, are
+``InvestmentPriceEventsDto``'s), so the investment reads with or without them."""
 
 from deweloperuch_mcp.api.dto.developer_dto import DeveloperDto
 from deweloperuch_mcp.api.dto.dto import Dto, Number
@@ -19,7 +23,6 @@ class InvestmentSaleDto(SaleDto):
 
 
 class InvestmentDto(Dto):
-    invest_id: int
     developer_id: int | None = None
     city: str
     city_slug: str
@@ -47,7 +50,6 @@ class InvestmentDto(Dto):
     def to_model(self) -> Investment:
         """The investment with every offer, in the service's order."""
         return Investment(
-            investment_id=self.invest_id,
             investment_slug=self.slug,
             name=self.name,
             status=self.status,

@@ -33,7 +33,8 @@ def test_the_answer_is_a_table_with_links_and_says_rooms_are_no_filter() -> None
     said = PROMPT.render(miasto="Gdańsk")
 
     assert "w tabeli" in said and "investment_url" in said and "list_url" in said
-    assert "nie filtruje po liczbie pokoi ani piętrze" in said
+    assert "w tabeli: inwestycja, dzielnica, deweloper" in said  # items name their district
+    assert "nie filtruje po liczbie pokoi ani piętrze (lista ofert ich nie podaje)" in said
     assert "truncated=true" in said
     assert "ceny ofertowe deweloperów, nie transakcyjne" in said
 

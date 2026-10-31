@@ -15,7 +15,9 @@ PRICE_PER_M2 = "Cena za m² w PLN (price / area_m2)."
 STATUS = "active (aktualna) albo archived (wycofana)."
 CHANGE_SINCE_START = "Zmiana ceny od pierwszej zaobserwowanej, w PLN (ujemna = tańsza)."
 CHANGE_SINCE_START_PCT = "Zmiana ceny od pierwszej zaobserwowanej, w procentach (ujemna = tańsza)."
-LAST_CHANGE_KIND = "increase, decrease albo no_change."
+LAST_CHANGE_KIND = (
+    "increase, decrease, no_change albo new_offer (oferta bez zmiany ceny od dodania)."
+)
 LAST_CHANGE_PCT = "Ostatnia zmiana ceny w procentach."
 # The values are [P] (docs/discovery/entities.md, SaleEvent.event_type); whether a price
 # change is an `offer` event or a type of its own is [H], so no "first price" here.

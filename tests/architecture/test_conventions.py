@@ -377,7 +377,7 @@ def test_the_offers_reference_exists_in_every_layer() -> None:
         "api/dto/sale_events_dto",
         "api/dto/sale_dto",
         "api/dto/investment_dto",
-        "api/dto/investment_sale_events_dto",
+        "api/dto/investment_price_events_dto",
         "api/dto/developer_dto",
         "api/queries/offers_query",
         "api/http/rsc_page",

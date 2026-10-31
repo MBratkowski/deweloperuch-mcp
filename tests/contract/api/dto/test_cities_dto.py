@@ -7,9 +7,9 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from deweloperuch_mcp.api.dto import investment_dto, offers_page_dto, sale_events_dto
+from deweloperuch_mcp.api.dto import investment_dto, sale_events_dto
 from deweloperuch_mcp.api.dto.cities_dto import CitiesDto
-from deweloperuch_mcp.api.dto.investment_sale_events_dto import InvestmentSaleEventsDto
+from deweloperuch_mcp.api.dto.investment_price_events_dto import InvestmentPriceEventsDto
 from support.providers.samples import body, envelope
 
 
@@ -19,8 +19,7 @@ from support.providers.samples import body, envelope
         ("api.cities_q", CitiesDto),
         ("api.map_inv_visible", investment_dto.InvestmentDto),
         ("api.sale_events", sale_events_dto.SaleEventsDto),
-        ("api.inv_sale_events", InvestmentSaleEventsDto),
-        ("page.offers_list", offers_page_dto.OffersPageDto),
+        ("api.map_inv_visible.v2", InvestmentPriceEventsDto),
     ],
 )
 def test_dtos_refuse_trimming_markers(name: str, model: type[Any]) -> None:

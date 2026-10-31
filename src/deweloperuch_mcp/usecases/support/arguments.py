@@ -30,6 +30,7 @@ from deweloperuch_mcp.models.errors import (
 PARAMETERS: Mapping[ValueName, str] = {
     ValueName.QUERY: "query",
     ValueName.CITY: "city",
+    ValueName.OFFERS_CITY: "city",
     ValueName.INVESTMENT: "investment_slug",
     ValueName.DEVELOPER: "developer_slug",
     ValueName.STATISTICS_LOCATION: "location",
@@ -61,6 +62,7 @@ PARAMETERS: Mapping[ValueName, str] = {
     ValueName.DEVELOPER_NAME: "name",
     ValueName.DEVELOPER_MATCHES: "limit",
     ValueName.INVESTMENTS_CITY: "city",
+    ValueName.MARKET_CITY: "city",
     ValueName.INVESTMENT_NAME: "name",
     ValueName.INVESTMENT_SORT: "sort",
     ValueName.TRANSACTIONS_CITY: "city",
@@ -82,6 +84,10 @@ PARAMETERS: Mapping[ValueName, str] = {
 
 _SLUGS: Mapping[ValueName, str] = {
     ValueName.CITY: "slug miasta (np. warszawa) albo polska; slug podaje search_locations",
+    ValueName.OFFERS_CITY: (
+        "city_slug jednego miasta (małe litery bez polskich znaków, np. warszawa, krakow), "
+        "nie polska; slug podaje search_locations"
+    ),
     ValueName.INVESTMENT: (
         "slug inwestycji, np. smolna; podaje go search_offers (investment_slug)"
     ),
@@ -91,14 +97,19 @@ _SLUGS: Mapping[ValueName, str] = {
     ),
     ValueName.STATISTICS_LOCATION: (
         "polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta bez "
-        "polskich znaków, np. warszawa, krakow, jastrzebie (Jastrzębie-Zdrój)"
+        "polskich znaków, np. warszawa, krakow, jastrzebie-zdroj (Jastrzębie-Zdrój)"
     ),
     ValueName.INVESTMENTS_CITY: (
         "slug jednego miasta (np. warszawa, sopot; nie polska); slug podaje search_locations"
     ),
+    ValueName.MARKET_CITY: (
+        "slug jednego miasta z search_locations: małe litery, bez polskich znaków (np. "
+        "warszawa, sopot; nie polska)"
+    ),
     ValueName.TRANSACTIONS_CITY: (
-        "slug miasta bez polskich znaków, np. warszawa, krakow (nie polska: cała Polska nie "
-        "jest obsługiwana); slug podaje search_locations (city_slug)"
+        "slug jednego miasta bez polskich znaków, np. warszawa, krakow (nie polska ani agregat "
+        "miast, np. 7-miast; dane agregatów daje get_government_statistics); slug podaje "
+        "search_locations (city_slug)"
     ),
     ValueName.BUILDING: (
         "slug budynku: małe litery bez polskich znaków, cyfry i myślniki, np. 23-marca-79c-sopot"
@@ -185,9 +196,7 @@ class ParameterCheck:
     @staticmethod
     def _one_of(name: str, err: InvalidValueError, rule: OneOf) -> str:
         listed = ", ".join(map(str, rule.choices))
-        if err.value is ValueName.PAGE_SIZE:
-            listed += " (inne serwis zamienia na 10)"
-        elif err.value is ValueName.SORT:
+        if err.value is ValueName.SORT:
             listed += " albo pusty (domyślna kolejność serwisu)"
         return f"{name} musi być jedną z wartości {listed}, podano {err.given!r}."
 
@@ -218,12 +227,6 @@ class ParameterCheck:
 
     @staticmethod
     def _one_city(name: str, err: InvalidValueError) -> str:
-        if err.value is ValueName.DISTRICT:
-            return (
-                f"{name} działa tylko z jednym miastem: podaj jako city slug miasta tej "
-                "dzielnicy (search_locations zwraca go przy dzielnicy), a nie polska; "
-                f"podano {err.given!r}."
-            )
         return (
             f"{name}: statystyki rynku są tylko dla jednego miasta; podaj city_slug miasta "
             f"z search_locations (np. warszawa), a nie polska; podano {err.given!r}."

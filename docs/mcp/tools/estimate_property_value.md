@@ -43,7 +43,7 @@ A structured result and the same compact JSON in the content; `null` fields are 
 ## Errors
 | Situation | Message |
 |---|---|
-| The service gives no estimate (HTTP 404) | `Serwis nie podał wyceny dla tego miejsca; w promieniu może nie być transakcji.` |
+| The service gives no estimate (its own JSON 404 with an `error`; any other 404, a redirect or a 410 is a changed service, see the [MCP overview](../README.md#errors)) | `Serwis nie podał wyceny dla tego miejsca; w promieniu może nie być transakcji.` |
 | `lat`/`lng` outside Poland, a comma, a boolean | `Błędny argument narzędzia estimate_property_value: lat musi być liczbą z zakresu 49–54.9 (z kropką dziesiętną), podano 60. Popraw i ponów; nic nie zostało wysłane.` |
 | `area_m2` outside 10-500 | `Błędny argument narzędzia estimate_property_value: area_m2 musi być liczbą z zakresu 10–500 (z kropką dziesiętną), podano 5. Popraw i ponów; nic nie zostało wysłane.` |
 | `address` shorter than 3 characters | `address: podaj od 3 do 200 znaków adresu albo pomiń ten parametr, podano 'ab'.` |
@@ -52,7 +52,7 @@ A structured result and the same compact JSON in the content; `null` fields are 
 | Unknown argument | `Nieznany argument narzędzia estimate_property_value: '…'. Dozwolone argumenty: lat, lng, area_m2, address, limit. Popraw nazwy i ponów; nic nie zostało wysłane.` |
 | STOP, service error | As in the [MCP overview](../README.md#errors); a service error: `Wycena mieszkania: Serwis odpowiedział błędem HTTP 500. Nic nie ponawiam; spróbuj później.` |
 
-A response without an estimate that is not a 404 is a result with `estimated_value=null` and a `hint` (`tests/golden/mcp/valuation_without_an_estimate.json`).
+A response without an estimate that is not the JSON 404 is a result with `estimated_value=null` and a `hint` (`tests/golden/mcp/valuation_without_an_estimate.json`).
 
 ## Example
 Call:

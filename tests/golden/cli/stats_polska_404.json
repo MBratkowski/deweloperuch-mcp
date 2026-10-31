@@ -1,0 +1,20 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "polska",
+    "wages"
+  ],
+  "exit_code": 6,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Statystyki rządowe dla 'polska': Narzędzie nie może pobrać tych danych, bo serwis przeniósł je w inne miejsce albo przestał je udostępniać. To nie musi znaczyć, że argumenty są błędne ani że szukanego obiektu nie ma. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.",
+    "Szczegóły: /statystyki/polska/dane-rzadowe?_rsc=: HTTP 404, text/x-component (lokalizacja serwisu 'polska')",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

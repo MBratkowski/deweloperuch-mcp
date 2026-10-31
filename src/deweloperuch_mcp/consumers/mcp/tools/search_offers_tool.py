@@ -1,4 +1,4 @@
-"""``SearchOffersTool`` (D17 reference): offers in a city or in the whole country."""
+"""``SearchOffersTool`` (D17 reference): offers in a city or in one of its districts."""
 
 from typing import Annotated
 
@@ -28,31 +28,34 @@ from deweloperuch_mcp.usecases.search_offers import SearchOffersRequest
 
 
 class SearchOffersTool(ToolBase):
-    # [P 2026-10-10] pages-rsc.md: the district filter (a name as search_locations gives it),
-    # the price below the first one (not the last change), archived offers; offers have no
-    # rooms or floor (filterRooms/filterFloors do nothing on this list). [W] the price-per-m²
-    # range and the descending orders by price per m² and area (``OffersQuery``).
+    # pages-rsc.md: the list of a city or of one of its districts, internal pages of the
+    # site (D21) [P 2026-10-31]; the district comes as its name, as search_locations gives
+    # it, and becomes the service's slug [W] (``OffersQuery``). [P 2026-10-31] the three
+    # ranges up to an end, the price below the first one (not the last change), archived
+    # offers, the dearest first; [P 2026-10-10] offers have no rooms or floor
+    # (filterRooms/filterFloors do nothing on this list). [W] on 2.0, each checked by the
+    # live suite: the open ends of a range, a page of 50, the other orders, every parameter
+    # on a district's list (T73), active and archived together (T72). The whole country is
+    # refused: the service's list of Poland is a list of cities [P 2026-10-29].
     name = "search_offers"
     title = "Szukaj ofert mieszkań"
     description = """\
 Wyszukuje oferty mieszkań od deweloperów (tylko rynek pierwotny, ceny ofertowe, nie \
-transakcyjne) w jednym mieście albo w całej Polsce (city=polska). Filtry: cena, metraż, \
-cena za m², dzielnica, status (aktywne, archiwalne) i obniżka od pierwszej ceny; \
-sortowanie po cenie, cenie za m², metrażu albo największej obniżce. Nie filtruje po \
-liczbie pokoi ani piętrze (serwis nie ma takich danych) ani po deweloperze (jego \
-inwestycje daje get_developer).
+transakcyjne) w jednym mieście albo w jego dzielnicy; city=polska nie działa. city_slug \
+i nazwę dzielnicy daje search_locations. Filtry: cena, metraż, cena za m², dzielnica, \
+status (aktywne, archiwalne) i obniżka od pierwszej ceny; sortowanie po cenie, cenie za \
+m², metrażu albo największej obniżce; lista ofert nie filtruje po pokojach ani piętrze, \
+ani po deweloperze (jego inwestycje daje get_developer).
 
 Zwraca jedną stronę: total (wszystkie pasujące), returned, page, per_page, \
 pages_available, truncated, hint, list_url i items (offer_id, investment_slug, \
-investment_url (strona inwestycji), name, cena w PLN, metraż w m², cena za m², status, \
-inwestycja, deweloper z developer_slug, zmiany ceny w procentach; miasto tylko przy \
-city=polska). Pozycje są skrócone; szczegóły oferty i historię ceny daje get_offer. \
-list_url to ta lista na deweloperuch.pl z tymi samymi filtrami. Linki podawaj \
-użytkownikowi.
+investment_url, name, cena w PLN, metraż w m², cena za m², status, inwestycja z \
+dzielnicą, deweloper z developer_slug, zmiany ceny w procentach). Pozycje są skrócone; \
+szczegóły oferty i historię ceny daje get_offer. Linki podawaj użytkownikowi.
 
 Ograniczenia: można przejrzeć najwyżej 20 stron po per_page ofert. Gdy truncated=true, \
-zawęź filtry zamiast przeglądać kolejne strony. Wszystkie oferty jednej inwestycji daje \
-get_investment, ceny całego miasta get_market_statistics."""
+zawęź filtry (np. dzielnica, cena) zamiast przeglądać kolejne strony. Wszystkie oferty \
+jednej inwestycji daje get_investment, ceny całego miasta get_market_statistics."""
 
     async def __call__(
         self,
@@ -61,8 +64,8 @@ get_investment, ceny całego miasta get_market_statistics."""
             Field(
                 title="Miasto",
                 description=(
-                    "city_slug miasta z search_locations (np. warszawa, krakow) albo polska "
-                    "dla całego kraju."
+                    "city_slug jednego miasta z search_locations, np. warszawa, krakow (nie "
+                    "polska: serwis nie ma listy ofert całego kraju)."
                 ),
             ),
         ],
@@ -104,7 +107,8 @@ get_investment, ceny całego miasta get_market_statistics."""
                 title="Dzielnica",
                 description=(
                     "Nazwa dzielnicy dokładnie tak, jak podaje ją search_locations (kind=district, "
-                    "pole name), np. Mokotów; tylko z miastem tej dzielnicy, nie z polska."
+                    "pole name), np. Mokotów, Praga-Południe; razem z city_slug miasta tej "
+                    "dzielnicy."
                 ),
             ),
         ] = None,
@@ -126,7 +130,8 @@ get_investment, ceny całego miasta get_market_statistics."""
                 title="Status ofert",
                 description=(
                     "active (domyślnie): oferty obecnie w cennikach; archived: tylko wycofane; "
-                    "all: aktywne i wycofane."
+                    "all: aktywne i wycofane (total przy all może być większy niż suma active "
+                    "i archived: serwis liczy je niejasno)."
                 ),
             ),
         ] = "active",
@@ -139,12 +144,21 @@ get_investment, ceny całego miasta get_market_statistics."""
                     "price_asc: od najtańszych, price_desc: od najdroższych, price_per_m2_asc i "
                     "price_per_m2_desc: po cenie za m², area_asc i area_desc: po metrażu, "
                     "biggest_drop: najpierw największa obniżka od pierwszej ceny (w %); brak: "
-                    "domyślna kolejność serwisu (nie jest gwarantowana)."
+                    "domyślna kolejność serwisu (nie jest gwarantowana; zwykle najstarsze "
+                    "oferty, grupami po inwestycji; to nie ranking), więc do przeglądu miasta "
+                    "podaj sort."
                 ),
             ),
         ] = None,
         page: Annotated[
-            Page, whole_or(1), Field(title="Strona", description="Numer strony wyników, 1–20.")
+            Page,
+            whole_or(1),
+            Field(
+                title="Strona",
+                description=(
+                    "Numer strony wyników, 1–20 (dalej serwis nie udostępnia: zawęź filtry)."
+                ),
+            ),
         ] = 1,
         per_page: Annotated[
             McpPerPage,

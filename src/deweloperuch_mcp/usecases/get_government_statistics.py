@@ -80,11 +80,14 @@ class GetGovernmentStatistics:
 
     @staticmethod
     def _unknown_location(location: LocationSlug) -> str:
+        """The accepted forms, without the 1.0 list of locations: the 2.0 page of ``polska``
+        lists 3 aggregates and 66 cities, each a lowercase ASCII slug with hyphens (e.g.
+        ``jastrzebie-zdroj``, ``jastrzebie`` on 1.0) [P 2026-10-31]."""
         return (
             f"Serwis nie ma statystyk rządowych dla lokalizacji {location.value!r}. "
             "Podaj polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug "
-            "miasta na prawach powiatu bez polskich znaków, np. warszawa, krakow. Jeśli nie "
+            "miasta na prawach powiatu: nazwa małymi literami bez polskich znaków, z "
+            "myślnikami zamiast spacji, np. warszawa, krakow, jastrzebie-zdroj. Jeśli nie "
             "znasz sluga miasta, spróbuj city_slug z search_locations (zwykle jest taki "
-            "sam, ale nie zawsze, np. dla Jastrzębia-Zdroju użyj jastrzebie). Statystyki "
-            "są tylko dla miast na prawach powiatu."
+            "sam). Statystyki są tylko dla miast na prawach powiatu."
         )

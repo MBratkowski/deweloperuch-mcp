@@ -61,11 +61,19 @@ def test_the_arguments_default_to_12_months() -> None:
     [
         (
             {"city": "polska"},
-            "city: oczekiwano slug miasta bez polskich znaków, np. warszawa, krakow (nie polska: "
-            "cała Polska nie jest obsługiwana); slug podaje search_locations (city_slug); "
-            "podano 'polska'.",
+            "city: oczekiwano slug jednego miasta bez polskich znaków, np. warszawa, krakow (nie "
+            "polska ani agregat miast, np. 7-miast; dane agregatów daje "
+            "get_government_statistics); slug podaje search_locations (city_slug); podano "
+            "'polska'.",
         ),
-        ({"city": "Kraków", "granularity": "year"}, "city: oczekiwano slug miasta"),
+        (
+            {"city": "10-miast"},
+            "city: oczekiwano slug jednego miasta bez polskich znaków, np. warszawa, krakow (nie "
+            "polska ani agregat miast, np. 7-miast; dane agregatów daje "
+            "get_government_statistics); slug podaje search_locations (city_slug); podano "
+            "'10-miast'.",
+        ),
+        ({"city": "Kraków", "granularity": "year"}, "city: oczekiwano slug jednego miasta"),
         (
             {"city": "warszawa", "granularity": "year"},
             "granularity musi być jedną z wartości month, quarter, podano 'year'.",
@@ -121,7 +129,8 @@ def test_a_city_without_data_points_to_search_locations(
     assert str(caught.value) == (
         "Serwis nie ma cen transakcyjnych mieszkań dla miasta 'warszawa'. Sprawdź city_slug w "
         "search_locations (np. warszawa, krakow); statystyki są dla całych miast, nie dla "
-        "dzielnic ani ulic."
+        "dzielnic ani ulic. Jeśli city_slug pochodzi z search_locations, serwis nie ma dla "
+        "niego statystyk: powiedz to użytkownikowi."
     )
     assert "search_locations" in str(caught.value)
     assert "HTTP" not in str(caught.value)

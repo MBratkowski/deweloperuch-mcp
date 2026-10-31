@@ -10,17 +10,17 @@
   "results": [
     {
       "is_error": true,
-      "text": "Ceny transakcyjne dla 'warszawa': Serwis zwrócił stronę HTML zamiast danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.",
+      "text": "Ceny transakcyjne dla 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "UnexpectedResponseError: Ceny transakcyjne dla 'warszawa': Serwis zwrócił stronę HTML zamiast danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi. Szczegóły: /api/monthly-transaction-stats: oczekiwano JSON, przyszedł HTML"
+      "UnexpectedResponseError: Ceny transakcyjne dla 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi. Szczegóły: /statystyki/warszawa/transakcje nie zawiera danych w propsie 'view' (propsy z danymi: brak)"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa [accept: application/json]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/transakcje?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

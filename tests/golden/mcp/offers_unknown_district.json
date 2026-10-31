@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "warszawa",
+        "district": "Nieistniejąca Dzielnica"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Serwis nie zna dzielnicy 'Nieistniejąca Dzielnica' w mieście 'warszawa'. Podaj nazwę dzielnicy tak, jak zwraca ją search_locations (kind=district, pole name), razem z city_slug jej miasta.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Serwis nie zna dzielnicy 'Nieistniejąca Dzielnica' w mieście 'warszawa'. Podaj nazwę dzielnicy tak, jak zwraca ją search_locations (kind=district, pole name), razem z city_slug jej miasta. Szczegóły: /ceny-ofertowe/warszawa/nieistniejaca-dzielnica/mieszkania: brak propsów 'sales', 'serverPaginationData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/nieistniejaca-dzielnica/mieszkania?perPage=10&_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

@@ -10,6 +10,16 @@ from deweloperuch_mcp.usecases.ports import DeveloperDirectory, PageLinks
 from deweloperuch_mcp.usecases.support.arguments import ParameterCheck
 from deweloperuch_mcp.usecases.support.failures import ReportedAs
 
+NO_OFFERS_IN_THE_CITY = " Albo deweloper nie ma w tym mieście aktywnych ofert: spróbuj city=polska."
+"""The end of the "not found" message of a developer in a city (``GetDeveloper``)."""
+
+CITIES_OF_INVESTMENTS_ONLY = (
+    "Serwis nie podał listy miast dewelopera: cities to tylko miasta inwestycji w city "
+    "(wszystkie: city=polska)."
+)
+"""The hint of a city's profile whose cities come from its investments
+(``GetDeveloperResult.hint``)."""
+
 
 @dataclass(frozen=True, kw_only=True)
 class GetDeveloperRequest:
@@ -50,17 +60,20 @@ class GetDeveloperResult:
 
     @property
     def hint(self) -> str | None:
-        """What to do about a profile without investments in its scope; ``None``
-        otherwise."""
+        """What to do about a profile without investments in its scope, or about a city's
+        profile whose cities may be only that city (the service sent no list of cities,
+        ``DeveloperProfile.cities_in_scope_only``); ``None`` otherwise."""
         profile = self.listing.profile
-        if profile.investments:
-            return None
-        if profile.city.whole_country:
-            return "Deweloper nie ma inwestycji z aktywnymi ofertami."
-        return (
-            f"Deweloper nie ma inwestycji z aktywnymi ofertami w {profile.city.value!r}. "
-            "Spróbuj city=polska (cała Polska)."
-        )
+        if not profile.investments:
+            if profile.city.whole_country:
+                return "Deweloper nie ma inwestycji z aktywnymi ofertami."
+            return (
+                f"Deweloper nie ma inwestycji z aktywnymi ofertami w {profile.city.value!r}. "
+                "Spróbuj city=polska (cała Polska)."
+            )
+        if profile.cities_in_scope_only:
+            return CITIES_OF_INVESTMENTS_ONLY
+        return None
 
 
 class GetDeveloper:
@@ -90,9 +103,14 @@ class GetDeveloper:
 
     @classmethod
     def _unknown(cls, request: GetDeveloperRequest) -> str:
-        return (
+        """What a "not found" means. In a city it may be a known developer without offers
+        there (T39: the service may answer so, [H], not requested)."""
+        message = (
             f"Nie znaleziono dewelopera {request.developer.value!r}{cls._where(request.city)}. "
             "Slug dewelopera podaje search_developers (po nazwie) albo pole developer_slug w "
             "search_offers, get_investment i get_offer; city to city_slug z search_locations "
             "albo polska (cała Polska)."
         )
+        if request.city.whole_country:
+            return message
+        return message + NO_OFFERS_IN_THE_CITY

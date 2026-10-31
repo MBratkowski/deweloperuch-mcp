@@ -17,7 +17,6 @@ import pytest
 
 import flight as recon_flight
 from deweloperuch_mcp import flight as package_flight
-from deweloperuch_mcp.api.dto.offers_page_dto import OffersPageDto
 from deweloperuch_mcp.flight import Row, error_digests, rows
 from flight import component_props, find_json_after, flight, flight_from_html
 from support.paths import REPO
@@ -413,12 +412,11 @@ def test_component_props_finds_the_offers_in_the_real_payload() -> None:
     ]
 
     assert len(values) == 1
-    page = OffersPageDto.model_validate(values[0])
-    assert len(page.data) == 10
-    assert page.pagination.perPage == 10
-    assert page.pagination.page == 1
-    assert page.pagination.total > 10
-    assert all(offer.invest.city_slug == "warszawa" for offer in page.data)
+    page = values[0]  # the 1.0 prop, which no adapter reads any more
+    assert len(page["data"]) == 10
+    assert (page["pagination"]["perPage"], page["pagination"]["page"]) == (10, 1)
+    assert page["pagination"]["total"] > 10
+    assert all(offer["invest"]["city_slug"] == "warszawa" for offer in page["data"])
 
 
 def test_component_props_on_the_real_payload_inlined_in_html() -> None:

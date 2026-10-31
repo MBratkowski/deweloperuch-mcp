@@ -19,7 +19,9 @@ deweloperuch stats cities [OPTIONS]
 | `--help` | flag | | Show the help. |
 
 ## Exit codes
-See the [exit code table](../README.md#exit-codes). Most common: 0, 2 (`--level` or `--sort` outside the list, `--limit` outside 1–100, `--min-transactions` outside 0–10 000 000), 3 STOP, 4 service error.
+See the [exit code table](../README.md#exit-codes). Most common: 0, 2 (`--level` or `--sort` outside the list, `--limit` outside 1–100, `--min-transactions` outside 0–10 000 000), 3 STOP, 4 service error, 6 the service moved or removed the route.
+
+**Known limitation (not fixed in 0.2.0):** `--level powiat` ends with exit code 6 on the redesigned service: its route, `/api/map/powiat-stats`, is gone (an HTML 404), so the command prints the "service changed" message (`Błąd: Ranking powiatów: Narzędzie nie może pobrać tych danych, …`, [exit code 6](../README.md#exit-codes)). `--level city` is not affected. A repair is planned; see [`rank_locations`](../../mcp/tools/rank_locations.md).
 
 ## Examples
 ```

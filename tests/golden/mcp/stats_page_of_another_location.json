@@ -18,10 +18,10 @@
   "log": [
     [
       "INFO",
-      "UnexpectedResponseError: Statystyki rządowe dla 'krakow': Serwis zwrócił statystyki innej lokalizacji niż żądana. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi. Szczegóły: /statystyki/statystyki-rzadowe/krakow: currentSlug [None, None], oczekiwano 'krakow'"
+      "UnexpectedResponseError: Statystyki rządowe dla 'krakow': Serwis zwrócił statystyki innej lokalizacji niż żądana. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi. Szczegóły: /statystyki/krakow/dane-rzadowe: citySlug [], oczekiwano 'krakow'"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/krakow?_rsc= [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/krakow/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

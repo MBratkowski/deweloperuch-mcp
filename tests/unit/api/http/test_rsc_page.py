@@ -2,7 +2,9 @@
 page in one request, on the raw 2.0 payloads of 2026-10-31 (tests/fixtures/rsc/README.md)."""
 
 from pathlib import Path
+from typing import Any
 
+import httpx
 import pytest
 import respx
 from pydantic import BaseModel
@@ -22,6 +24,7 @@ from support.providers.rsc import (
     OFFERS_WARSZAWA_20261031,
     STATS_TX_KARPACZ_20261031,
     STATS_TX_WARSZAWA_20261031,
+    offers_payload,
     raw,
 )
 
@@ -284,3 +287,50 @@ def test_a_removed_route_stays_a_changed_service_also_where_404_is_opted_in(
         RscPage(http, path, unknown_404=True).props(("blocks",))
 
     assert str(caught.value) == CHANGED_SERVICE
+
+
+CACHED = {**RSC, "Cache-Control": "private, max-age=172800, must-revalidate", "Age": "1500"}
+"""The cache headers of the 2.0 pages [P 2026-10-31] and a Cloudflare age like the fixtures'
+HITs: a reply the client keeps for its full 300 s."""
+
+
+def page_size(props: dict[str, Any]) -> int:
+    """A caller's own reading of the props: the page size, a whole number or a refusal."""
+    size = props["serverPaginationData"]["perPage"]
+    if not isinstance(size, int):
+        raise UnexpectedResponseError("Inny format.", detail=f"perPage {size!r}")
+    return size
+
+
+def test_props_are_what_the_callers_decode_makes_of_them(
+    http: HttpClient, service: respx.MockRouter
+) -> None:
+    page_of(service, "/ceny-ofertowe/warszawa/mieszkania", OFFERS_WARSZAWA_20261031)
+
+    found = RscPage(http, "/ceny-ofertowe/warszawa/mieszkania").props(
+        ("sales", "serverPaginationData"), decode=page_size
+    )
+
+    assert found == 25
+
+
+def test_a_reply_the_callers_decode_refuses_is_not_kept_in_the_cache(
+    http: HttpClient, service: respx.MockRouter
+) -> None:
+    """``decode`` runs inside the transport's decode, before the reply is cached: a reply
+    whose props it refuses is asked for again, and the next good one is kept."""
+    off_contract = offers_payload({"serverPaginationData": {"currentPage": 1, "perPage": "x"}})
+    route = service.get(path="/ceny-ofertowe/warszawa/mieszkania").mock(
+        side_effect=[
+            httpx.Response(200, content=off_contract, headers=CACHED),
+            httpx.Response(200, content=offers_payload(), headers=CACHED),
+        ]
+    )
+    page = RscPage(http, "/ceny-ofertowe/warszawa/mieszkania")
+
+    with pytest.raises(UnexpectedResponseError):
+        page.props(("sales", "serverPaginationData"), decode=page_size)
+    sizes = [page.props(("sales", "serverPaginationData"), decode=page_size) for _ in range(2)]
+
+    assert sizes == [25, 25]
+    assert route.call_count == 2  # the refused reply again, then the good one from the cache

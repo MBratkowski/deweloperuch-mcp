@@ -14,9 +14,9 @@ import datetime as dt
 import math
 from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
-from typing import Self
+from typing import ClassVar, Self
 
-from deweloperuch_mcp.models.errors import InvalidValueError, OneCity, ValueName
+from deweloperuch_mcp.models.errors import ValueName
 from deweloperuch_mcp.models.price_history import PriceEvent, PriceFlags, PriceHistory
 from deweloperuch_mcp.models.values import (
     BROWSABLE_PAGES,
@@ -85,6 +85,9 @@ class InvestmentRef:
     city: str | None
     city_slug: str | None
     developer: DeveloperRef
+    district: str | None = None
+    """The district's name, as the locations search gives it; ``None`` where the list does
+    not name one."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -95,13 +98,23 @@ class ListedOffer:
     investment: InvestmentRef
 
 
+@dataclass(frozen=True)
+class OffersCity(CitySlug):
+    """The city of an offers search: a city slug, refused in the words of this search (one
+    city; ``OfferSearchCriteria`` refuses the whole country)."""
+
+    NAME: ClassVar[ValueName] = ValueName.OFFERS_CITY
+
+
 @dataclass(frozen=True, kw_only=True)
 class OfferSearchCriteria:
-    """What an offers search asks for: a city (or the whole country), optional ranges of
-    price, area and price per m², a district of the city, only offers cheaper than their
-    first price, their status, an order, and the page.
+    """What an offers search asks for: one city, optional ranges of price, area and price
+    per m², a district of the city, only offers cheaper than their first price, their
+    status, an order, and the page.
 
-    A district belongs to one city, so it needs one: never the whole country.
+    The service lists the offers of a city or of one of its districts, never of the whole
+    country (its page for Poland is a list of cities, [P 2026-10-29]): a search of
+    ``polska`` is a mistake of the caller, which the request refuses first.
     """
 
     city: CitySlug
@@ -117,8 +130,8 @@ class OfferSearchCriteria:
     per_page: PageSize = field(default_factory=PageSize)
 
     def __post_init__(self) -> None:
-        if self.district is not None and self.city.whole_country:
-            raise InvalidValueError(ValueName.DISTRICT, OneCity(), self.district.text)
+        if self.city.whole_country:
+            raise ValueError("wyszukiwanie ofert obejmuje jedno miasto, nie cały kraj")
 
 
 @dataclass(frozen=True, kw_only=True)

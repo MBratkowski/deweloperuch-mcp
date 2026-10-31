@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "7-miast",
+        "dataset": "unemployment"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Serwis nie publikuje zestawu 'unemployment' (Stopa bezrobocia rejestrowanego) dla lokalizacji '7-miast'. Podaj polska albo miasto na prawach powiatu, np. warszawa.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Serwis nie publikuje zestawu 'unemployment' (Stopa bezrobocia rejestrowanego) dla lokalizacji '7-miast'. Podaj polska albo miasto na prawach powiatu, np. warszawa. Szczegóły: None"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

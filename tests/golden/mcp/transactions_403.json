@@ -17,10 +17,10 @@
   "log": [
     [
       "WARNING",
-      "STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi. Szczegóły: /api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa: HTTP 403"
+      "STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi. Szczegóły: /statystyki/warszawa/transakcje?_rsc=: HTTP 403"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa [accept: application/json]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/transakcje?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

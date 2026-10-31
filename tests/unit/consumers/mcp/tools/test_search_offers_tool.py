@@ -21,12 +21,19 @@ from deweloperuch_mcp.models.values import (
     OfferStatus,
     PricePerM2Pln,
 )
-from support.builders.offers import COMPACT_OFFER, UNKNOWN_CITY_MESSAGE, offers_page
+from support.builders.offers import (
+    COMPACT_OFFER,
+    UNKNOWN_CITY_MESSAGE,
+    UNKNOWN_DISTRICT,
+    WHOLE_COUNTRY_MESSAGE,
+    offers_page,
+    unknown_district_message,
+)
 from support.checks.leaks import LEAKS
 from support.providers.error_answers import CHANGED_SERVICE, removed_route
 from support.providers.mcp import call, data, has_null, text, tools, with_client
 from support.providers.routes.offers import offers_route, unknown_city_route
-from support.providers.rsc import UNKNOWN_CITY
+from support.providers.rsc import OFFERS_UNKNOWN_DISTRICT_20261031, UNKNOWN_CITY, raw
 from support.providers.service import PAGES
 
 # The MCP server runs behind the SDK's in-memory client: its event loop needs Unix sockets.
@@ -48,10 +55,19 @@ def test_search_offers_input_schema(server: MCPServer[bootstrap.Session]) -> Non
         "boolean",
         False,
     )
-    assert "search_locations" in fields["district"]["description"]
+    assert "nie polska" in fields["city"]["description"]
+    assert "search_locations (kind=district" in fields["district"]["description"]
+    assert "polska" not in fields["district"]["description"]
     assert schema["additionalProperties"] is False
     assert fields["sort"]["default"] is None
     assert "nie jest gwarantowana" in fields["sort"]["description"]
+    assert "więc do przeglądu miasta podaj sort" in fields["sort"]["description"]
+    # T72: the total of `all` is not the sum of the other two [P 2026-10-31]
+    assert (
+        "total przy all może być większy niż suma active i archived"
+        in (fields["status"]["description"])
+    )
+    assert "dalej serwis nie udostępnia: zawęź filtry" in fields["page"]["description"]
     assert fields["per_page"]["default"] == 10  # the values: test_mcp_page_sizes_...
     assert (fields["page"]["minimum"], fields["page"]["maximum"]) == (1, BROWSABLE_PAGES)
     assert fields["page"]["default"] == 1
@@ -70,8 +86,9 @@ def test_search_offers_input_schema(server: MCPServer[bootstrap.Session]) -> Non
 def test_mcp_page_sizes_are_confirmed_ones(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
-    """In MCP only 10 and 50: [P] values (D4) that keep a page readable. The one test of
-    the page sizes: the others (and the subprocess smoke test) do not depend on them."""
+    """In MCP only 10 and 50: values that keep a page readable (D4); 10 [P 2026-10-31], 50
+    [W] on 2.0 (tests/e2e/test_live_mcp.py). The one test of the page sizes: the others (and
+    the subprocess smoke test) do not depend on them."""
     assert get_args(inputs.McpPerPage) == (10, 50)
     assert set(get_args(inputs.McpPerPage)) <= set(PAGE_SIZES)
     assert get_args(PageSizeChoice) == PAGE_SIZES
@@ -95,49 +112,53 @@ def test_mcp_page_sizes_are_confirmed_ones(
 def test_search_offers_with_defaults_lists_compact_offers(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
-    route = offers_route(service)  # the real Warsaw page: 10 offers
+    route = offers_route(service)  # the real Warsaw page, its first 10 offers
 
     result = data(call(server, "search_offers", city="warszawa"))
 
     params = route.calls.last.request.url.params
     # [P 2026-10-29] the first page goes without `page` (the service redirects `page=1`).
     assert (params["perPage"], "page" in params, "sortBy" in params) == ("10", False, False)
-    assert (result["total"], result["returned"], result["truncated"]) == (13324, 10, True)
+    assert (result["total"], result["returned"], result["truncated"]) == (11672, 10, True)
     assert result["items"][0] == {
-        "offer_id": 4397,
-        "investment_slug": "nowy-targowek-vi",
-        "name": "D1.1.1.4",
-        "price": 994012.0,
-        "area_m2": 55.25,
-        "price_per_m2": 17991.17,
+        "offer_id": 4487,
+        "investment_slug": "apartamenty-beethovena",
+        "name": "A2",
+        "price": 810660.0,
+        "area_m2": 35.4,
+        "price_per_m2": 22900.0,
         "status": "active",
-        "investment_name": "Nowy Targówek VI",
-        "investment_url": PAGES + "/warszawa/deweloperzy/atal/nowy-targowek-vi",
-        "developer_name": "ATAL S.A.",
-        "developer_slug": "atal",
+        "investment_name": "Apartamenty Beethovena",
+        "district": "Mokotów",
+        "investment_url": PAGES + "/warszawa/deweloperzy/dom-development/apartamenty-beethovena",
+        "developer_name": "Dom Development S.A.",
+        "developer_slug": "dom-development",
         "last_price_change_kind": "increase",
-        "last_price_change_pct": 5.89,
-        "price_change_since_start_pct": -0.6,
+        "last_price_change_pct": 6.51,
+        "price_change_since_start_pct": 0.08,
     }
     assert result["list_url"] == PAGES + "/warszawa/mieszkania?perPage=10"
     assert all(set(item) <= COMPACT_OFFER for item in result["items"])
     assert not has_null(result)
 
 
-def test_search_offers_in_the_whole_country_keeps_the_city(
-    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+@pytest.mark.parametrize("district", [None, "Mokotów"])
+def test_search_offers_of_the_whole_country_is_refused_without_a_request(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter, district: str | None
 ) -> None:
-    offers_route(service)
+    """[P 2026-10-29] the service's list of Poland is a list of cities: the model learns to
+    search one city at a time."""
+    result = call(server, "search_offers", city="polska", district=district)
 
-    result = data(call(server, "search_offers", city="polska"))
-
-    assert (result["items"][0]["city"], result["items"][0]["city_slug"]) == ("Warszawa", "warszawa")
+    assert result.is_error is True
+    assert text(result) == WHOLE_COUNTRY_MESSAGE
+    assert service.calls.call_count == 0
 
 
 def test_search_offers_passes_every_argument(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
-    route = offers_route(service, offers_page("page.offers_list.filtered"))
+    route = offers_route(service, offers_page(total=1192, page=2, per_page=50))
 
     data(
         call(
@@ -166,33 +187,48 @@ def test_search_offers_passes_every_argument(
     }
 
 
-@pytest.mark.parametrize("per_page", [10, 50])
+@pytest.mark.parametrize(
+    ("per_page", "district", "filters"),
+    [
+        (10, None, "dzielnica, cena, metraż"),
+        (50, None, "dzielnica, cena, metraż"),
+        (10, "Mokotów", "cena, metraż"),
+    ],
+)
 def test_truncated_hint_says_to_narrow_the_filters(
-    server: MCPServer[bootstrap.Session], service: respx.MockRouter, per_page: int
+    server: MCPServer[bootstrap.Session],
+    service: respx.MockRouter,
+    per_page: int,
+    district: str | None,
+    filters: str,
 ) -> None:
-    """A bigger page would not narrow 13 324 offers down; the hint does not suggest it."""
-    offers_route(service, offers_page(count=per_page))
+    """A bigger page would not narrow 11 672 offers down; the hint does not suggest it. A
+    city's list is narrowed by a district first."""
+    offers_route(service, offers_page(per_page=per_page))
 
-    result = data(call(server, "search_offers", city="warszawa", per_page=per_page))
+    result = data(
+        call(server, "search_offers", city="warszawa", district=district, per_page=per_page)
+    )
 
     shown = 20 * per_page
     assert result["hint"] == (
-        f"Pasujących ofert jest 13324, a można przejrzeć najwyżej 20 stron po {per_page} "
-        f"({shown}). Zawęź filtry (cena, metraż)."
+        f"Pasujących ofert jest 11672, a można przejrzeć najwyżej 20 stron po {per_page} "
+        f"({shown}). Zawęź filtry ({filters})."
     )
 
 
-@pytest.mark.parametrize("city", ["Kraków", "Warszawa", "KRAKOW", ""])
+@pytest.mark.parametrize("city", ["Kraków", "Warszawa", "KRAKOW", "Polska", ""])
 def test_search_offers_city_that_is_not_a_slug_points_to_search_locations(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter, city: str
 ) -> None:
-    """Mistakes a model makes with `city`: a name, capitals, nothing. No request."""
+    """Mistakes a model makes with `city`: a name, capitals, nothing. No request, and no
+    hint at the whole country, which the search refuses."""
     result = call(server, "search_offers", city=city)
 
     assert result.is_error is True
     assert text(result) == (
-        "city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje "
-        f"search_locations; podano {city!r}."
+        "city: oczekiwano city_slug jednego miasta (małe litery bez polskich znaków, np. "
+        f"warszawa, krakow), nie polska; slug podaje search_locations; podano {city!r}."
     )
     assert service.calls.call_count == 0
 
@@ -220,6 +256,24 @@ def test_search_offers_of_an_unknown_city_is_an_error_that_says_so(
 
     assert result.is_error is True
     assert text(result) == UNKNOWN_CITY_MESSAGE
+    assert not LEAKS.search(text(result))
+
+
+def test_search_offers_in_an_unknown_district_is_an_error_that_says_so(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    """The district's list of a district the city does not have (the real 200 with the 404
+    marker, [P 2026-10-31]): the model is sent to the districts of search_locations."""
+    service.get(path="/ceny-ofertowe/warszawa/nieistniejaca-dzielnica/mieszkania").respond(
+        200,
+        content=raw(OFFERS_UNKNOWN_DISTRICT_20261031),
+        headers={"Content-Type": "text/x-component"},
+    )
+
+    result = call(server, "search_offers", city="warszawa", district=UNKNOWN_DISTRICT)
+
+    assert result.is_error is True
+    assert text(result) == unknown_district_message()
     assert not LEAKS.search(text(result))
 
 
@@ -276,9 +330,11 @@ def test_search_offers_sends_the_new_filters(
     )
 
     sent = route.calls.last.request.url
+    # [P 2026-10-31] the district is its own list, at its slug; the parameters as on the
+    # city's list ([W] on that route, T73).
+    assert sent.path == "/ceny-ofertowe/warszawa/mokotow/mieszkania"
     assert sent.params.multi_items()[:-1] == [
         ("filterPricePerM2", "12000-999999"),
-        ("filterDistrict", "Mokotów"),
         ("filterPriceChange", "decrease"),
         ("filterStatus", "archived"),
         ("sortBy", "size"),
@@ -286,19 +342,16 @@ def test_search_offers_sends_the_new_filters(
         ("perPage", "10"),
     ]
     assert result["list_url"] == (
-        f"{PAGES}/warszawa/mieszkania?filterPricePerM2=12000-999999&filterDistrict="
-        "Mokot%C3%B3w&filterPriceChange=decrease&filterStatus=archived&sortBy=size"
-        "&sortOrder=desc&perPage=10"
+        f"{PAGES}/warszawa/mokotow/mieszkania?filterPricePerM2=12000-999999"
+        "&filterPriceChange=decrease&filterStatus=archived&sortBy=size&sortOrder=desc"
+        "&perPage=10"
     )
 
 
 @pytest.mark.parametrize(
     ("arguments", "message"),
     [
-        (
-            {"city": "polska", "district": "Mokotów"},
-            "district działa tylko z jednym miastem",
-        ),
+        ({"city": "polska", "district": "Mokotów"}, "city=polska nie działa"),
         ({"city": "warszawa", "district": None, "status": ""}, None),
         ({"city": "warszawa", "price_dropped": None}, None),
     ],
@@ -319,3 +372,21 @@ def test_search_offers_new_arguments_as_models_send_them(
     else:
         assert result.is_error is True and text(result).startswith(message)
         assert service.calls.call_count == 0
+
+
+def test_search_offers_description_and_output_schema(server: MCPServer[bootstrap.Session]) -> None:
+    """What the model reads about a search: one city or its district, no rooms nor floor
+    filter (the list does not give them), the items' district, the kinds of the last
+    change (``NEW_OFFER`` [P 2026-10-31]) and what an item's ``name`` is."""
+    tool = tools(server)["search_offers"]
+    item = tool["outputSchema"]["$defs"]["OfferItem"]["properties"]
+
+    assert "w jednym mieście albo w jego dzielnicy; city=polska nie działa" in tool["description"]
+    assert "lista ofert nie filtruje po pokojach ani piętrze" in tool["description"]
+    assert "inwestycja z dzielnicą" in tool["description"]
+    assert "można ją podać w district" in item["district"]["description"]
+    assert (
+        "new_offer (oferta bez zmiany ceny od dodania)"
+        in (item["last_price_change_kind"]["description"])
+    )
+    assert item["name"]["description"].startswith("Oznaczenie mieszkania u dewelopera")

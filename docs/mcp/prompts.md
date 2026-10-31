@@ -15,7 +15,7 @@ Titles, descriptions and argument descriptions below are quoted verbatim from `t
 | `metraz_max` | no | Największy metraż w m², np. 65. |
 | `dzielnica` | no | Dzielnica, np. Mokotów. |
 
-Plan for the model: `search_locations` → `search_offers` (sorted by `price_per_m2_asc`, 10 per page) → a table with `total` and `list_url`.
+Plan for the model: `search_locations` (the city, and with a `dzielnica` the district by its `name`, passed to `search_offers` as `district` together with the `city_slug` of its city) → `search_offers` (sorted by `price_per_m2_asc`, 10 per page) → a table with the columns „inwestycja, dzielnica, deweloper, cena, metraż, cena za m², zmiana ceny od pierwszej i link investment_url” (the district column is new: `search_offers` items carry `district`) and under it `total` and `list_url`. The note on rooms and floors says: `search_offers` does not filter by them (the offer list does not give them), so the model tells the user and narrows the area instead.
 
 ## `ocen_oferte`: Oceń ofertę
 > Ocena ceny jednej oferty: historia ceny (najniższa z 30 i 90 dni, podejrzane obniżki), porównanie z rynkiem miasta i z wyceną z transakcji w okolicy; werdykt z zastrzeżeniami.
@@ -44,6 +44,6 @@ Plan for the model: `search_developers` → `get_developer` (plus `search_locati
 |---|---|---|
 | `miasta` | yes | Nazwy miast rozdzielone przecinkami, np. Kraków, Wrocław, Gdańsk (najwyżej 5). |
 
-Plan for the model: per city `search_locations`, `get_market_statistics`, `get_transaction_statistics` and optionally `get_government_statistics` → one table with asking and transaction prices in separate columns; periods with `incomplete=true` are skipped and the cities are compared up to the earliest `last_complete_period` of them all (a city without one is marked uncertain, see its `hint`).
+Plan for the model: per city `search_locations`, `get_market_statistics`, `get_transaction_statistics` and optionally `get_government_statistics` → one table with asking and transaction prices in separate columns (the asking-price columns are the median asking price per m², the number of offers and the day the service gave them for, `as_of` of `get_market_statistics`); periods with `incomplete=true` are skipped and the cities are compared up to the earliest `last_complete_period` of them all (a city without one is marked uncertain, see its `hint`).
 
 _Source: `src/deweloperuch_mcp/consumers/mcp/prompts/`, `tests/snapshots/mcp_prompts.json`_

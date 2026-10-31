@@ -47,6 +47,10 @@ def test_a_transactions_city_is_a_lowercase_slug(given: str, slug: str) -> None:
     [
         ("polska", "polska"),
         (" Polska ", "polska"),
+        ("7-miast", "7-miast"),
+        (" 10-Miast ", "10-miast"),
+        ("9-miast", "9-miast"),
+        ("6-miast-bez-warszawy", "6-miast-bez-warszawy"),
         ("Kraków", "Kraków"),
         ("a/b", "a/b"),
         ("", ""),
@@ -65,9 +69,19 @@ def test_a_transactions_city_is_never_the_whole_country_nor_text(
     assert caught.value.given == repeated
 
 
-def test_the_whole_country_is_refused_also_when_made_directly() -> None:
+@pytest.mark.parametrize("slug", ["polska", "7-miast", "6-miast-bez-warszawy"])
+def test_the_whole_country_and_groups_of_cities_are_refused_also_when_made_directly(
+    slug: str,
+) -> None:
     with pytest.raises(InvalidValueError):
-        TransactionCity("polska")
+        TransactionCity(slug)
+
+
+def test_the_groups_of_cities_are_named() -> None:
+    """The aggregates of the service's statistics (docs/discovery/pages-rsc.md)."""
+    named = TransactionCity.AGGREGATES
+
+    assert named == {"7-miast", "9-miast", "10-miast", "6-miast-bez-warszawy"}
 
 
 @pytest.mark.parametrize(

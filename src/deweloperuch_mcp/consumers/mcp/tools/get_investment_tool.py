@@ -35,8 +35,11 @@ Ograniczenia: zwraca najwyżej limit ofert (domyślnie 20); offers_returned mów
 jest na liście, truncated i offers_omitted, czy i ile pominięto. offers_total to liczba \
 z serwisu, a pominięte oferty liczy offers_omitted. Przy dużej inwestycji nie zwiększaj \
 limitu bez potrzeby; offers_omitted > 0 znaczy, że lista jest niepełna. \
-include_history=true dodaje historię ceny każdej zwróconej oferty: wynik jest dłuższy i \
-powstaje wolniej. Dla jednej oferty lepiej użyć get_offer."""
+include_history=true dodaje każdej zwróconej ofercie price_history (zdarzenia ceny od \
+najstarszego): ok. 150 znaków więcej na ofertę, czyli przy limicie 20 do ok. 10 tys. znaków \
+zamiast ok. 6 tys. Zmianę od pierwszej ceny ma każda oferta także bez historii \
+(price_change_since_start), więc historię dodawaj, gdy liczy się przebieg ceny. Dla jednej \
+oferty lepiej użyć get_offer."""
 
     async def __call__(
         self,
@@ -56,7 +59,10 @@ powstaje wolniej. Dla jednej oferty lepiej użyć get_offer."""
             null_is(False),
             Field(
                 title="Z historią cen",
-                description="true: dołącz historię ceny każdej zwróconej oferty (dłuższy wynik).",
+                description=(
+                    "true: dołącz price_history każdej zwróconej oferty (ok. 150 znaków więcej "
+                    "na ofertę)."
+                ),
             ),
         ] = False,
         limit: Annotated[
@@ -67,8 +73,9 @@ powstaje wolniej. Dla jednej oferty lepiej użyć get_offer."""
                 description=(
                     "Najwięcej ofert w wyniku (najpierw aktywne), domyślnie 20, 0 = tylko "
                     "podsumowanie inwestycji. Ile pominięto, mówi offers_omitted. Każda oferta "
-                    "to ok. 300 znaków wyniku, z historią ceny kilkaset więcej. Maksimum 200 "
-                    "daje ok. 60 tys. znaków; zwykle wystarcza domyślne 20."
+                    "to ok. 300 znaków wyniku, z historią ceny ok. 450 (zdarzenie to ok. 55 "
+                    "znaków). Maksimum 200 daje ok. 60 tys. znaków; zwykle wystarcza domyślne "
+                    "20."
                 ),
             ),
         ] = DEFAULT_INVESTMENT_LIMIT,

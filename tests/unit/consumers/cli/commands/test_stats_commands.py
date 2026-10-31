@@ -10,13 +10,15 @@ import respx
 from deweloperuch_mcp import identity
 from deweloperuch_mcp.consumers.cli.support.common import ExitCode
 from support.providers.cli import Cli, ok
+from support.providers.error_answers import unknown_location_page
 from support.providers.routes.government_statistics import (
-    STATS_PATH,
+    STATS_PAGES,
     UNKNOWN_LOCATION,
+    stats_path,
     stats_routes,
     unknown_location_route,
 )
-from support.providers.rsc import STATS_POLSKA, raw
+from support.providers.rsc import raw
 
 STATS = identity.BASE_URL + "/statystyki"
 """The statistics pages; the government ones are ``{STATS}/{location}/dane-rzadowe``."""
@@ -60,7 +62,8 @@ def test_stats_government_shows_the_note_decimals_and_missing_values(
     assert lines[-87].startswith("2005-Q1") and lines[-87].endswith("–")  # no data for rent
     assert lines[-1].startswith("2026-Q3") and lines[-1].endswith(" 22")
     assert area.splitlines()[-1] == "2026   62,5"
-    assert len(area.splitlines()) == 7 + 12  # default: 12 periods
+    assert area.splitlines()[3].startswith("Uwaga: Ostatni rok (2026) bywa niepełny")
+    assert len(area.splitlines()) == 8 + 12  # the note, then the default 12 periods
 
 
 def test_stats_government_json_is_the_domain_model(run: Cli, service: respx.MockRouter) -> None:
@@ -118,9 +121,23 @@ def test_stats_government_json_is_the_domain_model(run: Cli, service: respx.Mock
         ),
         (
             ["krakow", "wages"],
-            lambda r: r.get(path=STATS_PATH + "krakow").respond(200, content=raw(STATS_POLSKA)),
+            lambda r: r.get(path=stats_path("krakow")).respond(
+                200, content=raw(STATS_PAGES["warszawa"])
+            ),
             6,
             "Błąd: Statystyki rządowe dla 'krakow': Serwis zwrócił statystyki innej lokalizacji",
+        ),
+        (
+            ["7-miast", "wages"],
+            stats_routes,
+            7,
+            "Błąd: Serwis nie publikuje zestawu 'wages'",
+        ),
+        (
+            ["polska", "wages"],
+            lambda r: r.get(path=stats_path("polska")).respond(404, **unknown_location_page()),
+            6,
+            "Błąd: Statystyki rządowe dla 'polska': Narzędzie nie może pobrać tych danych",
         ),
     ],
 )

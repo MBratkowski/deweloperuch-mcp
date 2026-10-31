@@ -8,6 +8,7 @@ characters.
 """
 
 import json
+import re
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -20,9 +21,12 @@ from support.e2e.live import SERVICE_CHANGED, Budget, Run, run_cli, run_script
 pytestmark = pytest.mark.live
 
 UNKNOWN_CITY = "nieistniejace-miasto"
+UNKNOWN_DEVELOPER = "nieistniejacy-deweloper-e2e"
 PAGES = BASE_URL + "/ceny-ofertowe"
 STATS = BASE_URL + "/statystyki"
 FILTERS = ("--price-max", "900000", "--area-min", "30", "--sort", "price_asc")
+EVENT_LINE = re.compile(r"  \d{4}-\d{2}-\d{2}  (?:cena|wycofanie|przywrócenie) +\S.*")
+"""A price event under its offer (``OfferCliPresenter.event_line``)."""
 
 Cli = Callable[..., Run]
 
@@ -123,14 +127,20 @@ def test_offers_get(cli: Cli, offer: dict[str, Any]) -> None:
     assert run.sent == 2  # the investment and the price history
 
 
-def test_investments_get_with_a_limit(cli: Cli, offer: dict[str, Any]) -> None:
-    run = cli("investments", "get", offer["investment_slug"], "--limit", "2")
+def test_investments_get_with_a_limit_and_history(cli: Cli, offer: dict[str, Any]) -> None:
+    """``--history``: each offer's line is followed by its price events, which the 2.0
+    service sends in the investment's own answer [P 2026-10-30]: still one request."""
+    run = cli("investments", "get", offer["investment_slug"], "--limit", "2", "--history")
 
     lines = ok(run).splitlines()
     assert f"[{offer['investment_slug']}]" in lines[0]
     assert lines[1] == f"Strona inwestycji: {offer['investment_url']}"
     assert any(line.startswith("Oferty: aktywne ") for line in lines)
-    assert sum(line.startswith("[") for line in lines) <= 2
+    starts = [index for index, line in enumerate(lines) if line.startswith("[")]
+    assert 1 <= len(starts) <= 2
+    for start, end in zip(starts, [*starts[1:], len(lines)], strict=True):
+        events = lines[start + 1 : end]
+        assert events and all(EVENT_LINE.fullmatch(line) for line in events), lines[start:end]
     assert run.sent == 1
 
 
@@ -142,7 +152,7 @@ def test_offers_search_of_an_unknown_city(cli: Cli) -> None:
     run.readable()
     lines = run.stderr.splitlines()
     assert lines[0].startswith(f"Błąd: Serwis nie zna miasta '{UNKNOWN_CITY}'.")
-    assert "search_locations" in lines[0] and "polska" in lines[0]
+    assert "search_locations" in lines[0] and "polska" not in lines[0]
     assert SERVICE_CHANGED not in run.stderr
     assert lines[1].startswith("Szczegóły: ")
     assert "<html" not in run.stderr.lower() and "<!doctype" not in run.stderr.lower()
@@ -161,6 +171,16 @@ def test_stats_government_as_text(cli: Cli) -> None:
     rows = lines[header + 1 :]
     assert len(rows) == 12 and all(row[:7].count("-") == 1 for row in rows), rows
     assert run.sent == 1
+
+
+def test_offers_search_of_the_whole_country_sends_nothing(cli: Cli) -> None:
+    """[P 2026-10-29] the service's list of Poland is a list of cities: exit code 2, no
+    request."""
+    run = cli("offers", "search", "polska")
+
+    assert run.code == 2, (run.code, run.stderr)
+    assert run.stderr.startswith("Błąd: city=polska nie działa przy wyszukiwaniu ofert")
+    assert run.sent == 0
 
 
 def test_offers_search_with_a_wrong_page_size_sends_nothing(cli: Cli) -> None:
@@ -204,15 +224,19 @@ def test_skill_install_is_offline(cli: Cli, tmp_path: Path) -> None:
 
 
 def test_stats_market_as_text(cli: Cli) -> None:
-    """`stats market sopot`: a small city (6 offers [P 2026-10-13]), 1 request."""
+    """`stats market sopot`: a small city (8 offers in its offer snapshot [P 2026-10-31]),
+    1 request; the head line ends with the day of the data, and the first of the largest
+    developers is shown by its name and slug."""
     run = cli("stats", "market", "sopot")
 
     lines = ok(run).splitlines()
-    assert lines[0].startswith("Rynek ofert [sopot] · aktywne oferty: ")
+    head = r"Rynek ofert \[sopot\] · aktywne oferty: .+ · stan na \d{4}-\d{2}-\d{2}\."
+    assert re.fullmatch(head, lines[0]), lines[0]
     assert lines[1] == f"Te oferty na deweloperuch.pl: {PAGES}/sopot/mieszkania?perPage=10"
     assert lines[2].split() == ["min", "p25", "mediana", "p75", "max"]
     assert lines[3].startswith("Cena (PLN)")
-    assert any(line.startswith("Najwięcej ofert (pokazano ") for line in lines)
+    top = next(i for i, line in enumerate(lines) if line.startswith("Najwięcej ofert ("))
+    assert re.fullmatch(r"  \S.* \[[a-z0-9-]+\] · oferty .+", lines[top + 1]), lines[top + 1]
     assert run.sent == 1
 
 
@@ -227,4 +251,21 @@ def test_developers_get_in_a_city_as_json(cli: Cli, offer: dict[str, Any]) -> No
     assert data["developer_url"] == f"{PAGES}/krakow/deweloperzy/{slug}"
     assert data["investments"] and {i["city_slug"] for i in data["investments"]} == {"krakow"}
     assert data["cities"]
+    assert run.sent == 1
+
+
+def test_developers_get_of_an_unknown_developer(cli: Cli) -> None:
+    """[P 2026-10-31] the page of an unknown developer in Warsaw answers 200 with Next.js's
+    404 marker: exit code 7 and where slugs come from, never a changed service: 1 request."""
+    run = cli("developers", "get", UNKNOWN_DEVELOPER, "--city", "warszawa")
+
+    assert run.code == 7, (run.code, run.stderr)
+    assert run.stdout == ""
+    run.readable()
+    lines = run.stderr.splitlines()
+    assert lines[0].startswith(
+        f"Błąd: Nie znaleziono dewelopera '{UNKNOWN_DEVELOPER}' w 'warszawa'."
+    )
+    assert "search_developers" in lines[0]
+    assert SERVICE_CHANGED not in run.stderr
     assert run.sent == 1

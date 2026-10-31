@@ -1,5 +1,5 @@
-"""respx routes of the developers' profiles: the real pages
-(tests/fixtures/rsc/developer_*.rsc).
+"""respx routes of the developers' profiles: the real 2.0 pages of 2026-10-31
+(tests/fixtures/rsc/developer_*_20261031.rsc).
 """
 
 import respx
@@ -7,9 +7,12 @@ import respx
 from deweloperuch_mcp.flight import component_props
 from support.providers.routes.offers import RSC_HEADERS
 from support.providers.rsc import (
-    DEVELOPER_POLSKA,
-    DEVELOPER_UNKNOWN,
-    DEVELOPER_WARSZAWA,
+    DEVELOPER_CERES_WARSZAWA_20261031,
+    DEVELOPER_DOM_DEVELOPMENT_WARSZAWA_20261031,
+    DEVELOPER_POLSKA_20261031,
+    DEVELOPER_UNKNOWN_20261031,
+    DEVELOPER_UNKNOWN_POLSKA_20261031,
+    DEVELOPER_WARSZAWA_20261031,
     UNKNOWN_DEVELOPER,
     raw,
     replace_prop,
@@ -19,9 +22,12 @@ DEVELOPERS_PATH = "/ceny-ofertowe/{city}/deweloperzy/{developer}"
 
 
 DEVELOPER_PAGES = {
-    ("warszawa", "atal"): DEVELOPER_WARSZAWA,
-    ("polska", "atal"): DEVELOPER_POLSKA,
-    ("warszawa", UNKNOWN_DEVELOPER): DEVELOPER_UNKNOWN,
+    ("warszawa", "atal"): DEVELOPER_WARSZAWA_20261031,
+    ("polska", "atal"): DEVELOPER_POLSKA_20261031,
+    ("warszawa", "ceres-development"): DEVELOPER_CERES_WARSZAWA_20261031,
+    ("warszawa", "dom-development"): DEVELOPER_DOM_DEVELOPMENT_WARSZAWA_20261031,
+    ("warszawa", UNKNOWN_DEVELOPER): DEVELOPER_UNKNOWN_20261031,
+    ("polska", UNKNOWN_DEVELOPER): DEVELOPER_UNKNOWN_POLSKA_20261031,
 }
 """(city, developer) -> the real page of the developer's profile."""
 
@@ -30,35 +36,42 @@ WITHOUT_OFFERS_CITY = "bialystok"
 
 
 def without_offers(payload: bytes) -> bytes:
-    """The page of a developer with no active offers in that city.
+    """The page of a developer with no active offers in that city: the real page of Warsaw
+    without investments.
 
-    The service writes 0 for the averages of such a page (``averagePrice``,
-    ``averageSize``, ``avgAmountPerM2``) and lists no investment [P 2026-10-20] (live:
-    ``atal`` in ``bialystok``); the real page of Warsaw with those figures replaced.
+    [P 2026-10-20] the 1.0 page of such a developer (live: ``atal`` in ``bialystok``)
+    listed no investment; how the 2.0 page shows it was not seen [H] (an empty
+    ``investments``, as here, or Next.js's 404 marker; the live suite asks a known developer
+    in an unknown city). The chart of cities is the developer's, whatever the city.
     """
-    props = list(component_props(payload))
-    data = next(value for name, value in props if name == "data" and isinstance(value, dict))
-    edited = {
-        **data,
-        "investments": [],
-        "filteredStats": {
-            **data["filteredStats"],
-            "totalProjects": 0,
-            "totalSales": 0,
-            "totalCities": 0,
-            "averagePrice": 0,
-            "averageSize": 0,
-            "avgAmountPerM2": 0,
-        },
-    }
-    return replace_prop(payload, "data", lambda value: isinstance(value, dict), edited)
+    return replace_prop(payload, "investments", lambda value: isinstance(value, list), [])
+
+
+def without_cities_chart(payload: bytes) -> bytes:
+    """The page with its chart of cities renamed, as if the service had dropped it (the
+    page of a developer in one city has none [P 2026-10-31])."""
+    assert payload.count(b'"ceny-w-miastach"') == 1
+    return payload.replace(b'"ceny-w-miastach"', b'"ceny-w-regionach"')
+
+
+def with_cities_reversed(payload: bytes) -> bytes:
+    """The page with the rows of its chart of cities in the opposite order (the service
+    lists them by price per m², a result by active offers)."""
+    rows = next(
+        value
+        for name, value in component_props(payload)
+        if name == "spec" and isinstance(value, dict) and value.get("id") == "ceny-w-miastach"
+    )["views"][""]["rows"]
+    return replace_prop(payload, "rows", lambda value: value == rows, list(reversed(rows)))
 
 
 def developer_routes(router: respx.MockRouter) -> dict[tuple[str, str], respx.Route]:
-    """The profiles of ATAL in Warsaw and in the whole country and the page of an unknown
-    developer in Warsaw, byte for byte (tests/fixtures/rsc/developer_*.rsc), plus the page
-    of a developer without active offers in that city. Add them before ``offers_route``
-    (it answers every ``/ceny-ofertowe/`` path)."""
+    """The profiles of ATAL in Warsaw and in the whole country, of Ceres Development (one
+    city, no chart of cities) and Dom Development in Warsaw, and the pages of an unknown
+    developer in Warsaw and in the whole country, byte for byte
+    (tests/fixtures/rsc/developer_*_20261031.rsc), plus the page of a developer without
+    active offers in that city. Add them before ``offers_route`` (it answers every
+    ``/ceny-ofertowe/`` path)."""
     routes = {
         key: router.get(path=DEVELOPERS_PATH.format(city=key[0], developer=key[1])).respond(
             200, content=raw(path), headers=RSC_HEADERS
@@ -67,5 +80,5 @@ def developer_routes(router: respx.MockRouter) -> dict[tuple[str, str], respx.Ro
     }
     routes[(WITHOUT_OFFERS_CITY, "atal")] = router.get(
         path=DEVELOPERS_PATH.format(city=WITHOUT_OFFERS_CITY, developer="atal")
-    ).respond(200, content=without_offers(raw(DEVELOPER_WARSZAWA)), headers=RSC_HEADERS)
+    ).respond(200, content=without_offers(raw(DEVELOPER_WARSZAWA_20261031)), headers=RSC_HEADERS)
     return routes

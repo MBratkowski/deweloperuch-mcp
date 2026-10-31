@@ -6,8 +6,10 @@ from mcp.server.mcpserver import MCPServer
 
 from deweloperuch_mcp import bootstrap
 from support.checks.leaks import SIZE_BUDGET
+from support.providers.error_answers import CHANGED_SERVICE, removed_route
 from support.providers.mcp import call, data, keys, text
-from support.providers.routes.city_sales import city_sales_routes
+from support.providers.routes.offer_snapshot import OFFER_SNAPSHOT_PATH, offer_snapshot_routes
+from support.providers.rsc import UNKNOWN_CITY
 from support.providers.service import PAGES
 
 # The MCP server runs behind the SDK's in-memory client: its event loop needs Unix sockets.
@@ -17,31 +19,39 @@ pytestmark = pytest.mark.usefixtures("unix_sockets_for_the_event_loop")
 def test_get_market_statistics_of_a_city(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
-    routes = city_sales_routes(service)
+    routes = offer_snapshot_routes(service)
 
     result = data(call(server, "get_market_statistics", city="sopot", top_developers=1))
 
     assert result == {
         "city_slug": "sopot",
-        "offers": 6,
+        "as_of": "2026-10-31",
+        "offers": 8,
         "investments": 2,
         "developers": 1,
-        # statistics.quantiles(..., method="inclusive") of the 6 offers, rounded
+        # statistics.quantiles(..., method="inclusive") of the 8 offers, rounded
         "price": {
-            "min": 1399205,
-            "p25": 1588164,
-            "median": 1616463,
-            "p75": 1646230,
-            "max": 1679796,
+            "min": 1261250,
+            "p25": 1534860,
+            "median": 1616858,
+            "p75": 1661530,
+            "max": 3735107,
         },
-        "price_per_m2": result["price_per_m2"],
-        "area_m2": {"min": 56.5, "p25": 61.21, "median": 67.0, "p75": 68.7, "max": 69.5},
+        "price_per_m2": {
+            "min": 24289,
+            "p25": 25224,
+            "median": 25808,
+            "p75": 26383,
+            "max": 39115,
+        },
+        "area_m2": {"min": 48.73, "p25": 58.11, "median": 64.69, "p75": 66.02, "max": 95.49},
         "top_developers": [
             {
                 "developer_slug": "invest-komfort-spolka-akcyjna",
-                "offers": 6,
+                "developer_name": "Invest Komfort Spółka Akcyjna Sp.K.",
+                "offers": 8,
                 "investments": 2,
-                "median_price_per_m2": result["top_developers"][0]["median_price_per_m2"],
+                "median_price_per_m2": 25808,
                 "developer_url": f"{PAGES}/sopot/deweloperzy/invest-komfort-spolka-akcyjna",
             }
         ],
@@ -50,23 +60,22 @@ def test_get_market_statistics_of_a_city(
         "truncated": False,
         "list_url": f"{PAGES}/sopot/mieszkania?perPage=10",
     }
-    assert all(isinstance(v, int) for v in result["price_per_m2"].values())
     assert routes["sopot"].call_count == 1
 
 
 def test_the_market_never_shows_single_offers_and_fits_its_budget(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
-    """D5, D15: 7325 offers of Kraków, only aggregates and 30 developers at most."""
-    city_sales_routes(service)
+    """D5, D20: 11,672 offers of Warszawa, only aggregates and 30 developers at most."""
+    offer_snapshot_routes(service)
 
     result = call(
-        server, "get_market_statistics", city="krakow", price_max=900_000, top_developers=30
+        server, "get_market_statistics", city="warszawa", price_max=900_000, top_developers=30
     )
 
     found = data(result)
-    assert found["offers"] < 7325 and found["developers_returned"] == 30
-    assert found["list_url"].endswith("/krakow/mieszkania?filterPrice=0-900000&perPage=10")
+    assert found["offers"] < 11_672 and found["developers_returned"] == 30
+    assert found["list_url"].endswith("/warszawa/mieszkania?filterPrice=0-900000&perPage=10")
     assert not {"offer_id", "items", "offers_list", "sales"} & keys(found)
     assert len(text(result)) < SIZE_BUDGET
 
@@ -81,8 +90,15 @@ def test_the_market_never_shows_single_offers_and_fits_its_budget(
             0,
         ),
         (
-            "nieznane",
-            "Serwis nie zna miasta 'nieznane'. Podaj city_slug z search_locations (statystyki "
+            "Kraków",
+            "city: oczekiwano slug jednego miasta z search_locations: małe litery, bez "
+            "polskich znaków (np. warszawa, sopot; nie polska); podano 'Kraków'.",
+            0,
+        ),
+        (
+            UNKNOWN_CITY,
+            f"Serwis nie zna miasta '{UNKNOWN_CITY}' albo nie ma w nim ofert. Podaj city_slug "
+            "z search_locations (miejscowości z offer_count=0 nie mają statystyk; statystyki "
             "rynku są tylko dla jednego miasta).",
             1,
         ),
@@ -95,10 +111,22 @@ def test_the_market_of_the_whole_country_or_an_unknown_city(
     message: str,
     sent: int,
 ) -> None:
-    city_sales_routes(service)
-    service.get("/api/offers/city-sales/nieznane").respond(400, json={"error": "Invalid citySlug"})
+    offer_snapshot_routes(service)
 
     result = call(server, "get_market_statistics", city=city)
 
     assert result.is_error is True and text(result) == message
     assert service.calls.call_count == sent
+
+
+def test_a_removed_snapshot_is_a_changed_service_not_an_unknown_city(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    """D21: the HTML 404 of a route that is gone tells the model to report it, not to look
+    for another city."""
+    service.get(OFFER_SNAPSHOT_PATH + "sopot").respond(404, **removed_route())
+
+    result = call(server, "get_market_statistics", city="sopot")
+
+    assert result.is_error is True
+    assert text(result) == f"Statystyki rynku w 'sopot': {CHANGED_SERVICE}"

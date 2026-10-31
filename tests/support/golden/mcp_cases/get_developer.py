@@ -19,6 +19,12 @@ CASES: dict[str, Case] = {
     "developer_unknown": case(
         DEVELOPER, developer_routes, developer_slug=UNKNOWN_DEVELOPER, city="warszawa"
     ),
+    "developer_unknown_whole_country": case(
+        DEVELOPER, developer_routes, developer_slug=UNKNOWN_DEVELOPER
+    ),
+    "developer_single_city": case(
+        DEVELOPER, developer_routes, developer_slug="ceres-development", city="warszawa"
+    ),
     "developer_slug_capitals": case(DEVELOPER, developer_routes, developer_slug="ATAL"),
     "developer_city_name": case(DEVELOPER, developer_routes, developer_slug="atal", city="Kraków"),
     "developer_limit_0": case(DEVELOPER, developer_routes, developer_slug="atal", limit=0),

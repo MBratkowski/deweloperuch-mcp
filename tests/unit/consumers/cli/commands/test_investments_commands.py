@@ -9,7 +9,11 @@ import respx
 
 from support.builders.investments import DEVELOPER_PAGE, SMOLNA_PAGE
 from support.providers.cli import Cli, ok
-from support.providers.routes.investments import INVESTMENT, investment_routes
+from support.providers.routes.investments import (
+    INVESTMENT,
+    investment_routes,
+    smolna_with_events,
+)
 
 
 def test_investments_get_prints_the_investment_and_its_offers(
@@ -36,13 +40,16 @@ def test_investments_get_prints_the_investment_and_its_offers(
 
 
 def test_investments_get_with_history_and_limit(run: Cli, service: respx.MockRouter) -> None:
-    _, history, _ = investment_routes(service)
+    investment, history, _ = investment_routes(service, smolna_with_events())
 
     out = ok(run("investments", "get", "smolna", "--history", "--limit", "1"))
 
-    assert history.call_count == 1
-    assert "Oferty: aktywne 3 z 16 · pokazano 1 · pominięto 2 (zwiększ --limit)." in out
-    assert "  2026-10-03  cena          1 679 796 PLN" in out
+    assert (investment.call_count, history.call_count) == (1, 0)  # the history comes with it
+    assert "Oferty: aktywne 4 z 17 · pokazano 1 · pominięto 16 (zwiększ --limit)." in out
+    assert out.splitlines()[-2:] == [
+        "[206523] C121 · 3 735 107 PLN · 95,49 m² · 39 115,16 PLN/m² · aktywna",
+        "  2026-10-24  cena          3 735 107 PLN",
+    ]
 
 
 def test_investments_get_json_is_the_domain_model(run: Cli, service: respx.MockRouter) -> None:

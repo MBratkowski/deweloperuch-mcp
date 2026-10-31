@@ -1,7 +1,8 @@
 """Live: ``recon/probe.py``, one request per run (never the bundle scanner: ~140 requests).
 
-The page run checks the fix of 2026-10-10 on the live service: without ``--prop`` the
-list of data props now shows ``initialData`` (the data row follows text rows).
+The page run checks the reading of a page on the live service: without ``--prop`` the list
+of data props shows the props of the offers list, ``sales`` and ``serverPaginationData``
+on 2.0 [P 2026-10-31] (``initialData`` until 2026-10-29), whatever text rows surround them.
 """
 
 import json
@@ -26,4 +27,5 @@ def test_probe_page_lists_the_data_props(budget: Budget) -> None:
 
     assert run.code == 0, (run.code, run.stderr)
     listed = json.loads(run.stdout)
-    assert {"name": "initialData", "type": "object", "size": 2} in listed
+    assert {"name": "sales", "type": "array", "size": 10} in listed
+    assert {"name": "serverPaginationData", "type": "object", "size": 6} in listed

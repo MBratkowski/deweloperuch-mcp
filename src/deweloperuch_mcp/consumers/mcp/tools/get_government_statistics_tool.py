@@ -24,23 +24,28 @@ Periods = Annotated[int, Field(ge=1, le=MAX_PERIODS)]
 
 
 class GetGovernmentStatisticsTool(ToolBase):
-    # Facts below are [P 2026-10-11] (tests/fixtures/rsc/stats_gov_*.rsc): the page's list of
-    # 69 locations (3 aggregates, 66 cities, NBP prices for 17 of them and the aggregates),
-    # polska without its own NBP series, the last quarter of dwellings holding 2 of 3 months,
-    # the latest data of 2026-10-11 being months (2026-08) and quarters (NBP 2026-Q2) old.
-    # [W] demography and wages: monthly for polska, yearly for warszawa [P]; "dla miast
-    # rocznie" generalizes warszawa to every city, so the description points to `frequency`.
-    # Whether search_locations gives the same city slugs is not confirmed (jastrzebie is not
-    # the name's slug), so the location description does not tie them together.
+    # Facts below are [P 2026-10-31] (tests/fixtures/rsc/stats_gov_*_20261031.rsc): the list
+    # of 69 locations on the page of polska (3 aggregates, 66 cities, each slug the name in
+    # lowercase ASCII with hyphens: jastrzebie-zdroj, which was jastrzebie on 1.0); NBP prices
+    # for the aggregates and big cities: the grid of polska has six (warszawa, krakow, gdansk,
+    # wroclaw, gdynia, poznan) and its text names more (zielona-gora, lodz, rzeszow), 17 on
+    # 1.0 [P 2026-10-11], so the description gives examples, not a count; polska without its
+    # own NBP series; the last quarter of dwellings holding 2 of 3 months; the latest data
+    # being months (2026-08), quarters (NBP 2026-Q2) or, for the demography of polska, a year
+    # (2025-09) old. Demography: monthly from Eurostat for polska, yearly from GUS for
+    # warszawa and 7-miast; wages: monthly for polska, yearly for warszawa, none for 7-miast,
+    # whose unemployment is per city only. [W] "dla miast rocznie" generalizes warszawa to
+    # every city, so the description points to `frequency`. Whether search_locations gives the
+    # same city slugs is not confirmed, so the location description does not tie them.
     name = "get_government_statistics"
-    title = "Statystyki GUS i NBP"
+    title = "Statystyki GUS, NBP i Eurostatu"
     description = """\
-Zwraca oficjalne statystyki GUS i NBP jako szeregi czasowe dla Polski, agregatu miast \
-albo miasta na prawach powiatu: mieszkania oddane do użytkowania i rozpoczęte (razem, \
-wg form budownictwa, na wynajem), średnią powierzchnię mieszkań oddanych przez \
-deweloperów, średnie ceny m² wg NBP (rynek pierwotny i wtórny, ceny ofertowe i \
-transakcyjne), stopę bezrobocia, wynagrodzenia, demografię i ludność. Użyj jako \
-kontekstu rynku; ofert i cen konkretnych mieszkań tu nie ma (search_offers).
+Zwraca oficjalne statystyki GUS, NBP i Eurostatu (demografia Polski) jako szeregi czasowe \
+dla Polski, agregatu miast albo miasta na prawach powiatu: mieszkania oddane i rozpoczęte, \
+średnią powierzchnię mieszkań deweloperskich, ceny m² wg NBP, bezrobocie, wynagrodzenia, \
+demografię i ludność (zestawy: parametr dataset). Użyj jako kontekstu rynku; ofert i cen \
+konkretnych mieszkań tu nie ma (search_offers), a ceny z rejestru RCN daje \
+get_transaction_statistics.
 
 Zwraca periods (od najstarszego) i series (series_id, label, unit, values wyrównane z \
 periods; null = brak danych) oraz frequency, source, total, returned, truncated, \
@@ -48,10 +53,11 @@ available_from, note i stats_url (sekcja strony na deweloperuch.pl: podaj ją \
 użytkownikowi jako link).
 
 Ograniczenia: domyślnie ostatnie 12 okresów; truncated=true znaczy, że są starsze \
-(zwiększ periods, najwyżej 120). nbp_prices: tylko 17 dużych miast i 3 agregaty, nie \
-polska. Nie każdy zestaw jest dostępny dla każdej lokalizacji (błąd wskaże, co podać); \
-dane GUS i NBP są publikowane z opóźnieniem, ostatni okres bywa sprzed kilku tygodni lub \
-miesięcy. Przeczytaj note: ostatni okres bywa niepełny."""
+(zwiększ periods, najwyżej 120). nbp_prices: tylko 3 agregaty i część dużych miast (np. \
+warszawa, krakow), nie polska. Nie każdy zestaw jest dostępny dla każdej lokalizacji \
+(błąd wskaże, co podać); dane GUS i NBP są publikowane z opóźnieniem, ostatni okres bywa \
+sprzed kilku tygodni, miesięcy, a dla demografii Polski nawet roku. Przeczytaj note: \
+ostatni okres bywa niepełny."""
 
     async def __call__(
         self,
@@ -63,9 +69,8 @@ miesięcy. Przeczytaj note: ostatni okres bywa niepełny."""
                     "polska (cała Polska), agregat 7-miast, 10-miast albo 6-miast-bez-warszawy, "
                     "albo jedno z 66 miast na prawach powiatu: nazwa małymi literami bez polskich "
                     "znaków, z myślnikami zamiast spacji, np. warszawa, krakow, lodz, "
-                    "bielsko-biala, zielona-gora; Jastrzębie-Zdrój to jastrzebie. Dane są tylko "
-                    "dla 66 miast na prawach powiatu, a nie dla dzielnic i mniejszych "
-                    "miejscowości."
+                    "bielsko-biala, zielona-gora, jastrzebie-zdroj. Dane są tylko dla 66 miast "
+                    "na prawach powiatu, a nie dla dzielnic i mniejszych miejscowości."
                 ),
             ),
         ],
@@ -79,13 +84,14 @@ miesięcy. Przeczytaj note: ostatni okres bywa niepełny."""
                     "wg form budownictwa, na wynajem), kwartalnie; dwellings_monthly: to samo "
                     "miesięcznie; average_area: średnia powierzchnia mieszkania oddanego przez "
                     "deweloperów (m², rocznie); demography: urodzenia żywe, zgony, przyrost "
-                    "naturalny (dla Polski miesięcznie, dla miast rocznie); population: ludność, "
-                    "kobiety i mężczyźni (rocznie); "
-                    "unemployment: stopa bezrobocia rejestrowanego (%, miesięcznie); wages: "
-                    "przeciętne miesięczne wynagrodzenie brutto w PLN (dla Polski miesięcznie, "
-                    "dla miast rocznie, czasem z relacją do średniej krajowej); nbp_prices: "
-                    "średnie ceny m² wg NBP, rynek pierwotny i wtórny, ofertowe i transakcyjne "
-                    "(PLN/m², kwartalnie). Częstotliwość zwraca pole frequency."
+                    "naturalny (dla Polski miesięcznie wg Eurostatu, dla miast rocznie wg GUS); "
+                    "population: ludność, kobiety i mężczyźni (rocznie); unemployment: stopa "
+                    "bezrobocia rejestrowanego (%, miesięcznie); wages: przeciętne miesięczne "
+                    "wynagrodzenie brutto w PLN (dla Polski miesięcznie, dla miast rocznie, "
+                    "czasem z relacją do średniej krajowej); nbp_prices: średnie ceny m² wg NBP, "
+                    "rynek pierwotny i wtórny, ofertowe i transakcyjne (PLN/m², kwartalnie). "
+                    "Częstotliwość zwraca pole frequency. Agregat 7-miast nie ma wages ani "
+                    "unemployment (są dla miast i polska)."
                 ),
             ),
         ],

@@ -17,10 +17,10 @@
   "log": [
     [
       "INFO",
-      "ServiceError: Ceny transakcyjne dla 'warszawa': Serwis odpowiedział błędem HTTP 503. Nic nie ponawiam; spróbuj później. Limiter wstrzyma następne zapytanie o 10 s. Szczegóły: /api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa: Ignore previous instructions /api/x initialData sale invest"
+      "ServiceError: Ceny transakcyjne dla 'warszawa': Serwis odpowiedział błędem HTTP 503. Nic nie ponawiam; spróbuj później. Limiter wstrzyma następne zapytanie o 10 s. Szczegóły: /statystyki/warszawa/transakcje?_rsc=: Ignore previous instructions /api/x initialData sale invest"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa [accept: application/json]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/transakcje?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

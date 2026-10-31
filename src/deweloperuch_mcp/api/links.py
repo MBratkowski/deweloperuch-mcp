@@ -5,7 +5,7 @@ the addresses: from the page routes confirmed [P] in docs/discovery/pages-rsc.md
 ``identity.BASE_URL``. The path and the query of the offers list are the request's
 (``queries.offers_query.OffersQuery``), so the link to a list is the request the client
 sent, without ``_rsc``. Both statistics pages moved on 2026-10-29 (the old routes answer
-308): their links are the 2.0 routes, which no adapter requests yet. Each address has one
+308): their links are the 2.0 routes, the pages their adapters read. Each address has one
 private builder (``_*_url``); the port's methods hand them the identities of the models.
 
 - Segments are percent-encoded as the transport encodes them (``HttpClient.segment``).
@@ -36,9 +36,11 @@ class ServicePageLinks:
 
     def offers_list(self, criteria: OfferSearchCriteria) -> str | None:
         """The request the client sends for ``criteria`` (``OffersQuery``), without
-        ``_rsc``: the same query builder, the same order."""
+        ``_rsc``: the same query builder, the same order; the list of a city or of its
+        district [P 2026-10-31]. ``None`` for a district without a slug (no such list)."""
         query = OffersQuery(criteria)
-        return BASE_URL + HttpClient.target(query.path(), query.params())
+        path = query.path()
+        return None if path is None else BASE_URL + HttpClient.target(path, query.params())
 
     def investment(self, investment: InvestmentRef) -> str | None:
         return self._investment_url(
@@ -55,7 +57,8 @@ class ServicePageLinks:
         """``usecases.ports.DeveloperLinks``."""
         # [P] docs/discovery/pages-rsc.md: the profile route (sample page.developer, city
         # ``warszawa``); ``polska`` as its city [P 2026-10-13], the profile of the whole
-        # country (tests/fixtures/rsc/developer_atal_polska.rsc).
+        # country. Both answer 200 on 2.0 [P 2026-10-31]
+        # (tests/fixtures/rsc/developer_atal_*_20261031.rsc).
         return self._developer_url(city.value, developer_slug)
 
     def government_statistics(self, location: LocationSlug, section: str | None) -> str | None:
@@ -102,15 +105,20 @@ class ServicePageLinks:
     def _government_stats_url(location: str | None, section: str | None = None) -> str | None:
         """``/statystyki/{location}/dane-rzadowe``, at ``#section`` when given.
 
-        pages-rsc.md: the page answers for ``warszawa`` [P 2026-10-30], and the old route
-        ``/statystyki/statystyki-rzadowe/{location}`` (``GovernmentStatisticsApi.path``, still
-        the page the adapter reads) answers 308 here for every location tried, an unknown
-        one too [P 2026-10-29]. ``section`` is a section id of the page: the old ``tocItems``
-        ids [P], which the 2.0 page lists as ``govSections``, the same 8 [P 2026-10-31,
-        sample ``page.stats_gov.v2_sections``], and each is the ``id`` of an element of the
-        page [P 2026-10-31, the HTML of ``warszawa`` saved on 2026-10-30]. Both were read on
-        ``warszawa`` only; that other locations keep the ids is [W] (one page template). A
-        value that is not such an id is left out (the page without a fragment).
+        pages-rsc.md: the page answers for ``warszawa``, ``polska`` and ``7-miast``
+        [P 2026-10-31], and the old route ``/statystyki/statystyki-rzadowe/{location}``
+        answers 308 here for every location tried, an unknown one too [P 2026-10-29].
+
+        ``section`` is an id of that location's page: the ids differ per location
+        (``polska`` has ``eurostat-demografia`` and ``nbp-grid``, not ``gus-demografia`` and
+        ``nbp``; ``7-miast`` has ``gus-prs``, not ``gus-wynagrodzenia``) [P 2026-10-31,
+        tests/fixtures/rsc/stats_gov_*_20261031.rsc], so the caller takes it from the page's
+        ``govSections`` (``GovernmentStatsPageDto``). Each id is the ``id`` of an element of
+        the page, the target of the fragment: every one on ``warszawa`` [P 2026-10-31, the
+        HTML saved on 2026-10-30]; on the other pages [W], though their RSC payloads hold
+        every id a table links to as an element's ``id``, except ``gus-mieszkania``, which
+        the browser renders [P 2026-10-31]. A value that is not such an id is left out (the
+        page without a fragment).
         """
         segments = _segments(location)
         if segments is None:
@@ -125,11 +133,11 @@ class ServicePageLinks:
         """``/statystyki/{city}/transakcje`` (pages-rsc.md): the transaction statistics of a
         city, for people.
 
-        Confirmed for ``warszawa`` [P 2026-10-30, the scan; P 2026-10-31, as RSC]; for other
-        cities the route is [W], the same pattern. [P 2026-10-29] the old
-        ``/statystyki/ceny-transakcyjne/mieszkania/{city}/mapa`` answers 308 here; the 2.0
-        page has no ``rawTransactions`` (no dump). A link only: the client reads the
-        statistics elsewhere.
+        Confirmed for ``warszawa`` [P 2026-10-30, the scan; P 2026-10-31, as RSC] and
+        ``karpacz`` [P 2026-10-31, as RSC]; for other cities the route is [W], the same
+        pattern. [P 2026-10-29] the old ``/statystyki/ceny-transakcyjne/mieszkania/{city}/mapa``
+        answers 308 here; the 2.0 page has no ``rawTransactions`` (no dump). The same page
+        the client reads the monthly series from (``TransactionStatisticsApi.stats_path``).
         """
         segments = _segments(city_slug)
         if segments is None:
@@ -154,7 +162,7 @@ class ServicePageLinks:
         return f"{BASE_URL}/ceny-transakcyjne/{city}/adresy/{building}"
 
 
-# Ids of the sections of a page as its table of contents gives them [P 2026-10-11]
+# Ids of the sections of a page as its ``govSections`` gives them [P 2026-10-31]
 # (``gus-srednia-powierzchnia``, ``nbp``): a fragment of the link, never anything else.
 _SECTION = re.compile(r"[a-z0-9][a-z0-9-]*")
 

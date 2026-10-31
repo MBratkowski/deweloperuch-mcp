@@ -14,17 +14,16 @@
     "Miejsce: Sopot [sopot], Świemirowo · 54.42736, 18.55839",
     "Deweloper: Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna]",
     "Profil dewelopera: https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna",
-    "Średnio (aktywne oferty): 1 566 392 PLN · 63,97 m² · 24 487,63 PLN/m²",
-    "Oferty: aktywne 3 z 16 · pokazano 1 · pominięto 2 (zwiększ --limit).",
-    "[206087] C234 · 1 679 796 PLN · 65,9 m² · 25 490,08 PLN/m² · aktywna",
-    "  2026-10-03  cena          1 679 796 PLN",
+    "Średnio (aktywne oferty): 2 108 801 PLN · 70,31 m² · 29 992,91 PLN/m²",
+    "Oferty: aktywne 4 z 17 · pokazano 1 · pominięto 16 (zwiększ --limit).",
+    "[206523] C121 · 3 735 107 PLN · 95,49 m² · 39 115,16 PLN/m² · aktywna",
+    "  2026-10-24  cena          3 735 107 PLN",
     ""
   ],
   "stderr": [
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]",
-    "GET https://deweloperuch.pl/api/investments/33/sale-events [accept: application/json]"
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
   ]
 }

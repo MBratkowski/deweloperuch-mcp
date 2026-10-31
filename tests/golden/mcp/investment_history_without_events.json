@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "get_investment",
+      "arguments": {
+        "investment_slug": "smolna",
+        "include_history": true
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Historia cen inwestycji 'smolna': Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi. Zamiast tego możesz pobrać inwestycję bez include_history albo historię jednej oferty przez get_offer.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "UnexpectedResponseError: Historia cen inwestycji 'smolna': Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi. Zamiast tego możesz pobrać inwestycję bez include_history albo historię jednej oferty przez get_offer. Szczegóły: /api/map/investments/visible/smolna: sale.0.ev: Field required; sale.1.ev: Field required; sale.2.ev: Field required"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
+  ]
+}

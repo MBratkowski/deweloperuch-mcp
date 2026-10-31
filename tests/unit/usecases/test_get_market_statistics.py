@@ -2,10 +2,8 @@
 
 import pytest
 
-from deweloperuch_mcp.models.errors import (
-    NotFoundError,
-)
-from deweloperuch_mcp.models.market_statistics import MarketOffer
+from deweloperuch_mcp.models.errors import InvalidInputError, NotFoundError
+from deweloperuch_mcp.models.market_statistics import MarketCity, MarketOffer
 from deweloperuch_mcp.usecases.get_market_statistics import (
     GetMarketStatistics,
     GetMarketStatisticsRequest,
@@ -18,7 +16,7 @@ def market_offer(offer_id: int, developer: str, price: float, area: float) -> Ma
         offer_id=offer_id,
         investment_slug=f"inv-{developer}",
         developer_slug=developer,
-        status="active",
+        developer_name=developer.upper(),
         price=price,
         area_m2=area,
     )
@@ -38,6 +36,21 @@ def test_the_market_is_one_request_and_links_its_list_and_developers() -> None:
     assert found.developer_urls == ("developer:krakow:atal",)
 
 
+def test_the_city_of_the_market_is_a_city_of_its_own() -> None:
+    assert GetMarketStatisticsRequest.parse(city=" krakow ").criteria.city == MarketCity("krakow")
+
+
+@pytest.mark.parametrize("city", ["Kraków", "KRAKOW", "krakow/mieszkania", ""])
+def test_a_city_that_is_no_slug_is_refused_in_the_words_of_the_market(city: str) -> None:
+    with pytest.raises(InvalidInputError) as caught:
+        GetMarketStatisticsRequest.parse(city=city)
+
+    assert str(caught.value) == (
+        "city: oczekiwano slug jednego miasta z search_locations: małe litery, bez polskich "
+        f"znaków (np. warszawa, sopot; nie polska); podano {city!r}."
+    )
+
+
 def test_an_empty_market_says_what_to_do() -> None:
     found = GetMarketStatistics(FakeCatalogs(), EchoPageLinks()).execute(
         GetMarketStatisticsRequest.parse(city="krakow")
@@ -51,7 +64,8 @@ def test_an_empty_market_says_what_to_do() -> None:
 
 
 def test_an_unknown_city_of_the_market_points_to_search_locations() -> None:
-    fake = FakeCatalogs(errors={"city_offers nieznane": NotFoundError("400")})
+    """An unknown city, or one the service lists without offers [H]: the same answer."""
+    fake = FakeCatalogs(errors={"city_offers nieznane": NotFoundError("404")})
 
     with pytest.raises(NotFoundError) as caught:
         GetMarketStatistics(fake, EchoPageLinks()).execute(
@@ -59,6 +73,7 @@ def test_an_unknown_city_of_the_market_points_to_search_locations() -> None:
         )
 
     assert str(caught.value) == (
-        "Serwis nie zna miasta 'nieznane'. Podaj city_slug z search_locations (statystyki "
-        "rynku są tylko dla jednego miasta)."
+        "Serwis nie zna miasta 'nieznane' albo nie ma w nim ofert. Podaj city_slug z "
+        "search_locations (miejscowości z offer_count=0 nie mają statystyk; statystyki rynku "
+        "są tylko dla jednego miasta)."
     )

@@ -2,39 +2,31 @@
 
 Unlike the samples in docs/discovery/samples/ (the value of one prop), these are whole
 ``text/x-component`` bodies as the service sent them: text rows (``<id>:T<len>,``) with
-JSON-LD right before the row with the data, no newline after them. Tests that go
+JSON-LD next to the row with the data, no newline after them. Tests that go
 through the wire format use these, not a payload built from assumptions
 (``samples.rsc_payload``). Where a test needs specific offers, they are
-spliced into the real frame (``offers_payload``): every other byte stays as sent.
+spliced into the real 2.0 frame (``offers_payload``): every other byte stays as sent.
 See tests/fixtures/rsc/README.md for their source.
 """
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
 from support.paths import RSC_FIXTURES as FIXTURES
 
+# The 1.0 service, before 2026-10-29: the flight parser, probe and the not-found answers of
+# other pages read these; the offers routes answer with the 2.0 pages below.
 OFFERS_WARSZAWA = FIXTURES / "warszawa_perPage10.rsc"
-"""``/ceny-ofertowe/warszawa/mieszkania?perPage=10``: ``initialData`` with 10 offers."""
+"""1.0: ``/ceny-ofertowe/warszawa/mieszkania?perPage=10``: ``initialData`` with 10 offers."""
 
 OFFERS_UNKNOWN_CITY = FIXTURES / "unknown_city_perPage10.rsc"
-"""``/ceny-ofertowe/nieistniejace-miasto/mieszkania?perPage=10``: HTTP 200, no
+"""1.0: ``/ceny-ofertowe/nieistniejace-miasto/mieszkania?perPage=10``: HTTP 200, no
 ``initialData``, an error row with the digest ``NEXT_HTTP_ERROR_FALLBACK;404``."""
 
 UNKNOWN_CITY = "nieistniejace-miasto"
 """The city slug the unknown-city payload was requested with."""
-
-STATS_POLSKA = FIXTURES / "stats_gov_polska.rsc"
-"""``/statystyki/statystyki-rzadowe/polska``: the root page of the government statistics
-(GUS, NBP grid of cities), ``currentSlug`` null."""
-
-STATS_WARSZAWA = FIXTURES / "stats_gov_warszawa.rsc"
-"""``/statystyki/statystyki-rzadowe/warszawa``: a city with its own NBP prices."""
-
-STATS_FIXTURES = {"polska": STATS_POLSKA, "warszawa": STATS_WARSZAWA}
-"""Location -> its real page."""
 
 DEVELOPER_WARSZAWA = FIXTURES / "developer_atal_warszawa.rsc"
 """``/ceny-ofertowe/warszawa/deweloperzy/atal``: 4 investments, 14 cities."""
@@ -65,6 +57,16 @@ DEVELOPER_POLSKA_20261031 = FIXTURES / "developer_atal_polska_20261031.rsc"
 """``/ceny-ofertowe/polska/deweloperzy/atal``: the same shape, ``investments`` ×42."""
 DEVELOPER_UNKNOWN_20261031 = FIXTURES / "developer_unknown_warszawa_20261031.rsc"
 """``/ceny-ofertowe/warszawa/deweloperzy/nieistniejacy-deweloper``: 200, the 404 digest."""
+DEVELOPER_CERES_WARSZAWA_20261031 = FIXTURES / "developer_ceres_warszawa_20261031.rsc"
+"""``/ceny-ofertowe/warszawa/deweloperzy/ceres-development``: a developer in one city, the
+``hero`` element's props without the chart of cities."""
+DEVELOPER_DOM_DEVELOPMENT_WARSZAWA_20261031 = (
+    FIXTURES / "developer_dom_development_warszawa_20261031.rsc"
+)
+"""``/ceny-ofertowe/warszawa/deweloperzy/dom-development``: ``investments`` ×28, a chart of
+3 cities with a count of thousands (``"1 816"``)."""
+DEVELOPER_UNKNOWN_POLSKA_20261031 = FIXTURES / "developer_unknown_polska_20261031.rsc"
+"""``/ceny-ofertowe/polska/deweloperzy/nieistniejacy-deweloper``: 200, the 404 digest."""
 STATS_GOV_WARSZAWA_20261031 = FIXTURES / "stats_gov_warszawa_20261031.rsc"
 """``/statystyki/warszawa/dane-rzadowe``: ``blocks.govSections`` ×8, ``data``, ``monthlyData``."""
 STATS_GOV_POLSKA_20261031 = FIXTURES / "stats_gov_polska_20261031.rsc"
@@ -77,13 +79,6 @@ STATS_TX_KARPACZ_20261031 = FIXTURES / "stats_tx_karpacz_20261031.rsc"
 """``/statystyki/karpacz/transakcje``: a small town, ``latestSummary`` null."""
 
 API_FIXTURES = FIXTURES.parent / "api"
-CITY_SALES = {
-    "sopot": API_FIXTURES / "city_sales_sopot.json",
-    "krakow": API_FIXTURES / "city_sales_krakow.json",
-}
-"""City -> its real ``/api/offers/city-sales/{city}`` body (tests/fixtures/api/)."""
-
-_PROP = b'"initialData":'
 
 
 def raw(path: Path = OFFERS_WARSZAWA) -> bytes:
@@ -91,28 +86,20 @@ def raw(path: Path = OFFERS_WARSZAWA) -> bytes:
     return path.read_bytes()
 
 
-def initial_data_span(payload: bytes) -> tuple[int, int]:
-    """Byte offsets of the one ``initialData`` value in ``payload`` (start, end)."""
-    assert payload.count(_PROP) == 1
-    start = payload.index(_PROP) + len(_PROP)
-    text = payload.decode("utf-8")
-    char_start = len(payload[:start].decode("utf-8"))
-    _, char_end = json.JSONDecoder().raw_decode(text, char_start)
-    return start, start + len(text[char_start:char_end].encode("utf-8"))
+def offers_payload(
+    page: Mapping[str, Any] | None = None, frame: Path = OFFERS_WARSZAWA_20261031
+) -> bytes:
+    """A real offers list as the 2.0 service sent it (``frame``: the 25 offers of Warszawa
+    unless given, or of the district Mokotów); with ``page``, each of its props (``sales``,
+    ``serverPaginationData``) replaced in the same real frame.
 
-
-def offers_payload(page: Any = None) -> bytes:
-    """The real offers page of Warsaw; with ``page``, its ``initialData`` replaced by it.
-
-    The value sits in a row that ends with a newline, after the text rows, so their
-    byte lengths stay right whatever ``page`` is.
+    Both props sit in one row that ends with a newline, so every byte length in the stream
+    stays right whatever ``page`` is.
     """
-    payload = raw(OFFERS_WARSZAWA)
-    if page is None:
-        return payload
-    start, end = initial_data_span(payload)
-    value = json.dumps(page, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    return payload[:start] + value + payload[end:]
+    payload = raw(frame)
+    for prop, value in (page or {}).items():
+        payload = replace_prop(payload, prop, lambda _: True, value)
+    return payload
 
 
 def prop_value_span(
@@ -121,7 +108,7 @@ def prop_value_span(
     """Byte offsets (start, end) of the one value after ``"prop":`` that ``matches``.
 
     The page of the government statistics has several props called ``data``; ``matches``
-    picks one by its value (e.g. rows with the key ``averageSizeM2``).
+    picks one by its value (e.g. rows with the key ``totalKobiety``).
     """
     text = payload.decode("utf-8")
     decoder = json.JSONDecoder()
@@ -150,8 +137,8 @@ def rows_with(key: str) -> Callable[[Any], bool]:
 def replace_prop(payload: bytes, prop: str, matches: Callable[[Any], bool], value: Any) -> bytes:
     """``payload`` with that one value replaced by ``value`` (compact JSON).
 
-    The values sit in rows that end with a newline, and these pages have no text rows,
-    so no byte length in the stream changes.
+    The values sit in rows that end with a newline, and a text row (``T``) gives the
+    length of its own text only, so no byte length in the stream changes.
     """
     start, end = prop_value_span(payload, prop, matches)
     encoded = json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode("utf-8")

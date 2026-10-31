@@ -1,0 +1,52 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "7-miast",
+    "dwellings_quarterly"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Mieszkania oddane do użytkowania i rozpoczęte (kwartalnie) · Top 7 miast Polski [7-miast]",
+    "Źródło: GUS · kwartalnie · okresy: pokazano 12 z 87 (dane od 2005-Q1).",
+    "Wskazówka: Pokazano ostatnie 12 z 87 okresów (dane od 2005-Q1); starsze pokaże większa wartość periods.",
+    "Uwaga: Ostatni kwartał (2026-Q3) obejmuje tylko 2 z 3 miesięcy (dane miesięczne do 2026-08); nie porównuj go z pełnymi kwartałami.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe#gus-mieszkania",
+    "Kolumny:",
+    "  [1] Oddane do użytkowania: razem (mieszkania)",
+    "  [2] Oddane: deweloperskie (mieszkania)",
+    "  [3] Oddane: indywidualne (mieszkania)",
+    "  [4] Oddane: spółdzielcze (mieszkania)",
+    "  [5] Oddane: komunalne (mieszkania)",
+    "  [6] Oddane: społeczne (mieszkania)",
+    "  [7] Oddane: zakładowe (mieszkania)",
+    "  [8] Rozpoczęte budowy: razem (mieszkania)",
+    "  [9] Rozpoczęte: deweloperskie (mieszkania)",
+    "  [10] Rozpoczęte: indywidualne (mieszkania)",
+    "  [11] Rozpoczęte: spółdzielcze (mieszkania)",
+    "  [12] Rozpoczęte: komunalne (mieszkania)",
+    "  [13] Rozpoczęte: społeczne (mieszkania)",
+    "  [14] Rozpoczęte: zakładowe (mieszkania)",
+    "  [15] Rozpoczęte: na wynajem (mieszkania)",
+    "Okres       [1]     [2]  [3]  [4]  [5]  [6]  [7]     [8]     [9]  [10]  [11]  [12]  [13]  [14]  [15]",
+    "2023-Q4  14 791  14 131  471   32    0  156    1  11 978  10 896   629    55     0   398     0     0",
+    "2024-Q1  11 147  10 460  581    0   16   90    0  16 262  15 819   443     0     0     0     0     5",
+    "2024-Q2   9 408   8 679  572   85   72    0    0  13 739  12 957   600    36    50    96     0     0",
+    "2024-Q3  12 871  11 747  546  364   15  199    0  10 974  10 454   462     0     0    58     0    17",
+    "2024-Q4  14 938  14 247  472  195   24    0    0  11 493  11 053   379    45    16     0     0     0",
+    "2025-Q1  10 513   9 894  555   64    0    0    0  14 405  13 725   492     0     0   188     0   263",
+    "2025-Q2  10 543   9 915  504    0   58   66    0  11 008  10 474   504     0     0    30     0     1",
+    "2025-Q3  13 300  11 925  484  196  130  565    0   9 047   8 630   394     0     0    23     0     0",
+    "2025-Q4  19 148  18 407  426  315    0    0    0  10 683  10 254   369    50    10     0     0     9",
+    "2026-Q1   9 726   9 030  474   36   16   70  100  10 941  10 450   376     0    50    65     0     0",
+    "2026-Q2  11 590  10 906  399    5    0  280    0  12 156  11 610   546     0     0     0     0     4",
+    "2026-Q3  10 519   9 878  373   80    0  188    0   8 152   6 938   315     0   183   716     0     2",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

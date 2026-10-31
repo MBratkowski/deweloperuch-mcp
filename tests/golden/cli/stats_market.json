@@ -6,14 +6,14 @@
   ],
   "exit_code": 0,
   "stdout": [
-    "Rynek ofert [sopot] · aktywne oferty: 6 · inwestycje: 2 · deweloperzy: 1.",
+    "Rynek ofert [sopot] · aktywne oferty: 8 · inwestycje: 2 · deweloperzy: 1 · stan na 2026-10-31.",
     "Te oferty na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/sopot/mieszkania?perPage=10",
     "                        min        p25    mediana        p75        max",
-    "Cena (PLN)        1 399 205  1 588 164  1 616 463  1 646 230  1 679 796",
-    "Cena za m² (PLN)     22 931     23 559     24 533     25 309     27 037",
-    "Metraż (m²)            56,5      61,21         67       68,7       69,5",
+    "Cena (PLN)        1 261 250  1 534 860  1 616 858  1 661 530  3 735 107",
+    "Cena za m² (PLN)     24 289     25 224     25 808     26 383     39 115",
+    "Metraż (m²)           48,73      58,11      64,69      66,02      95,49",
     "Najwięcej ofert (pokazano 1 z 1):",
-    "  invest-komfort-spolka-akcyjna · oferty 6 · inwestycje 2 · mediana 24 533 PLN/m²",
+    "  Invest Komfort Spółka Akcyjna Sp.K. [invest-komfort-spolka-akcyjna] · oferty 8 · inwestycje 2 · mediana 25 808 PLN/m²",
     "      https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna",
     ""
   ],
@@ -21,6 +21,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/offers/city-sales/sopot [accept: application/json]"
+    "GET https://deweloperuch.pl/api/map/offer-snapshot/sopot [accept: application/json]"
   ]
 }

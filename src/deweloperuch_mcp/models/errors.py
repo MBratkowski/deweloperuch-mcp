@@ -69,6 +69,7 @@ class ValueName(StrEnum):
 
     QUERY = "szukany tekst"
     CITY = "miasto"
+    OFFERS_CITY = "miasto ofert"
     INVESTMENT = "inwestycja"
     DEVELOPER = "deweloper"
     STATISTICS_LOCATION = "lokalizacja statystyk"
@@ -100,6 +101,7 @@ class ValueName(StrEnum):
     DEVELOPER_NAME = "nazwa dewelopera"
     DEVELOPER_MATCHES = "liczba znalezionych deweloperów"
     INVESTMENTS_CITY = "miasto inwestycji"
+    MARKET_CITY = "miasto statystyk rynku"
     INVESTMENT_NAME = "nazwa inwestycji"
     INVESTMENT_SORT = "kolejność inwestycji"
     TRANSACTIONS_CITY = "miasto statystyk transakcji"

@@ -11,14 +11,14 @@
   "results": [
     {
       "is_error": true,
-      "text": "location: oczekiwano polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta bez polskich znaków, np. warszawa, krakow, jastrzebie (Jastrzębie-Zdrój); podano 'kraków'.",
+      "text": "location: oczekiwano polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta bez polskich znaków, np. warszawa, krakow, jastrzebie-zdroj (Jastrzębie-Zdrój); podano 'kraków'.",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "InvalidInputError: location: oczekiwano polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta bez polskich znaków, np. warszawa, krakow, jastrzebie (Jastrzębie-Zdrój); podano 'kraków'. Szczegóły: None"
+      "InvalidInputError: location: oczekiwano polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta bez polskich znaków, np. warszawa, krakow, jastrzebie-zdroj (Jastrzębie-Zdrój); podano 'kraków'. Szczegóły: None"
     ]
   ],
   "requests": []

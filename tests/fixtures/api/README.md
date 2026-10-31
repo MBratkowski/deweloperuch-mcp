@@ -40,12 +40,16 @@ Complete response bodies of `GET /api/*` endpoints, byte for byte as the service
 
 ## Used by
 
-- `city_sales_*`: `tests/support/providers/rsc.py` (`CITY_SALES`) and `tests/support/providers/routes/city_sales.py` (the `city-sales` routes), and through them the contract, unit, safeguards and characterization tests.
+- `city_sales_*`: no test reads them since D20 retired `city-sales` from the code (2026-10-31); they stay as the record of the route the market statistics used before.
 - `city_tx_stats_20261015.json`, `powiat_stats_20261015.json`: `tests/support/providers/routes/rankings.py` (`CITIES_2026_10_15`, `POWIATS_2026_10_15`, `captured_ranking_routes`).
-- `monthly_tx_warszawa_20261015.json`, `avg_trend_city_warszawa_20261016.json`, `monthly_tx_karpacz_20261016.json`: `tests/support/builders/transactions.py` (`MONTHLY_WARSZAWA`, `QUARTERLY_WARSZAWA`, `MONTHLY_KARPACZ`).
+- `avg_trend_city_warszawa_20261016.json`: `tests/support/builders/transactions.py` (`QUARTERLY_WARSZAWA`). `monthly_tx_warszawa_20261015.json` and `monthly_tx_karpacz_20261016.json` (the monthly JSON series of 1.0, a removed route since 2026-10-29): `tests/contract/api/dto/test_transaction_stats_page_dto.py` compares them with the 2.0 page the monthly series is read from now (`tests/fixtures/rsc/stats_tx_*_20261031.rsc`).
 - `standalone_val_cisna_20261015.json`: `tests/support/providers/routes/valuation.py` (`CISNA`, `cisna()`, `cisna_route`).
 - `tx_visible_cisna_20261015.json`, `avg_trend_building_152198_20261015.json`: `tests/support/providers/routes/buildings.py` (`CISNA_BODY`, `CISNA_TREND_BODY`, `cisna_routes()`).
 
 Through them the contract, unit and characterization tests of the RCN tools read these files.
 
 - `*_20261031.json`: the 2.0 repairs of `get_market_statistics` (the snapshots, D20), the `get_investment` history (`smolna`) and the district of `search_offers` (`city-districts`); each repair lists its users here.
+  - `offer_snapshot_sopot_20261031.json`, `offer_snapshot_warszawa_20261031.json`: `tests/support/providers/routes/offer_snapshot.py` (`OFFER_SNAPSHOT`, `snapshot`, `offer_snapshot_routes`, `changed_snapshot_route`), and through it the contract, unit, safeguards and characterization tests of `get_market_statistics` and `stats market`.
+- `map_inv_visible_smolna_20261031.json`: `tests/support/providers/routes/investments.py` (`SMOLNA_2026_10_31`, `smolna_with_events()`), and through it the contract, unit, integration and characterization tests of the `get_investment` history (`ev`), the price flags' property test (`tests/unit/models/test_price_history.py`), the views' test (`test_offer_views.py`) and the leak checks (`tests/safeguards/test_e2e_gate.py`, `test_search_locations_tool.py`).
+- `offer_snapshot_warszawa_20261031.json`: also `tests/contract/api/dto/test_developer_page_dto.py`, the meaning of an investment's figures on the developer page of the same day (`get_developer`).
+- `city_districts_warszawa_tx_20261031.json`, `city_districts_krakow_tx_20261031.json`: `tests/support/builders/offers.py` (`district_pages`), for `tests/unit/api/queries/test_offers_query.py`: the slug `search_offers` makes of a district's name is the service's own for each of their 36 districts.

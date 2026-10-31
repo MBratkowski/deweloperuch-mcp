@@ -7,10 +7,10 @@ a model.
 import dataclasses
 from typing import Self
 
-from deweloperuch_mcp.consumers.shared.offer_views import Developer
 from deweloperuch_mcp.consumers.shared.view import View
 from deweloperuch_mcp.models.developer_match import DeveloperMatch
 from deweloperuch_mcp.models.developer_profile import DeveloperCity, DeveloperInvestment
+from deweloperuch_mcp.models.offer import DeveloperRef
 from deweloperuch_mcp.usecases.get_developer import GetDeveloperResult
 from deweloperuch_mcp.usecases.search_developers import SearchDevelopersResult
 
@@ -65,6 +65,18 @@ class DeveloperSearchView(View):
 # --- get_developer -----------------------------------------------------------------------------
 
 
+class DeveloperBriefView(View):
+    """The developer of a profile: the service's page names it, with no website or
+    description [P 2026-10-31]."""
+
+    developer_slug: str
+    name: str
+
+    @classmethod
+    def from_model(cls, developer: DeveloperRef) -> Self:
+        return cls(developer_slug=developer.developer_slug, name=developer.name)
+
+
 class DeveloperInvestmentView(View):
     """An investment on a developer's profile (``get_developer``)."""
 
@@ -104,7 +116,6 @@ class DeveloperCityView(View):
     city_slug: str
     investments: int | None = None
     active_offers: int | None = None
-    avg_price: float | None = None
     avg_price_per_m2: float | None = None
 
     @classmethod
@@ -114,13 +125,13 @@ class DeveloperCityView(View):
             city_slug=item.city_slug,
             investments=item.investments,
             active_offers=item.active_offers,
-            avg_price=item.avg_price,
             avg_price_per_m2=item.avg_price_per_m2,
         )
 
 
 class DeveloperSummaryView(View):
-    """The developer's active offers in the profile's city (or the whole country)."""
+    """The developer's active offers in the profile's city (or the whole country), summed
+    up from its investments (``DeveloperProfile.summary``)."""
 
     investments: int | None = None
     active_offers: int | None = None
@@ -133,7 +144,7 @@ class DeveloperSummaryView(View):
 class DeveloperProfileView(View):
     """A developer in a city or the whole country (``get_developer``)."""
 
-    developer: Developer
+    developer: DeveloperBriefView
     developer_url: str | None = None
     """The developer's profile in ``city_slug`` on the service."""
     city_slug: str
@@ -146,14 +157,15 @@ class DeveloperProfileView(View):
     investments: list[DeveloperInvestmentView]
     """The most active offers first, at most ``limit``."""
     cities: list[DeveloperCityView]
-    """Every city of the developer, whatever ``city_slug``."""
+    """Every city of the developer, whatever ``city_slug``, the most active offers first
+    (``DeveloperProfile.listing``)."""
 
     @classmethod
     def from_result(cls, found: GetDeveloperResult) -> Self:
         listing = found.listing
         profile = listing.profile
         return cls(
-            developer=Developer.from_model(profile.developer),
+            developer=DeveloperBriefView.from_model(profile.developer),
             developer_url=found.developer_url,
             city_slug=profile.city.value,
             summary=DeveloperSummaryView(**dataclasses.asdict(profile.summary)),
@@ -164,5 +176,5 @@ class DeveloperProfileView(View):
                 DeveloperInvestmentView.from_model(item, url)
                 for item, url in zip(listing.investments, found.investment_urls, strict=True)
             ],
-            cities=[DeveloperCityView.from_model(item) for item in profile.cities],
+            cities=[DeveloperCityView.from_model(item) for item in listing.cities],
         )

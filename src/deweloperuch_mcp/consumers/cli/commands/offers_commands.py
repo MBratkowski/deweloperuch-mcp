@@ -31,7 +31,7 @@ def offers_search(
         str,
         typer.Argument(
             metavar="CITY",
-            help="Slug miasta (np. warszawa; podaje go `locations search`) albo polska.",
+            help="Slug jednego miasta (np. warszawa; podaje go `locations search`), nie polska.",
         ),
     ],
     price_min: Annotated[
@@ -54,7 +54,9 @@ def offers_search(
     ] = None,
     district: Annotated[
         str | None,
-        typer.Option(help="Dzielnica miasta jak w `locations search` (np. Mokotów); nie z polska."),
+        typer.Option(
+            help="Dzielnica miasta: jej nazwa jak w `locations search` (np. Praga-Południe)."
+        ),
     ] = None,
     price_dropped: Annotated[
         bool,
@@ -79,7 +81,7 @@ def offers_search(
     ] = DEFAULT_PAGE_SIZE,
     as_json: JsonFlag = False,
 ) -> None:
-    """Szukaj ofert mieszkań w mieście; najwyżej 20 stron wyników."""
+    """Szukaj ofert mieszkań w mieście albo w jego dzielnicy; najwyżej 20 stron wyników."""
 
     def search(session: Session) -> SearchOffersResult:
         request = SearchOffersRequest.parse(

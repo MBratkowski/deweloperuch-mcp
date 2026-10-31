@@ -102,6 +102,12 @@ def test_the_cheapest_cities_skip_small_places_by_default(mcp: McpLive, cities: 
     assert "min_transactions=0" in data["hint"]
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="[P 2026-10-29] map/powiat-stats is gone on 2.0 (an HTML 404): rank_locations at "
+    "powiat level answers with the changed-service message (D21). Its repair is a follow-up; "
+    "drop this mark with it.",
+)
 def test_powiats_by_transactions(powiats: Call, cities: Call) -> None:
     data = powiats.data
 
@@ -117,6 +123,12 @@ def test_powiats_by_transactions(powiats: Call, cities: Call) -> None:
     assert by_id[POWIAT_WARSZAWA]["transaction_count"] > 2 * city["transaction_count"]
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="[P 2026-10-29] map/powiat-stats is gone on 2.0 (an HTML 404): rank_locations at "
+    "powiat level answers with the changed-service message (D21). Its repair is a follow-up; "
+    "drop this mark with it.",
+)
 def test_the_cheapest_powiats_come_from_the_cache(mcp: McpLive, powiats: Call) -> None:
     """The default threshold applies to powiats too; the hint names it only when it left a
     powiat out (one of 380 had fewer than 20 transactions on 2026-10-15)."""

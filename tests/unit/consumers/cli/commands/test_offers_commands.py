@@ -6,37 +6,39 @@ import respx
 
 from deweloperuch_mcp.consumers.cli.support.common import ExitCode
 from support.builders.investments import DEVELOPER_PAGE, SMOLNA_PAGE
-from support.builders.offers import offers_page
+from support.builders.offers import WHOLE_COUNTRY_MESSAGE, offers_page
 from support.providers.cli import Cli, ok
 from support.providers.routes.investments import investment_routes
 from support.providers.routes.offers import offers_route, unknown_city_route
 from support.providers.rsc import UNKNOWN_CITY
-from support.providers.samples import request_target
 from support.providers.service import BASE, PAGES
+
+BEETHOVENA = f"{PAGES}/warszawa/deweloperzy/dom-development/apartamenty-beethovena"
 
 
 def test_offers_search_prints_the_page_with_the_limits_of_d4(
     run: Cli, service: respx.MockRouter
 ) -> None:
-    offers_route(service)  # the real Warsaw page: 10 offers
+    offers_route(service)  # the real Warsaw page, its first 10 offers
 
     out = ok(run("offers", "search", "warszawa"))
 
     lines = out.splitlines()
     assert lines[0] == (
-        "Pasujące oferty: 13 324 · strona 1 z 20 (po 10) · pokazano 10 · obcięte: "
+        "Pasujące oferty: 11 672 · strona 1 z 20 (po 10) · pokazano 10 · obcięte: "
         "serwis pozwala przejrzeć najwyżej 20 stron."
     )
-    assert lines[1].startswith("Wskazówka: Pasujących ofert jest 13324")
-    assert (
-        "[4397] D1.1.1.4 · 994 012 PLN · 55,25 m² · 17 991,17 PLN/m² · aktywna · "
-        "od pierwszej ceny -5 988 PLN (-0,6%)"
-    ) in lines
-    assert "    Nowy Targówek VI [nowy-targowek-vi] · ATAL S.A. · Warszawa" in lines
+    assert lines[1].startswith("Wskazówka: Pasujących ofert jest 11672")
+    assert lines[3] == (
+        "[4487] A2 · 810 660 PLN · 35,4 m² · 22 900 PLN/m² · aktywna · "
+        "od pierwszej ceny +660 PLN (+0,08%)"
+    )
     # Links (D12): the list as requested, then each offer's investment under it.
     assert lines[2] == f"Ta lista na deweloperuch.pl: {PAGES}/warszawa/mieszkania?perPage=10"
-    where = lines.index("    Nowy Targówek VI [nowy-targowek-vi] · ATAL S.A. · Warszawa")
-    assert lines[where + 1] == f"    {PAGES}/warszawa/deweloperzy/atal/nowy-targowek-vi"
+    assert lines[4:6] == [
+        "    Apartamenty Beethovena [apartamenty-beethovena] · Dom Development S.A. · Warszawa",
+        f"    {BEETHOVENA}",
+    ]
     assert sum(line.startswith(f"    {PAGES}/") for line in lines) == 10
     assert lines[-1] == (
         "Szczegóły oferty: deweloperuch offers get OFFER_ID --investment INVESTMENT_SLUG"
@@ -46,8 +48,8 @@ def test_offers_search_prints_the_page_with_the_limits_of_d4(
 def test_offers_search_passes_every_option_to_the_service(
     run: Cli, service: respx.MockRouter
 ) -> None:
-    """The filtered sample's request, flag by flag."""
-    route = offers_route(service, offers_page("page.offers_list.filtered"))
+    """Every option, flag by flag, as the request's parameters (pages-rsc.md)."""
+    route = offers_route(service, offers_page(total=1192, page=2, per_page=50))
 
     ok(
         run(
@@ -71,7 +73,10 @@ def test_offers_search_passes_every_option_to_the_service(
         )
     )
 
-    target = request_target("page.offers_list.filtered")
+    target = (
+        "/ceny-ofertowe/warszawa/mieszkania?filterPrice=500000-700000&filterSize=40-60"
+        "&sortBy=amount&sortOrder=asc&page=2&perPage=50"
+    )
     assert str(route.calls.last.request.url) == f"{BASE}{target}&_rsc="
 
 
@@ -80,22 +85,19 @@ def test_offers_search_json_is_the_domain_model(run: Cli, service: respx.MockRou
 
     data = json.loads(ok(run("offers", "search", "warszawa", "--json")))
 
-    assert (data["total"], data["returned"], data["truncated"]) == (13324, 10, True)
+    assert (data["total"], data["returned"], data["truncated"]) == (11672, 10, True)
     assert (data["page"], data["per_page"], data["pages_available"]) == (1, 10, 20)
-    assert data["items"][0]["offer_id"] == 4397
-    assert data["items"][0]["investment_slug"] == "nowy-targowek-vi"
+    assert data["items"][0]["offer_id"] == 4487
+    assert data["items"][0]["investment_slug"] == "apartamenty-beethovena"
+    assert (data["items"][0]["city"], data["items"][0]["city_slug"]) == ("Warszawa", "warszawa")
+    assert data["items"][0]["district"] == "Mokotów"
     assert data["items"][0]["last_price_change_kind"] == "increase"
     assert data["list_url"] == f"{PAGES}/warszawa/mieszkania?perPage=10"
-    assert (
-        data["items"][0]["investment_url"] == f"{PAGES}/warszawa/deweloperzy/atal/nowy-targowek-vi"
-    )
+    assert data["items"][0]["investment_url"] == BEETHOVENA
 
 
 def test_offers_search_with_an_empty_page(run: Cli, service: respx.MockRouter) -> None:
-    page = offers_page()
-    page["data"] = []
-    page["pagination"].update(total=0, totalPages=0)
-    offers_route(service, page)
+    offers_route(service, offers_page(total=0))
 
     out = ok(run("offers", "search", "warszawa"))
 
@@ -116,11 +118,38 @@ def test_offers_search_of_an_unknown_city_ends_with_not_found(
     assert result.exit_code == 7  # ExitCode.NOT_FOUND, public API
     assert result.stdout == ""
     assert result.stderr.splitlines() == [
-        f"Błąd: Serwis nie zna miasta {UNKNOWN_CITY!r}. Podaj city_slug z search_locations "
-        "albo polska (cały kraj).",
-        f"Szczegóły: /ceny-ofertowe/{UNKNOWN_CITY}/mieszkania: brak propsa 'initialData', "
-        "strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404",
+        f"Błąd: Serwis nie zna miasta {UNKNOWN_CITY!r}. Podaj city_slug miasta z search_locations.",
+        f"Szczegóły: /ceny-ofertowe/{UNKNOWN_CITY}/mieszkania: brak propsów 'sales', "
+        "'serverPaginationData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404",
     ]
+
+
+def test_offers_search_of_the_whole_country_is_invalid_input(
+    run: Cli, service: respx.MockRouter
+) -> None:
+    """[P 2026-10-29] the service's list of Poland is a list of cities: code 2, nothing
+    sent."""
+    result = run("offers", "search", "polska", "--district", "Mokotów")
+
+    assert result.exit_code == 2  # ExitCode.INVALID_INPUT, public API
+    assert result.stdout == ""
+    assert result.stderr.splitlines() == [f"Błąd: {WHOLE_COUNTRY_MESSAGE}"]
+    assert service.calls.call_count == 0
+
+
+def test_offers_search_in_a_district_asks_for_the_district_list(
+    run: Cli, service: respx.MockRouter
+) -> None:
+    """[P 2026-10-31] the district's own list, at its slug; the link is that list."""
+    route = offers_route(service)
+
+    out = ok(run("offers", "search", "warszawa", "--district", "Praga-Południe"))
+
+    assert route.calls.last.request.url.path == "/ceny-ofertowe/warszawa/praga-poludnie/mieszkania"
+    assert (
+        f"Ta lista na deweloperuch.pl: {PAGES}/warszawa/praga-poludnie/mieszkania?perPage=10"
+        in out.splitlines()
+    )
 
 
 def test_offers_get_prints_the_offer_with_its_price_history(

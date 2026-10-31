@@ -1,22 +1,35 @@
-"""``GovernmentStatsPageDto``: the data of ``/statystyki/statystyki-rzadowe/{location}``
-(RSC) [P], read from the page's props (``from_payload``) and mapped to the models
-(``to_model``, ``models.government_statistics``).
+"""``GovernmentStatsPageDto``: the government statistics (GUS, NBP, Eurostat) of
+``/statystyki/{location}/dane-rzadowe`` (RSC), read from the page's props
+(``from_payload``) and mapped to the models (``to_model``, ``models.government_statistics``).
 
-Several props of the page are called ``data``; they are told apart by the keys of their
-rows (``STATS_SHAPES``) and kept under the field names of the DTO, which are this
-client's own. Every shape is [P 2026-10-11] in the real payloads
-(tests/fixtures/rsc/stats_gov_*.rsc); which locations have which shape is [W].
+The page is an internal channel of the site's UI, not an API: its props may change at any
+deploy, without notice (D21). Its 2.0 props [P 2026-10-31, the pages of ``warszawa``,
+``polska`` and ``7-miast``, tests/fixtures/rsc/stats_gov_*_20261031.rsc]:
 
-``to_model`` maps backend fields to series (``MAPPINGS``), period labels, sources and
-the section of the page that shows each table (``SECTIONS``, the anchor of its link,
-``links``). Names of the backend (``oddane``, ``tocItems``...) stay in ``api``.
+- ``blocks.govSections``: the ids of the page's sections. They differ per location
+  (``polska`` has ``eurostat-demografia`` and ``nbp-grid`` instead of ``gus-demografia``
+  and ``nbp``; ``7-miast`` has no ``gus-wynagrodzenia``), so a table's section, the anchor
+  of its link (``links``), is one this page lists (``SECTIONS``);
+- props of rows, told apart by their keys (``STATS_SHAPES``): the quarterly and monthly
+  dwellings (``data``, ``monthlyData``), the population (``data``) and the NBP prices
+  (``data``; ``polska`` has none, it shows a grid of cities);
+- chart specs (``spec``), told apart by their ``id`` (``CHARTS``): the average area, the
+  demography, the unemployment rate and the wages;
+- ``citySlug`` and ``cityName``: the location (the page of ``polska`` has neither).
 
-Sections of the page (ids of its table of contents, [P 2026-10-11] in both fixtures,
-``polska`` and ``warszawa``) tell a dataset the page does not have (``NotFoundError``
-from the domain) from one it shows but whose data cannot be read: the latter means the
-service changed (``UnexpectedResponseError``), not that the location lacks the data.
+The values of the eight datasets are those of the 1.0 page [P 2026-10-31: every period
+both pages have, ``warszawa`` and ``polska`` against the captures of 2026-10-11,
+tests/fixtures/rsc/stats_gov_{warszawa,polska}.rsc]. Names of the backend (``oddane``,
+``govSections``...) stay in ``api``.
+
+A section the page lists tells a dataset it shows from one it does not have: when the data
+of a listed section cannot be read, the service changed (``UnexpectedResponseError``),
+unless the page fills that section with other data (``CHARTS_WITHOUT_SERIES``); a dataset
+without its section is one the location lacks (``NotFoundError`` from the domain).
 """
 
+import logging
+import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Annotated, Any, Self
@@ -31,11 +44,12 @@ from deweloperuch_mcp.models.government_statistics import (
     Frequency,
     LocationStatistics,
     SeriesPoint,
-    StatisticsLocation,
     StatisticsTable,
     TimeSeries,
 )
 from deweloperuch_mcp.models.values import LocationSlug
+
+_log = logging.getLogger(__name__)
 
 # --- the rows of the data props ----------------------------------------------------------
 
@@ -54,33 +68,8 @@ def _check_year(value: object) -> int:
 Year = Annotated[int, BeforeValidator(_check_year)]
 
 
-class TocItemDto(Dto):
-    """An entry of the page's table of contents (prop ``tocItems`` [P]): a section id."""
-
-    id: str
-    label: str | None = None
-
-
-class StatsLocationDto(Dto):
-    """A location of prop ``sortedLocations`` [P]; ``nbp`` is ``null`` for the cities NBP
-    does not cover."""
-
-    slug: str
-    displayName: str
-    isAggregate: bool = False
-    nbp: dict[str, Any] | None = None
-
-    def to_model(self) -> StatisticsLocation:
-        return StatisticsLocation(
-            slug=self.slug,
-            name=self.displayName,
-            is_aggregate=self.isAggregate,
-            has_nbp_prices=self.nbp is not None,
-        )
-
-
 class StatsRowDto(Dto):
-    """A row of a data prop; a table reads its columns by name (``_Mapping.columns``)."""
+    """A row of a data prop; a table reads its columns by name (``_Rows.columns``)."""
 
     def number(self, field: str) -> float | None:
         """The value of ``field`` as a number; ``None`` for no value."""
@@ -92,8 +81,8 @@ class DwellingsCountsDto(StatsRowDto):
     """Dwellings completed (``oddane``) and started (``rozpoczete``) by form [P].
 
     The totals are the keys the rows are recognized by (``STATS_SHAPES``), so they
-    are required; the forms may be missing (``None``): every form is [P] on both pages
-    seen, [W] on the others, and a series without values is left out of the table.
+    are required; the forms may be missing (``None``): every form is [P] on the three
+    pages seen, [W] on the others, and a series without values is left out of the table.
     """
 
     oddane: Number | None
@@ -115,7 +104,7 @@ class DwellingsCountsDto(StatsRowDto):
 
 
 class DwellingsQuarterDto(DwellingsCountsDto):
-    """A row of the first ``data`` prop: a quarter, the sum of its months [P]."""
+    """A row of the quarterly ``data`` prop: a quarter, the sum of its months [P]."""
 
     quarter: QuarterText
 
@@ -124,31 +113,6 @@ class DwellingsMonthDto(DwellingsCountsDto):
     """A row of prop ``monthlyData`` [P]."""
 
     month: MonthText
-
-
-class AverageAreaYearDto(StatsRowDto):
-    """Average usable area (m²) of what developers completed in a year [P]."""
-
-    year: Year
-    averageSizeM2: Number | None
-
-
-class DemographyYearDto(StatsRowDto):
-    """Live births, deaths, natural increase in a year: cities (GUS) [P warszawa]."""
-
-    year: Year
-    urodzenia: Number | None
-    zgony: Number | None
-    przyrostNaturalny: Number | None
-
-
-class DemographyMonthDto(StatsRowDto):
-    """The same per month: the whole country (section ``eurostat-demografia``) [P polska]."""
-
-    month: MonthText
-    urodzeniaZywe: Number | None
-    zgony: Number | None
-    przyrostNaturalny: Number | None
 
 
 class PopulationYearDto(StatsRowDto):
@@ -160,32 +124,10 @@ class PopulationYearDto(StatsRowDto):
     totalMezczyzni: Number | None
 
 
-class UnemploymentMonthDto(StatsRowDto):
-    """Registered unemployment rate (%) [P]."""
-
-    month: MonthText
-    rate: Number | None
-
-
-class WagesMonthDto(StatsRowDto):
-    """Average gross monthly wage (PLN) per month: the whole country [P polska]."""
-
-    month: MonthText
-    brutto: Number | None
-
-
-class WagesYearDto(StatsRowDto):
-    """The same per year, with the ratio to the national average (Poland = 100) [P
-    warszawa]; whether every city has the ratio is [W], so it may be missing."""
-
-    year: Year
-    brutto: Number | None
-    relacjaPolska: Number | None = None
-
-
 class NbpQuarterDto(StatsRowDto):
     """NBP's average prices per m² (PLN), asking and transaction, primary and secondary
-    market [P warszawa]; the whole country has no such series, only a grid of cities."""
+    market [P warszawa, 7-miast]; the whole country has no such series, only a grid of
+    cities."""
 
     quarter: QuarterText
     pierwotnyOfertowa: Number | None
@@ -200,13 +142,7 @@ RawRows = list[dict[str, Any]]
 STATS_ROWS: Mapping[str, type[StatsRowDto]] = {
     "dwellings_quarterly": DwellingsQuarterDto,
     "dwellings_monthly": DwellingsMonthDto,
-    "average_area_yearly": AverageAreaYearDto,
-    "demography_yearly": DemographyYearDto,
-    "demography_monthly": DemographyMonthDto,
     "population_yearly": PopulationYearDto,
-    "unemployment_monthly": UnemploymentMonthDto,
-    "wages_monthly": WagesMonthDto,
-    "wages_yearly": WagesYearDto,
     "nbp_quarterly": NbpQuarterDto,
 }
 """The row of each data field of ``GovernmentStatsPageDto``."""
@@ -216,39 +152,26 @@ STATS_ROWS: Mapping[str, type[StatsRowDto]] = {
 
 @dataclass(frozen=True)
 class StatsShape:
-    """How rows of one kind of data prop look: every row has ``keys``.
-
-    ``field``: where ``GovernmentStatsPageDto`` keeps them; ``group``: one table of the
-    page (a page with two props of one group is ambiguous).
-    """
+    """How rows of one kind of data prop look: every row has ``keys``; ``field`` is where
+    ``GovernmentStatsPageDto`` keeps them."""
 
     field: str
-    group: str
     keys: frozenset[str]
 
 
-def _shape(field: str, group: str, *keys: str) -> StatsShape:
-    return StatsShape(field, group, frozenset(keys))
+def _shape(field: str, *keys: str) -> StatsShape:
+    return StatsShape(field, frozenset(keys))
 
 
-# [P 2026-10-11] tests/fixtures/rsc/stats_gov_polska.rsc and stats_gov_warszawa.rsc: the
-# page has several props called `data`; each kind has keys no other kind has. A prop
-# whose rows match none of these is not read (e.g. the NBP grid of cities on `polska`).
+# [P 2026-10-31] tests/fixtures/rsc/stats_gov_*_20261031.rsc: the page has several props
+# called `data` (and `monthlyData`); each kind has keys no other kind has. A prop whose rows
+# match none of these is not read (e.g. the NBP grid of cities on `polska`).
 STATS_SHAPES = (
-    _shape("dwellings_quarterly", "dwellings_quarterly", "quarter", "oddane", "rozpoczete"),
-    _shape("dwellings_monthly", "dwellings_monthly", "month", "oddane", "rozpoczete"),
-    _shape("average_area_yearly", "average_area", "year", "averageSizeM2"),
-    _shape("demography_yearly", "demography", "year", "urodzenia", "zgony", "przyrostNaturalny"),
-    _shape(
-        "demography_monthly", "demography", "month", "urodzeniaZywe", "zgony", "przyrostNaturalny"
-    ),
-    _shape("population_yearly", "population", "year", "totalKobiety", "totalMezczyzni"),
-    _shape("unemployment_monthly", "unemployment", "month", "rate"),
-    _shape("wages_monthly", "wages", "month", "brutto"),
-    _shape("wages_yearly", "wages", "year", "brutto"),
+    _shape("dwellings_quarterly", "quarter", "oddane", "rozpoczete"),
+    _shape("dwellings_monthly", "month", "oddane", "rozpoczete"),
+    _shape("population_yearly", "year", "totalKobiety", "totalMezczyzni"),
     _shape(
         "nbp_quarterly",
-        "nbp",
         "quarter",
         "pierwotnyOfertowa",
         "pierwotnyTransakcyjna",
@@ -257,14 +180,55 @@ STATS_SHAPES = (
     ),
 )
 
-# --- the rows as series of the models --------------------------------------------------------
+# --- the chart specs ----------------------------------------------------------------------------
+
+
+class ChartPointDto(Dto):
+    """A point of a chart: its period (``2025``, ``2025-08``), the values of its series by
+    key and the texts the page shows with them (``notes``) [P]. Only what the client reads
+    is checked: the values of the series of ``CHARTS`` (``ChartValueDto``) and the notes
+    ``_ratios`` reads, so an unread series or notes off the contract (a city's national
+    comparison as "n/d", ``notes: null``) do not make the dataset unreadable."""
+
+    period: str
+    values: dict[str, Any]
+    notes: Any = None
+
+
+class ChartValueDto(Dto):
+    """A value of a series the client reads, as the page sends it: ``Number`` or no value."""
+
+    value: Number | None = None
+
+    def number(self) -> float | None:
+        return self._number(self.value)
+
+
+class ChartDataDto(Dto):
+    """One dataset of a chart, a choice of its switches (``""`` for a chart without them,
+    ``ruch|mies`` for "births and deaths, monthly") [P]: its points."""
+
+    points: list[ChartPointDto]
+
+
+class ChartSpecDto(Dto):
+    """A chart of the page (prop ``spec``) [P]: its ``id`` and its datasets by key, each
+    checked when it is read (``ChartDataDto``), so a dataset the client does not read does
+    not matter."""
+
+    id: str
+    datasets: dict[str, Any]
+
+
+# --- the rows and the charts as series of the models ---------------------------------------
 
 WHOLE_COUNTRY_NAME = "Polska"
-"""``polska`` is not on the page's list of locations (it is the root page) [P]."""
+"""The name of ``polska``: its page has no ``cityName`` [P 2026-10-31]."""
 
-# Sections of each dataset in the page's table of contents (the link's anchor): [P
-# 2026-10-11]. `polska` shows its demography as `eurostat-demografia`, cities as
-# `gus-demografia`; `polska` has `nbp-grid` (prices of every city), not `nbp`.
+# Sections of each dataset among the page's `govSections` (the link's anchor): the ids of the
+# 1.0 table of contents [P 2026-10-11], which the 2.0 pages list per location [P 2026-10-31]:
+# `polska` shows its demography as `eurostat-demografia`, `warszawa` and `7-miast` as
+# `gus-demografia`; `polska` has `nbp-grid` (prices of cities), not `nbp`.
 SECTIONS: Mapping[Dataset, tuple[str, ...]] = {
     Dataset.DWELLINGS_QUARTERLY: ("gus-mieszkania",),
     Dataset.DWELLINGS_MONTHLY: ("gus-mieszkania",),
@@ -277,74 +241,131 @@ SECTIONS: Mapping[Dataset, tuple[str, ...]] = {
 }
 
 GUS, NBP = "GUS", "NBP"
-# [W] docs/discovery/pages-rsc.md: the monthly demography of `polska` sits in the section
-# `eurostat-demografia`; the page's own text about it is rendered in the browser.
+# [P 2026-10-31] stats_gov_polska_20261031.rsc: the monthly demography of `polska` is the
+# chart `eurostat-demografia-wykres`, whose `source` is "Eurostat", in the section
+# headed „EUROSTAT · DEMOGRAFIA”; the cities' yearly charts give „GUS — Bank Danych
+# Lokalnych”.
 EUROSTAT = "Eurostat"
 
-Value = Callable[[StatsRowDto], float | None]
+RowValue = Callable[[StatsRowDto], float | None]
+Entries = list[tuple[str, dict[str, float | None]]]
+"""A dataset as (period, series id -> value), one entry per row or point, in any order."""
 
 
 @dataclass(frozen=True)
-class _Mapping:
-    """One kind of data prop -> one dataset: its period and series (id -> value)."""
+class _Reading:
+    """How the page gives one dataset: its period (``frequency``) and ``source``."""
 
-    field: str
     dataset: Dataset
     frequency: Frequency
     source: str
-    columns: Sequence[tuple[str, Value]]
 
-    def table(self, raw_rows: Sequence[Any], section: str | None, path: str) -> StatisticsTable:
-        """The rows as series, oldest period first; series without any value are left out
-        (e.g. a ratio the page does not give, or a form the page does not list).
+    def _table(
+        self, entries: Entries, series_ids: Sequence[str], section: str | None, where: str
+    ) -> StatisticsTable:
+        """The entries as series, oldest period first; series without any value are left
+        out (e.g. a ratio the page does not give, or a form it does not list).
 
-        Raises ``UnexpectedResponseError`` for rows off the contract or an inconsistent
-        table: the caller decides whether that dataset was the one asked for.
+        Raises ``UnexpectedResponseError`` for an inconsistent table (``where`` in its
+        detail): the caller decides whether that dataset was the one asked for.
         """
-        rows = Dto.validated_rows(STATS_ROWS[self.field], raw_rows, f"{path} ({self.field})")
-        series = self._series(sorted(rows, key=self._period))
+        ordered = sorted(entries, key=lambda entry: entry[0])
+        definitions = {definition.series_id: definition for definition in self.dataset.series}
+        series = []
+        for series_id in series_ids:
+            points = tuple(SeriesPoint(period, values.get(series_id)) for period, values in ordered)
+            if any(point.value is not None for point in points):
+                definition = definitions[series_id]
+                series.append(TimeSeries(series_id, definition.label, definition.unit, points))
         try:
             return StatisticsTable(
                 dataset=self.dataset,
                 frequency=self.frequency,
                 source=self.source,
-                series=series,
+                series=tuple(series),
                 section=section,
             )
         except ValueError as err:  # e.g. a period twice, or no values at all
-            raise UnexpectedResponseError(
-                f"Dane statystyk na stronie serwisu są niespójne. {SERVICE_CHANGED}",
-                detail=f"{path} ({self.field}): {err}",
-            ) from err
-
-    def _series(self, ordered: Sequence[StatsRowDto]) -> tuple[TimeSeries, ...]:
-        periods = [self._period(row) for row in ordered]
-        definitions = {d.series_id: d for d in self.dataset.series}
-        series = []
-        for series_id, value in self.columns:
-            points = tuple(
-                SeriesPoint(period, value(row))
-                for period, row in zip(periods, ordered, strict=True)
-            )
-            if any(point.value is not None for point in points):
-                definition = definitions[series_id]
-                series.append(TimeSeries(series_id, definition.label, definition.unit, points))
-        return tuple(series)
-
-    @staticmethod
-    def _period(row: Any) -> str:
-        for name in ("quarter", "month"):
-            label = getattr(row, name, None)
-            if isinstance(label, str):
-                return label
-        return str(row.year)
+            raise _inconsistent(where, str(err)) from err
 
 
-def _attr(name: str) -> Value:
+@dataclass(frozen=True)
+class _Rows(_Reading):
+    """A data prop of rows (``field`` of ``GovernmentStatsPageDto``) -> one dataset."""
+
+    field: str
+    columns: Sequence[tuple[str, RowValue]]
+
+    def found(self, page: "GovernmentStatsPageDto") -> Any:
+        return getattr(page, self.field)
+
+    def table(self, raw: Any, section: str | None, path: str) -> StatisticsTable:
+        """Raises ``UnexpectedResponseError`` for rows off the contract or an inconsistent
+        table."""
+        where = f"{path} ({self.field})"
+        rows = Dto.validated_rows(STATS_ROWS[self.field], raw, where)
+        entries = [
+            (_period(row), {series_id: value(row) for series_id, value in self.columns})
+            for row in rows
+        ]
+        return self._table(entries, [series_id for series_id, _ in self.columns], section, where)
+
+
+@dataclass(frozen=True)
+class _Chart(_Reading):
+    """A chart (``chart_id``) -> one dataset: each series is read from the points of one of
+    the chart's datasets (``columns``: series id, dataset key, key of the points' values,
+    or ``None`` for the ratio in their notes, ``_ratios``)."""
+
+    chart_id: str
+    columns: Sequence[tuple[str, str, str | None]]
+
+    def found(self, page: "GovernmentStatsPageDto") -> Any:
+        return page.charts.get(self.chart_id)
+
+    def table(self, raw: Any, section: str | None, path: str) -> StatisticsTable:
+        """The points of the chart's datasets joined by period. Raises
+        ``UnexpectedResponseError`` for a chart off the contract (a dataset missing, a
+        point without its period, a value read that is no number), a period twice in one
+        dataset or an inconsistent table."""
+        where = f"{path} (spec {self.chart_id})"
+        chart = Dto.validated(ChartSpecDto, raw, where)
+        joined: dict[str, dict[str, float | None]] = {}
+        for key in dict.fromkeys(key for _, key, _ in self.columns):
+            for period, values in self._entries(chart, key, where):
+                joined.setdefault(period, {}).update(values)
+        series_ids = [series_id for series_id, _, _ in self.columns]
+        return self._table(list(joined.items()), series_ids, section, where)
+
+    def _entries(self, chart: ChartSpecDto, key: str, where: str) -> Entries:
+        """The series of the chart's dataset ``key``, one entry per point."""
+        source = f"{where} [{key!r}]"
+        data = Dto.validated(ChartDataDto, chart.datasets.get(key), source)
+        periods = [point.period for point in data.points]
+        if len(set(periods)) < len(periods):
+            raise _inconsistent(where, f"zbiór {key!r}: okres występuje dwa razy")
+        entries: Entries = [(period, {}) for period in periods]
+        for series_id, column, values_key in self.columns:
+            if column == key:
+                found = _series_of(data.points, values_key, source)
+                for (_, values), value in zip(entries, found, strict=True):
+                    values[series_id] = value
+        return entries
+
+
+def _period(row: Any) -> str:
+    for name in ("quarter", "month"):
+        label = getattr(row, name, None)
+        if isinstance(label, str):
+            return label
+    return str(row.year)
+
+
+def _attr(name: str) -> RowValue:
     return lambda row: row.number(name)
 
 
-def _sum(*names: str) -> Value:
+def _sum(*names: str) -> RowValue:
     """The sum of ``names``; ``None`` when any of them is missing."""
 
     def total(row: StatsRowDto) -> float | None:
@@ -355,6 +376,67 @@ def _sum(*names: str) -> Value:
     return total
 
 
+def _series_of(
+    points: Sequence[ChartPointDto], values_key: str | None, source: str
+) -> list[float | None]:
+    """The values ``values_key`` of the points, each checked (``ChartValueDto``; one off the
+    contract raises ``UnexpectedResponseError``); ``None``: the ratios in their notes."""
+    if values_key is None:
+        return _ratios(points, source)
+    rows = [{"value": point.values.get(values_key)} for point in points]
+    checked = Dto.validated_rows(ChartValueDto, rows, f"{source} {values_key}")
+    return [value.number() for value in checked]
+
+
+# [P 2026-10-31] the yearly wages of `warszawa` (chart `gus-wynagrodzenia-roczne-wykres`): each
+# of the 21 points has one note, "124,6 % średniej krajowej" (a no-break space before "%"),
+# which the section's own text calls the wage's ratio to the national average (Polska =
+# 100 %); every one equals the 1.0 page's `relacjaPolska` [P 2026-10-11]. A note in any other
+# form is no value (the series is left out when no point has one).
+_RATIO = re.compile(r"(\d+(?:,\d+)?)\s*% średniej krajowej")
+
+
+def _ratios(points: Sequence[ChartPointDto], source: str) -> list[float | None]:
+    """The ratio to the national average in each point's notes (``_ratio``).
+
+    Text notes of which none is a ratio mean their wording changed (D21: the text of the
+    site's UI): the series is left out, and a WARNING says so in the log of the server,
+    where the live suite and a person find it.
+    """
+    ratios = [_ratio(point.notes) for point in points]
+    texts = [note for point in points for note in _texts(point.notes)]
+    if texts and all(ratio is None for ratio in ratios):
+        _log.warning(
+            "%s: %d notatek, żadna nie jest relacją do średniej krajowej, np. %r",
+            source,
+            len(texts),
+            texts[0][:60],
+        )
+    return ratios
+
+
+def _ratio(notes: Any) -> float | None:
+    """The ratio to the national average among ``notes`` (the whole note, ``fullmatch``);
+    ``None`` without one."""
+    for note in _texts(notes):
+        found = _RATIO.fullmatch(note.strip())
+        if found:
+            return float(found[1].replace(",", "."))
+    return None
+
+
+def _texts(notes: Any) -> list[str]:
+    """The notes of a point that are texts: the strings of a list, nothing else."""
+    return [note for note in notes if isinstance(note, str)] if isinstance(notes, list) else []
+
+
+def _inconsistent(where: str, problem: str) -> UnexpectedResponseError:
+    return UnexpectedResponseError(
+        f"Dane statystyk na stronie serwisu są niespójne. {SERVICE_CHANGED}",
+        detail=f"{where}: {problem}",
+    )
+
+
 _FORMS = (
     ("developer", "Deweloperskie"),
     ("individual", "Indywidualne"),
@@ -363,77 +445,35 @@ _FORMS = (
     ("social", "Spoleczne"),
     ("company", "Zakladowe"),
 )
-_DWELLINGS: Sequence[tuple[str, Value]] = (
+_DWELLINGS: Sequence[tuple[str, RowValue]] = (
     ("completed_total", _attr("oddane")),
     *((f"completed_{key}", _attr(f"oddane{name}")) for key, name in _FORMS),
     ("started_total", _attr("rozpoczete")),
     *((f"started_{key}", _attr(f"rozpoczete{name}")) for key, name in _FORMS),
     ("started_for_rent", _attr("rozpoczeteNaWynajem")),
 )
-_DEMOGRAPHY_REST: Sequence[tuple[str, Value]] = (
-    ("deaths", _attr("zgony")),
-    ("natural_increase", _attr("przyrostNaturalny")),
-)
 
-MAPPINGS = (
-    _Mapping(
-        "dwellings_quarterly", Dataset.DWELLINGS_QUARTERLY, Frequency.QUARTER, GUS, _DWELLINGS
-    ),
-    _Mapping("dwellings_monthly", Dataset.DWELLINGS_MONTHLY, Frequency.MONTH, GUS, _DWELLINGS),
-    _Mapping(
-        "average_area_yearly",
-        Dataset.AVERAGE_AREA,
-        Frequency.YEAR,
-        GUS,
-        (("average_area", _attr("averageSizeM2")),),
-    ),
-    _Mapping(
-        "demography_yearly",
-        Dataset.DEMOGRAPHY,
-        Frequency.YEAR,
-        GUS,
-        (("births", _attr("urodzenia")), *_DEMOGRAPHY_REST),
-    ),
-    _Mapping(
-        "demography_monthly",
-        Dataset.DEMOGRAPHY,
-        Frequency.MONTH,
-        EUROSTAT,
-        (("births", _attr("urodzeniaZywe")), *_DEMOGRAPHY_REST),
-    ),
-    _Mapping(
-        "population_yearly",
+ROWS = (
+    _Rows(Dataset.DWELLINGS_QUARTERLY, Frequency.QUARTER, GUS, "dwellings_quarterly", _DWELLINGS),
+    _Rows(Dataset.DWELLINGS_MONTHLY, Frequency.MONTH, GUS, "dwellings_monthly", _DWELLINGS),
+    _Rows(
         Dataset.POPULATION,
         Frequency.YEAR,
         GUS,
+        "population_yearly",
         (
-            # [P 2026-10-11] the page states the population as this sum (2025: 37 332 510
-            # for polska, 1 866 729 for warszawa).
+            # [P 2026-10-31] the page states the population as this sum (2025: 37 332 510
+            # for polska, 1 866 729 for warszawa, 5 258 113 for 7-miast).
             ("total", _sum("totalKobiety", "totalMezczyzni")),
             ("women", _attr("totalKobiety")),
             ("men", _attr("totalMezczyzni")),
         ),
     ),
-    _Mapping(
-        "unemployment_monthly",
-        Dataset.UNEMPLOYMENT,
-        Frequency.MONTH,
-        GUS,
-        (("rate", _attr("rate")),),
-    ),
-    _Mapping("wages_monthly", Dataset.WAGES, Frequency.MONTH, GUS, (("gross", _attr("brutto")),)),
-    _Mapping(
-        "wages_yearly",
-        Dataset.WAGES,
-        Frequency.YEAR,
-        GUS,
-        (("gross", _attr("brutto")), ("relative_to_poland", _attr("relacjaPolska"))),
-    ),
-    _Mapping(
-        "nbp_quarterly",
+    _Rows(
         Dataset.NBP_PRICES,
         Frequency.QUARTER,
         NBP,
+        "nbp_quarterly",
         (
             ("primary_asking", _attr("pierwotnyOfertowa")),
             ("primary_transaction", _attr("pierwotnyTransakcyjna")),
@@ -442,156 +482,273 @@ MAPPINGS = (
         ),
     ),
 )
+"""The datasets in data props (``STATS_SHAPES``)."""
+
+# [P 2026-10-31] tests/fixtures/rsc/stats_gov_*_20261031.rsc: the chart ids and the keys of
+# their datasets and series. The demography of `polska` has four datasets: births and
+# deaths (`ruch`) or the natural increase (`przyrost`), monthly (`mies`) or as sums of 12
+# months (`krocz`); the monthly ones are the dataset. The unemployment chart of a city also
+# has the national rate (`polska`), which is not this location's. [W] the other cities and
+# aggregates use the template of `warszawa` and `7-miast`: the same ids and keys.
+CHARTS = (
+    _Chart(
+        Dataset.AVERAGE_AREA,
+        Frequency.YEAR,
+        GUS,
+        "gus-powierzchnia-wykres",
+        (("average_area", "", "powierzchnia"),),
+    ),
+    _Chart(
+        Dataset.DEMOGRAPHY,
+        Frequency.YEAR,
+        GUS,
+        "gus-demografia-wykres",
+        (
+            ("births", "ruch", "urodzenia"),
+            ("deaths", "ruch", "zgony"),
+            ("natural_increase", "przyrost", "przyrost"),
+        ),
+    ),
+    _Chart(
+        Dataset.DEMOGRAPHY,
+        Frequency.MONTH,
+        EUROSTAT,
+        "eurostat-demografia-wykres",
+        (
+            ("births", "ruch|mies", "urodzenia"),
+            ("deaths", "ruch|mies", "zgony"),
+            ("natural_increase", "przyrost|mies", "przyrost"),
+        ),
+    ),
+    _Chart(
+        Dataset.UNEMPLOYMENT,
+        Frequency.MONTH,
+        GUS,
+        "gus-bezrobocie-wykres",
+        (("rate", "", "miejsce"),),
+    ),
+    _Chart(
+        Dataset.WAGES,
+        Frequency.MONTH,
+        GUS,
+        "gus-wynagrodzenia-wykres",
+        (("gross", "", "brutto"),),
+    ),
+    _Chart(
+        Dataset.WAGES,
+        Frequency.YEAR,
+        GUS,
+        "gus-wynagrodzenia-roczne-wykres",
+        (("gross", "", "brutto"), ("relative_to_poland", "", None)),
+    ),
+)
+"""The datasets in chart specs, by the chart's ``id``."""
+
+# [P 2026-10-31] tests/fixtures/rsc/stats_gov_7_miast_20261031.rsc: the aggregate lists the
+# section `gus-bezrobocie` with a chart of one rate per city of the aggregate (its series are
+# keyed by the cities' slugs) and no rate of its own: it does not publish the dataset.
+CHARTS_WITHOUT_SERIES: Mapping[str, Dataset] = {
+    "gus-bezrobocie-miasta-wykres": Dataset.UNEMPLOYMENT,
+}
+"""Charts that fill a dataset's section without a series of the location."""
+
+READINGS: tuple[_Rows | _Chart, ...] = (*ROWS, *CHARTS)
 
 # --- the page --------------------------------------------------------------------------------
 
-STATS_WHOLE_COUNTRY = "polska"
-"""The location of the root page of these statistics; its ``currentSlug`` is ``null`` [P]."""
-
 
 class GovernmentStatsPageDto(Dto):
-    """The data of ``/statystyki/statystyki-rzadowe/{location}`` (RSC).
+    """The data of ``/statystyki/{location}/dane-rzadowe`` (RSC).
 
-    ``tocItems`` and ``sortedLocations`` are the page's props, checked here; every other
-    field holds the rows of a data prop recognized by its rows (``None``: the page has no
-    such prop), checked one dataset at a time (``validate_rows`` with ``STATS_ROWS``), so
-    rows that do not match the contract make only their own dataset unreadable.
+    ``govSections`` (of the prop ``blocks``) and ``cityName`` are the page's; every row
+    field holds the rows of a data prop recognized by its rows and ``charts`` the chart
+    specs the client knows, by ``id`` (``None`` or absent: the page has no such data). Each
+    is checked one dataset at a time (``_Rows.table``, ``_Chart.table``), so data off the
+    contract makes only its own dataset unreadable.
     """
 
-    tocItems: list[TocItemDto]
-    sortedLocations: list[StatsLocationDto] = Field(default_factory=list)
+    govSections: list[str]
+    cityName: str | None = None
     dwellings_quarterly: RawRows | None = None
     dwellings_monthly: RawRows | None = None
-    average_area_yearly: RawRows | None = None
-    demography_yearly: RawRows | None = None
-    demography_monthly: RawRows | None = None
     population_yearly: RawRows | None = None
-    unemployment_monthly: RawRows | None = None
-    wages_monthly: RawRows | None = None
-    wages_yearly: RawRows | None = None
     nbp_quarterly: RawRows | None = None
+    charts: dict[str, Any] = Field(default_factory=dict)
 
     @classmethod
-    def from_payload(cls, payload: str | bytes, *, path: str, location: str) -> Self:
-        """The table of contents, the list of locations and every data prop of the page at
-        ``path``, the page of ``location``.
+    def from_payload(cls, payload: str | bytes, *, path: str, location: LocationSlug) -> Self:
+        """The sections, the location and the data of the page at ``path``, the page of
+        ``location``.
 
         Raises ``NotFoundError`` for a page Next.js answers with ``notFound()`` and
-        ``UnexpectedResponseError`` for a page without the table of contents, one that is
-        about another location (``currentSlug``), or one whose data props are ambiguous.
+        ``UnexpectedResponseError`` for a page without its list of sections, one that is
+        about another location (``citySlug``), or one whose data props are ambiguous.
         """
         props = _PageProps(path)
         for name, value in component_props(payload):
             props.add(name, value)
-        return Dto.validated(cls, props.data(payload, location), f"{path} (statystyki rządowe)")
+        return Dto.validated(cls, props.data(payload, location), f"{path} (dane rządowe)")
 
     def to_model(
         self, location: LocationSlug, dataset: Dataset, *, path: str
     ) -> LocationStatistics:
-        """Every dataset the page shows, as a table, with the page's list of locations.
+        """Every dataset the page shows, as a table.
 
         A table that cannot be read fails only when it is ``dataset``'s (the port's
         contract: the other datasets do not matter for it), and so does a section of
         ``dataset`` the page lists without its data: ``UnexpectedResponseError``, with the
         page's ``path`` in its detail.
         """
-        sections = [item.id for item in self.tocItems]
-        tables = self._tables(dataset, sections, path)
-        if dataset not in tables and self._shown_without_data(dataset, sections, tables):
+        tables = self._tables(dataset, path)
+        if dataset not in tables and self._shown_without_data(dataset, tables):
             raise UnexpectedResponseError(
                 f"Serwis pokazuje zestaw {dataset.value!r}, ale jego dane są nieczytelne. "
                 f"{SERVICE_CHANGED}",
-                detail=f"{path}: sekcja {SECTIONS[dataset]} w tocItems, brak propsa z danymi",
+                detail=f"{path}: sekcja {SECTIONS[dataset]} w govSections, brak jej danych",
             )
-        return LocationStatistics(
-            location=location,
-            name=self._name(location),
-            tables=tables,
-            locations=tuple(item.to_model() for item in self.sortedLocations),
-        )
+        return LocationStatistics(location=location, name=self._name(location), tables=tables)
 
-    def _tables(
-        self, dataset: Dataset, sections: Sequence[str], path: str
-    ) -> dict[Dataset, StatisticsTable]:
+    def _tables(self, dataset: Dataset, path: str) -> dict[Dataset, StatisticsTable]:
         tables: dict[Dataset, StatisticsTable] = {}
-        for mapping in MAPPINGS:
-            rows = getattr(self, mapping.field)
-            if rows is None:
+        for reading in READINGS:
+            raw = reading.found(self)
+            if raw is None:
                 continue
-            section = next((s for s in SECTIONS[mapping.dataset] if s in sections), None)
+            section = next((s for s in SECTIONS[reading.dataset] if s in self.govSections), None)
             try:
-                tables[mapping.dataset] = mapping.table(rows, section, path)
+                tables[reading.dataset] = reading.table(raw, section, path)
             except UnexpectedResponseError:
-                if mapping.dataset is dataset:
+                if reading.dataset is dataset:
                     raise
                 # Another dataset of the page: the one asked for does not depend on it (the
                 # port's contract; "isolation" in
                 # tests/contract/api/adapters/test_government_statistics_api.py).
         return tables
 
-    @staticmethod
     def _shown_without_data(
-        dataset: Dataset, sections: Sequence[str], tables: Mapping[Dataset, StatisticsTable]
+        self, dataset: Dataset, tables: Mapping[Dataset, StatisticsTable]
     ) -> bool:
-        """The page lists a section of ``dataset``, and no dataset it read explains it.
+        """The page lists a section of ``dataset``, and nothing it read explains it.
 
         ``gus-mieszkania`` is the section of both quarterly and monthly dwellings: a page
         with only one of them lists it for that one, so the other is not published there
-        (the domain's ``NotFoundError``), not unreadable. [W] every page seen has both.
+        (the domain's ``NotFoundError``), not unreadable. [W] every page seen has both. A
+        chart of ``CHARTS_WITHOUT_SERIES`` fills its section without the dataset.
         """
-        shown = {section for section in SECTIONS[dataset] if section in sections}
+        shown = {section for section in SECTIONS[dataset] if section in self.govSections}
         explained = any(other is not dataset and shown & set(SECTIONS[other]) for other in tables)
-        return bool(shown) and not explained
+        filled = any(CHARTS_WITHOUT_SERIES.get(chart) is dataset for chart in self.charts)
+        return bool(shown) and not explained and not filled
 
     def _name(self, location: LocationSlug) -> str:
         if location.whole_country:
             return WHOLE_COUNTRY_NAME
-        listed = (item.displayName for item in self.sortedLocations if item.slug == location.value)
-        return next(listed, location.value)
+        return (self.cityName or "").strip() or location.value
+
+
+_READ_CHARTS: Mapping[str, Dataset] = {chart.chart_id: chart.dataset for chart in CHARTS}
+_KNOWN_CHARTS: Mapping[str, Dataset] = {**_READ_CHARTS, **CHARTS_WITHOUT_SERIES}
 
 
 class _PageProps:
-    """The props of one page, collected in the order of its stream (``add``): the table of
-    contents, the list of locations, each ``currentSlug``, and the data props recognized by
-    their rows (``STATS_SHAPES``); ``data`` checks them and gives the DTO's data."""
+    """The props of one page, collected in the order of its stream (``add``): the list of
+    sections, each ``citySlug``, ``cityName``, the data props recognized by their rows
+    (``STATS_SHAPES``) and the known charts; ``data`` checks them and gives the DTO's
+    data."""
 
     def __init__(self, path: str) -> None:
         self._path = path
-        self._toc: list[Any] | None = None
-        self._locations: list[Any] | None = None
-        self._current: list[object] = []
-        self._tables: dict[str, list[Any]] = {}
-        self._groups: dict[str, str] = {}
+        self._sections: list[Any] | None = None
+        self._city_slugs: list[str] = []
+        self._city_name: str | None = None
+        self._rows: dict[str, list[Any]] = {}
+        self._charts: dict[str, dict[str, Any]] = {}
         self._found: list[str] = []
 
     def add(self, name: str, value: Any) -> None:
         if isinstance(value, dict | list) and name not in self._found:
             self._found.append(name)
-        if name == "tocItems" and isinstance(value, list) and self._toc is None:
-            self._toc = value
-        elif name == "sortedLocations" and isinstance(value, list) and self._locations is None:
-            self._locations = value
-        elif name == "currentSlug" and (value is None or isinstance(value, str)):
-            self._current.append(value)
+        if name == "blocks":
+            self._add_sections(value)
+        elif name in ("citySlug", "cityName"):
+            self._add_city(name, value)
+        elif name == "spec":
+            self._add_chart(value)
         elif shape := self._shape(name, value):
             self._add_rows(shape, name, value)
 
-    def data(self, payload: str | bytes, location: str) -> dict[str, Any]:
+    def data(self, payload: str | bytes, location: LocationSlug) -> dict[str, Any]:
         """The props under the DTO's field names, once the page proves to be the one of
         ``location`` (its ``payload`` tells a page Next.js does not know)."""
-        if self._toc is None:
-            raise self._without_toc(payload)
+        if self._sections is None:
+            raise self._without_sections(payload)
         self._check_location(location)
-        data: dict[str, Any] = {"tocItems": self._toc, **self._tables}
-        if self._locations is not None:
-            data["sortedLocations"] = self._locations
-        return data
+        return {
+            "govSections": self._sections,
+            "cityName": self._city_name,
+            "charts": self._charts,
+            **self._rows,
+        }
 
     def _add_rows(self, shape: StatsShape, name: str, rows: list[Any]) -> None:
-        if shape.group in self._groups:
-            raise self._ambiguous(f"dwa propsy z danymi {shape.group}: {name}, {self._groups}")
-        self._groups[shape.group] = name
-        self._tables[shape.field] = rows
+        """Rows of a shape; other rows of the same shape make the page ambiguous, the same
+        ones again do not: [W] the stream may write a value out again instead of
+        referencing it (the ``gus-prs`` section of ``polska`` gets ``monthlyData`` as a
+        reference [P 2026-10-31])."""
+        earlier = self._rows.get(shape.field)
+        if earlier is not None and earlier != rows:
+            raise self._ambiguous(f"dwa propsy z danymi {shape.field}: {name}")
+        self._rows[shape.field] = rows
+
+    # The props of the page's identity (`govSections`, `cityName`; `citySlug` in
+    # `_check_location`) follow the policy of the rows and the charts above: the same value
+    # again is no conflict, another value makes the page ambiguous, never a silent pick of
+    # the first (the policy the round-2 review of the core sets for the plain values of
+    # `RscPage.props`, which this page does not use: its several `data` and `spec` props
+    # need a reader of their own).
+
+    def _add_sections(self, blocks: Any) -> None:
+        """The list ``govSections`` of a prop ``blocks`` [P 2026-10-31: one per page]."""
+        sections = blocks.get("govSections") if isinstance(blocks, dict) else None
+        if not isinstance(sections, list):
+            return
+        if self._sections is not None and sections != self._sections:
+            raise self._ambiguous("dwie listy sekcji govSections")
+        self._sections = sections
+
+    def _add_city(self, name: str, value: Any) -> None:
+        """Every ``citySlug`` (each must be the location's) and the ``cityName``."""
+        if not _is_text(value):
+            return
+        if name == "citySlug":
+            self._city_slugs.append(value)
+            return
+        if self._city_name is not None and value != self._city_name:
+            raise self._ambiguous(f"dwie nazwy lokalizacji: {self._city_name!r}, {value!r}")
+        self._city_name = value
+
+    def _add_chart(self, spec: Any) -> None:
+        """A chart the client knows (``_KNOWN_CHARTS``); the same id with other data, or
+        another chart the client reads for the same dataset (``CHARTS``), makes the page
+        ambiguous. Other charts are left out."""
+        chart_id = spec.get("id") if isinstance(spec, dict) else None
+        if not isinstance(chart_id, str) or chart_id not in _KNOWN_CHARTS:
+            return
+        earlier = self._charts.get(chart_id)
+        if earlier is not None and earlier != spec:
+            raise self._ambiguous(f"dwa wykresy {chart_id}")
+        rival = self._rival(chart_id)
+        if rival is not None:
+            raise self._ambiguous(f"wykresy {chart_id} i {rival} jednego zestawu")
+        self._charts[chart_id] = spec
+
+    def _rival(self, chart_id: str) -> str | None:
+        """Another chart the client reads (``CHARTS``) for the dataset of ``chart_id``."""
+        dataset = _READ_CHARTS.get(chart_id)
+        if dataset is None:
+            return None
+        others = (c for c in self._charts if c != chart_id and _READ_CHARTS.get(c) is dataset)
+        return next(others, None)
 
     def _shape(self, name: str, value: Any) -> StatsShape | None:
         """The one shape whose keys every row of ``value`` has; ``None`` for anything else."""
@@ -602,28 +759,40 @@ class _PageProps:
             raise self._ambiguous(f"prop {name} pasuje do {[s.field for s in shapes]}")
         return shapes[0] if shapes else None
 
-    def _without_toc(self, payload: str | bytes) -> NotFoundError | UnexpectedResponseError:
+    def _without_sections(self, payload: str | bytes) -> NotFoundError | UnexpectedResponseError:
         """A page Next.js does not know (its 404 marker), or one that changed."""
         if NOT_FOUND_DIGEST in error_digests(payload):
             return NotFoundError(
                 "Serwis nie zna żądanych danych (strona nie istnieje).",
-                detail=f"{self._path}: brak propsa 'tocItems', strona zgłasza {NOT_FOUND_DIGEST}",
+                detail=(
+                    f"{self._path}: brak propsa 'blocks.govSections', strona zgłasza "
+                    f"{NOT_FOUND_DIGEST}"
+                ),
             )
         names = ", ".join(self._found[:10]) or "brak"
         return UnexpectedResponseError(
             f"Na stronie serwisu brakuje oczekiwanych danych. {SERVICE_CHANGED}",
-            detail=f"{self._path} nie zawiera spisu treści 'tocItems' (propsy z danymi: {names})",
+            detail=(
+                f"{self._path} nie zawiera listy sekcji 'blocks.govSections' (propsy z "
+                f"danymi: {names})"
+            ),
         )
 
-    def _check_location(self, location: str) -> None:
-        # [P 2026-10-11] `currentSlug` is the requested city (warszawa) or null (polska). A
-        # page about another location (e.g. a fallback for an unknown one, [H]) is not this
-        # one's.
-        expected = None if location == STATS_WHOLE_COUNTRY else location
-        if not self._current or any(slug != expected for slug in self._current):
+    def _check_location(self, location: LocationSlug) -> None:
+        # [P 2026-10-31] `citySlug` is the requested location on the pages of `warszawa` and
+        # `7-miast`; the page of `polska` has none. [W] the other cities and aggregates use
+        # the template of these pages, so their `citySlug` is theirs (the live suite reads a
+        # few). A page about another location (e.g. a fallback, [H]) is not this one's.
+        allowed: set[str | None] = {location.value}
+        if location.whole_country:
+            allowed.add(None)
+        found: list[str | None] = [*self._city_slugs] or [None]
+        if any(slug not in allowed for slug in found):
             raise UnexpectedResponseError(
                 f"Serwis zwrócił statystyki innej lokalizacji niż żądana. {SERVICE_CHANGED}",
-                detail=f"{self._path}: currentSlug {self._current!r}, oczekiwano {expected!r}",
+                detail=(
+                    f"{self._path}: citySlug {self._city_slugs!r}, oczekiwano {location.value!r}"
+                ),
             )
 
     def _ambiguous(self, what: str) -> UnexpectedResponseError:
@@ -631,3 +800,8 @@ class _PageProps:
             f"Dane na stronie serwisu są niejednoznaczne. {SERVICE_CHANGED}",
             detail=f"{self._path}: {what}",
         )
+
+
+def _is_text(value: object) -> bool:
+    """A prop's text value: a string that is no reference of the stream (``$…``)."""
+    return isinstance(value, str) and not value.startswith("$")

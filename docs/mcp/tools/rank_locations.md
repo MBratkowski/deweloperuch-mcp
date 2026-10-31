@@ -34,7 +34,8 @@ A structured result and the same compact JSON in the content; `null` fields are 
 - Powiat transaction counts cover many years: they only order the list, are not the current volume and must not be compared with city counts.
 - A price or area of 0 from the service means no value: the place sorts last on price and has no `price_per_m2` / `area_m2` / `price` fields (CLI text `?`, `--json` `null`). Example: Ignatki-osiedle, which the service lists with 0 and which used to rank as the cheapest [P 2026-10-15].
 - Sorting by price with few transactions favours random prices; that is why the default threshold is 20 (`min_transactions=0` shows everything). Sources: [endpoints.md](../../discovery/endpoints.md) (`city-transaction-stats`), [open-questions.md](../../open-questions.md).
-- Size: about 120 characters per item (20 items about 2 700).
+- **Known limitation (not fixed in 0.2.0):** `level=powiat` does not work on the redesigned service. The route behind it, `/api/map/powiat-stats`, is gone (an HTML 404, [P 2026-10-29]), so the call answers with the "service changed" message (see Errors); the live e2e suite records both powiat tests as expected failures. A repair is planned. `level=city` reads another route and is not affected.
+- Size: about 120 characters per item (20 items about 2 900 with the hint, `tests/golden/mcp/rank_cities_price_asc_default_threshold.json`).
 
 ## Errors
 | Situation | Message |
@@ -43,7 +44,8 @@ A structured result and the same compact JSON in the content; `null` fields are 
 | `limit` outside 1-100 | `Błędny argument narzędzia rank_locations: limit musi być liczbą całkowitą z zakresu 1–100, podano 101. Popraw i ponów; nic nie zostało wysłane.` |
 | `min_transactions` outside 0-10 000 000 | `Błędny argument narzędzia rank_locations: min_transactions musi być liczbą całkowitą z zakresu 0–10000000 albo pusty, podano -1. Popraw i ponów; nic nie zostało wysłane.` |
 | Unknown argument | `Nieznany argument narzędzia rank_locations: '…'. Dozwolone argumenty: level, sort, limit, min_transactions. Popraw nazwy i ponów; nic nie zostało wysłane.` |
-| STOP, service error | As in the [MCP overview](../README.md#errors); a service error: `Ranking miejscowości: Serwis odpowiedział błędem HTTP 500. Nic nie ponawiam; spróbuj później.` |
+| `level=powiat` (the known limitation above: a removed route is a changed service) | `Ranking powiatów: Narzędzie nie może pobrać tych danych, bo serwis przeniósł je w inne miejsce albo przestał je udostępniać. To nie musi znaczyć, że argumenty są błędne ani że szukanego obiektu nie ma. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.` |
+| STOP, other service error | As in the [MCP overview](../README.md#errors); a service error: `Ranking miejscowości: Serwis odpowiedział błędem HTTP 500. Nic nie ponawiam; spróbuj później.` |
 
 ## Example
 Call:

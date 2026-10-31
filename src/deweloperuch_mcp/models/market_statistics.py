@@ -1,27 +1,36 @@
-"""``MarketStatistics``: the offer market of a city in numbers (D15): counts, quartiles,
-the largest developers.
+"""``MarketStatistics``: the offer market of a city in numbers (D15, D20): counts,
+quartiles, the largest developers.
 
 The port ``usecases.ports.CityOffersSource`` gives every active offer of one city in a
-compact form (``CityOffers``); ``CityOffers.statistics`` narrows them to the ranges of
-price and area of ``MarketCriteria`` and sums them up. The source lists one city at a
-time, never the whole country [P 2026-10-10], so the criteria refuse ``polska``
+compact form, as of one day (``CityOffers``); ``CityOffers.statistics`` narrows them to the
+ranges of price and area of ``MarketCriteria`` and sums them up. The source lists one city
+at a time, never the whole country (D20), so the criteria refuse ``polska``
 (``MarketCriteria.one_city``). Single offers never leave this module: a result holds
-only aggregates and a bounded list of developers (D5, D15).
+only aggregates and a bounded list of developers (D5, D15, D20).
 
 Quantiles are linear between the closest ranks (the "inclusive" method: ``p25`` of
 1, 2, 3, 4 is 1.75), the median the middle value or the mean of the two middle ones.
 """
 
+import datetime as dt
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import ClassVar
 
 from deweloperuch_mcp.models.errors import InvalidValueError, OneCity, ValueName
-from deweloperuch_mcp.models.offer import ACTIVE
 from deweloperuch_mcp.models.values import AreaRange, CitySlug, DeveloperCount, PriceRange
 
 DEFAULT_TOP_DEVELOPERS = 10
 """Developers a summary names unless asked otherwise."""
+
+
+@dataclass(frozen=True)
+class MarketCity(CitySlug):
+    """The city of a market summary: a city slug, refused in the words of this summary
+    (one city; ``MarketCriteria`` refuses the whole country)."""
+
+    NAME: ClassVar[ValueName] = ValueName.MARKET_CITY
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -41,19 +50,20 @@ class MarketCriteria:
     def one_city(city: CitySlug) -> CitySlug:
         """``city``, unless it is the whole country (the market is of one city)."""
         if city.whole_country:
-            raise InvalidValueError(ValueName.CITY, OneCity(), city.value)
+            raise InvalidValueError(ValueName.MARKET_CITY, OneCity(), city.value)
         return city
 
 
 @dataclass(frozen=True, kw_only=True)
 class MarketOffer:
-    """An offer of a city's market: only what the summary counts."""
+    """An active offer of a city's market: only what the summary counts."""
 
     offer_id: int
     investment_slug: str | None
     """``None`` when the offer names no investment the city lists."""
     developer_slug: str | None
-    status: str
+    developer_name: str | None
+    """The name the source gives the developer of the offer's investment."""
     price: float | None
     area_m2: float | None
 
@@ -103,6 +113,9 @@ class DeveloperShare:
     """A developer's part of a city's market."""
 
     developer_slug: str
+    developer_name: str | None
+    """The first name the source gives the developer, among all its offers in the
+    source's order (not only the matching ones); ``None`` when none has one."""
     offers: int
     investments: int
     median_price_per_m2: float | None
@@ -113,6 +126,8 @@ class MarketStatistics:
     """The offers of a city that match the criteria, summed up."""
 
     criteria: MarketCriteria
+    as_of: dt.date | None
+    """The day of the offers summed up (``CityOffers.as_of``)."""
     offers: int
     investments: int
     developers: int
@@ -130,20 +145,21 @@ class MarketStatistics:
 
 @dataclass(frozen=True, kw_only=True)
 class CityOffers:
-    """Every active offer of a city, as the service lists them for its market."""
+    """Every active offer of a city, as the service lists them for its market (the source
+    lists active offers only, D20)."""
 
     city: CitySlug
     offers: tuple[MarketOffer, ...]
+    as_of: dt.date | None = None
+    """The day the source gives for its offers; ``None`` when it gives none."""
 
     def matching(self, price: PriceRange | None, area: AreaRange | None) -> list[MarketOffer]:
-        """Active offers within both ranges (ends included); an offer without a price
-        (an area) does not match a range of prices (areas)."""
+        """Offers within both ranges (ends included); an offer without a price (an area)
+        does not match a range of prices (areas)."""
         return [
             offer
             for offer in self.offers
-            if offer.status == ACTIVE
-            and _within(offer.price, price)
-            and _within(offer.area_m2, area)
+            if _within(offer.price, price) and _within(offer.area_m2, area)
         ]
 
     def statistics(self, criteria: MarketCriteria) -> MarketStatistics:
@@ -154,15 +170,19 @@ class CityOffers:
                 by_developer.setdefault(offer.developer_slug, []).append(offer)
         ranked = sorted(by_developer, key=lambda slug: (-len(by_developer[slug]), slug))
         ranked = ranked[: criteria.top.value]
+        names = _names(self.offers)
         return MarketStatistics(
             criteria=criteria,
+            as_of=self.as_of,
             offers=len(found),
             investments=len({o.investment_slug for o in found if o.investment_slug is not None}),
             developers=len(by_developer),
             price_spread=Spread.of([o.price for o in found if o.price is not None]),
             price_per_m2_spread=Spread.of(_prices_per_m2(found)),
             area_spread=Spread.of([o.area_m2 for o in found if o.area_m2]),
-            top_developers=tuple(_share(slug, by_developer[slug]) for slug in ranked),
+            top_developers=tuple(
+                _share(slug, names.get(slug), by_developer[slug]) for slug in ranked
+            ),
         )
 
 
@@ -180,10 +200,20 @@ def _prices_per_m2(offers: Sequence[MarketOffer]) -> list[float]:
     return [value for offer in offers if (value := offer.price_per_m2) is not None]
 
 
-def _share(slug: str, offers: Sequence[MarketOffer]) -> DeveloperShare:
+def _names(offers: Sequence[MarketOffer]) -> dict[str, str]:
+    """Each developer's first non-empty name among ``offers``, in their order."""
+    names: dict[str, str] = {}
+    for offer in offers:
+        if offer.developer_slug is not None and offer.developer_name:
+            names.setdefault(offer.developer_slug, offer.developer_name)
+    return names
+
+
+def _share(slug: str, name: str | None, offers: Sequence[MarketOffer]) -> DeveloperShare:
     per_m2 = sorted(_prices_per_m2(offers))
     return DeveloperShare(
         developer_slug=slug,
+        developer_name=name,
         offers=len(offers),
         investments=len({o.investment_slug for o in offers if o.investment_slug is not None}),
         median_price_per_m2=Spread.quantile(per_m2, 0.5) if per_m2 else None,

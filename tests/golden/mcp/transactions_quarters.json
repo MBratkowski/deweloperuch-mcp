@@ -25,17 +25,17 @@
           {
             "period": "2017-Q1",
             "transactions": 2922,
-            "average_price_per_m2": 7595
+            "median_price_per_m2": 7595
           },
           {
             "period": "2017-Q2",
             "transactions": 2854,
-            "average_price_per_m2": 7695
+            "median_price_per_m2": 7695
           },
           {
             "period": "2017-Q3",
             "transactions": 2893,
-            "average_price_per_m2": 7844
+            "median_price_per_m2": 7844
           }
         ]
       }

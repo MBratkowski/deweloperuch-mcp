@@ -1,0 +1,108 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "7-miast",
+        "dataset": "demography"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "7-miast",
+        "location_name": "Top 7 miast Polski",
+        "dataset": "demography",
+        "title": "Urodzenia żywe, zgony i przyrost naturalny",
+        "source": "GUS",
+        "frequency": "year",
+        "total": 31,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "1995",
+        "hint": "Pokazano ostatnie 12 z 31 okresów (dane od 1995); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe#gus-demografia",
+        "periods": [
+          "2014",
+          "2015",
+          "2016",
+          "2017",
+          "2018",
+          "2019",
+          "2020",
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025"
+        ],
+        "series": [
+          {
+            "series_id": "births",
+            "label": "Urodzenia żywe",
+            "unit": "osoby",
+            "values": [
+              52134,
+              53045,
+              57014,
+              58245,
+              58520,
+              57979,
+              55837,
+              53673,
+              49513,
+              43609,
+              40774,
+              39772
+            ]
+          },
+          {
+            "series_id": "deaths",
+            "label": "Zgony",
+            "unit": "osoby",
+            "values": [
+              53998,
+              56489,
+              54810,
+              57055,
+              58402,
+              57028,
+              65334,
+              70539,
+              62058,
+              56855,
+              53959,
+              52565
+            ]
+          },
+          {
+            "series_id": "natural_increase",
+            "label": "Przyrost naturalny",
+            "unit": "osoby",
+            "values": [
+              -1864,
+              -3444,
+              2204,
+              1190,
+              118,
+              951,
+              -9497,
+              -16866,
+              -12545,
+              -13246,
+              -13185,
+              -12793
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

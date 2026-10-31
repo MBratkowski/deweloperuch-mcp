@@ -28,7 +28,7 @@ A page without the prop and without the marker does not match the contract
 
 import json
 from collections.abc import Callable, Iterator, Sequence
-from typing import Any, TypeVar
+from typing import Any, TypeVar, overload
 
 from pydantic import BaseModel
 
@@ -83,9 +83,29 @@ class RscPage:
         """
         return self.read(lambda payload: self._prop(payload, name, model, missing))
 
+    @overload
     def props(
         self, required: Sequence[str], optional: Sequence[str] = (), *, missing: str | None = None
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any]: ...
+
+    @overload
+    def props(
+        self,
+        required: Sequence[str],
+        optional: Sequence[str] = (),
+        *,
+        missing: str | None = None,
+        decode: Callable[[dict[str, Any]], T],
+    ) -> T: ...
+
+    def props(
+        self,
+        required: Sequence[str],
+        optional: Sequence[str] = (),
+        *,
+        missing: str | None = None,
+        decode: Callable[[dict[str, Any]], T] | None = None,
+    ) -> dict[str, Any] | T:
         """The props ``required`` and ``optional`` of the page's client components, all from
         one request: name -> its first value that is an object or a list, as
         ``component_props`` yields them (the props of nested elements too); for a name
@@ -96,12 +116,21 @@ class RscPage:
         are no values; an empty list or a 0 is a value. The caller validates each value
         with its own DTO (``Dto.validated``).
 
+        ``decode``: what the caller makes of the props (its DTOs), run inside the transport's
+        decode, so a reply whose props it refuses is never cached, as ``prop`` validates its
+        model. Without it, the props as found.
+
         An optional prop that is absent or ``null`` gives ``None`` (a small town's
         ``latestSummary`` [P 2026-10-31]). A required one that is absent raises as ``prop``
         does: ``NotFoundError`` for a page with Next.js's 404 marker or the ``missing``
         heading, otherwise ``UnexpectedResponseError``.
         """
-        return self.read(lambda payload: self._props(payload, required, optional, missing))
+
+        def decoded(payload: str | bytes) -> dict[str, Any] | T:
+            found = self._props(payload, required, optional, missing)
+            return found if decode is None else decode(found)
+
+        return self.read(decoded)
 
     def read(self, decode: Callable[[str | bytes], T]) -> T:
         """The page's flight stream decoded by ``decode`` (a page with several props)."""

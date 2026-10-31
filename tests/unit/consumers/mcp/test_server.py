@@ -155,7 +155,9 @@ def test_descriptions_say_when_to_use_the_tool_and_its_limits(
     stats = described["get_government_statistics"]
     assert "GUS i NBP" in stats and "search_offers" in stats
     assert "domyślnie ostatnie 12 okresów" in stats and "najwyżej 120" in stats
-    assert "nbp_prices: tylko 17 dużych miast i 3 agregaty, nie polska" in stats
+    assert "nbp_prices: tylko 3 agregaty i część dużych miast (np. warszawa, krakow)" in stats
+    assert "GUS, NBP i Eurostatu" in stats and "get_transaction_statistics" in stats
+    assert len(stats) <= 1_200
     assert "note" in stats and "stats_url" in stats
     assert "Nie każdy zestaw jest dostępny dla każdej lokalizacji" in stats
     assert "z opóźnieniem" in stats
@@ -163,7 +165,7 @@ def test_descriptions_say_when_to_use_the_tool_and_its_limits(
     assert "tylko aktywne oferty" in market and "polska nie działa" in market
     assert "mogą się nieco różnić od total w search_offers" in market
     assert "developer_slug weź z search_developers (po nazwie)" in described["get_developer"]
-    assert "cities zawsze obejmuje całą Polskę" in described["get_developer"]
+    assert "cities obejmuje całą Polskę (gdy serwis nie podaje" in described["get_developer"]
     assert "suspicious_reduction" in described["get_offer"]
     assert "lowest_price_30d" in described["get_offer"]
     assert "Nie filtruje po dzielnicy" not in described["search_offers"]
@@ -612,16 +614,16 @@ def test_tools_write_nothing_to_stdout(
 def test_result_sizes_on_the_samples(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
-    """Sizes of the text content (compact JSON) on full pages built from the samples.
+    """Sizes of the text content (compact JSON) on full pages built from the real rows.
 
     The defaults fit the budget; the per-item sizes in the descriptions of per_page and
-    limit hold ("ok. 450" and "ok. 300" characters), so results do not grow unnoticed.
-    With the links (D12, 2026-10-11) and the developer's slug (2026-10-13) an offer of a
-    page is about 450 characters, 490 with its city (more for a long developer slug): 10
-    offers about 4.7k, 50 about 22-25k."""
+    limit hold ("ok. 500" and "ok. 300" characters), so results do not grow unnoticed.
+    With the links (D12, 2026-10-11), the developer's slug (2026-10-13) and the district
+    (2026-10-31) an offer of a page is about 480 characters (more for a long developer
+    slug): 10 offers about 5.1k, 50 about 24k."""
 
     def full_page(request: httpx.Request) -> httpx.Response:
-        page = offers_page(count=int(request.url.params["perPage"]))
+        page = offers_page(per_page=int(request.url.params["perPage"]))
         return httpx.Response(
             200,
             content=offers_payload(page),
@@ -635,7 +637,10 @@ def test_result_sizes_on_the_samples(
         calls: dict[str, tuple[str, dict[str, Any]]] = {
             "page_10": ("search_offers", {"city": "warszawa"}),
             "page_50": ("search_offers", {"city": "warszawa", "per_page": 50}),
-            "page_50_country": ("search_offers", {"city": "polska", "per_page": 50}),
+            "page_50_district": (
+                "search_offers",
+                {"city": "warszawa", "district": "Praga-Południe", "per_page": 50},
+            ),
             "investment_20": ("get_investment", {"investment_slug": "smolna"}),
             "investment_200": ("get_investment", {"investment_slug": "smolna", "limit": 200}),
         }
@@ -648,8 +653,8 @@ def test_result_sizes_on_the_samples(
 
     assert measured["page_10"] <= SIZE_BUDGET
     assert measured["investment_20"] <= SIZE_BUDGET
-    assert measured["page_50"] <= 50 * 470 < SIZE_BUDGET_50
-    assert measured["page_50_country"] <= 50 * 500 < SIZE_BUDGET_50
+    assert measured["page_50"] <= 50 * 500 < SIZE_BUDGET_50
+    assert measured["page_50_district"] <= 50 * 500 < SIZE_BUDGET_50
     assert measured["investment_200"] <= 200 * 320
 
 

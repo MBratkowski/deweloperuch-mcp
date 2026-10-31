@@ -5,12 +5,13 @@ import datetime as dt
 import pytest
 
 from deweloperuch_mcp.api.dto import investment_dto, sale_events_dto
-from deweloperuch_mcp.api.dto.investment_sale_events_dto import InvestmentSaleEventsDto
+from deweloperuch_mcp.api.dto.investment_price_events_dto import InvestmentPriceEventsDto
 from deweloperuch_mcp.api.dto.sale_events_dto import SaleEventDto
 from deweloperuch_mcp.models.offer import (
     Offer,
 )
 from deweloperuch_mcp.models.price_history import PriceEvent, PriceFlags, PriceHistory
+from support.providers.routes.investments import smolna_with_events
 from support.providers.samples import body
 
 DAY = dt.date
@@ -44,13 +45,15 @@ def offer_2377() -> PriceHistory:
 
 
 def active_offers_with_history() -> list[tuple[int, float, PriceHistory]]:
-    """Every active offer of the sample investment with its history and current price."""
-    investment = investment_dto.InvestmentDto.model_validate(body("api.map_inv_visible")).to_model()
-    histories = InvestmentSaleEventsDto.model_validate(body("api.inv_sale_events")).root
+    """Every active offer of the 2.0 answer for ``smolna`` (tests/fixtures/api/README.md)
+    with its history and current price, both from that answer."""
+    answer = smolna_with_events()
+    investment = investment_dto.InvestmentDto.model_validate(answer).to_model()
+    histories = InvestmentPriceEventsDto.model_validate(answer).to_model()
     found = []
     for offer in investment.offers:
-        if offer.active and offer.price is not None and offer.offer_id in histories:
-            events = SaleEventDto.price_events(histories[offer.offer_id])
+        if offer.active and offer.price is not None:
+            events = histories[offer.offer_id]
             found.append((offer.offer_id, offer.price, PriceHistory().with_events(events)))
     return found
 

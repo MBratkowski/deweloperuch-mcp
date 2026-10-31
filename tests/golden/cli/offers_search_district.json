@@ -1,0 +1,53 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "warszawa",
+    "--district",
+    "Mokotów"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Pasujące oferty: 959 · strona 1 z 20 (po 10) · pokazano 10 · obcięte: serwis pozwala przejrzeć najwyżej 20 stron.",
+    "Wskazówka: Pasujących ofert jest 959, a serwis pozwala przejrzeć najwyżej 20 stron po 10 (200). Zawęź filtry (cena, metraż) albo zwiększ per_page do 100.",
+    "Ta lista na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/warszawa/mokotow/mieszkania?perPage=10",
+    "[4487] A2 · 810 660 PLN · 35,4 m² · 22 900 PLN/m² · aktywna · od pierwszej ceny +660 PLN (+0,08%)",
+    "    Apartamenty Beethovena [apartamenty-beethovena] · Dom Development S.A. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/dom-development/apartamenty-beethovena",
+    "[4527] B36 · 1 324 896 PLN · 59,68 m² · 22 200 PLN/m² · aktywna · od pierwszej ceny +14 896 PLN (+1,14%)",
+    "    Apartamenty Beethovena [apartamenty-beethovena] · Dom Development S.A. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/dom-development/apartamenty-beethovena",
+    "[4580] B52 · 1 561 804 PLN · 73,67 m² · 21 200 PLN/m² · aktywna · od pierwszej ceny +21 804 PLN (+1,42%)",
+    "    Apartamenty Beethovena [apartamenty-beethovena] · Dom Development S.A. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/dom-development/apartamenty-beethovena",
+    "[4586] A35 · 1 402 908 PLN · 63,48 m² · 22 100 PLN/m² · aktywna · od pierwszej ceny +12 908 PLN (+0,93%)",
+    "    Apartamenty Beethovena [apartamenty-beethovena] · Dom Development S.A. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/dom-development/apartamenty-beethovena",
+    "[52503] B.0.02 · 869 352 PLN · 48,84 m² · 17 800 PLN/m² · aktywna · od pierwszej ceny -40 648 PLN (-4,47%)",
+    "    Ananasowa [ananasowa] · SGI Sp. z o.o. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/sgi/ananasowa",
+    "[52510] D.0.04 · 1 051 245 PLN · 53,91 m² · 19 500 PLN/m² · aktywna · od pierwszej ceny +91 245 PLN (+9,5%)",
+    "    Ananasowa [ananasowa] · SGI Sp. z o.o. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/sgi/ananasowa",
+    "[52532] C.0.04 · 1 035 456 PLN · 53,93 m² · 19 200 PLN/m² · aktywna · od pierwszej ceny +95 456 PLN (+10,15%)",
+    "    Ananasowa [ananasowa] · SGI Sp. z o.o. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/sgi/ananasowa",
+    "[52542] E.1.06 · 1 211 760 PLN · 64,8 m² · 18 700 PLN/m² · aktywna · od pierwszej ceny +101 760 PLN (+9,17%)",
+    "    Ananasowa [ananasowa] · SGI Sp. z o.o. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/sgi/ananasowa",
+    "[52549] A.1.04 · 943 425 PLN · 53,91 m² · 17 500 PLN/m² · aktywna · od pierwszej ceny +13 425 PLN (+1,44%)",
+    "    Ananasowa [ananasowa] · SGI Sp. z o.o. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/sgi/ananasowa",
+    "[59990] 67 · 915 029 PLN · 39,87 m² · 22 950,31 PLN/m² · aktywna · od pierwszej ceny +55 029 PLN (+6,4%)",
+    "    Sadyba Spot [sadyba-spot] · Unidevelopment S.A. · Warszawa",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/unidevelopment/sadyba-spot",
+    "Szczegóły oferty: deweloperuch offers get OFFER_ID --investment INVESTMENT_SLUG",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mokotow/mieszkania?perPage=10&_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

@@ -28,12 +28,33 @@
           "name": "Invest Komfort Spółka Akcyjna Sp.K."
         },
         "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna",
-        "avg_price": 1566392.0,
-        "avg_area_m2": 63.97,
-        "avg_price_per_m2": 24487.63,
-        "offers_active": 3,
-        "offers_total": 16,
+        "avg_price": 2108801.25,
+        "avg_area_m2": 70.31,
+        "avg_price_per_m2": 29992.91,
+        "offers_active": 4,
+        "offers_total": 17,
         "offers": [
+          {
+            "offer_id": 206523,
+            "name": "C121",
+            "status": "active",
+            "price": 3735107.0,
+            "currency": "PLN",
+            "area_m2": 95.49,
+            "price_per_m2": 39115.16,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2026-10-24",
+            "last_event_date": "2026-10-30",
+            "last_change_date": "2026-10-24",
+            "price_history": [
+              {
+                "date": "2026-10-24",
+                "kind": "offer",
+                "price": 3735107.0
+              }
+            ]
+          },
           {
             "offer_id": 206087,
             "name": "C234",
@@ -45,7 +66,7 @@
             "price_change_since_start": 0.0,
             "price_change_since_start_pct": 0.0,
             "creation_date": "2026-10-03",
-            "last_event_date": "2026-10-03",
+            "last_event_date": "2026-10-24",
             "last_change_date": "2026-10-03",
             "price_history": [
               {
@@ -59,15 +80,15 @@
             "offer_id": 2377,
             "name": "C224",
             "status": "active",
-            "price": 1620175.0,
+            "price": 1620768.0,
             "currency": "PLN",
-            "area_m2": 69.5,
-            "price_per_m2": 23311.87,
-            "price_change_since_start": 175.0,
-            "price_change_since_start_pct": 0.01,
+            "area_m2": 66.36,
+            "price_per_m2": 24423.87,
+            "price_change_since_start": 768.0,
+            "price_change_since_start_pct": 0.05,
             "creation_date": "2025-02-25",
-            "last_event_date": "2026-10-03",
-            "last_change_date": "2026-10-03",
+            "last_event_date": "2026-10-30",
+            "last_change_date": "2026-10-24",
             "price_history": [
               {
                 "date": "2025-02-25",
@@ -83,6 +104,16 @@
                 "date": "2026-10-03",
                 "kind": "restored",
                 "price": 1620175.0
+              },
+              {
+                "date": "2026-10-03",
+                "kind": "offer",
+                "price": 1620175.0
+              },
+              {
+                "date": "2026-10-24",
+                "kind": "offer",
+                "price": 1620768.0
               }
             ]
           },
@@ -90,15 +121,15 @@
             "offer_id": 2386,
             "name": "C213",
             "status": "active",
-            "price": 1399205.0,
+            "price": 1399534.0,
             "currency": "PLN",
-            "area_m2": 56.5,
-            "price_per_m2": 24764.69,
-            "price_change_since_start": -10795.0,
-            "price_change_since_start_pct": -0.77,
+            "area_m2": 53.49,
+            "price_per_m2": 26164.4,
+            "price_change_since_start": -10466.0,
+            "price_change_since_start_pct": -0.74,
             "creation_date": "2025-02-25",
-            "last_event_date": "2026-10-03",
-            "last_change_date": "2026-10-03",
+            "last_event_date": "2026-10-24",
+            "last_change_date": "2026-10-24",
             "price_history": [
               {
                 "date": "2025-02-25",
@@ -114,11 +145,359 @@
                 "date": "2026-10-03",
                 "kind": "restored",
                 "price": 1399205.0
+              },
+              {
+                "date": "2026-10-03",
+                "kind": "offer",
+                "price": 1399205.0
+              },
+              {
+                "date": "2026-10-24",
+                "kind": "offer",
+                "price": 1399534.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2382,
+            "name": "B231",
+            "status": "archived",
+            "price": 2600000.0,
+            "currency": "PLN",
+            "area_m2": 113.4,
+            "price_per_m2": 22927.69,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 2600000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 2600000.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2381,
+            "name": "A234",
+            "status": "archived",
+            "price": 2030000.0,
+            "currency": "PLN",
+            "area_m2": 88.0,
+            "price_per_m2": 23068.18,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 2030000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 2030000.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2376,
+            "name": "B113",
+            "status": "archived",
+            "price": 1920000.0,
+            "currency": "PLN",
+            "area_m2": 78.9,
+            "price_per_m2": 24334.6,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 1920000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 1920000.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2375,
+            "name": "C244",
+            "status": "archived",
+            "price": 1870000.0,
+            "currency": "PLN",
+            "area_m2": 69.2,
+            "price_per_m2": 27023.12,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 1870000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 1870000.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2383,
+            "name": "B214",
+            "status": "archived",
+            "price": 1660000.0,
+            "currency": "PLN",
+            "area_m2": 71.1,
+            "price_per_m2": 23347.4,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 1660000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 1660000.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2373,
+            "name": "B224",
+            "status": "archived",
+            "price": 1650000.0,
+            "currency": "PLN",
+            "area_m2": 71.0,
+            "price_per_m2": 23239.44,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 1650000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 1650000.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2379,
+            "name": "C214",
+            "status": "archived",
+            "price": 1630000.0,
+            "currency": "PLN",
+            "area_m2": 69.9,
+            "price_per_m2": 23319.03,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 1630000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 1630000.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2387,
+            "name": "B122",
+            "status": "archived",
+            "price": 1560000.0,
+            "currency": "PLN",
+            "area_m2": 67.0,
+            "price_per_m2": 23283.58,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 1560000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 1560000.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2384,
+            "name": "C243",
+            "status": "archived",
+            "price": 1460000.0,
+            "currency": "PLN",
+            "area_m2": 55.9,
+            "price_per_m2": 26118.07,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 1460000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 1460000.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2385,
+            "name": "B112",
+            "status": "archived",
+            "price": 1460000.0,
+            "currency": "PLN",
+            "area_m2": 62.5,
+            "price_per_m2": 23360.0,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 1460000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 1460000.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2380,
+            "name": "A115",
+            "status": "archived",
+            "price": 1420000.0,
+            "currency": "PLN",
+            "area_m2": 57.2,
+            "price_per_m2": 24825.17,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 1420000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 1420000.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2374,
+            "name": "B213",
+            "status": "archived",
+            "price": 1210000.0,
+            "currency": "PLN",
+            "area_m2": 48.4,
+            "price_per_m2": 25000.0,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 1210000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 1210000.0
+              }
+            ]
+          },
+          {
+            "offer_id": 2378,
+            "name": "C123",
+            "status": "archived",
+            "price": 1110000.0,
+            "currency": "PLN",
+            "area_m2": 48.6,
+            "price_per_m2": 22839.51,
+            "price_change_since_start": 0.0,
+            "price_change_since_start_pct": 0.0,
+            "creation_date": "2025-02-25",
+            "last_event_date": "2025-02-25",
+            "last_change_date": "2025-02-25",
+            "price_history": [
+              {
+                "date": "2025-02-25",
+                "kind": "offer",
+                "price": 1110000.0
+              },
+              {
+                "date": "2025-02-25",
+                "kind": "archived",
+                "price": 1110000.0
               }
             ]
           }
         ],
-        "offers_returned": 3,
+        "offers_returned": 17,
         "offers_omitted": 0,
         "truncated": false
       }
@@ -126,7 +505,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]",
-    "GET https://deweloperuch.pl/api/investments/33/sale-events [accept: application/json]"
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
   ]
 }

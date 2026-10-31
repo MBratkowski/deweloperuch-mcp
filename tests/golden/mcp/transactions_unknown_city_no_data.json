@@ -10,17 +10,17 @@
   "results": [
     {
       "is_error": true,
-      "text": "Serwis nie ma cen transakcyjnych mieszkań dla miasta 'nieistniejace-miasto'. Sprawdź city_slug w search_locations (np. warszawa, krakow); statystyki są dla całych miast, nie dla dzielnic ani ulic.",
+      "text": "Serwis nie ma cen transakcyjnych mieszkań dla miasta 'nieistniejace-miasto'. Sprawdź city_slug w search_locations (np. warszawa, krakow); statystyki są dla całych miast, nie dla dzielnic ani ulic. Jeśli city_slug pochodzi z search_locations, serwis nie ma dla niego statystyk: powiedz to użytkownikowi.",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "NotFoundError: Serwis nie ma cen transakcyjnych mieszkań dla miasta 'nieistniejace-miasto'. Sprawdź city_slug w search_locations (np. warszawa, krakow); statystyki są dla całych miast, nie dla dzielnic ani ulic. Szczegóły: None"
+      "NotFoundError: Serwis nie ma cen transakcyjnych mieszkań dla miasta 'nieistniejace-miasto'. Sprawdź city_slug w search_locations (np. warszawa, krakow); statystyki są dla całych miast, nie dla dzielnic ani ulic. Jeśli city_slug pochodzi z search_locations, serwis nie ma dla niego statystyk: powiedz to użytkownikowi. Szczegóły: None"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=nieistniejace-miasto [accept: application/json]"
+    "GET https://deweloperuch.pl/statystyki/nieistniejace-miasto/transakcje?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

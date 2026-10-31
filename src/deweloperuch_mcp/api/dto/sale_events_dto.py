@@ -1,6 +1,5 @@
 """``SaleEventsDto``: ``GET /api/sale-events?saleId=`` [P] (sample ``api.sale_events``), the
-price events of one offer, and ``SaleEventDto``, one event, also of
-``InvestmentSaleEventsDto`` (``api.dto.investment_dto``)."""
+price events of one offer, and ``SaleEventDto``, one event."""
 
 import datetime as dt
 from collections.abc import Sequence

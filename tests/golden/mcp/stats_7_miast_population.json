@@ -1,0 +1,108 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "7-miast",
+        "dataset": "population"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "7-miast",
+        "location_name": "Top 7 miast Polski",
+        "dataset": "population",
+        "title": "Ludność według płci (stan na 31 grudnia)",
+        "source": "GUS",
+        "frequency": "year",
+        "total": 21,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "2005",
+        "hint": "Pokazano ostatnie 12 z 21 okresów (dane od 2005); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe#gus-wiek",
+        "periods": [
+          "2014",
+          "2015",
+          "2016",
+          "2017",
+          "2018",
+          "2019",
+          "2020",
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025"
+        ],
+        "series": [
+          {
+            "series_id": "total",
+            "label": "Razem",
+            "unit": "osoby",
+            "values": [
+              5092795,
+              5094236,
+              5104600,
+              5110164,
+              5124352,
+              5144651,
+              5288958,
+              5280831,
+              5268315,
+              5260557,
+              5256474,
+              5258113
+            ]
+          },
+          {
+            "series_id": "women",
+            "label": "Kobiety",
+            "unit": "osoby",
+            "values": [
+              2733793,
+              2733954,
+              2739039,
+              2740897,
+              2747548,
+              2757611,
+              2831305,
+              2826693,
+              2819882,
+              2815053,
+              2811626,
+              2810551
+            ]
+          },
+          {
+            "series_id": "men",
+            "label": "Mężczyźni",
+            "unit": "osoby",
+            "values": [
+              2359002,
+              2360282,
+              2365561,
+              2369267,
+              2376804,
+              2387040,
+              2457653,
+              2454138,
+              2448433,
+              2445504,
+              2444848,
+              2447562
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

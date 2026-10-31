@@ -8,7 +8,6 @@ import pytest
 from deweloperuch_mcp.models.errors import InvalidInputError, InvalidValueError, ValueName
 from deweloperuch_mcp.models.government_statistics import Dataset
 from deweloperuch_mcp.models.market_statistics import MarketCriteria
-from deweloperuch_mcp.models.offer import OfferSearchCriteria
 from deweloperuch_mcp.models.values import (
     AmountPln,
     AreaM2,
@@ -38,7 +37,7 @@ from deweloperuch_mcp.usecases.support import arguments
 
 LOCATION_HELP = (
     "location: oczekiwano polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo "
-    "slug miasta bez polskich znaków, np. warszawa, krakow, jastrzebie (Jastrzębie-Zdrój); "
+    "slug miasta bez polskich znaków, np. warszawa, krakow, jastrzebie-zdroj (Jastrzębie-Zdrój); "
 )
 
 
@@ -51,8 +50,20 @@ REFUSALS: list[tuple[str, Any, str]] = [
     (
         "city",
         lambda: SearchOffersRequest.parse(city=" Kraków ").criteria,
+        "city: oczekiwano city_slug jednego miasta (małe litery bez polskich znaków, np. "
+        "warszawa, krakow), nie polska; slug podaje search_locations; podano ' Kraków '.",
+    ),
+    (
+        "city of the offers, capitalised",
+        lambda: SearchOffersRequest.parse(city="Polska").criteria,
+        "city: oczekiwano city_slug jednego miasta (małe litery bez polskich znaków, np. "
+        "warszawa, krakow), nie polska; slug podaje search_locations; podano 'Polska'.",
+    ),
+    (
+        "city of a developer",
+        lambda: GetDeveloperRequest.parse(developer_slug="atal", city="Kraków"),
         "city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje "
-        "search_locations; podano ' Kraków '.",
+        "search_locations; podano 'Kraków'.",
     ),
     (
         "price_min",
@@ -118,12 +129,6 @@ REFUSALS: list[tuple[str, Any, str]] = [
         "search_locations (kind=district), np. Mokotów; podano 7.",
     ),
     (
-        "district of the whole country",
-        lambda: SearchOffersRequest.parse(city="polska", district="Mokotów").criteria,
-        "district działa tylko z jednym miastem: podaj jako city slug miasta tej dzielnicy "
-        "(search_locations zwraca go przy dzielnicy), a nie polska; podano 'Mokotów'.",
-    ),
-    (
         "price_dropped",
         lambda: SearchOffersRequest.parse(city="warszawa", price_dropped="yes").criteria,
         "price_dropped musi być true albo false, podano 'yes'.",
@@ -164,7 +169,7 @@ REFUSALS: list[tuple[str, Any, str]] = [
     (
         "per_page",
         lambda: SearchOffersRequest.parse(city="warszawa", per_page=20).criteria,
-        "per_page musi być jedną z wartości 10, 50, 100 (inne serwis zamienia na 10), podano 20.",
+        "per_page musi być jedną z wartości 10, 50, 100, podano 20.",
     ),
     (
         "offer_id",
@@ -236,7 +241,6 @@ REFUSED: list[Callable[[], object]] = [
     lambda: InvestmentsLimit(0),
     lambda: DeveloperCount(31),
     lambda: MarketCriteria(city=CitySlug("polska")),
-    lambda: OfferSearchCriteria(city=CitySlug("polska"), district=DistrictName("Wola")),
 ]
 
 

@@ -25,13 +25,13 @@ from types import TracebackType
 from typing import Self
 
 from deweloperuch_mcp.api.adapters.buildings_api import BuildingsApi
-from deweloperuch_mcp.api.adapters.city_sales_api import CitySalesApi
 from deweloperuch_mcp.api.adapters.developer_profile_api import DeveloperProfileApi
 from deweloperuch_mcp.api.adapters.developer_search_api import DeveloperSearchApi
 from deweloperuch_mcp.api.adapters.government_statistics_api import GovernmentStatisticsApi
 from deweloperuch_mcp.api.adapters.investment_search_api import InvestmentSearchApi
 from deweloperuch_mcp.api.adapters.investments_api import InvestmentsApi
 from deweloperuch_mcp.api.adapters.locations_api import LocationsApi
+from deweloperuch_mcp.api.adapters.offer_snapshot_api import OfferSnapshotApi
 from deweloperuch_mcp.api.adapters.offers_api import OffersApi
 from deweloperuch_mcp.api.adapters.transaction_ranking_api import TransactionRankingApi
 from deweloperuch_mcp.api.adapters.transaction_statistics_api import TransactionStatisticsApi
@@ -106,7 +106,7 @@ class Session:
         self.get_offer = GetOffer(investments, offers, links, clock or SystemClock())
         self.get_investment = GetInvestment(investments, links)
         self.get_developer = GetDeveloper(DeveloperProfileApi(self._http), links)
-        self.get_market_statistics = GetMarketStatistics(CitySalesApi(self._http), links)
+        self.get_market_statistics = GetMarketStatistics(OfferSnapshotApi(self._http), links)
         self.get_government_statistics = GetGovernmentStatistics(
             GovernmentStatisticsApi(self._http), links
         )

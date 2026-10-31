@@ -9,7 +9,7 @@
     ""
   ],
   "stderr": [
-    "Błąd: city: oczekiwano slug miasta bez polskich znaków, np. warszawa, krakow (nie polska: cała Polska nie jest obsługiwana); slug podaje search_locations (city_slug); podano 'kraków'.",
+    "Błąd: city: oczekiwano slug jednego miasta bez polskich znaków, np. warszawa, krakow (nie polska ani agregat miast, np. 7-miast; dane agregatów daje get_government_statistics); slug podaje search_locations (city_slug); podano 'kraków'.",
     ""
   ],
   "requests": []

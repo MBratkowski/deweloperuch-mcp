@@ -1,0 +1,51 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "7-miast",
+    "dwellings_monthly"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Mieszkania oddane do użytkowania i rozpoczęte (miesięcznie) · Top 7 miast Polski [7-miast]",
+    "Źródło: GUS · miesięcznie · okresy: pokazano 12 z 260 (dane od 2005-01).",
+    "Wskazówka: Pokazano ostatnie 12 z 260 okresów (dane od 2005-01); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe#gus-mieszkania",
+    "Kolumny:",
+    "  [1] Oddane do użytkowania: razem (mieszkania)",
+    "  [2] Oddane: deweloperskie (mieszkania)",
+    "  [3] Oddane: indywidualne (mieszkania)",
+    "  [4] Oddane: spółdzielcze (mieszkania)",
+    "  [5] Oddane: komunalne (mieszkania)",
+    "  [6] Oddane: społeczne (mieszkania)",
+    "  [7] Oddane: zakładowe (mieszkania)",
+    "  [8] Rozpoczęte budowy: razem (mieszkania)",
+    "  [9] Rozpoczęte: deweloperskie (mieszkania)",
+    "  [10] Rozpoczęte: indywidualne (mieszkania)",
+    "  [11] Rozpoczęte: spółdzielcze (mieszkania)",
+    "  [12] Rozpoczęte: komunalne (mieszkania)",
+    "  [13] Rozpoczęte: społeczne (mieszkania)",
+    "  [14] Rozpoczęte: zakładowe (mieszkania)",
+    "  [15] Rozpoczęte: na wynajem (mieszkania)",
+    "Okres      [1]    [2]  [3]  [4]  [5]  [6]  [7]    [8]    [9]  [10]  [11]  [12]  [13]  [14]  [15]",
+    "2025-09  5 471  4 596  153  196    0  526    0  4 274  4 129   145     0     0     0     0     0",
+    "2025-10  6 036  5 913  123    0    0    0    0  4 265  4 090   175     0     0     0     0     9",
+    "2025-11  5 500  5 346  154    0    0    0    0  3 191  3 101    90     0     0     0     0     0",
+    "2025-12  7 612  7 148  149  315    0    0    0  3 227  3 063   104    50    10     0     0     0",
+    "2026-01  3 129  2 967  146    0   16    0    0  3 806  3 608    83     0    50    65     0     0",
+    "2026-02  3 408  3 236  172    0    0    0    0  2 890  2 810    80     0     0     0     0     0",
+    "2026-03  3 189  2 827  156   36    0   70  100  4 245  4 032   213     0     0     0     0     0",
+    "2026-04  3 763  3 582  181    0    0    0    0  4 688  4 476   212     0     0     0     0     4",
+    "2026-05  3 687  3 511   96    5    0   75    0  3 848  3 678   170     0     0     0     0     0",
+    "2026-06  4 140  3 813  122    0    0  205    0  3 620  3 456   164     0     0     0     0     0",
+    "2026-07  5 141  4 936  162   43    0    0    0  3 160  2 811   149     0     0   200     0     0",
+    "2026-08  5 378  4 942  211   37    0  188    0  4 992  4 127   166     0   183   516     0     2",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

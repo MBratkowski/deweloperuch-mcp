@@ -1,11 +1,16 @@
 """Live: ``get_transaction_statistics`` (MCP over stdio) and ``deweloperuch stats
-transactions`` (CLI) on the real service. 3 live requests in file order, at most 5.
+transactions`` (CLI) on the real service. 4 live requests in file order, at most 6.
 
-One server for the module, so a repeat comes from its cache. Assertions are about
-structure, ranges and consistency, never about today's numbers. Behaviours marked [W]
-in the code (the meaning of the medians and averages, the lag of the latest months, the
-rule of the incomplete periods, other cities than Warsaw) are confirmed here only as far
-as the data shows them.
+The months come from the statistics page of a city (RSC, [P 2026-10-31]), the quarters
+from the trend route [P 2026-10-30]: both internal channels of the site (D21), so this
+module is the check after each deploy of the service. One server for the module, so a
+repeat comes from its cache. Assertions are about structure, ranges and consistency,
+never about today's numbers. Behaviours marked [W] in the code (the meaning of the
+medians and averages, the lag of the latest months, the rule of the incomplete periods,
+other cities than Warsaw and Karpacz) are confirmed here only as far as the data shows
+them. "Tylko rynek wtórny" for another city: the adapter refuses a month whose
+transactions are not all of the secondary market (api/dto/transaction_stats_page_dto.py),
+so the CLI's months of Kraków assert it.
 
 | Test | Requests |
 |---|---|
@@ -14,7 +19,14 @@ as the data shows them.
 | ``test_the_latest_months_hold_fewer_transactions`` | 0 |
 | ``test_the_incomplete_months_are_the_newest_ones`` | 0 (cache) |
 | ``test_quarters_of_a_city`` | 1 (fixture) |
+| ``test_the_price_of_a_quarter_is_a_median`` | 0 (cache) |
 | ``test_the_cli_shows_another_city`` | 1 (CLI, own process) |
+| ``test_an_aggregate_is_refused_without_a_request`` | 0 |
+| ``test_an_unknown_city_is_not_found`` | 1 |
+
+The page pads its end with empty months up to the current one; the client drops them
+(api/dto/transaction_stats_page_dto.py), so every series here ends with a month with
+transactions. ``total`` moves every month and is never pinned.
 """
 
 import json
@@ -34,7 +46,13 @@ pytestmark = pytest.mark.live
 TOOL = "get_transaction_statistics"
 CITY = "warszawa"
 OTHER_CITY = "krakow"
-"""[W] a city slug of search_locations works here too (only warszawa is [P])."""
+"""[W] a city slug of search_locations works here too (warszawa and karpacz are
+[P 2026-10-31])."""
+UNKNOWN_CITY = "nieistniejace-miasto"
+"""[P 2026-10-31] the page answers it with a 404 whose body is a flight stream."""
+SINCE = "2017"
+"""[P 2026-10-31, 2026-10-30] the year both series of Warsaw start in: the description
+says "od 2017 r."."""
 PERIOD = {
     "month": re.compile(r"\d{4}-(?:0[1-9]|1[0-2])"),
     "quarter": re.compile(r"\d{4}-Q[1-4]"),
@@ -47,7 +65,7 @@ MONTH_FIELDS = {
     "median_area_m2",
     "median_price",
 }
-QUARTER_FIELDS = {"period", "transactions", "average_price_per_m2"}
+QUARTER_FIELDS = {"period", "transactions", "median_price_per_m2"}
 FLAG = "incomplete"
 """A period's flag besides its measures: in MCP results only where it is true."""
 FEW_TRANSACTIONS = "Transakcji jest za mało, by ocenić"
@@ -152,8 +170,11 @@ def test_months_of_a_city(months: Call) -> None:
     for item in full:
         assert 10 <= item["median_area_m2"] <= 200
         assert item["median_price"] > item["median_price_per_m2"]
-    # Five years of Warsaw's months, about a thousand transactions each: the month right
-    # before the incomplete ones is judged, and usual.
+    # Warsaw's months since 2017, about a thousand transactions each: the month right
+    # before the incomplete ones is judged, and usual. The newest month has transactions
+    # (the page's empty months after it are dropped).
+    assert result["available_from"][:4] == SINCE, result["available_from"]
+    assert result["periods"][-1]["transactions"] > 0, result["periods"][-1]
     assert PERIOD["month"].fullmatch(result.get("last_complete_period", "")), result
     assert result["note"].startswith("Ostatnie miesiące są niepełne")
     assert result["stats_url"] == f"{STATS}/{CITY}/transakcje"
@@ -218,8 +239,35 @@ def test_quarters_of_a_city(quarters: Call, months: Call) -> None:
     assert {key for item in result["periods"] for key in item} <= QUARTER_FIELDS | {FLAG}
     assert result["note"].startswith("Ostatnie kwartały są niepełne")
     assert result["stats_url"] == f"{STATS}/{CITY}/transakcje"
-    # [W] the quarters reach further back than the months (2017 vs 2021 in the samples).
-    assert result["available_from"][:4] <= months.data["available_from"][:4]
+    # Both series start in the same year (the description: "od 2017 r.").
+    assert result["available_from"][:4] == months.data["available_from"][:4] == SINCE
+
+
+def test_the_price_of_a_quarter_is_a_median(mcp: McpLive, months: Call, quarters: Call) -> None:
+    """[P 2026-10-30] (api/dto/city_trend_dto.py): the trend's price of one m² is a median,
+    though its name says average. Over the quarters both results cover in full, it lies
+    closer to the medians of its three months than to their means (on the fixtures of
+    2026-10-16 and 2026-10-31 in every complete quarter since 2017, by 390 PLN/m² or more
+    since 2023-Q4)."""
+    every = mcp.call(TOOL, city=CITY, periods=60)
+
+    assert every.sent == 0
+    months_of: dict[str, list[dict[str, Any]]] = {}
+    for item in every.data["periods"]:
+        if not item.get(FLAG) and "median_price_per_m2" in item:
+            year, month = item["period"].split("-")
+            months_of.setdefault(f"{year}-Q{(int(month) - 1) // 3 + 1}", []).append(item)
+    compared = 0
+    for quarter in quarters.data["periods"]:
+        three = months_of.get(quarter["period"], [])
+        if quarter.get(FLAG) or len(three) != 3 or "median_price_per_m2" not in quarter:
+            continue
+        medians = statistics.mean(item["median_price_per_m2"] for item in three)
+        means = statistics.mean(item["average_price_per_m2"] for item in three)
+        price = quarter["median_price_per_m2"]
+        assert abs(price - medians) < abs(price - means), (quarter, medians, means)
+        compared += 1
+    assert compared >= 4, compared
 
 
 def test_the_cli_shows_another_city(
@@ -239,3 +287,30 @@ def test_the_cli_shows_another_city(
     check_incomplete(shown, compact=False)
     assert {"average_area_m2", "average_price"} <= set(shown["periods"][-1])
     assert shown["stats_url"] == f"{STATS}/{OTHER_CITY}/transakcje"
+    assert shown["available_from"][:4] == SINCE, shown["available_from"]
+    assert shown["periods"][-1]["transactions"] > 0, shown["periods"][-1]
+
+
+def test_an_aggregate_is_refused_without_a_request(mcp: McpLive) -> None:
+    """A group of cities is no city (models.transaction_series.TransactionCity.AGGREGATES):
+    refused before any request, pointing to the government statistics."""
+    call = mcp.call(TOOL, city="7-miast")
+
+    assert call.error, call.text
+    assert call.text.startswith("city: oczekiwano slug jednego miasta"), call.text
+    assert "get_government_statistics" in call.text
+    assert call.sent == 0
+
+
+def test_an_unknown_city_is_not_found(mcp: McpLive) -> None:
+    """[P 2026-10-31] (module docstring): "no such city" with what to give, never "the
+    service changed" (the transport reads the page's 404 with a flight stream as the
+    service's own answer)."""
+    call = mcp.call_network(TOOL, city=UNKNOWN_CITY)
+
+    assert call.error, call.text
+    assert call.text.startswith(
+        f"Serwis nie ma cen transakcyjnych mieszkań dla miasta {UNKNOWN_CITY!r}."
+    ), call.text
+    assert "Jeśli city_slug pochodzi z search_locations" in call.text
+    assert call.sent == 1

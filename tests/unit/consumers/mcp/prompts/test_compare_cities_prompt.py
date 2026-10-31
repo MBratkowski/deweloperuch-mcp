@@ -27,6 +27,7 @@ def test_each_city_gets_asking_and_transaction_prices_then_one_table() -> None:
     assert "w miastach: Kraków, Wrocław, Gdańsk." in said
     assert "dataset=wages albo unemployment" in said
     assert "jedna tabela, wiersz na miasto" in said
+    assert "liczba ofert i dzień, na który serwis je podał (as_of)" in said
     assert "list_url" in said and "stats_url" in said
 
 

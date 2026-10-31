@@ -253,7 +253,7 @@ def test_the_entry_point_over_stdio_on_the_real_payloads(tmp_path: Path) -> None
 
     assert names == list(TOOLS)
     result = data(found)
-    assert (result["total"], result["returned"], result["per_page"]) == (13324, 10, 10)
+    assert (result["total"], result["returned"], result["per_page"]) == (11672, 10, 10)
     assert all({"offer_id", "investment_slug", "price"} <= set(item) for item in result["items"])
     assert unknown.is_error is True
     assert text(unknown) == UNKNOWN_CITY_MESSAGE

@@ -1,0 +1,19 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "7-miast",
+    "wages"
+  ],
+  "exit_code": 7,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Serwis nie publikuje zestawu 'wages' (Przeciętne miesięczne wynagrodzenie brutto w sektorze przedsiębiorstw) dla lokalizacji '7-miast'. Podaj polska albo miasto na prawach powiatu, np. warszawa.",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

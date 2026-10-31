@@ -11,15 +11,18 @@ from support.golden.mcp import (
     SMOLNA,
     Case,
     case,
-    history_missing,
 )
 from support.golden.routes import investment_answer, investment_is
 from support.providers.error_answers import removed_route, unknown_entity
 from support.providers.routes.investments import (
     INVESTMENT,
     investment_routes,
+    smolna_with_events,
 )
 from support.providers.routes.locations import location_routes
+
+WITH_EVENTS = investment_is(smolna_with_events())
+"""The 2.0 answer: every offer with its price events (the history of 2.0)."""
 
 CASES: dict[str, Case] = {
     "offer_after_investment_from_the_cache": case(
@@ -37,10 +40,10 @@ CASES: dict[str, Case] = {
         limit=200,
     ),
     "investment_history_limit_1": case(
-        INVESTMENT_TOOL, investment_routes, investment_slug="smolna", include_history=True, limit=1
+        INVESTMENT_TOOL, WITH_EVENTS, investment_slug="smolna", include_history=True, limit=1
     ),
     "investment_history": case(
-        INVESTMENT_TOOL, investment_routes, investment_slug="smolna", include_history=True
+        INVESTMENT_TOOL, WITH_EVENTS, investment_slug="smolna", include_history=True
     ),
     "investment_limit_0": case(
         INVESTMENT_TOOL, investment_routes, investment_slug="smolna", limit=0
@@ -56,7 +59,7 @@ CASES: dict[str, Case] = {
         include_history=None,
     ),
     "investment_history_text": case(
-        INVESTMENT_TOOL, investment_routes, investment_slug="smolna", include_history="yes"
+        INVESTMENT_TOOL, WITH_EVENTS, investment_slug="smolna", include_history="yes"
     ),
     "investment_404": case(INVESTMENT_TOOL, investment_answer(404, **unknown_entity()), **SMOLNA),
     "investment_404_with_a_body": case(
@@ -91,8 +94,9 @@ CASES: dict[str, Case] = {
         lambda r: r.get(INVESTMENT).mock(side_effect=httpx.ConnectError(INJECTED)),
         **SMOLNA,
     ),
-    "investment_history_404": case(
-        INVESTMENT_TOOL, history_missing, investment_slug="smolna", include_history=True
+    # The answer before 2.0 (the sample) has no price events: the history alone fails.
+    "investment_history_without_events": case(
+        INVESTMENT_TOOL, investment_routes, investment_slug="smolna", include_history=True
     ),
     "investment_slug_capitals": case(INVESTMENT_TOOL, investment_routes, investment_slug="Smolna"),
     "investment_slug_path": case(INVESTMENT_TOOL, investment_routes, investment_slug="smolna/../x"),

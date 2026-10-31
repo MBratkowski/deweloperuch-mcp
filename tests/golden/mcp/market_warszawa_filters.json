@@ -1,0 +1,98 @@
+{
+  "calls": [
+    {
+      "tool": "get_market_statistics",
+      "arguments": {
+        "city": "warszawa",
+        "price_min": "400000",
+        "price_max": 700000,
+        "area_max": 60,
+        "top_developers": 5
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "city_slug": "warszawa",
+        "as_of": "2026-10-31",
+        "offers": 3113,
+        "investments": 152,
+        "developers": 61,
+        "price": {
+          "min": 405282,
+          "p25": 562436,
+          "median": 616275,
+          "p75": 660151,
+          "max": 699890
+        },
+        "price_per_m2": {
+          "min": 10473,
+          "p25": 14100,
+          "median": 15950,
+          "p75": 17299,
+          "max": 27587
+        },
+        "area_m2": {
+          "min": 24.89,
+          "p25": 35.2,
+          "median": 38.22,
+          "p75": 42.27,
+          "max": 59.97
+        },
+        "top_developers": [
+          {
+            "developer_slug": "dom-development",
+            "developer_name": "Dom Development S.A.",
+            "offers": 525,
+            "investments": 22,
+            "median_price_per_m2": 16300,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/dom-development"
+          },
+          {
+            "developer_slug": "home-invest",
+            "developer_name": "Home Invest Sp. z o.o.",
+            "offers": 328,
+            "investments": 8,
+            "median_price_per_m2": 16470,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/home-invest"
+          },
+          {
+            "developer_slug": "grupa-victoria-dom",
+            "developer_name": "Grupa Victoria Dom",
+            "offers": 266,
+            "investments": 22,
+            "median_price_per_m2": 15900,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/grupa-victoria-dom"
+          },
+          {
+            "developer_slug": "develia",
+            "developer_name": "Develia",
+            "offers": 263,
+            "investments": 10,
+            "median_price_per_m2": 16799,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/develia"
+          },
+          {
+            "developer_slug": "napollo",
+            "developer_name": "NAPOLLO",
+            "offers": 110,
+            "investments": 3,
+            "median_price_per_m2": 12952,
+            "developer_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/napollo"
+          }
+        ],
+        "developers_returned": 5,
+        "developers_omitted": 56,
+        "truncated": true,
+        "list_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?filterPrice=400000-700000&filterSize=0-60&perPage=10"
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/map/offer-snapshot/warszawa [accept: application/json]"
+  ]
+}
