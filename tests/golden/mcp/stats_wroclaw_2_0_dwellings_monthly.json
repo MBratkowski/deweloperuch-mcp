@@ -1,0 +1,193 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "wroclaw",
+        "dataset": "dwellings_monthly",
+        "periods": 3
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "wroclaw",
+        "location_name": "Wrocław",
+        "dataset": "dwellings_monthly",
+        "title": "Mieszkania oddane do użytkowania i rozpoczęte (miesięcznie)",
+        "source": "GUS",
+        "frequency": "month",
+        "total": 260,
+        "returned": 3,
+        "truncated": true,
+        "available_from": "2005-01",
+        "hint": "Pokazano ostatnie 3 z 260 okresów (dane od 2005-01); starsze pokaże większe periods (najwyżej 120).",
+        "stats_url": "https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe#gus-mieszkania",
+        "periods": [
+          "2026-06",
+          "2026-07",
+          "2026-08"
+        ],
+        "series": [
+          {
+            "series_id": "completed_total",
+            "label": "Oddane do użytkowania: razem",
+            "unit": "mieszkania",
+            "values": [
+              243,
+              684,
+              145
+            ]
+          },
+          {
+            "series_id": "completed_developer",
+            "label": "Oddane: deweloperskie",
+            "unit": "mieszkania",
+            "values": [
+              243,
+              664,
+              133
+            ]
+          },
+          {
+            "series_id": "completed_individual",
+            "label": "Oddane: indywidualne",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              20,
+              12
+            ]
+          },
+          {
+            "series_id": "completed_cooperative",
+            "label": "Oddane: spółdzielcze",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "completed_municipal",
+            "label": "Oddane: komunalne",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "completed_social",
+            "label": "Oddane: społeczne",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "completed_company",
+            "label": "Oddane: zakładowe",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "started_total",
+            "label": "Rozpoczęte budowy: razem",
+            "unit": "mieszkania",
+            "values": [
+              212,
+              233,
+              455
+            ]
+          },
+          {
+            "series_id": "started_developer",
+            "label": "Rozpoczęte: deweloperskie",
+            "unit": "mieszkania",
+            "values": [
+              201,
+              21,
+              443
+            ]
+          },
+          {
+            "series_id": "started_individual",
+            "label": "Rozpoczęte: indywidualne",
+            "unit": "mieszkania",
+            "values": [
+              11,
+              12,
+              12
+            ]
+          },
+          {
+            "series_id": "started_cooperative",
+            "label": "Rozpoczęte: spółdzielcze",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "started_municipal",
+            "label": "Rozpoczęte: komunalne",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "started_social",
+            "label": "Rozpoczęte: społeczne",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              200,
+              0
+            ]
+          },
+          {
+            "series_id": "started_company",
+            "label": "Rozpoczęte: zakładowe",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "series_id": "started_for_rent",
+            "label": "Rozpoczęte: na wynajem",
+            "unit": "mieszkania",
+            "values": [
+              0,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
+  ]
+}

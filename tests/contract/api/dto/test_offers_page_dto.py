@@ -21,10 +21,12 @@ from deweloperuch_mcp.errors import (
     NotFoundError,
     UnexpectedResponseError,
 )
+from deweloperuch_mcp.flight import component_props
 from support.builders.offers import html_page, offers_list
 from support.providers.rsc import (
     OFFERS_UNKNOWN_CITY,
     OFFERS_WARSZAWA,
+    OFFERS_WROCLAW_2_0,
     UNKNOWN_CITY,
     offers_payload,
     raw,
@@ -255,3 +257,48 @@ def test_offers_page_sample_fields() -> None:
         "warszawa",
     )
     assert (first.invest.developer.name, first.invest.developer.slug) == ("ATAL S.A.", "atal")
+
+
+# --- the 2.0 build (2026-10-29): `sales` and `serverPaginationData` ------------------------
+
+
+def props_of(payload: bytes, names: tuple[str, ...]) -> dict[str, list[Any]]:
+    """Every value of ``names`` in ``payload``, as ``RscPage.props`` gives them."""
+    found: dict[str, list[Any]] = {}
+    for name, value in component_props(payload):
+        if name in names and not (isinstance(value, str) and value.startswith("$")):
+            found.setdefault(name, []).append(value)
+    return found
+
+
+def test_the_2_0_offers_list_is_read_from_sales_and_its_paging() -> None:
+    """[P 2026-10-30] Wrocław, ``perPage=10``: no ``initialData``; the rows have the fields
+    of the old ``initialData.data``."""
+    props = props_of(raw(OFFERS_WROCLAW_2_0), offers_page_dto.OFFERS_PROPS)
+
+    page = offers_page_dto.OffersPageDto.from_props(props, path="/x").to_model()
+
+    assert "initialData" not in props
+    assert (page.total, page.page, page.per_page, len(page.items)) == (5836, 1, 10, 10)
+    first = page.items[0]
+    assert (first.offer.offer_id, first.offer.price, first.investment.investment_slug) == (
+        2044,
+        985757.0,
+        "legnicka-vita",
+    )
+    assert first.investment.developer.developer_slug == "develia"
+
+
+def test_the_2_0_sample_rows_are_offers_list_items() -> None:
+    rows = body("page.offers_list.v2")
+
+    items = [offers_page_dto.SaleListItemDto.model_validate(row).to_model() for row in rows]
+
+    assert [item.offer.offer_id for item in items] == [row["sale_id"] for row in rows]
+
+
+def test_a_2_0_page_without_its_paging_does_not_match_the_contract() -> None:
+    props = props_of(raw(OFFERS_WROCLAW_2_0), ("sales",))
+
+    with pytest.raises(UnexpectedResponseError, match="brakuje"):
+        offers_page_dto.OffersPageDto.from_props(props, path="/x")

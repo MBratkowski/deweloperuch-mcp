@@ -24,7 +24,7 @@
         "truncated": true,
         "available_from": "2005",
         "hint": "Pokazano ostatnie 12 z 21 okresów (dane od 2005); starsze pokaże większe periods (najwyżej 120).",
-        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-wiek",
+        "stats_url": "https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-wiek",
         "periods": [
           "2014",
           "2015",
@@ -103,6 +103,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

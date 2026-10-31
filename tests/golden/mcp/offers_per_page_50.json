@@ -20,7 +20,7 @@
         "per_page": 50,
         "pages_available": 20,
         "hint": "Pasujących ofert jest 13324, a można przejrzeć najwyżej 20 stron po 50 (1000). Zawęź filtry (cena, metraż).",
-        "list_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=50",
+        "list_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?perPage=50",
         "items": [
           {
             "offer_id": 900000,
@@ -828,6 +828,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=1&perPage=50&_rsc=435c9c41 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?perPage=50&_rsc [rsc: 1] [accept: */*]"
   ]
 }

@@ -15,10 +15,12 @@ from deweloperuch_mcp.api.dto.government_stats_page_dto import MAPPINGS, SECTION
 from deweloperuch_mcp.errors import UnexpectedResponseError
 from deweloperuch_mcp.flight import component_props, error_digests
 from deweloperuch_mcp.models.government_statistics import Dataset
+from deweloperuch_mcp.models.values import LocationSlug
 from support.providers.rsc import (
-    STATS_FIXTURES,
     STATS_POLSKA,
+    STATS_POLSKA_2_0,
     STATS_WARSZAWA,
+    STATS_WROCLAW_2_0,
     raw,
 )
 from support.providers.samples import envelope, untrimmed
@@ -46,10 +48,13 @@ def test_the_page_has_several_props_called_data() -> None:
         assert len([v for v in datas if isinstance(v, list)]) == count
 
 
-@pytest.mark.parametrize("location", ["polska", "warszawa"])
-def test_every_linked_section_is_in_the_table_of_contents(location: str) -> None:
-    """The fragments are ids of the page's own table of contents [P]."""
-    toc = next(v for n, v in component_props(raw(STATS_FIXTURES[location])) if n == "tocItems")
+@pytest.mark.parametrize(
+    ("location", "path"), [("polska", STATS_POLSKA), ("warszawa", STATS_WARSZAWA)]
+)
+def test_every_linked_section_is_in_the_table_of_contents(location: str, path: Path) -> None:
+    """The fragments are ids of the page's own table of contents [P] (the pages of the
+    build before 2.0)."""
+    toc = next(v for n, v in component_props(raw(path)) if n == "tocItems")
     ids = {item["id"] for item in toc}
 
     for dataset, sections in SECTIONS.items():
@@ -131,3 +136,64 @@ def test_shapes_fields_and_mappings_agree() -> None:
         same_group = [f for f, other in shapes.items() if other.group == shape.group]
         assert {mappings[f].dataset for f in same_group} == {mappings[field].dataset}
     assert {mapping.dataset for mapping in MAPPINGS} == set(Dataset) == set(SECTIONS)
+
+
+# --- the 2.0 build (2026-10-29): /statystyki/{location}/dane-rzadowe ---------------------
+
+
+@pytest.mark.parametrize(
+    ("location", "path", "datasets"),
+    [
+        ("wroclaw", STATS_WROCLAW_2_0, set(Dataset)),
+        ("polska", STATS_POLSKA_2_0, set(Dataset) - {Dataset.NBP_PRICES}),
+    ],
+)
+def test_every_dataset_of_a_2_0_page_is_read(
+    location: str, path: Path, datasets: set[Dataset]
+) -> None:
+    """[P 2026-10-30] the ``data`` rows (dwellings, population, NBP) and the chart specs
+    (average area, demography, unemployment, wages) give the same tables as before;
+    ``polska`` has no NBP series of its own, as before."""
+    page = page_dto.GovernmentStatsPageDto.from_payload(raw(path), path="/x", location=location)
+
+    statistics = page.to_model(LocationSlug(location), Dataset.WAGES, path="/x")
+
+    assert set(statistics.tables) == datasets
+    assert all(table.section for table in statistics.tables.values())
+
+
+def test_the_wages_of_a_city_on_the_2_0_page_are_yearly() -> None:
+    page = page_dto.GovernmentStatsPageDto.from_payload(
+        raw(STATS_WROCLAW_2_0), path="/x", location="wroclaw"
+    )
+
+    statistics = page.to_model(LocationSlug("wroclaw"), Dataset.WAGES, path="/x")
+
+    wages = statistics.tables[Dataset.WAGES]
+    assert (statistics.name, wages.section) == ("Wrocław", "gus-wynagrodzenia")
+    gross = wages.series[0]
+    assert (gross.series_id, gross.points[-1].period, gross.points[-1].value) == (
+        "gross",
+        "2025",
+        10147.9,
+    )
+
+
+def test_the_population_of_the_2_0_page_of_polska_is_the_one_the_page_states() -> None:
+    """The same sum as before the 2.0 build: 37 332 510 in 2025."""
+    page = page_dto.GovernmentStatsPageDto.from_payload(
+        raw(STATS_POLSKA_2_0), path="/x", location="polska"
+    )
+
+    table = page.to_model(LocationSlug("polska"), Dataset.POPULATION, path="/x").tables[
+        Dataset.POPULATION
+    ]
+
+    assert table.series[0].points[-1].value == 37_332_510
+
+
+def test_a_2_0_page_of_another_city_is_not_this_location() -> None:
+    with pytest.raises(UnexpectedResponseError, match="innej lokalizacji"):
+        page_dto.GovernmentStatsPageDto.from_payload(
+            raw(STATS_WROCLAW_2_0), path="/x", location="krakow"
+        )

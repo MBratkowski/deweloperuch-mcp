@@ -7,6 +7,7 @@ import respx
 from deweloperuch_mcp.flight import component_props
 from support.providers.routes.offers import RSC_HEADERS
 from support.providers.rsc import (
+    DEVELOPER_ARCHICOM_2_0,
     DEVELOPER_POLSKA,
     DEVELOPER_UNKNOWN,
     DEVELOPER_WARSZAWA,
@@ -22,6 +23,7 @@ DEVELOPER_PAGES = {
     ("warszawa", "atal"): DEVELOPER_WARSZAWA,
     ("polska", "atal"): DEVELOPER_POLSKA,
     ("warszawa", UNKNOWN_DEVELOPER): DEVELOPER_UNKNOWN,
+    ("polska", "archicom"): DEVELOPER_ARCHICOM_2_0,
 }
 """(city, developer) -> the real page of the developer's profile."""
 

@@ -47,6 +47,7 @@ from support.providers.routes.developer_profiles import developer_routes
 from support.providers.routes.government_statistics import (
     UNKNOWN_LOCATION,
     stats_routes,
+    stats_url,
     unknown_location_route,
 )
 from support.providers.routes.investments import investment_routes
@@ -199,7 +200,7 @@ def test_a_stop_ends_the_session() -> None:
         '{"invest_id": 1}',
         '{"sale_id": 1}',
         "/ceny-ofertowe/warszawa/mieszkania",
-        "/statystyki/statystyki-rzadowe/polska",
+        "/statystyki/polska/dane-rzadowe",
         "brak propsa 'tocItems'",
         "currentSlug ['polska']",
         "sortedLocations",
@@ -277,8 +278,7 @@ def test_values_are_not_checked_for_backend_names(text: str) -> None:
 
 PAGES = identity.BASE_URL + "/ceny-ofertowe"
 SMOLNA = PAGES + "/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna"
-LIST = PAGES + "/krakow/mieszkania?filterPrice=0-700000&sortBy=amount&sortOrder=asc&page=1"
-STATS = identity.BASE_URL + "/statystyki/statystyki-rzadowe"
+LIST = PAGES + "/krakow/mieszkania?filterPrice=0-700000&sortBy=amount&sortOrder=asc&perPage=10"
 TRANSACTIONS = identity.BASE_URL + "/statystyki/ceny-transakcyjne/mieszkania"
 
 
@@ -294,9 +294,9 @@ def as_result(value: dict[str, Any]) -> list[str]:
         {"list_url": LIST, "items": [{"investment_url": SMOLNA}]},
         {"investment_url": SMOLNA, "developer_url": PAGES + "/sopot/deweloperzy/invest-komfort"},
         {"investment_url": PAGES + "/krak%C3%B3w/deweloperzy/a%2Fb/x"},
-        {"stats_url": STATS + "/polska#gus-srednia-powierzchnia"},
-        {"stats_url": STATS + "/6-miast-bez-warszawy#nbp", "periods": ["2026-Q2"]},
-        {"stats_url": STATS + "/warszawa"},
+        {"stats_url": stats_url("polska", "#gus-srednia-powierzchnia")},
+        {"stats_url": stats_url("6-miast-bez-warszawy", "#nbp"), "periods": ["2026-Q2"]},
+        {"stats_url": stats_url("warszawa")},
         # The transaction statistics of a city (2026-10-13, the user's decision): a link
         # for people to a [P] page the client never requests (a D5 dump).
         {"stats_url": TRANSACTIONS + "/krakow"},
@@ -337,15 +337,15 @@ def test_page_links_in_link_fields_pass(value: dict[str, Any]) -> None:
         {"developer_url": PAGES + "/sopot/deweloperzy"},
         {"developer_url": PAGES + "/sopot/deweloperzy/"},
         # the government statistics: the page of a location, at most a section id
-        {"title": STATS + "/polska#nbp"},
-        {"stats_url": STATS + "/polska?_rsc=b3d11c70"},
-        {"stats_url": STATS + "/polska/x#nbp"},
-        {"stats_url": STATS + "/..#nbp"},
-        {"stats_url": STATS + "/%2e%2e#nbp"},
-        {"stats_url": STATS + "/polska#Nbp"},
-        {"stats_url": STATS + "/polska#nbp x"},
-        {"stats_url": STATS + "/polska#"},
-        {"stats_url": STATS + "#nbp"},
+        {"title": stats_url("polska", "#nbp")},
+        {"stats_url": stats_url("polska", "?_rsc=b3d11c70")},
+        {"stats_url": stats_url("polska", "/x#nbp")},
+        {"stats_url": stats_url("..", "#nbp")},
+        {"stats_url": stats_url("%2e%2e", "#nbp")},
+        {"stats_url": stats_url("polska", "#Nbp")},
+        {"stats_url": stats_url("polska", "#nbp x")},
+        {"stats_url": stats_url("polska", "#")},
+        {"stats_url": identity.BASE_URL + "/statystyki/dane-rzadowe#nbp"},
         {"stats_url": identity.BASE_URL + "/statystyki/portale-ogloszeniowe/x/y"},
         # the transaction statistics: only flats of one city, nothing after it
         {"note": TRANSACTIONS + "/krakow"},
@@ -364,7 +364,7 @@ def test_links_elsewhere_or_of_another_kind_are_leaks(value: dict[str, Any]) -> 
 
 def test_a_link_in_an_error_message_is_a_leak() -> None:
     assert live.leaks(f"Nie znaleziono inwestycji 'smolna'. Zobacz {SMOLNA}")
-    assert live.leaks(f"NBP nie podaje cen. Zobacz {STATS}/polska#nbp-grid")
+    assert live.leaks(f"NBP nie podaje cen. Zobacz {stats_url('polska')}#nbp-grid")
 
 
 def test_the_tool_listing_has_no_leaks() -> None:
@@ -445,8 +445,8 @@ def test_real_results_pass_the_leak_check(tmp_path: Path, unix_sockets: None) ->
     assert '"list_url":"' + PAGES + "/warszawa/mieszkania?" in calls[1].text
     assert '"developer_url":"' + PAGES in calls[7].text
     # The statistics link to the section of their page.
-    assert '"stats_url":"' + STATS + '/warszawa#nbp"' in calls[9].text
-    assert '"stats_url":"' + STATS + '/polska#gus-mieszkania"' in calls[10].text
+    assert '"stats_url":"' + stats_url("warszawa", "#nbp") + '"' in calls[9].text
+    assert '"stats_url":"' + stats_url("polska", "#gus-mieszkania") + '"' in calls[10].text
     # Validation errors in Polish: the field and what it allows, no link to pydantic's docs.
     assert "per_page musi być jedną z wartości 10, 50" in calls[5].text
     assert "Nieznany argument narzędzia search_offers: 'max_price'" in calls[16].text

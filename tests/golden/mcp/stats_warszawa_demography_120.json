@@ -24,7 +24,7 @@
         "returned": 24,
         "truncated": false,
         "available_from": "2002",
-        "stats_url": "https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa#gus-demografia",
+        "stats_url": "https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#gus-demografia",
         "periods": [
           "2002",
           "2003",
@@ -151,6 +151,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

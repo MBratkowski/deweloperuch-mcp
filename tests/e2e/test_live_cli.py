@@ -16,12 +16,12 @@ import pytest
 
 from deweloperuch_mcp.identity import BASE_URL
 from support.e2e.live import SERVICE_CHANGED, Budget, Run, run_cli, run_script
+from support.providers.routes.government_statistics import stats_url
 
 pytestmark = pytest.mark.live
 
 UNKNOWN_CITY = "nieistniejace-miasto"
 PAGES = BASE_URL + "/ceny-ofertowe"
-STATS = BASE_URL + "/statystyki/statystyki-rzadowe"
 FILTERS = ("--price-max", "900000", "--area-min", "30", "--sort", "price_asc")
 
 Cli = Callable[..., Run]
@@ -89,7 +89,7 @@ def test_offers_search_with_filters_as_json(offers: dict[str, Any]) -> None:
     # Links (D12): the list with the filters as sent, each offer's investment page.
     assert offers["list_url"] == (
         f"{PAGES}/krakow/mieszkania?filterPrice=0-900000&filterSize=30-9999"
-        "&sortBy=amount&sortOrder=asc&page=1&perPage=10"
+        "&sortBy=amount&sortOrder=asc&perPage=10"
     )
     for item in items:
         assert item["investment_url"] == (
@@ -155,7 +155,7 @@ def test_stats_government_as_text(cli: Cli) -> None:
     lines = ok(run).splitlines()
     assert lines[0] == "Stopa bezrobocia rejestrowanego · Warszawa [warszawa]"
     assert lines[1].startswith("Źródło: GUS · miesięcznie · okresy: pokazano 12 z ")
-    assert f"Strona na deweloperuch.pl: {STATS}/warszawa#gus-bezrobocie" in lines
+    assert f"Strona na deweloperuch.pl: {stats_url('warszawa')}#gus-bezrobocie" in lines
     assert "  [1] Stopa bezrobocia (%)" in lines
     header = next(i for i, line in enumerate(lines) if line.startswith("Okres "))
     rows = lines[header + 1 :]
@@ -209,7 +209,7 @@ def test_stats_market_as_text(cli: Cli) -> None:
 
     lines = ok(run).splitlines()
     assert lines[0].startswith("Rynek ofert [sopot] · aktywne oferty: ")
-    assert lines[1] == f"Te oferty na deweloperuch.pl: {PAGES}/sopot/mieszkania?page=1&perPage=10"
+    assert lines[1] == f"Te oferty na deweloperuch.pl: {PAGES}/sopot/mieszkania?perPage=10"
     assert lines[2].split() == ["min", "p25", "mediana", "p75", "max"]
     assert lines[3].startswith("Cena (PLN)")
     assert any(line.startswith("Najwięcej ofert (pokazano ") for line in lines)

@@ -19,7 +19,7 @@ from deweloperuch_mcp.usecases.search_locations import SearchLocations
 from support.builders.offers import INJECTED, offer_without_history
 from support.checks.leaks import LEAKS
 from support.providers.mcp import TOOLS, Sessions, call, text, with_client
-from support.providers.routes.government_statistics import STATS_PATH, stats_routes
+from support.providers.routes.government_statistics import stats_path, stats_routes
 from support.providers.routes.investments import INVESTMENT, investment_routes
 from support.providers.routes.locations import location_routes
 from support.providers.routes.offers import offers_route
@@ -80,14 +80,14 @@ ERRORS: dict[str, tuple[str, dict[str, Any], Callable[[respx.MockRouter], Any]]]
     "statistics page without the data": (
         "get_government_statistics",
         {"location": "warszawa", "dataset": "wages"},
-        lambda r: r.get(path=STATS_PATH + "warszawa").respond(
+        lambda r: r.get(path=stats_path("warszawa")).respond(
             200, content=rsc_payload({"other": {"text": INJECTED}})
         ),
     ),
     "statistics page of another location": (
         "get_government_statistics",
         {"location": "krakow", "dataset": "wages"},
-        lambda r: r.get(path=STATS_PATH + "krakow").respond(200, content=raw(STATS_POLSKA)),
+        lambda r: r.get(path=stats_path("krakow")).respond(200, content=raw(STATS_POLSKA)),
     ),
     "offer without history": (
         "get_offer",

@@ -1,0 +1,51 @@
+{
+  "args": [
+    "offers",
+    "search",
+    "wroclaw"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Pasujące oferty: 5 836 · strona 1 z 20 (po 10) · pokazano 10 · obcięte: serwis pozwala przejrzeć najwyżej 20 stron.",
+    "Wskazówka: Pasujących ofert jest 5836, a serwis pozwala przejrzeć najwyżej 20 stron po 10 (200). Zawęź filtry (cena, metraż) albo zwiększ per_page do 100.",
+    "Ta lista na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/wroclaw/mieszkania?perPage=10",
+    "[2044] L1/9/96 · 985 757 PLN · 80,8 m² · 12 199,96 PLN/m² · aktywna · od pierwszej ceny -115 433 PLN (-10,48%)",
+    "    Legnicka Vita [legnicka-vita] · Develia · Wrocław",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/develia/legnicka-vita",
+    "[2085] L2/15/123 · 1 133 377 PLN · 86,52 m² · 13 099,6 PLN/m² · aktywna · od pierwszej ceny -136 623 PLN (-10,76%)",
+    "    Legnicka Vita [legnicka-vita] · Develia · Wrocław",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/develia/legnicka-vita",
+    "[2129] L2/9/79 · 1 001 429 PLN · 80,12 m² · 12 499,11 PLN/m² · aktywna · od pierwszej ceny -128 571 PLN (-11,38%)",
+    "    Legnicka Vita [legnicka-vita] · Develia · Wrocław",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/develia/legnicka-vita",
+    "[2150] L1/12/121 · 1 094 798 PLN · 87,59 m² · 12 499,12 PLN/m² · aktywna · od pierwszej ceny -135 202 PLN (-10,99%)",
+    "    Legnicka Vita [legnicka-vita] · Develia · Wrocław",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/develia/legnicka-vita",
+    "[2186] L1/15/148 · 1 101 150 PLN · 80,23 m² · 13 724,92 PLN/m² · aktywna · od pierwszej ceny -98 850 PLN (-8,24%)",
+    "    Legnicka Vita [legnicka-vita] · Develia · Wrocław",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/develia/legnicka-vita",
+    "[36342] B8-K1-0-4 · 521 964 PLN · 41,86 m² · 12 469,28 PLN/m² · aktywna · od pierwszej ceny -8 036 PLN (-1,52%)",
+    "    ATAL Strachowicka II [atal-strachowicka-ii] · ATAL S.A. · Wrocław",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/atal/atal-strachowicka-ii",
+    "[36523] B8-K1-0-7 · 605 298 PLN · 48,52 m² · 12 475,23 PLN/m² · aktywna · od pierwszej ceny -4 702 PLN (-0,77%)",
+    "    ATAL Strachowicka II [atal-strachowicka-ii] · ATAL S.A. · Wrocław",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/atal/atal-strachowicka-ii",
+    "[42733] 1-12.A.1.2 · 1 107 373 PLN · 97,48 m² · 11 360 PLN/m² · aktywna · od pierwszej ceny -182 627 PLN (-14,16%)",
+    "    Murapol Osiedle Ferrovia [murapol-osiedle-ferrovia] · Murapol S.A. · Wrocław",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/murapol/murapol-osiedle-ferrovia",
+    "[42749] 43-48.A.1.47 · 1 106 157 PLN · 97,89 m² · 11 300 PLN/m² · aktywna · od pierwszej ceny -173 843 PLN (-13,58%)",
+    "    Murapol Osiedle Ferrovia [murapol-osiedle-ferrovia] · Murapol S.A. · Wrocław",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/murapol/murapol-osiedle-ferrovia",
+    "[42758] 13-21.A.1.20 · 1 319 965 PLN · 90,1 m² · 14 650 PLN/m² · aktywna · od pierwszej ceny +69 965 PLN (+5,6%)",
+    "    Murapol Osiedle Ferrovia [murapol-osiedle-ferrovia] · Murapol S.A. · Wrocław",
+    "    https://deweloperuch.pl/ceny-ofertowe/wroclaw/deweloperzy/murapol/murapol-osiedle-ferrovia",
+    "Szczegóły oferty: deweloperuch offers get OFFER_ID --investment INVESTMENT_SLUG",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/wroclaw/mieszkania?perPage=10&_rsc [rsc: 1] [accept: */*]"
+  ]
+}

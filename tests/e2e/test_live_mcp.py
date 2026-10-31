@@ -34,6 +34,7 @@ from support.e2e.live import (
     run_probe,
 )
 from support.paths import SNAPSHOT
+from support.providers.routes.government_statistics import stats_url
 
 pytestmark = pytest.mark.live
 
@@ -73,7 +74,6 @@ SLUG = re.compile(r"[a-z0-9][a-z0-9-]*")
 PAGES = BASE_URL + "/ceny-ofertowe"
 """Public pages of the service: the only addresses a result may hold (D12, 2026-10-11)."""
 EVENT_KINDS = {"offer", "archived", "restored"}
-STATS = BASE_URL + "/statystyki/statystyki-rzadowe"
 """The government statistics pages (D12): a stats_url is one of them at a section."""
 PERIOD = {
     "year": re.compile(r"\d{4}"),
@@ -801,7 +801,7 @@ def check_statistics(result: dict[str, Any], location: str, dataset: str, sectio
     assert result["series"]
     for series in result["series"]:
         assert len(series["values"]) == returned, series
-    assert result["stats_url"] == f"{STATS}/{location}#{section}"
+    assert result["stats_url"] == stats_url(location, f"#{section}")
 
 
 def values(result: dict[str, Any]) -> list[float]:
@@ -851,7 +851,7 @@ def test_government_average_area_of_an_aggregate(mcp: McpLive) -> None:
     assert (result["location_slug"], result["dataset"]) == ("7-miast", "average_area")
     assert result["returned"] == min(12, result["total"]) == len(result["periods"]) > 0
     assert all(30 <= v <= 150 for v in values(result)), values(result)
-    assert result["stats_url"].startswith(f"{STATS}/7-miast")
+    assert result["stats_url"].startswith(f"{stats_url('7-miast')}")
     assert call.sent == 1
 
 
@@ -1097,7 +1097,7 @@ def test_market_of_a_city(market: Call, city_slug: str, first_page: Call) -> Non
     assert offers == sorted(offers, reverse=True) and sum(offers) <= result["offers"]
     for share in top:
         assert share["developer_url"] == page_url(city_slug, "deweloperzy", share["developer_slug"])
-    assert result["list_url"] == page_url(city_slug, "mieszkania") + "?page=1&perPage=10"
+    assert result["list_url"] == page_url(city_slug, "mieszkania") + "?perPage=10"
     assert not {"offer_id", "items", "investment_slug"} & keys(result)
     assert len(market.text) < SIZE_BUDGET
     assert market.sent == 1
@@ -1119,7 +1119,7 @@ def test_market_with_filters(mcp: McpLive, city_slug: str, market: Call) -> None
     assert result["offers"] <= market.data["offers"]
     if result["offers"]:
         assert result["price"]["max"] <= 700_000 and result["area_m2"]["min"] >= 40
-    assert result["list_url"].endswith("?filterPrice=0-700000&filterSize=40-9999&page=1&perPage=10")
+    assert result["list_url"].endswith("?filterPrice=0-700000&filterSize=40-9999&perPage=10")
     assert call.sent <= 1
 
 

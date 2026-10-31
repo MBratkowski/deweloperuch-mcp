@@ -11,11 +11,11 @@
   ],
   "stderr": [
     "Błąd: STOP: HTTP 403 (odmowa dostępu). Klient nie wyśle już żadnego zapytania; inne procesy też zostały wstrzymane. Przerwij, niczego nie ponawiaj i zgłoś to użytkownikowi.",
-    "Szczegóły: /statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c: HTTP 403",
+    "Szczegóły: /statystyki/warszawa/dane-rzadowe?_rsc: HTTP 403",
     "Nie uruchamiaj kolejnych poleceń deweloperuch ani pętli: przerwij i zgłoś to użytkownikowi. Blokada obejmuje też inne procesy.",
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/warszawa?_rsc=cc0b509c [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

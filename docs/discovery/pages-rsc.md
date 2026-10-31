@@ -5,7 +5,7 @@ Search with filters, sorting and pagination, and most detail views, exist **only
 ## How to fetch [P]
 
 ```
-GET https://deweloperuch.pl<path>?<filters>&_rsc=<random token>
+GET https://deweloperuch.pl<path>?<filters>&_rsc
 RSC: 1
 → 200 text/x-component
 ```
@@ -170,6 +170,12 @@ Sample: `page.transactions_list.json`, `page.transactions_list.params.json`
 - Several props are named `data`; they have to be told apart by shape or position in the tree [P]. A fragile spot.
 - Cache headers [P 2026-10-13, `polska`]: `private, max-age=28800, must-revalidate`; `cf-cache-status: HIT`; `age: 69574` (above `max-age`). The client caches such replies for 300 s (see D2 in [decisions.md](../decisions.md)).
 - Sample: `page.stats_gov.json`
+
+### `/statystyki/{location}/dane-rzadowe`: GUS + NBP since 2.0 [P 2026-10-30]
+- Since the 2.0 build (2026-10-29) the old `/statystyki/statystyki-rzadowe/{location}` answers 308 to this route [P 2026-10-29]. The old route stays in the allowlist only to see that redirect.
+- `location`: `polska`, a city slug or an aggregate, as before.
+- Props [P 2026-10-30, live RSC payloads of the package client, `wroclaw` and `polska`]: `data` rows for dwellings (quarterly), population (`gus-wiek`) and NBP prices (`wroclaw` only), `monthlyData` (monthly dwellings), chart specs `spec` (`id` such as `gus-wynagrodzenia-wykres`, `datasets.<key>.points[] {period, values}`) which alone carry average area, demography, unemployment and wages, `blocks.govSections` (the section ids, the old `tocItems`), `citySlug` (absent on `polska`), `cityName`; no `tocItems`, `sortedLocations` or `currentSlug`.
+- Request: an empty `_rsc` (`?_rsc`) with `RSC: 1` returns `text/x-component` (200) [P 2026-10-30]. Since the 2.0 build any other `_rsc` gets a 307 to the same URL with an empty one, and `page=1` a 308 to the URL without it; this applies to every RSC page the package reads.
 
 ### `/statystyki/portale-ogloszeniowe/{type}/{region}` [P]
 - Data loaded client-side from `/api/announcement-stats`. The page contains only a skeleton and the region list.

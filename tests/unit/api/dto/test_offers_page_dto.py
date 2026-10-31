@@ -9,7 +9,6 @@ from deweloperuch_mcp import identity
 from deweloperuch_mcp.api.dto import offers_page_dto
 from deweloperuch_mcp.api.dto.offers_page_dto import SaleListItemDto
 from deweloperuch_mcp.api.http.transport import HttpClient
-from deweloperuch_mcp.flight import rsc_token
 from deweloperuch_mcp.models.offer import DeveloperRef, InvestmentRef, ListedOffer, Offer
 from deweloperuch_mcp.models.price_history import PriceChange, PriceHistory
 from support.builders.offers import html_page, offers_list
@@ -27,11 +26,13 @@ FILTERED_PARAMS = [
 ]
 
 
-def test_offers_list_requests_the_page_as_rsc_with_a_deterministic_token(
+def test_offers_list_requests_the_page_as_rsc_with_an_empty_token(
     http: HttpClient, service: respx.MockRouter
 ) -> None:
+    """[P 2026-10-30] since the 2.0 build the service redirects any other ``_rsc`` to the
+    same URL with a bare one; the client asks for that URL directly."""
     target = request_target("page.offers_list.filtered")
-    url = f"{identity.BASE_URL}{target}&_rsc={rsc_token(target)}"
+    url = f"{identity.BASE_URL}{target}&_rsc"
     route = service.get(url).respond(
         200,
         content=offers_payload(body("page.offers_list.filtered")),
@@ -47,19 +48,18 @@ def test_offers_list_requests_the_page_as_rsc_with_a_deterministic_token(
     assert request.headers["rsc"] == "1"
 
 
-def test_rsc_token_changes_with_the_query(http: HttpClient, service: respx.MockRouter) -> None:
+def test_the_token_is_empty_whatever_the_query(http: HttpClient, service: respx.MockRouter) -> None:
     route = service.route(method="GET").respond(200, content=offers_payload())
 
     offers_list(http, "warszawa", [("perPage", "100")])
     offers_list(http, "warszawa", [("perPage", "50")])
     offers_list(http, "krakow", [("perPage", "100")])
 
-    tokens = [call.request.url.params["_rsc"] for call in route.calls]
-    assert len(set(tokens)) == 3
-    for call in route.calls:
-        url = call.request.url
-        without_token = url.raw_path.decode().rsplit("&_rsc=", 1)[0]
-        assert url.params["_rsc"] == rsc_token(without_token)
+    assert [call.request.url.query.decode() for call in route.calls] == [
+        "perPage=100&_rsc",
+        "perPage=50&_rsc",
+        "perPage=100&_rsc",
+    ]
 
 
 def test_html_instead_of_rsc_is_decoded_from_the_page_scripts(

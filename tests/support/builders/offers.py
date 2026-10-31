@@ -86,33 +86,33 @@ def offer_without_history(router: respx.MockRouter) -> None:
 
 
 OFFERS_QUERY_CASES: list[tuple[dict[str, Any], str]] = [
-    ({}, "page=1&perPage=10"),
-    ({"price_max": 500_000}, "filterPrice=0-500000&page=1&perPage=10"),
-    ({"price_min": 500_000}, "filterPrice=500000-99999999&page=1&perPage=10"),
-    ({"price_min": 0, "price_max": 0}, "filterPrice=0-0&page=1&perPage=10"),
-    ({"area_min": 40}, "filterSize=40-9999&page=1&perPage=10"),
-    ({"area_max": 60}, "filterSize=0-60&page=1&perPage=10"),
+    ({}, "perPage=10"),
+    ({"price_max": 500_000}, "filterPrice=0-500000&perPage=10"),
+    ({"price_min": 500_000}, "filterPrice=500000-99999999&perPage=10"),
+    ({"price_min": 0, "price_max": 0}, "filterPrice=0-0&perPage=10"),
+    ({"area_min": 40}, "filterSize=40-9999&perPage=10"),
+    ({"area_max": 60}, "filterSize=0-60&perPage=10"),
     (
         {"price_max": 900_000, "area_min": 35},
-        "filterPrice=0-900000&filterSize=35-9999&page=1&perPage=10",
+        "filterPrice=0-900000&filterSize=35-9999&perPage=10",
     ),
-    ({"sort": "price_asc"}, "sortBy=amount&sortOrder=asc&page=1&perPage=10"),
-    ({"sort": "price_desc"}, "sortBy=amount&sortOrder=desc&page=1&perPage=10"),
-    ({"sort": "price_per_m2_asc"}, "sortBy=price_per_sqm&sortOrder=asc&page=1&perPage=10"),
-    ({"sort": "area_desc"}, "sortBy=size&sortOrder=desc&page=1&perPage=10"),
+    ({"sort": "price_asc"}, "sortBy=amount&sortOrder=asc&perPage=10"),
+    ({"sort": "price_desc"}, "sortBy=amount&sortOrder=desc&perPage=10"),
+    ({"sort": "price_per_m2_asc"}, "sortBy=price_per_sqm&sortOrder=asc&perPage=10"),
+    ({"sort": "area_desc"}, "sortBy=size&sortOrder=desc&perPage=10"),
     (
         {"sort": "biggest_drop"},
-        "sortBy=start_amount_difference_percent&sortOrder=asc&page=1&perPage=10",
+        "sortBy=start_amount_difference_percent&sortOrder=asc&perPage=10",
     ),
-    ({"price_per_m2_min": 12_000}, "filterPricePerM2=12000-999999&page=1&perPage=10"),
-    ({"price_per_m2_max": 15_000}, "filterPricePerM2=0-15000&page=1&perPage=10"),
+    ({"price_per_m2_min": 12_000}, "filterPricePerM2=12000-999999&perPage=10"),
+    ({"price_per_m2_max": 15_000}, "filterPricePerM2=0-15000&perPage=10"),
     # [P 2026-10-10] the district's name, percent-encoded as the UI sends it.
-    ({"district": " Mokotów "}, "filterDistrict=Mokot%C3%B3w&page=1&perPage=10"),
-    ({"district": "Stare Miasto"}, "filterDistrict=Stare%20Miasto&page=1&perPage=10"),
-    ({"price_dropped": True}, "filterPriceChange=decrease&page=1&perPage=10"),
-    ({"price_dropped": False, "status": "active"}, "page=1&perPage=10"),
-    ({"status": "archived"}, "filterStatus=archived&page=1&perPage=10"),
-    ({"status": "all"}, "includeArchived=true&page=1&perPage=10"),
+    ({"district": " Mokotów "}, "filterDistrict=Mokot%C3%B3w&perPage=10"),
+    ({"district": "Stare Miasto"}, "filterDistrict=Stare%20Miasto&perPage=10"),
+    ({"price_dropped": True}, "filterPriceChange=decrease&perPage=10"),
+    ({"price_dropped": False, "status": "active"}, "perPage=10"),
+    ({"status": "archived"}, "filterStatus=archived&perPage=10"),
+    ({"status": "all"}, "includeArchived=true&perPage=10"),
     ({"page": 20, "per_page": 100}, "page=20&perPage=100"),
     (
         {
@@ -139,6 +139,6 @@ OFFERS_QUERY_CASES: list[tuple[dict[str, Any], str]] = [
         },
         "filterPrice=0-900000&filterSize=40-9999&filterPricePerM2=10000-14000"
         "&filterDistrict=Mokot%C3%B3w&filterPriceChange=decrease&includeArchived=true"
-        "&sortBy=price_per_sqm&sortOrder=desc&page=1&perPage=10",
+        "&sortBy=price_per_sqm&sortOrder=desc&perPage=10",
     ),
 ]

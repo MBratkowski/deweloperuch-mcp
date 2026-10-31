@@ -93,7 +93,10 @@ PAGE_ROUTES = (
     # Statystyki
     "/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}",
     "/statystyki/ceny-transakcyjne/{type}/{city}/mapa",
+    # Since 2.0 (2026-10-29) a 308 to /statystyki/{location}/dane-rzadowe; kept so the
+    # redirect can still be checked, the package reads the new route.
     "/statystyki/statystyki-rzadowe/{location}",
+    "/statystyki/{location}/dane-rzadowe",
     "/statystyki/portale-ogloszeniowe/{type}/{region}",
     # Inne
     "/zglos-dewelopera/mapa-zgloszen",

@@ -21,7 +21,7 @@
     "  \"available_from\": \"2005-01\",",
     "  \"hint\": \"Pokazano ostatnie 12 z 260 okresów (dane od 2005-01); starsze pokaże większa wartość periods.\",",
     "  \"note\": null,",
-    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska#gus-mieszkania\",",
+    "  \"stats_url\": \"https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-mieszkania\",",
     "  \"series\": [",
     "    {",
     "      \"series_id\": \"completed_total\",",
@@ -856,6 +856,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/statystyki-rzadowe/polska?_rsc=b3d11c70 [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
   ]
 }

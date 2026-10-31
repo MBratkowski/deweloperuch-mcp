@@ -63,7 +63,7 @@ The result from `tests/golden/mcp/market_sopot.json`:
   "area_m2": {"min": 56.5, "p25": 61.21, "median": 67.0, "p75": 68.7, "max": 69.5},
   "top_developers": [{"developer_slug": "invest-komfort-spolka-akcyjna", "offers": 6, "investments": 2, "median_price_per_m2": 24533, "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna"}],
   "developers_returned": 1, "developers_omitted": 0, "truncated": false,
-  "list_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/mieszkania?page=1&perPage=10"
+  "list_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/mieszkania?perPage=10"
 }
 ```
 

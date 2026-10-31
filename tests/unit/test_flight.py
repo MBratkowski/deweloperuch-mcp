@@ -5,7 +5,6 @@ tests/fixtures/rsc/ pin it (text rows without a newline, lengths in bytes).
 """
 
 import ast
-import hashlib
 import json
 import re
 import subprocess
@@ -187,31 +186,20 @@ def test_recon_flight_defines_no_decoder_of_its_own() -> None:
     assert defined == {"_main"}
 
 
-def test_rsc_token_is_a_short_hash_of_path_and_query() -> None:
-    target = "/ceny-ofertowe/warszawa/mieszkania?page=2&perPage=50"
-
-    assert package_flight.rsc_token(target) == hashlib.sha256(target.encode()).hexdigest()[:8]
-    assert package_flight.rsc_token(target) != package_flight.rsc_token(target + "0")
-
-
 @pytest.mark.parametrize(
-    ("target", "expected_separator"),
+    ("target", "expected"),
     [
-        ("/ceny-ofertowe/warszawa/mieszkania", "?"),
-        ("/ceny-ofertowe/warszawa/mieszkania?page=2", "&"),
+        ("/ceny-ofertowe/warszawa/mieszkania", "/ceny-ofertowe/warszawa/mieszkania?_rsc"),
+        (
+            "/ceny-ofertowe/warszawa/mieszkania?page=2",
+            "/ceny-ofertowe/warszawa/mieszkania?page=2&_rsc",
+        ),
     ],
 )
-def test_with_rsc_token_appends_the_token_as_the_last_parameter(
-    target: str, expected_separator: str
+def test_with_rsc_query_appends_an_empty_rsc_as_the_last_parameter(
+    target: str, expected: str
 ) -> None:
-    token = package_flight.rsc_token(target)
-
-    assert package_flight.with_rsc_token(target) == f"{target}{expected_separator}_rsc={token}"
-
-
-def test_rsc_token_refuses_unencoded_targets() -> None:
-    with pytest.raises(UnicodeEncodeError):
-        package_flight.rsc_token("/ceny-ofertowe/kraków/mieszkania")
+    assert package_flight.with_rsc_query(target) == expected
 
 
 def test_rows_split_ids_tags_and_data() -> None:

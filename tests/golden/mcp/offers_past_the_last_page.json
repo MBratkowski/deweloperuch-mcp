@@ -27,6 +27,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=9&perPage=10&_rsc=e1e2aa8d [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?page=9&perPage=10&_rsc [rsc: 1] [accept: */*]"
   ]
 }

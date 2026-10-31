@@ -13,7 +13,7 @@
   "exit_code": 0,
   "stdout": [
     "Rynek ofert [krakow] · aktywne oferty: 879 · inwestycje: 63 · deweloperzy: 39.",
-    "Te oferty na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/krakow/mieszkania?filterPrice=0-700000&filterSize=40-9999&page=1&perPage=10",
+    "Te oferty na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/krakow/mieszkania?filterPrice=0-700000&filterSize=40-9999&perPage=10",
     "                      min      p25  mediana      p75      max",
     "Cena (PLN)        519 807  618 957  650 097  676 170  699 706",
     "Cena za m² (PLN)   10 907   14 099   14 800   15 700   17 450",
