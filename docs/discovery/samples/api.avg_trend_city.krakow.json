@@ -1,0 +1,26 @@
+{
+  "_request": "GET /api/avg-price-trend/city/krakow",
+  "_captured": "2026-10-30",
+  "response": {
+    "data": [
+      {
+        "period": "2017-Q1",
+        "avgPriceSqm": 6002,
+        "count": 1036
+      },
+      {
+        "period": "2017-Q2",
+        "avgPriceSqm": 6052,
+        "count": 1161
+      },
+      {
+        "period": "2017-Q3",
+        "avgPriceSqm": 6340,
+        "count": 1172
+      },
+      "... (37 more, 40 total)"
+    ],
+    "scope": "city",
+    "scopeName": null
+  }
+}

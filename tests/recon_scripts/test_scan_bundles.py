@@ -9,6 +9,8 @@ import ast
 import json
 import os
 import re
+import shutil
+import stat
 import subprocess
 import sys
 from collections.abc import Mapping
@@ -146,6 +148,8 @@ def test_json_output_format(env: ScannerEnv, capsys: pytest.CaptureFixture[str])
         "api": EXPECTED_API,
         "actions": EXPECTED_ACTIONS,
         "incomplete": [],
+        "redirects": {},
+        "missing": {},
     }
     assert list(data["actions"]) == sorted(EXPECTED_ACTIONS)
 
@@ -368,6 +372,9 @@ def test_default_cache_dir_follows_xdg(monkeypatch: pytest.MonkeyPatch, tmp_path
         (1, response(401), 0.0),
         (3, html_response(CHALLENGE_HTML), 0.0),
         (4, response(503, CHALLENGE_HTML.encode(), cf_mitigated="challenge"), 30.0),
+        # A challenge wins over a redirect or a 404: STOP, not a recorded page.
+        (6, response(302, location="/elsewhere", cf_mitigated="challenge"), 0.0),
+        (7, html_response(CHALLENGE_HTML, status=404), 0.0),
     ],
 )
 def test_stop_on_a_page_ends_the_scan(
@@ -426,9 +433,12 @@ def test_stop_on_a_chunk_ends_the_scan(
         (response(503, b"maintenance", retry_after="45"), 45.0, "maintenance"),
         (response(502), 30.0, "HTTP 502"),
         (response(500, b"oops"), 0.0, "oops"),
-        (response(404, b"gone"), 0.0, "gone"),
-        (response(308, location="/elsewhere"), 0.0, "PAGES"),
+        (response(400, b"bad request"), 0.0, "bad request"),
+        (response(405, b"not allowed"), 0.0, "not allowed"),  # only 404 and 410 are recorded
         (Response(200, {}, b"x" * 10, "Odpowiedź przekracza 10 B (D5)."), 0.0, "D5"),
+        # A moved or missing page is recorded only with its whole body; else the scan ends.
+        (Response(308, {"location": "/x"}, b"", "Odpowiedź ucięta: 0 z 31 B."), 0.0, "ucięta"),
+        (Response(410, {}, b"", "Odpowiedź ucięta: 0 z 9 B."), 0.0, "0 z 9 B"),
     ],
 )
 def test_other_failures_end_the_scan_without_retry(
@@ -527,6 +537,343 @@ def test_an_earlier_stop_ends_the_scan_before_any_request(
     assert captured.out == ""
     assert captured.err.startswith("STOP: seria zapytań do deweloperuch.pl jest wstrzymana")
     assert f"Skan przerwany przed GET {scan_bundles.PAGES[0]}." in captured.err
+
+
+# --- redirects, 404 and 410: recorded for a page, fatal for a chunk --------------------
+
+MOVED = scan_bundles.PAGES[1]
+UNREAD_CHUNK = CHUNKS + "app/_not-found/page-0123456789abcdef.js"
+"""Named only by bodies the scanner must not read: those of redirects and error pages."""
+UNREAD_PAGE = page_html(chunks=(UNREAD_CHUNK,))
+SITE_IN_CAPITALS = identity.BASE_URL.upper()
+
+
+@pytest.mark.parametrize(
+    ("reply", "target"),
+    [
+        (html_response(UNREAD_PAGE, status=308, location="/elsewhere"), "/elsewhere"),
+        (response(301, location=identity.BASE_URL + "/x"), identity.BASE_URL + "/x"),
+        (response(301, location=SITE_IN_CAPITALS + "/x"), SITE_IN_CAPITALS + "/x"),
+        (response(302), None),  # no Location: null in JSON, "?" in messages
+    ],
+    ids=["308", "301 absolute", "301 absolute in capitals", "302 without Location"],
+)
+def test_redirected_page_is_recorded_not_followed_and_the_scan_goes_on(
+    env: ScannerEnv, capsys: pytest.CaptureFixture[str], reply: Response, target: str | None
+) -> None:
+    site = env.site(overrides={MOVED: reply})
+
+    data, err = scan_json(env, site, capsys)  # exit 0: neither --compare nor --baseline-out
+
+    # Every page once, then the chunks the other pages name: neither the target nor the
+    # body of the redirect is read.
+    assert site.paths == [*scan_bundles.PAGES, RUNTIME, *sorted(set(CHUNK_JS) - {RUNTIME})]
+    assert data["redirects"] == {MOVED: target}
+    assert (data["api"], data["actions"]) == (EXPECTED_API, EXPECTED_ACTIONS)
+    reason = f"GET {MOVED}: HTTP {reply.status}: przekierowanie na {target or '?'}."
+    assert [item.startswith(reason) for item in data["incomplete"]] == [True]
+    assert f"Uwaga (niepełny wynik): {reason}" in err
+    assert "zaktualizuj PAGES" in err
+
+
+@pytest.mark.parametrize(
+    "location",
+    [
+        "https://gate.example/login",
+        "//gate.example/login",
+        identity.BASE_URL.replace("://", "://www.") + "/x",
+        "http://[gate/x",
+    ],
+    ids=["other host", "protocol-relative", "subdomain", "unreadable"],
+)
+def test_page_redirected_off_the_site_ends_the_scan_at_once(
+    env: ScannerEnv, capsys: pytest.CaptureFixture[str], location: str
+) -> None:
+    """A page cannot move off the site: an access gate ends the scan at the first page."""
+    first = scan_bundles.PAGES[0]
+    site = env.site(overrides={first: response(302, location=location)})
+
+    assert env.run(["--json"], site) == HTTP_ERROR
+
+    assert site.paths == [first]
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert f"GET {first}: HTTP 302: przekierowanie na {location}." in captured.err
+    assert "Skan przerwany" in captured.err
+
+
+@pytest.mark.parametrize("with_404", [False, True], ids=["all 308", "308 and 404"])
+def test_every_page_skipped_ends_the_scan_before_any_chunk(
+    env: ScannerEnv, capsys: pytest.CaptureFixture[str], with_404: bool
+) -> None:
+    replies = {
+        page: response(404) if with_404 and index % 2 else response(308, location="/elsewhere")
+        for index, page in enumerate(scan_bundles.PAGES)
+    }
+    site = env.site(overrides=replies)
+
+    assert env.run(["--json"], site) == NO_DATA
+
+    assert len(site.requests) == len(scan_bundles.PAGES)
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "Każda strona z PAGES odpowiedziała przekierowaniem albo kodem 404 lub 410" in (
+        captured.err
+    )
+    assert "Żadna strona nie odwołuje się" not in captured.err
+
+
+def test_terminal_controls_in_a_location_never_reach_the_output(
+    env: ScannerEnv, capsys: pytest.CaptureFixture[str]
+) -> None:
+    hostile = "/x\x1b]0;PWNED\x07\x1b[2K\x1b[1A\x9b31m"
+    shown = "/x\\x1b]0;PWNED\\x07\\x1b[2K\\x1b[1A\\x9b31m"
+
+    assert env.run(["--json"], env.site(overrides={MOVED: response(308, location=hostile)})) == 0
+    as_json = capsys.readouterr()
+    assert env.run([], env.site(overrides={MOVED: response(308, location=hostile)})) == 0
+    as_text = capsys.readouterr()
+
+    for output in (as_json.out, as_json.err, as_text.out, as_text.err):
+        assert "\x1b" not in output
+        assert "\x9b" not in output
+    assert json.loads(as_json.out)["redirects"] == {MOVED: shown}
+    assert f"\n  {MOVED}: przekierowanie na {shown}\n" in as_text.out
+
+
+def test_a_huge_location_is_cut_once_where_it_is_recorded(
+    env: ScannerEnv, capsys: pytest.CaptureFixture[str]
+) -> None:
+    huge = "/" + "a" * 60_000
+    site = env.site(overrides={MOVED: response(308, location=huge)})
+
+    assert env.run(["--json"], site) == 0
+
+    captured = capsys.readouterr()
+    assert json.loads(captured.out)["redirects"] == {MOVED: huge[:300] + "…"}
+    assert len(captured.out) + len(captured.err) < 20_000  # not 60 KB for every mention
+
+
+@pytest.mark.parametrize(
+    ("text", "shown"),
+    [
+        ("/statystyki/warszawa/transakcje", "/statystyki/warszawa/transakcje"),
+        ("/zażółć-gęślą", "/zażółć-gęślą"),
+        ("a\x1b[2Kb\x9bc\nd‮e", "a\\x1b[2Kb\\x9bc\\nd\\u202ee"),
+        ("x" * 301, "x" * 300 + "…"),
+        ("\x1b" * 300, "\\x1b" * 75 + "…"),  # the escapes count towards the limit
+    ],
+    ids=["plain", "Polish letters", "controls", "long", "long escapes"],
+)
+def test_printable_escapes_controls_and_caps_the_length(text: str, shown: str) -> None:
+    assert http_common.printable(text) == shown
+
+
+@pytest.mark.parametrize("status", [404, 410])
+def test_missing_page_is_recorded_and_the_scan_goes_on(
+    env: ScannerEnv, capsys: pytest.CaptureFixture[str], status: int
+) -> None:
+    error_page = html_response(UNREAD_PAGE, status=status)
+    site = env.site(overrides={MOVED: error_page})
+
+    data, err = scan_json(env, site, capsys)  # exit 0: neither --compare nor --baseline-out
+
+    # Every page once, then the chunks the other pages name: the error page is not read.
+    assert site.paths == [*scan_bundles.PAGES, RUNTIME, *sorted(set(CHUNK_JS) - {RUNTIME})]
+    assert (data["missing"], data["redirects"]) == ({MOVED: status}, {})
+    assert (data["api"], data["actions"]) == (EXPECTED_API, EXPECTED_ACTIONS)
+    reason = f"GET {MOVED}: HTTP {status}: strony nie ma"
+    assert [item.startswith(reason) for item in data["incomplete"]] == [True]
+    assert "PAGES" in data["incomplete"][0]
+    assert f"Uwaga (niepełny wynik): {reason}" in err
+
+
+def test_one_scan_reports_every_skipped_page_in_pages_order(
+    env: ScannerEnv, capsys: pytest.CaptureFixture[str]
+) -> None:
+    first, middle, last = scan_bundles.PAGES[1], scan_bundles.PAGES[5], scan_bundles.PAGES[-1]
+    site = env.site(
+        overrides={
+            last: response(308, location="/b"),
+            middle: response(410),
+            first: response(301, location="/a"),
+        }
+    )
+
+    data, err = scan_json(env, site, capsys)
+
+    assert list(data["redirects"].items()) == [(first, "/a"), (last, "/b")]
+    assert data["missing"] == {middle: 410}
+    assert len(data["incomplete"]) == 3
+    assert err.count("Uwaga (niepełny wynik): GET ") == 3
+    assert data["chunks_fetched"] == len(CHUNK_JS)  # the chunk phase still runs
+
+
+def test_text_output_lists_skipped_pages(
+    env: ScannerEnv, capsys: pytest.CaptureFixture[str]
+) -> None:
+    gone = scan_bundles.PAGES[2]
+    site = env.site(overrides={MOVED: response(308, location="/elsewhere"), gone: response(404)})
+
+    assert env.run([], site) == 0
+
+    out = capsys.readouterr().out
+    assert "NIEPEŁNY WYNIK" in out
+    assert "\n## strony pominięte (zaktualizuj PAGES)\n" in out
+    assert f"\n  {MOVED}: przekierowanie na /elsewhere\n" in out
+    assert f"\n  {gone}: HTTP 404\n" in out
+
+
+@pytest.mark.parametrize(
+    ("reply", "message"),
+    [
+        (response(301, location="/elsewhere.js"), "HTTP 301: przekierowanie na /elsewhere.js."),
+        (response(301, location="/x\x1b[2J.js"), "HTTP 301: przekierowanie na /x\\x1b[2J.js."),
+        (response(404, b"not found"), "HTTP 404. Treść: not found"),
+        (response(410, b"gone"), "HTTP 410. Treść: gone"),
+    ],
+    ids=["301", "301 with ESC", "404", "410"],
+)
+def test_redirected_or_missing_chunk_still_ends_the_scan(
+    env: ScannerEnv, capsys: pytest.CaptureFixture[str], reply: Response, message: str
+) -> None:
+    site = env.site(overrides={MAIN: reply})
+
+    assert env.run(["--json"], site) == HTTP_ERROR
+
+    assert site.paths[-1] == MAIN
+    assert "/elsewhere.js" not in site.paths
+    assert not cached_file(env, MAIN).exists()
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert f"GET {MAIN}: {message}" in captured.err
+    assert "Skan przerwany" in captured.err
+    assert "PAGES" not in captured.err  # a chunk is no page: nothing to update there
+    assert "\x1b" not in captured.err
+
+
+# --- --save-pages: the HTML of the pages, kept for offline analysis ----------------------
+
+NESTED = "/ceny-ofertowe/warszawa/deweloperzy/atal"
+
+
+@pytest.mark.parametrize(
+    ("path", "name"),
+    [
+        ("/", "index.html"),
+        (NESTED, "ceny-ofertowe__warszawa__deweloperzy__atal.html"),
+        ("/a b/ż?x.y", "a_b____x.y.html"),
+    ],
+    ids=["root", "nested", "other characters"],
+)
+def test_page_file_names(path: str, name: str) -> None:
+    assert scan_bundles.page_file_name(path) == name
+
+
+def test_save_pages_keeps_every_page_as_received_at_no_extra_request(
+    env: ScannerEnv, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = tmp_path / "new" / "pages"  # the missing parent is created too
+    raw = page_html().encode() + b"<!-- \xff: not UTF-8 -->"
+    site = env.site(overrides={"/": Response(200, {"content-type": "text/html"}, raw)})
+
+    assert env.run(["--json", "--save-pages", str(target)], site) == 0
+
+    assert (target / "index.html").read_bytes() == raw
+    assert (target / scan_bundles.page_file_name(NESTED)).read_bytes() == page_html().encode()
+    assert sorted(file.name for file in target.iterdir()) == sorted(
+        scan_bundles.page_file_name(page) for page in scan_bundles.PAGES
+    )
+    assert len(site.requests) == len(scan_bundles.PAGES) + len(CHUNK_JS)
+    assert json.loads(capsys.readouterr().out)["incomplete"] == []
+    if os.name != "nt":  # Windows permissions come from the parent directory's ACL.
+        for directory in (target, target.parent):
+            assert stat.S_IMODE(directory.stat().st_mode) == 0o700
+        assert {stat.S_IMODE(file.stat().st_mode) for file in target.iterdir()} == {0o600}
+
+
+def test_save_pages_skips_redirected_and_missing_pages(
+    env: ScannerEnv, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    target = tmp_path / "pages"
+    target.mkdir()  # an existing empty directory is used as it is
+    gone = scan_bundles.PAGES[2]
+    site = env.site(overrides={MOVED: response(308, location="/elsewhere"), gone: response(404)})
+
+    assert env.run(["--json", "--save-pages", str(target)], site) == 0
+
+    saved = {file.name for file in target.iterdir()}
+    assert len(saved) == len(scan_bundles.PAGES) - 2
+    assert scan_bundles.page_file_name(MOVED) not in saved
+    assert scan_bundles.page_file_name(gone) not in saved
+
+
+@pytest.mark.parametrize("existing", ["file", "non-empty directory"])
+def test_save_pages_never_writes_into_an_existing_target(
+    env: ScannerEnv, tmp_path: Path, capsys: pytest.CaptureFixture[str], existing: str
+) -> None:
+    target = tmp_path / "pages"
+    previous = target
+    if existing != "file":
+        target.mkdir()
+        previous = target / "index.html"
+    previous.write_text("previous", encoding="utf-8")
+    site = env.site()
+
+    assert env.run(["--save-pages", str(target)], site) == USAGE
+
+    assert site.requests == []
+    assert previous.read_text(encoding="utf-8") == "previous"
+    assert str(target) in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("through_link", [False, True], ids=["path", "symlink"])
+def test_save_pages_inside_the_repository_is_refused_before_any_request(
+    env: ScannerEnv, tmp_path: Path, capsys: pytest.CaptureFixture[str], through_link: bool
+) -> None:
+    """Pages may hold personal data: they never go where git could commit them."""
+    inside = REPO / ".save-pages-test"
+    target = inside / "pages"
+    if through_link:
+        (tmp_path / "repo").symlink_to(REPO, target_is_directory=True)
+        target = tmp_path / "repo" / ".save-pages-test" / "pages"
+    site = env.site()
+    try:
+        assert env.run(["--save-pages", str(target)], site) == USAGE
+
+        assert site.requests == []
+        assert not inside.exists()
+        assert "repozytorium" in capsys.readouterr().err
+    finally:
+        if inside.exists():  # only when the refusal failed
+            shutil.rmtree(inside)
+
+
+def test_failed_page_write_is_only_a_note(
+    env: ScannerEnv,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    target = tmp_path / "pages"
+    real_open = os.open
+
+    def disk_full(
+        path: str | os.PathLike[str], flags: int, mode: int = 0o777, *, dir_fd: int | None = None
+    ) -> int:
+        if Path(path).parent == target:
+            raise OSError(28, "No space left on device")
+        return real_open(path, flags, mode, dir_fd=dir_fd)
+
+    monkeypatch.setattr(os, "open", disk_full)
+
+    assert env.run(["--json", "--save-pages", str(target)], env.site()) == 0
+
+    captured = capsys.readouterr()
+    assert json.loads(captured.out)["incomplete"] == []
+    assert "Info: nie zapisano strony" in captured.err
+    assert "No space left" in captured.err
+    assert list(target.iterdir()) == []
 
 
 # --- allowlist --------------------------------------------------------------------------
@@ -1091,6 +1438,8 @@ INCOMPLETE_SCANS = {
         "overrides": {scan_bundles.PAGES[-1]: html_response(page_html("NEW_build"))}
     },
     "empty chunk": {"overrides": {MAIN: response(200, content_type="application/javascript")}},
+    "page redirected": {"overrides": {MOVED: response(308, location="/elsewhere")}},
+    "page missing": {"overrides": {MOVED: response(404, b"not found")}},
 }
 
 
@@ -1161,6 +1510,8 @@ def test_help_works_offline_without_installed_packages(tmp_path: Path) -> None:
     for text in ("--json", "--compare", "--baseline-out", "kody wyjścia", "STOP", "D9"):
         assert text in result.stdout
     for text in ("incomplete", "Uwaga (niepełny wynik)", "Info:", str(scan_bundles.MAX_CHUNKS)):
+        assert text in result.stdout
+    for text in ("redirects", "missing", "--save-pages"):
         assert text in result.stdout
     for code in range(2, 8):
         assert re.search(rf"^\s+{code}\s", result.stdout, re.M), code

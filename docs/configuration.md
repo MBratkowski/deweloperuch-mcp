@@ -139,15 +139,58 @@ Probe reads no environment variables of its own. The `Retry-After` parser (secon
 
 ### `recon/scan_bundles.py`
 
-The JS bundle scanner (detects changes of the service after a deploy). All requests go through the same `throttle.lock` lock and with the same User-Agent. It fetches only the pages from its `PAGES` list and `GET /_next/static/chunks/*.js`; the first scan with an empty cache is about 140 requests, so run it rarely. `--json` prints `build_id`, `pages`, `chunks`, `chunks_fetched`, `chunks_cached`, `api`, `actions`, `incomplete` and, with `--compare`, `drift`. `--compare FILE` compares `/api` paths and action names with a baseline; `--baseline-out FILE` writes one (refused for an incomplete result). Exit codes: 0 success or no differences; 2 usage error; 3 STOP; 4 other HTTP or network error or a redirect; 5 the limiter requires waiting longer than 60 s; 6 incomplete result (also exceeding `MAX_CHUNKS`); 7 differences from `--compare`. More: `python3 recon/scan_bundles.py --help`.
+The JS bundle scanner (detects changes of the service after a deploy). All requests go through the same `throttle.lock` lock and with the same User-Agent. It fetches only the pages from its `PAGES` list and `GET /_next/static/chunks/*.js`: each page once per scan, a chunk only when the cache does not hold it (see the "Files" table). The first scan with an empty cache was about 140 requests (22 pages and 118 chunks) before the redesign of the service on 2026-10-29; the new build has more chunks ([T62](open-questions.md)), so run it rarely. `--json` prints `build_id`, `pages` (the number of entries of `PAGES`, whatever the service answered), `chunks`, `chunks_fetched`, `chunks_cached`, `api`, `actions`, `incomplete`, `redirects`, `missing` and, with `--compare`, `drift`. `--compare FILE` compares `/api` paths and action names with a baseline; `--baseline-out FILE` writes one (refused for an incomplete result). `--save-pages DIR` keeps the HTML of the pages for offline analysis. Pages that moved or are gone, `--save-pages` and the exit codes are described below. More: `python3 recon/scan_bundles.py --help`.
 
 | Parameter | Value | Description |
 |---|---|---|
 | `max_wait` | 60 s (fixed) | No flag. A longer required pause ends the scan with code 5, before sending a request. |
 | Pauses, response limits | as in probe | Pause after 429 at least 60 s, after 502/503/504 `Retry-After` or 30 s; response limit 32 MiB and read time as above. |
-| Redirects, retries | none | Any error (also 3xx) ends the whole scan. |
+| Redirects, retries | none | A redirect is never followed and nothing is retried. A page of `PAGES` that answers a redirect within the site, 404 or 410 is recorded and skipped; any other failure ends the scan (a STOP with code 3, the rest with code 4). |
+| `PAGES` | 24 pages | The fixed list of pages the scanner requests, each once per scan and before any chunk. A page that moved or is gone does not end the scan (see "Moved and missing pages"). |
 | `MAX_CHUNKS` | 400 | Hard limit of chunk requests per scan (also when cache files are unreadable); exceeding it is code 6. |
 | Cache | `chunks/` | See the "Files" table. The scanner respects `XDG_CACHE_HOME`. |
 | STOP | `stop.json` | As in probe: after STOP a record with source `scan_bundles`; with an active record (from any process) the scan ends with code 3 before a request. |
+
+#### Moved and missing pages
+
+A page of `PAGES` can move or disappear when the service is redesigned. The scanner never follows a redirect; a page that answers with one of these is recorded and skipped, and the scan goes on:
+
+- a redirect (3xx) within the site: a `Location` that is a path or a full address on the service's own host, or no `Location` at all;
+- 404 or 410 with a complete body.
+
+Nothing else is requested for such a page, so the chunks only it names are missed and the result is incomplete (see "Exit codes"). The skipped pages are reported so that `PAGES` in `recon/scan_bundles.py` can be fixed:
+
+- stderr, for a redirect: `Uwaga (niepełny wynik): GET <page>: HTTP <status>: przekierowanie na <target>. Skaner nie podąża za przekierowaniami: chunki tej strony pominięte. Jeśli strona się przeniosła, zaktualizuj PAGES w recon/scan_bundles.py.` (`<target>` is `?` without a `Location`); for 404 or 410: `Uwaga (niepełny wynik): GET <page>: HTTP <status>: strony nie ma, chunki tej strony pominięte. Popraw albo usuń ten wpis PAGES w recon/scan_bundles.py.` The text after `Uwaga (niepełny wynik): ` is also an entry of `incomplete`;
+- `--json`: `redirects` maps a redirected page to its `Location`, or to `null` when the answer had none; `missing` maps a page that answered 404 or 410 to that status (an integer). Both are `{}` when no page was skipped, and both keep the order of `PAGES`;
+- text output: a section `## strony pominięte (zaktualizuj PAGES)` with one line per page, `<page>: przekierowanie na <target>` or `<page>: HTTP <status>`, redirected pages first.
+
+A `Location` is made safe to print before it reaches stdout, stderr or the JSON: every non-printable character (ESC, CSI, line breaks, bidi controls) is escaped as Python's `repr` does (`\x1b`, `\n`, `\u202e`), and the text is cut to 300 characters, counted after escaping, with „…” appended. `printable` in `recon/http_common.py` does this; `recon/probe.py` uses it for the `Location` in its redirect message too.
+
+A redirect of a page to another host (also a subdomain, or an address that cannot be read) still ends the scan with code 4: a page cannot leave the site, and an access gate must end the scan at its first page. So does a redirect, 404 or 410 of a chunk (chunk addresses come from the pages, so there is no `PAGES` entry to fix), and a redirect, 404 or 410 whose body is truncated. A STOP wins over everything else, also when it comes as a challenge on a 3xx or 404 answer (code 3).
+
+#### `--save-pages DIR`
+
+Keeps the HTML of every page of `PAGES` that answered 2xx, byte for byte, in `DIR/<name>.html`, at no extra request. The name is the path without its first „/”, with „/” replaced by `__` and every character outside `[A-Za-z0-9._-]` replaced by `_`; the start page is `index.html` (`/a/b` is `a__b.html`). A skipped page has no file.
+
+It is for offline analysis only (the props of a page sit in its inline `self.__next_f` flight data), never for samples or fixtures: a page may hold personal data. Hence the rules:
+
+- `DIR` must be new or an empty directory and must lie outside the repository. The location is compared with the repository by file identity, so a symlink, another letter case on a case-insensitive file system or a second mount of the repository does not get around it. Otherwise the scan ends with code 2 before the first request.
+- New directories (missing parents too) are created with mode `0700` and files with `0600`; these are POSIX modes and are not verified on Windows. A file is created exclusively, so nothing is overwritten.
+- A page that cannot be written is only a line `Info: nie zapisano strony <page> do <file> (<error>).` on stderr; the scan, its result and its exit code are not affected.
+- `DIR` is created before the first request. A scan that ends early leaves it with the pages saved so far, so a rerun needs a new or emptied directory.
+
+#### Exit codes
+
+A result is incomplete when it may miss `/api` paths or actions: a page was skipped (above), a chunk was skipped (outside the allowlist, empty or not a 200), the webpack runtime is missing or unreadable, or the pages named different build IDs. It is still printed, with its reasons: the `incomplete` field, the `Uwaga (niepełny wynik): …` lines on stderr and a header in the text output. Without `--compare` and `--baseline-out` it does not change the exit code.
+
+| Code | Meaning |
+|---|---|
+| 0 | Success. With `--compare`: no differences from the baseline. Also an incomplete result when neither `--compare` nor `--baseline-out` is given. |
+| 2 | Usage error. Before the first request: a bad option; `--compare` without a file or with a file in a wrong format; `--baseline-out` naming a directory or a missing directory; `--save-pages` naming a file, a non-empty directory, a directory in the repository or one that cannot be created. After the scan: the `--baseline-out` file could not be written. Also a request outside the scanner's allowlist (it is not sent). |
+| 3 | STOP: 401, 403, 429 or a Cloudflare challenge (also one served with a 3xx or 404 status) on a page or a chunk, or an earlier STOP record (then before the request). The scan ends; do not retry, report it. |
+| 4 | Another HTTP or network error: a redirect of a page to another host; a redirect, 404 or 410 of a chunk; other 4xx; 5xx; a timeout or no connection; a response that is too large or read for too long; a truncated body. The scan ends. A page that redirects within the site or answers 404 or 410 does not end it. |
+| 5 | The limiter requires waiting longer than 60 s; the scan ends before that request. |
+| 6 | The scan ends without a result when no page names a chunk (also when every page of `PAGES` was skipped, with the message „Każda strona z PAGES odpowiedziała przekierowaniem albo kodem 404 lub 410 (szczegóły wyżej): zaktualizuj PAGES w recon/scan_bundles.py. Skan przerwany przed pobraniem chunków.”), when a chunk is served as HTML, or when more than `MAX_CHUNKS` chunk requests would be needed. Also an incomplete result with `--compare` (takes precedence over 0 and 7) or with `--baseline-out` (the baseline is not written): the result and the reasons are printed. |
+| 7 | `--compare`: differences from a complete result (printed; `--baseline-out` written). |
 
 _Source: `src/deweloperuch_mcp/throttle.py`, `src/deweloperuch_mcp/identity.py`, `src/deweloperuch_mcp/retry_after.py`, `src/deweloperuch_mcp/http_policy.py`, `recon/config.py`, `recon/http_common.py`, `recon/probe.py`, `recon/scan_bundles.py`, `recon/allowlist.py`, `recon/flight.py`, `src/deweloperuch_mcp/api/http/transport.py`, `src/deweloperuch_mcp/usecases/`, `src/deweloperuch_mcp/consumers/`, `src/deweloperuch_mcp/allowlist.py`, `src/deweloperuch_mcp/flight.py`, `src/deweloperuch_mcp/errors.py`_
