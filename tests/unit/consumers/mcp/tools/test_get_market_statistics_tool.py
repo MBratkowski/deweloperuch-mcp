@@ -7,7 +7,7 @@ from mcp.server.mcpserver import MCPServer
 from deweloperuch_mcp import bootstrap
 from support.checks.leaks import SIZE_BUDGET
 from support.providers.error_answers import CHANGED_SERVICE, removed_route
-from support.providers.mcp import call, data, keys, text
+from support.providers.mcp import call, calls, data, keys, text
 from support.providers.routes.offer_snapshot import OFFER_SNAPSHOT_PATH, offer_snapshot_routes
 from support.providers.rsc import UNKNOWN_CITY
 from support.providers.service import PAGES
@@ -61,6 +61,41 @@ def test_get_market_statistics_of_a_city(
         "list_url": f"{PAGES}/sopot/mieszkania?perPage=10",
     }
     assert routes["sopot"].call_count == 1
+
+
+def test_get_market_statistics_of_wroclaw_agrees_with_the_services_summary(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    """[P 2026-10-30, PR #16] Wrocław's snapshot, captured with the package's client in
+    PR #16. By its description, the service's own summary on ``/statystyki/wroclaw/oferty``
+    agreed that day: 5,836 offers, 110 investments, 46 developers, a median of
+    14,600 PLN/m² and Develia first with 818 offers; at 45-55 m², ``offers search``
+    listed 956 offers, as many as this summary counts."""
+    routes = offer_snapshot_routes(service)
+
+    whole, sized = (
+        data(result)
+        for result in calls(
+            server,
+            "get_market_statistics",
+            {"city": "wroclaw", "top_developers": 1},
+            {"city": "wroclaw", "area_min": 45, "area_max": 55},
+        )
+    )
+
+    assert (whole["as_of"], whole["offers"], whole["investments"], whole["developers"]) == (
+        "2026-10-30",
+        5836,
+        110,
+        46,
+    )
+    assert whole["price_per_m2"]["median"] == 14600
+    assert [(top["developer_slug"], top["offers"]) for top in whole["top_developers"]] == [
+        ("develia", 818)
+    ]
+    assert (sized["offers"], sized["investments"], sized["developers"]) == (956, 75, 36)
+    # One client: the second summary comes from the snapshot the first one cached.
+    assert routes["wroclaw"].call_count == 1
 
 
 def test_the_market_never_shows_single_offers_and_fits_its_budget(

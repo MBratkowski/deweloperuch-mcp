@@ -1,0 +1,68 @@
+{
+  "_request": "GET /api/map/offer-snapshot/wroclaw",
+  "_captured": "2026-10-30",
+  "response": {
+    "citySlug": "wroclaw",
+    "asOf": "2026-10-30",
+    "investments": [
+      {
+        "id": 16,
+        "slug": "nowa-stawowa",
+        "name": "Nowa Stawowa",
+        "street": "Stare Miasto",
+        "lat": 51.10146275,
+        "lng": 17.03533489,
+        "district": "Przedmieście Świdnickie",
+        "developerId": 16,
+        "developer": "Nowa Stawowa",
+        "developerSlug": "nowa-stawowa"
+      },
+      {
+        "id": 23,
+        "slug": "legnicka-vita",
+        "name": "Legnicka Vita",
+        "street": "Fabryczna",
+        "lat": 51.12183,
+        "lng": 16.99208,
+        "district": "Gądów-Popowice Południowe",
+        "developerId": 23,
+        "developer": "Develia",
+        "developerSlug": "develia"
+      },
+      {
+        "id": 38,
+        "slug": "nowa-pabianicka",
+        "name": "Nowa Pabianicka",
+        "street": "Krzyki",
+        "lat": 51.09219346,
+        "lng": 17.02871367,
+        "district": "Powstańców Śląskich",
+        "developerId": 7,
+        "developer": "RealCo Property Investment and Development Sp. z o.o.",
+        "developerSlug": "realco-property-investment-and-development"
+      },
+      "... (107 more, 110 total)"
+    ],
+    "sales": [
+      [
+        1591,
+        16,
+        0,
+        "... (4 more, 7 total)"
+      ],
+      [
+        1600,
+        16,
+        0,
+        "... (4 more, 7 total)"
+      ],
+      [
+        1614,
+        16,
+        0,
+        "... (4 more, 7 total)"
+      ],
+      "... (5833 more, 5836 total)"
+    ]
+  }
+}
