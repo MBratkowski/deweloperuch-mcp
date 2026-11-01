@@ -9,9 +9,11 @@ from deweloperuch_mcp.models.offer import (
     DeveloperRef,
     InvestmentRef,
     ListedOffer,
+    OfferSearchCriteria,
     OfferSearchPage,
 )
 from deweloperuch_mcp.models.price_history import PriceEvent
+from deweloperuch_mcp.models.values import CitySlug, DistrictName
 from support.builders.investments import offer, smolna
 
 
@@ -101,3 +103,16 @@ def test_an_empty_page_past_the_last_one_knows_the_pages_that_exist() -> None:
 
 def test_no_pages_without_a_page_size() -> None:
     assert search_page(30, per_page=0).pages_available == 0
+
+
+@pytest.mark.parametrize("district", [None, DistrictName("Mokotów")])
+def test_an_offers_search_is_of_one_city(district: DistrictName | None) -> None:
+    """The service lists the offers of a city or of one of its districts, never of the whole
+    country [P 2026-10-29: its list of Poland is a list of cities]; the request refuses
+    ``polska`` first, in the words of its parameters (``SearchOffersRequest``)."""
+    with pytest.raises(ValueError, match="jedno miasto"):
+        OfferSearchCriteria(city=CitySlug("polska"), district=district)
+
+    assert OfferSearchCriteria(city=CitySlug("warszawa"), district=district).city.value == (
+        "warszawa"
+    )

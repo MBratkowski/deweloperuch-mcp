@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "get_developer",
+      "arguments": {
+        "developer_slug": "nieistniejacy-deweloper"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Nie znaleziono dewelopera 'nieistniejacy-deweloper'. Slug dewelopera podaje search_developers (po nazwie) albo pole developer_slug w search_offers, get_investment i get_offer; city to city_slug z search_locations albo polska (cała Polska).",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Nie znaleziono dewelopera 'nieistniejacy-deweloper'. Slug dewelopera podaje search_developers (po nazwie) albo pole developer_slug w search_offers, get_investment i get_offer; city to city_slug z search_locations albo polska (cała Polska). Szczegóły: /ceny-ofertowe/polska/deweloperzy/nieistniejacy-deweloper: brak propsów 'developerSlug', 'developerName', 'investments', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/polska/deweloperzy/nieistniejacy-deweloper?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

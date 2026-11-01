@@ -15,7 +15,7 @@
     "│ *    SLUG      <str>  Slug inwestycji (investment_slug z `offers search`). [required]            │",
     "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
     "╭─ Options ────────────────────────────────────────────────────────────────────────────────────────╮",
-    "│ --history               Dołącz historię ceny każdej oferty (wolniej).                            │",
+    "│ --history               Dołącz historię ceny każdej oferty.                                      │",
     "│ --limit          <int>  Najwięcej pokazanych ofert (najpierw aktywne); domyślnie wszystkie.      │",
     "│ --json                  Wypisz wynik jako JSON (model domenowy).                                 │",
     "│ --help                  Show this message and exit.                                              │",

@@ -1,26 +1,24 @@
 """``DeveloperProfileApi``: a developer's profile on the service, the ``DeveloperDirectory``
 port.
 
-- the profile in a city or the whole country: the object prop ``data`` of
-  ``/ceny-ofertowe/{city}/deweloperzy/{developerSlug}`` (RSC) [P], since 2.0 several props
-  (``DeveloperPageDto.from_props``) [P 2026-10-30]; an unknown developer is a page with a
-  heading instead (``DEVELOPER_NOT_FOUND``).
+- the profile in a city or the whole country: the page
+  ``/ceny-ofertowe/{city}/deweloperzy/{developerSlug}`` (RSC), read in one request by
+  ``DeveloperPageDto.from_payload`` (the ``hero`` element's props and the chart of
+  cities) [P 2026-10-31]. D21: the page is an internal channel of the site's UI and may
+  change without notice; a page without its props, a redirect, a 410 or an HTML 404 is a
+  changed service, never an unknown developer;
+- an unknown developer is a 200 with Next.js's 404 marker, in a city and in the whole
+  country [P 2026-10-31] (tests/fixtures/rsc/developer_unknown_*_20261031.rsc; 1.0 showed
+  a heading instead).
 """
 
 from functools import partial
 
-from deweloperuch_mcp.api.dto.developer_page_dto import DEVELOPER_PROPS, DeveloperPageDto
+from deweloperuch_mcp.api.dto.developer_page_dto import DeveloperPageDto
 from deweloperuch_mcp.api.http.rsc_page import RscPage
 from deweloperuch_mcp.api.http.transport import HttpClient
 from deweloperuch_mcp.models.developer_profile import DeveloperProfile
 from deweloperuch_mcp.models.values import CitySlug, DeveloperSlug
-
-DEVELOPER_NOT_FOUND = "Deweloper nie znaleziony"
-"""The heading of the page of a developer the service does not know.
-
-[P 2026-10-13] tests/fixtures/rsc/developer_unknown_warszawa.rsc: HTTP 200 without the
-``data`` prop and without Next.js's 404 marker, an ``h1`` with this text instead.
-"""
 
 
 class DeveloperProfileApi:
@@ -34,18 +32,15 @@ class DeveloperProfileApi:
         return self.developer_page(city.value, slug.value).to_model(city)
 
     def developer_page(self, city: str, developer_slug: str) -> DeveloperPageDto:
-        """The object prop ``data`` of the developer's profile in ``city`` [P].
-
-        ``NotFoundError`` for the page of an unknown developer (``DEVELOPER_NOT_FOUND``)
-        and for Next.js's 404 marker (an unknown city may answer so, [H]).
-        """
+        """The developer, its investments in ``city`` and its cities, from one page
+        (``DeveloperPageDto.from_payload``, with its errors)."""
         path = self.path(city, developer_slug)
-        decode = partial(DeveloperPageDto.from_props, path=path, slug=developer_slug)
-        return RscPage(self._http, path).props(DEVELOPER_PROPS, decode, missing=DEVELOPER_NOT_FOUND)
+        return RscPage(self._http, path).read(partial(DeveloperPageDto.from_payload, path=path))
 
     @staticmethod
     def path(city: str, developer_slug: str) -> str:
-        """``/ceny-ofertowe/{city}/deweloperzy/{developerSlug}`` [P]: ``city`` is a city slug
-        or ``polska``. Also the path of the link to the profile (``links``, D12)."""
+        """``/ceny-ofertowe/{city}/deweloperzy/{developerSlug}`` [P; 200 on 2.0 for a city and
+        for ``polska``, 2026-10-31]: ``city`` is a city slug or ``polska``. Also the path of
+        the link to the profile (``links``, D12)."""
         city, developer = HttpClient.segment(city), HttpClient.segment(developer_slug)
         return f"/ceny-ofertowe/{city}/deweloperzy/{developer}"

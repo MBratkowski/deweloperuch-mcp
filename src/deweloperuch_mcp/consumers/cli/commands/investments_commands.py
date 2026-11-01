@@ -26,7 +26,7 @@ def investments_get(
         typer.Argument(metavar="SLUG", help="Slug inwestycji (investment_slug z `offers search`)."),
     ],
     history: Annotated[
-        bool, typer.Option("--history", help="Dołącz historię ceny każdej oferty (wolniej).")
+        bool, typer.Option("--history", help="Dołącz historię ceny każdej oferty.")
     ] = False,
     limit: Annotated[
         int | None,

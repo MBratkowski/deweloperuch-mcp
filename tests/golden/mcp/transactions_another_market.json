@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "get_transaction_statistics",
+      "arguments": {
+        "city": "warszawa"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Ceny transakcyjne dla 'warszawa': Miesięczne dane serwisu obejmują też transakcje spoza rynku wtórnego, a to narzędzie podaje tylko rynek wtórny, więc nie zwraca tego szeregu. To nie znaczy, że argumenty są błędne: nie zmieniaj ich i nie ponawiaj wywołania, powiedz o tym użytkownikowi. Kwartały (granularity=quarter) idą z innego źródła, ale ich rynek jest nieokreślony.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "UnexpectedResponseError: Ceny transakcyjne dla 'warszawa': Miesięczne dane serwisu obejmują też transakcje spoza rynku wtórnego, a to narzędzie podaje tylko rynek wtórny, więc nie zwraca tego szeregu. To nie znaczy, że argumenty są błędne: nie zmieniaj ich i nie ponawiaj wywołania, powiedz o tym użytkownikowi. Kwartały (granularity=quarter) idą z innego źródła, ale ich rynek jest nieokreślony. Szczegóły: prop view, miesiąc 2017-01: 1 z 890 transakcji z rynku wtórnego"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/warszawa/transakcje?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "get_transaction_statistics",
+      "arguments": {
+        "city": "nieistniejace-miasto",
+        "granularity": "quarter"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Serwis nie ma cen transakcyjnych mieszkań dla miasta 'nieistniejace-miasto'. Sprawdź city_slug w search_locations (np. warszawa, krakow); statystyki są dla całych miast, nie dla dzielnic ani ulic. Jeśli city_slug pochodzi z search_locations, serwis nie ma dla niego statystyk: powiedz to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Serwis nie ma cen transakcyjnych mieszkań dla miasta 'nieistniejace-miasto'. Sprawdź city_slug w search_locations (np. warszawa, krakow); statystyki są dla całych miast, nie dla dzielnic ani ulic. Jeśli city_slug pochodzi z search_locations, serwis nie ma dla niego statystyk: powiedz to użytkownikowi. Szczegóły: /api/avg-price-trend/city/nieistniejace-miasto: HTTP 404, application/json"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/avg-price-trend/city/nieistniejace-miasto [accept: application/json]"
+  ]
+}

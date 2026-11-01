@@ -8,8 +8,6 @@ CASES: dict[str, Case] = {
     # get_developer
     "developer_warszawa": case(DEVELOPER, developer_routes, developer_slug="atal", city="warszawa"),
     "developer_whole_country": case(DEVELOPER, developer_routes, developer_slug="atal"),
-    # the 2.0 build: no `data` prop, the summary computed from the investments
-    "developer_archicom_2_0": case(DEVELOPER, developer_routes, developer_slug="archicom"),
     "developer_limit_100_from_the_cache": case(
         DEVELOPER,
         developer_routes,
@@ -20,6 +18,12 @@ CASES: dict[str, Case] = {
     ),
     "developer_unknown": case(
         DEVELOPER, developer_routes, developer_slug=UNKNOWN_DEVELOPER, city="warszawa"
+    ),
+    "developer_unknown_whole_country": case(
+        DEVELOPER, developer_routes, developer_slug=UNKNOWN_DEVELOPER
+    ),
+    "developer_single_city": case(
+        DEVELOPER, developer_routes, developer_slug="ceres-development", city="warszawa"
     ),
     "developer_slug_capitals": case(DEVELOPER, developer_routes, developer_slug="ATAL"),
     "developer_city_name": case(DEVELOPER, developer_routes, developer_slug="atal", city="Kraków"),

@@ -39,7 +39,7 @@ def test_offer_of_an_investment() -> None:
 def test_investment_values_are_normalized() -> None:
     investment = investment_sample().to_model()
 
-    assert (investment.investment_id, investment.investment_slug) == (33, "smolna")
+    assert investment.investment_slug == "smolna"
     assert (investment.name, investment.status) == ("Smolna", "active")
     assert (investment.city, investment.city_slug, investment.street) == (
         "Sopot",

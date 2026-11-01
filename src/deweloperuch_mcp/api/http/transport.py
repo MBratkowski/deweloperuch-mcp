@@ -29,6 +29,10 @@ and every call that is not served from the cache:
   STOP messages tell a model to stop and report, nothing else (no waiting, no
   restarting, no lifting); times, sources and pauses are in ``detail``;
 - never retries and never follows redirects;
+- reads a redirect, a 410, and a 404 that is not the service's own "unknown" answer
+  (JSON with an ``error``, or a page's flight stream; a removed route answers with the
+  Next.js HTML not-found page), as a change of the service (``UnexpectedResponseError``,
+  D21), never as unknown data (``_check``);
 - reads at most ``max_body_bytes`` (``http_policy.MAX_BODY_BYTES``, dumps are refused,
   D5) within ``BODY_DEADLINE``.
 
@@ -43,6 +47,7 @@ keeps the limiter slot's enter and exit in one thread, as ``RequestLimiter.slot`
 """
 
 import contextlib
+import json
 import logging
 import math
 import re
@@ -62,12 +67,15 @@ from deweloperuch_mcp.http_policy import (
     MAX_BODY_BYTES,
     PAUSE_AFTER_429,
     body_length,
+    content_type,
+    is_html,
     pause_seconds,
     stop_cause,
     stop_reason,
 )
 from deweloperuch_mcp.identity import BASE_URL, USER_AGENT
 from deweloperuch_mcp.models.errors import (
+    SERVICE_CHANGED,
     InvalidInputError,
     LimiterWaitError,
     NotFoundError,
@@ -75,6 +83,7 @@ from deweloperuch_mcp.models.errors import (
     ServiceBlockedError,
     ServiceError,
     SessionClosedError,
+    UnexpectedResponseError,
 )
 from deweloperuch_mcp.retry_after import parse_retry_after
 from deweloperuch_mcp.throttle import (
@@ -131,7 +140,11 @@ BODY_DEADLINE = 120.0
 """Seconds for reading a body; checked after each chunk."""
 
 NOT_FOUND = 404
-"""The status of what the service does not know, unless an endpoint says otherwise."""
+"""The status of what the service does not know, with its own answer (``_says_unknown``),
+unless an endpoint says otherwise; any other 404 is a route it no longer has."""
+
+GONE = 410
+"""The status of a page the service removed, whatever its media type (``_moved_or_gone``)."""
 
 DEFAULT_TTL = 300.0
 """Longest a reply stays in the in-memory cache (D2), whatever its headers say; also its
@@ -225,8 +238,8 @@ class HttpClient:
     def target(path: str, params: Sequence[tuple[str, str | int]] = ()) -> str:
         """``path?name=value&...`` with every name and value percent-encoded, in the given order.
 
-        The order is kept so the same request always has the same URL (cache keys, the RSC
-        ``_rsc`` token).
+        The order is kept so the same request always has the same URL (cache keys, and the
+        links that repeat a request, ``links.ServicePageLinks``).
         """
         query = urllib.parse.urlencode(
             [(name, str(value)) for name, value in params], quote_via=urllib.parse.quote, safe=""
@@ -302,7 +315,13 @@ class HttpClient:
         """GET ``target`` (path with an encoded query) and ``decode`` the 2xx reply.
 
         ``unknown``: the statuses that mean the service does not know what was asked for
-        (``NotFoundError``); 404 unless the endpoint answers so in another way.
+        (``NotFoundError``); 404 unless the endpoint answers so in another way. A 404 means
+        it only where the route lists 404 there and only as the service's own answer
+        (``_says_unknown``: JSON with an ``error``, or a page's flight stream). The JSON
+        routes list it (the default); a page lists it only when its route opts in,
+        ``RscPage(unknown_404=True)``: the two statistics pages [P 2026-10-31]. Any other
+        404, and a redirect or a 410, is an ``UnexpectedResponseError``: the service
+        changed (D21).
 
         Served from the cache when a reply for the same target and headers is fresh.
         Raises the errors of ``deweloperuch_mcp.errors``, checked in this order:
@@ -599,20 +618,23 @@ def _check(
         raise ServiceError(
             f"{problem.message}{after}", pause, detail=f"{target}: HTTP {status}, {problem.detail}"
         )
-    if 300 <= status < 400:
-        location = reply.headers.get("location", "?")
-        raise ServiceError(
-            f"Serwis przekierował zapytanie gdzie indziej (HTTP {status}); klient nie podąża "
-            "za przekierowaniami.",
+    if _moved_or_gone(reply, unknown):
+        # D21: the service changed, whatever the tool asked for. One text, without the
+        # status (it is in the detail): next to a subject ("Deweloper 'atal': …") a status
+        # would read as "this entity is gone".
+        raise UnexpectedResponseError(
+            "Narzędzie nie może pobrać tych danych, bo serwis przeniósł je w inne miejsce albo "
+            "przestał je udostępniać. To nie musi znaczyć, że argumenty są błędne ani że "
+            f"szukanego obiektu nie ma. {SERVICE_CHANGED}",
             pause,
-            detail=f"{target} -> {location}",
+            detail=_moved_or_gone_detail(target, reply),
         )
-    if status == NOT_FOUND and status in unknown:
-        raise NotFoundError("Serwis nie zna żądanych danych (HTTP 404).", detail=target)
     if status in unknown:
+        # The service's own text stays out of the detail too: the route says what was asked
+        # for, and the CLI prints the detail for agents to read.
         raise NotFoundError(
             f"Serwis nie zna żądanych danych (HTTP {status}).",
-            detail=f"{target}: {_excerpt(reply.body)}",
+            detail=f"{target}: HTTP {status}, {_media_type(reply)}",
         )
     if not 200 <= status < 300:
         raise ServiceError(
@@ -620,6 +642,81 @@ def _check(
             pause,
             detail=f"{target}: {_excerpt(reply.body)}",
         )
+
+
+def _moved_or_gone(reply: Reply, unknown: Collection[int]) -> bool:
+    """A redirect, a 410, or a 404 that is not the route's "unknown" answer: the service
+    moved or removed what the client reads (D21). A 404 is that answer only where the route
+    lists 404 in ``unknown`` and only in the service's own form (``_says_unknown``); a
+    route that does not answer 404 for "unknown" gives one only when it is gone or rebuilt.
+
+    [P 2026-10-29] moved routes answer 308 (the old statistics pages), RSC requests with an
+    ``_rsc`` the server does not expect 307; [P 2026-10-30] removed routes answer 404 with
+    the Next.js not-found page (endpoints.md section 9) and removed pages 410
+    (``/zglos-dewelopera``, pages-rsc.md), whatever their media type.
+    """
+    status = reply.status
+    if 300 <= status < 400 or status == GONE:
+        return True
+    return status == NOT_FOUND and not (status in unknown and _says_unknown(reply))
+
+
+def _says_unknown(reply: Reply) -> bool:
+    """The service's own answer that it does not know what was asked for: JSON
+    (``application/json``) holding an object with an ``error`` text, or a page's flight
+    stream (``text/x-component``); media types compared without parameters and case.
+
+    docs/discovery/endpoints.md section 9, as far as it was checked:
+
+    - on the live JSON routes tried an unknown entity is a 404 of the first kind, 3 of 3
+      [P 2026-10-30] and 4 of 4 with ``map/offer-snapshot`` [P 2026-10-31] (an investment
+      and an RCN building, ``{"error": "Investment not found"}``; a city, ``{"error":
+      "Unknown city"}``); on 4 removed routes every request is a 404 with the Next.js HTML
+      not-found page, also one that asks for JSON [P 2026-10-30];
+    - [P 2026-10-31] "Pages": the statistics pages answer an unknown location with a 404
+      of the second kind (``dane-rzadowe`` and ``transakcje``, 2 of 2). The offer lists and
+      the developer page answer an unknown city, district or developer with a 200 and
+      Next.js's 404 digest instead, which ``RscPage`` reads.
+
+    Only where the route lists 404 in its ``unknown`` statuses does this decide anything
+    (``_moved_or_gone``): the JSON routes by default, and of the pages only those that opt
+    in, ``RscPage(unknown_404=True)``, the two statistics pages. Elsewhere any 404 is a
+    changed service, so a rebuilt offer list cannot read as an unknown city.
+
+    [W] the same section: a 404 with another media type, JSON without an ``error`` text,
+    or an HTML 404 on a page route was never seen; it is read as a removed route (D21:
+    never as unknown data). [W] the residual risk: a statistics route removed altogether
+    might answer a 404 ``text/x-component`` too, and would then read as unknown; the live
+    suite after each deploy of the service is the check (D21).
+    """
+    media = content_type(reply.headers)
+    if media == "text/x-component":
+        return True
+    if media != "application/json":
+        return False
+    try:
+        data = json.loads(reply.body)
+    except (ValueError, RecursionError):
+        return False
+    return isinstance(data, dict) and isinstance(data.get("error"), str)
+
+
+def _moved_or_gone_detail(target: str, reply: Reply) -> str:
+    """The status and what the answer shows of the change: where a redirect points (the
+    start of ``Location``, cut like a body); for a 404 or a 410 the media type and the
+    start of the body, or only the size of an HTML page (no text for a log)."""
+    status = reply.status
+    if 300 <= status < 400:
+        location = reply.headers.get("location", "?")
+        return f"{target}: HTTP {status} -> {_excerpt(location.encode('utf-8', 'replace'))}"
+    if is_html(reply.headers, reply.body):
+        return f"{target}: HTTP {status}, {_media_type(reply)}, {len(reply.body)} B"
+    return f"{target}: HTTP {status}, {_media_type(reply)}, {_excerpt(reply.body) or 'bez treści'}"
+
+
+def _media_type(reply: Reply) -> str:
+    """The media type of a reply for a detail (``http_policy.content_type``)."""
+    return content_type(reply.headers) or "bez Content-Type"
 
 
 def _ttl(headers: httpx.Headers) -> float:

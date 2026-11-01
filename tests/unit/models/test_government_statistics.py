@@ -20,7 +20,6 @@ from deweloperuch_mcp.models.government_statistics import (
     LocationStatistics,
     PeriodCount,
     SeriesPoint,
-    StatisticsLocation,
     StatisticsTable,
     TimeSeries,
     Unit,
@@ -54,11 +53,6 @@ def location(*tables: StatisticsTable, slug: str = "warszawa") -> LocationStatis
         location=LocationSlug(slug),
         name="Warszawa",
         tables={item.dataset: item for item in tables},
-        locations=(
-            StatisticsLocation("7-miast", "Top 7 miast Polski", True, True),
-            StatisticsLocation("warszawa", "Warszawa", False, True),
-            StatisticsLocation("sopot", "Sopot", False, False),
-        ),
     )
 
 
@@ -196,6 +190,22 @@ def test_an_incomplete_last_quarter_is_noted(months: list[str], note: str | None
     assert result.note == note
 
 
+def test_the_last_year_of_the_average_area_is_noted() -> None:
+    """[P 2026-10-31] the page: „Ostatni rok bywa niepełny — GUS dopisuje go kwartałami”."""
+    area = table(
+        Dataset.AVERAGE_AREA,
+        Frequency.YEAR,
+        series("average_area", {"2025": 61.0, "2026": 62.5}, Unit.SQUARE_METRES),
+    )
+
+    result = location(area).statistics(Dataset.AVERAGE_AREA, PeriodCount())
+
+    assert result.note == (
+        "Ostatni rok (2026) bywa niepełny: GUS dopisuje go kwartałami, więc porównuj go "
+        "ostrożnie z pełnymi latami."
+    )
+
+
 def test_no_note_without_monthly_data_or_for_other_datasets() -> None:
     quarterly = dwellings(Frequency.QUARTER, ["2026-Q3"])
     monthly = dwellings(Frequency.MONTH, ["2026-07"])
@@ -206,12 +216,23 @@ def test_no_note_without_monthly_data_or_for_other_datasets() -> None:
 
 
 def test_a_dataset_the_location_does_not_have_is_not_found() -> None:
+    """The message says where the dataset is: ``polska`` has every one but NBP prices."""
     with pytest.raises(NotFoundError) as caught:
         location(RATE).statistics(Dataset.WAGES, PeriodCount())
 
     assert str(caught.value) == (
         "Serwis nie publikuje zestawu 'wages' (Przeciętne miesięczne wynagrodzenie brutto w "
-        "sektorze przedsiębiorstw) dla lokalizacji 'warszawa'."
+        "sektorze przedsiębiorstw) dla lokalizacji 'warszawa'. Podaj polska albo miasto na "
+        "prawach powiatu, np. warszawa."
+    )
+
+
+def test_a_dataset_the_whole_country_does_not_have_points_to_a_city() -> None:
+    with pytest.raises(NotFoundError) as caught:
+        location(RATE, slug="polska").statistics(Dataset.WAGES, PeriodCount())
+
+    assert str(caught.value).endswith(
+        "dla lokalizacji 'polska'. Podaj miasto na prawach powiatu, np. warszawa."
     )
 
 
@@ -220,17 +241,22 @@ def test_nbp_prices_of_the_whole_country_point_to_the_locations_that_have_them()
         location(RATE, slug="polska").statistics(Dataset.NBP_PRICES, PeriodCount())
 
     assert str(caught.value) == (
-        "NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj jedną "
-        "z lokalizacji: 7-miast, warszawa."
+        "NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj "
+        "agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo duże miasto, np. warszawa, "
+        "krakow, gdansk, wroclaw, gdynia, poznan."
     )
 
 
-def test_nbp_prices_of_a_city_without_them() -> None:
+@pytest.mark.parametrize("slug", ["sopot", "7-miast"])
+def test_nbp_prices_of_a_location_without_them(slug: str) -> None:
     with pytest.raises(NotFoundError) as caught:
-        location(RATE, slug="sopot").statistics(Dataset.NBP_PRICES, PeriodCount())
+        location(RATE, slug=slug).statistics(Dataset.NBP_PRICES, PeriodCount())
 
-    assert str(caught.value).startswith("NBP nie publikuje cen mieszkań dla lokalizacji 'sopot'.")
-    assert str(caught.value).endswith("Podaj jedną z lokalizacji: 7-miast, warszawa.")
+    assert str(caught.value) == (
+        f"NBP nie publikuje cen mieszkań dla lokalizacji {slug!r}. Podaj agregat (7-miast, "
+        "10-miast, 6-miast-bez-warszawy) albo duże miasto, np. warszawa, krakow, gdansk, "
+        "wroclaw, gdynia, poznan."
+    )
 
 
 @pytest.mark.parametrize(

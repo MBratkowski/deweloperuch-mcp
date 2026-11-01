@@ -8,12 +8,12 @@ from collections.abc import Callable
 import respx
 
 from deweloperuch_mcp.allowlist import match_api, match_dump, match_page
-from deweloperuch_mcp.api.adapters.city_sales_api import CitySalesApi
 from deweloperuch_mcp.api.adapters.developer_profile_api import (
     DeveloperProfileApi,
 )
 from deweloperuch_mcp.api.adapters.investments_api import InvestmentsApi
 from deweloperuch_mcp.api.adapters.locations_api import LocationsApi
+from deweloperuch_mcp.api.adapters.offer_snapshot_api import OfferSnapshotApi
 from deweloperuch_mcp.api.adapters.offers_api import OffersApi
 from deweloperuch_mcp.api.http.transport import HttpClient
 from deweloperuch_mcp.errors import (
@@ -34,10 +34,9 @@ def test_every_adapter_requests_a_documented_read_channel(
         lambda: LocationsApi(http).city_search("krak", 8),
         lambda: LocationsApi(http).location_search("mokot", 6),
         lambda: InvestmentsApi(http).visible_investment("smolna"),
-        lambda: InvestmentsApi(http).investment_sale_events(33),
         lambda: OffersApi(http).sale_events(2377),
         lambda: offers_list(http, "warszawa", [("page", 2)]),
-        lambda: CitySalesApi(http).city_sales("krakow"),
+        lambda: OfferSnapshotApi(http).offer_snapshot("krakow"),
         lambda: DeveloperProfileApi(http).developer_page("polska", "atal"),
     ]
     service.route(path__startswith="/ceny-ofertowe/").respond(200, content=offers_payload({}))

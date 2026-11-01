@@ -29,16 +29,23 @@ from deweloperuch_mcp.models.errors import (
 )
 
 WHOLE_COUNTRY = "polska"
-"""The slug of the whole country: of the offers list and of the government statistics [P]."""
+"""The slug of the whole country: of a developer's profile and of the government statistics
+[P]; the offers search refuses it (``offer.OfferSearchCriteria``)."""
 
 BROWSABLE_PAGES = 20
-"""[P] pages-rsc.md, "Wspólne reguły list": a page above 20 returns page 20."""
+"""[P 2026-10-31] pages-rsc.md, "Common list rules": ``totalPages`` is capped at 20 (11,672
+offers of Warszawa, 25 or 10 a page). A page above 20 gave page 20 on 1.0 [P]; the search
+never asks for one."""
 
 PAGE_SIZES = (10, 50, 100)
-"""[P] same section: other page sizes (20, 500) silently fall back to 10."""
+"""The page sizes of the offers search: 10 and 100 [P 2026-10-31]; 50 [P] on 1.0 and [W] on
+2.0, not sent to it before (tests/e2e/test_live_mcp.py checks it). Other sizes (20, 500)
+gave the service's default page on 1.0 [P] (T29)."""
 
 DEFAULT_PAGE_SIZE = 10
-"""The service's own page size [P]."""
+"""The offers search's page unless asked otherwise: the 1.0 service's own, kept because ten
+offers fit a model's context. The 2.0 service's own is 25 [P 2026-10-31]; the search
+always sends its page size."""
 
 SLUG_MAX = 200
 QUERY_MIN, QUERY_MAX = 2, 100
@@ -101,7 +108,8 @@ class Slug:
 
 @dataclass(frozen=True)
 class CitySlug(Slug):
-    """The city of an offers search, or ``polska`` for the whole country."""
+    """A city, or ``polska`` for the whole country where an operation takes it (a
+    developer's profile; not the offers search)."""
 
     NAME: ClassVar[ValueName] = ValueName.CITY
 

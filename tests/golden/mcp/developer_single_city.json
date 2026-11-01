@@ -1,0 +1,65 @@
+{
+  "calls": [
+    {
+      "tool": "get_developer",
+      "arguments": {
+        "developer_slug": "ceres-development",
+        "city": "warszawa"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "developer": {
+          "developer_slug": "ceres-development",
+          "name": "Ceres Development Sp. z o.o."
+        },
+        "developer_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/ceres-development",
+        "city_slug": "warszawa",
+        "summary": {
+          "active_offers": 110,
+          "cities": 1,
+          "avg_price": 662273.0,
+          "avg_area_m2": 50.96,
+          "avg_price_per_m2": 12996.0
+        },
+        "investments_total": 1,
+        "investments_returned": 1,
+        "investments_omitted": 0,
+        "truncated": false,
+        "hint": "Serwis nie podał listy miast dewelopera: cities to tylko miasta inwestycji w city (wszystkie: city=polska).",
+        "investments": [
+          {
+            "investment_slug": "osiedle-sprawna-warszawa",
+            "name": "Osiedle Sprawna",
+            "city": "Warszawa",
+            "city_slug": "warszawa",
+            "status": "active",
+            "active_offers": 110,
+            "total_offers": 114,
+            "avg_price": 662272.73,
+            "avg_area_m2": 50.96,
+            "avg_price_per_m2": 12996.0,
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/ceres-development/osiedle-sprawna-warszawa"
+          }
+        ],
+        "cities": [
+          {
+            "city": "Warszawa",
+            "city_slug": "warszawa",
+            "investments": 1,
+            "active_offers": 110,
+            "avg_price_per_m2": 12996.0
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/ceres-development?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

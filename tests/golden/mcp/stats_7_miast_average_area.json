@@ -1,0 +1,71 @@
+{
+  "calls": [
+    {
+      "tool": "get_government_statistics",
+      "arguments": {
+        "location": "7-miast",
+        "dataset": "average_area"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "location_slug": "7-miast",
+        "location_name": "Top 7 miast Polski",
+        "dataset": "average_area",
+        "title": "Średnia powierzchnia użytkowa mieszkania lub domu oddanego przez deweloperów",
+        "source": "GUS",
+        "frequency": "year",
+        "total": 22,
+        "returned": 12,
+        "truncated": true,
+        "available_from": "2005",
+        "hint": "Pokazano ostatnie 12 z 22 okresów (dane od 2005); starsze pokaże większe periods (najwyżej 120).",
+        "note": "Ostatni rok (2026) bywa niepełny: GUS dopisuje go kwartałami, więc porównuj go ostrożnie z pełnymi latami.",
+        "stats_url": "https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe#gus-srednia-powierzchnia",
+        "periods": [
+          "2015",
+          "2016",
+          "2017",
+          "2018",
+          "2019",
+          "2020",
+          "2021",
+          "2022",
+          "2023",
+          "2024",
+          "2025",
+          "2026"
+        ],
+        "series": [
+          {
+            "series_id": "average_area",
+            "label": "Średnia powierzchnia",
+            "unit": "m²",
+            "values": [
+              56,
+              55.2,
+              56.3,
+              55.1,
+              54.9,
+              55.4,
+              57.2,
+              56,
+              56.2,
+              56.3,
+              56.6,
+              56.8
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

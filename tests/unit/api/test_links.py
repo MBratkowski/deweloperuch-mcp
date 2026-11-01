@@ -6,6 +6,7 @@ import pytest
 
 from deweloperuch_mcp import identity
 from deweloperuch_mcp.allowlist import match_dump, match_page
+from deweloperuch_mcp.api.adapters.transaction_statistics_api import TransactionStatisticsApi
 from deweloperuch_mcp.api.http.transport import HttpClient
 from deweloperuch_mcp.api.links import ServicePageLinks
 from deweloperuch_mcp.models.building import BuildingRef
@@ -90,17 +91,30 @@ def test_the_list_link_keeps_the_parameters_in_order() -> None:
     assert match_page(path_of(url).split("?")[0]) == "/ceny-ofertowe/{city}/mieszkania"
 
 
-def test_the_list_link_encodes_the_query_as_the_client_does() -> None:
-    """The client's query builder (``HttpClient.target``): a space is %20, not +."""
-    url = offers_list(city="warszawa", district="Mokotów Górny") or ""
+def test_the_list_link_of_a_district_is_its_own_list() -> None:
+    """[P 2026-10-31] pages-rsc.md: the district's list, at the district's slug (made from its
+    name, [W]), with the query of the search as on the city's list."""
+    url = offers_list(city="warszawa", district="Praga-Południe", price_dropped=True) or ""
 
-    query: list[tuple[str, str | int]] = [("filterDistrict", "Mokotów Górny"), ("perPage", 10)]
-    assert url == BASE + HttpClient.target("/ceny-ofertowe/warszawa/mieszkania", query)
-    assert "?filterDistrict=Mokot%C3%B3w%20G%C3%B3rny&perPage=10" in url
+    query: list[tuple[str, str | int]] = [("filterPriceChange", "decrease"), ("perPage", 10)]
+    assert url == BASE + HttpClient.target(
+        "/ceny-ofertowe/warszawa/praga-poludnie/mieszkania", query
+    )
+    assert match_page(path_of(url).split("?")[0]) == "/ceny-ofertowe/{city}/{district}/mieszkania"
 
 
-def test_the_list_link_of_the_whole_country() -> None:
-    assert offers_list(city="polska") == (BASE + "/ceny-ofertowe/polska/mieszkania?perPage=10")
+def test_no_list_link_for_a_district_without_a_slug() -> None:
+    """No address is guessed (D12): a name without a Latin letter or digit has no list."""
+    assert offers_list(city="warszawa", district="Ωμέγα") is None
+
+
+def test_the_list_link_of_the_first_page_has_no_page_parameter() -> None:
+    """[P 2026-10-29] the service redirects ``page=1`` to the address without it: the link
+    is that address, as the request is (``OffersQuery``)."""
+    list_of_krakow = BASE + "/ceny-ofertowe/krakow/mieszkania"
+
+    assert offers_list(city="krakow", page=1) == list_of_krakow + "?perPage=10"
+    assert offers_list(city="krakow", page=2) == list_of_krakow + "?page=2&perPage=10"
 
 
 def test_the_samples_were_captured_at_these_routes() -> None:
@@ -113,11 +127,15 @@ def test_the_samples_were_captured_at_these_routes() -> None:
 
 
 def test_government_stats_url_points_to_a_section() -> None:
+    """[P 2026-10-29] the old route answers 308 to ``/statystyki/{location}/dane-rzadowe``,
+    a [P 2026-10-31] page (docs/discovery/pages-rsc.md); the section is an id of that
+    page's ``govSections``."""
     url = ServicePageLinks._government_stats_url("polska", "gus-srednia-powierzchnia")
 
     assert url == BASE + "/statystyki/polska/dane-rzadowe#gus-srednia-powierzchnia"
     page, fragment = path_of(url).split("#")
     assert match_page(page) == "/statystyki/{location}/dane-rzadowe"
+    assert match_dump(page) is None
     assert fragment == "gus-srednia-powierzchnia"
 
 
@@ -189,20 +207,13 @@ def test_addresses_have_no_rsc_token_nor_api_paths() -> None:
         ServicePageLinks._investment_url("warszawa", "atal", "nowy-targowek-vi"),
         ServicePageLinks().developer_in("warszawa", "atal"),
         offers_list(city="warszawa", page=2, per_page=50),
+        offers_list(city="warszawa", district="Mokotów", page=2),
     ]
 
     for url in urls:
         assert url is not None
         assert "_rsc" not in url and "/api/" not in url
         assert url.startswith(BASE + "/ceny-ofertowe/")
-
-
-def test_the_whole_country_is_its_own_page() -> None:
-    criteria = SearchOffersRequest.parse(city="polska", page=3, per_page=50).criteria
-
-    assert ServicePageLinks().offers_list(criteria) == (
-        BASE + "/ceny-ofertowe/polska/mieszkania?page=3&perPage=50"
-    )
 
 
 def test_the_link_of_the_cities_ranking_is_its_page() -> None:
@@ -218,17 +229,25 @@ def test_the_link_of_the_cities_ranking_is_its_page() -> None:
 def test_the_link_is_the_public_page_of_the_city() -> None:
     url = ServicePageLinks().transaction_statistics(TransactionCity("bielsko-biala"))
 
-    assert url == BASE + "/statystyki/ceny-transakcyjne/mieszkania/bielsko-biala"
+    assert url == BASE + "/statystyki/bielsko-biala/transakcje"
 
 
-def test_the_linked_page_is_a_p_route_the_client_never_requests() -> None:
-    """Linking is not fetching: the page is the sample's [P] route and stays a D5 dump."""
-    path = request_target("page.stats_transactions")
-    url = ServicePageLinks._transaction_stats_url("warszawa")
+def test_the_link_is_the_page_the_monthly_series_is_read_from() -> None:
+    assert ServicePageLinks().transaction_statistics(TransactionCity("karpacz")) == (
+        BASE + TransactionStatisticsApi.stats_path("karpacz")
+    )
 
-    assert url == BASE + path
-    assert match_page(path) == "/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}"
-    assert match_dump(path) is not None
+
+def test_the_linked_page_is_the_2_0_route_and_no_dump() -> None:
+    """[P 2026-10-30] docs/discovery/pages-rsc.md: the transaction statistics of a city moved
+    to ``/statystyki/{location}/transakcje`` (the old ``/mapa`` route answers 308 there); the
+    page has no ``rawTransactions``, so it is no dump (the dump is an API path now)."""
+    path = path_of(ServicePageLinks._transaction_stats_url("warszawa") or "")
+
+    assert path == "/statystyki/warszawa/transakcje"
+    assert match_page(path) == "/statystyki/{location}/transakcje"
+    assert match_dump(path) is None
+    assert match_dump(request_target("page.stats_transactions")) is not None  # the old page
 
 
 @pytest.mark.parametrize("slug", [None, "", " ", ".", ".."])

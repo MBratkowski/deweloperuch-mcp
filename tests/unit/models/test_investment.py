@@ -21,13 +21,24 @@ def test_a_limit_says_what_was_omitted(limit: int | None, returned: int, omitted
 
 
 def test_histories_are_attached_to_the_offers_kept() -> None:
-    events = {206087: (PriceEvent(date=dt.date(2026, 10, 3), kind="offer", price=1679796.0),)}
+    first_price = PriceEvent(date=dt.date(2026, 10, 3), kind="offer", price=1679796.0)
+    events = {206087: (first_price,), 2377: (), 2386: (first_price,)}
 
     listing = smolna().listing(OffersLimit(2)).with_price_events(events)
 
     first, second = listing.offers
-    assert first.history.events == events[206087]
-    assert second.history.events == ()  # no entry: no events, not "unknown"
+    assert first.history.events == (first_price,)
+    assert second.history.events == ()  # an empty entry: an offer without events
+
+
+def test_events_that_miss_an_offer_kept_are_refused() -> None:
+    """Events without an entry for an offer kept describe other offers (e.g. a later answer
+    of the service): no offer gets an empty history it may not have."""
+    events = {206087: (PriceEvent(date=dt.date(2026, 10, 3), kind="offer", price=1679796.0),)}
+
+    with pytest.raises(ValueError, match="^brak historii ofert 2377, 2386$"):
+        smolna().listing().with_price_events(events)
+    assert smolna().listing(OffersLimit(1)).with_price_events(events).offers[0].history.events
 
 
 def test_averages_are_those_of_the_active_offers() -> None:

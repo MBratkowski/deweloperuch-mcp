@@ -1,0 +1,17 @@
+{
+  "_request": "GET /statystyki/warszawa/transakcje (RSC)",
+  "_prop": "latestSummary",
+  "_captured": "2026-10-31",
+  "value": {
+    "month": "2026-04",
+    "transaction_count": 986,
+    "secondary_count": 986,
+    "unknown_count": 0,
+    "med_price_sqm": 16558,
+    "avg_price_sqm": 16989,
+    "med_size": 48.6,
+    "avg_size": 52.4,
+    "med_amount": 772500,
+    "avg_amount": 895299
+  }
+}

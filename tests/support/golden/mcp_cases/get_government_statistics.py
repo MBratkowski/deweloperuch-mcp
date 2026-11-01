@@ -3,21 +3,23 @@
 from deweloperuch_mcp.models.government_statistics import Dataset
 from support.golden.mcp import INJECTED, STATS, Case, case
 from support.golden.routes import stats_answer
+from support.providers.error_answers import unknown_location_page
 from support.providers.routes.government_statistics import (
+    STATS_PAGES,
     UNKNOWN_LOCATION,
     stats_routes,
     unknown_location_route,
 )
-from support.providers.rsc import STATS_POLSKA, raw
+from support.providers.rsc import raw
 from support.providers.samples import rsc_payload
 
 CASES: dict[str, Case] = {
-    # get_government_statistics: the real pages
+    # get_government_statistics: the real 2.0 pages
     **{
-        f"stats_{location}_{dataset.value}": case(
+        f"stats_{location.replace('-', '_')}_{dataset.value}": case(
             STATS, stats_routes, location=location, dataset=dataset.value
         )
-        for location in ("polska", "warszawa")
+        for location in ("polska", "warszawa", "7-miast")
         for dataset in Dataset
     },
     **{
@@ -27,13 +29,6 @@ CASES: dict[str, Case] = {
         for location in ("polska", "warszawa")
         for dataset in Dataset
         if (location, dataset) != ("polska", Dataset.NBP_PRICES)
-    },
-    # the 2.0 build: the page of a city with `data` rows and chart specs
-    **{
-        f"stats_wroclaw_2_0_{dataset.value}": case(
-            STATS, stats_routes, location="wroclaw", dataset=dataset.value, periods=3
-        )
-        for dataset in Dataset
     },
     "stats_warszawa_nbp_prices_2": case(
         STATS, stats_routes, location="warszawa", dataset="nbp_prices", periods=2
@@ -64,8 +59,14 @@ CASES: dict[str, Case] = {
     ),
     "stats_page_of_another_location": case(
         STATS,
-        stats_answer("krakow", 200, content=raw(STATS_POLSKA)),
+        stats_answer("krakow", 200, content=raw(STATS_PAGES["polska"])),
         location="krakow",
+        dataset="wages",
+    ),
+    "stats_polska_404": case(
+        STATS,
+        stats_answer("polska", 404, **unknown_location_page()),
+        location="polska",
         dataset="wages",
     ),
     "stats_page_without_data": case(

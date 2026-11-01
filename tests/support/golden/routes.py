@@ -9,14 +9,11 @@ import respx
 
 from support.builders.developer_search import developers_found
 from support.builders.investment_search import city_with_investments
-from support.builders.offers import offers_page
 from support.builders.rankings import ranking_with_places
 from support.providers.routes.buildings import BUILDING, building_routes
 from support.providers.routes.buildings import TREND as BUILDING_TREND
 from support.providers.routes.developer_search import developer_search_route
-from support.providers.routes.government_statistics import (
-    stats_path,
-)
+from support.providers.routes.government_statistics import stats_path
 from support.providers.routes.investment_search import CITY_INVESTMENTS, investment_search_routes
 from support.providers.routes.investments import (
     INVESTMENT,
@@ -47,15 +44,9 @@ FULL_SUGGESTIONS = {"suggestions": [body("api.location_search")["suggestions"][1
 
 
 def offers_with(page: Any) -> Router:
+    """The offers lists answer with ``page`` (``builders.offers.offers_page``) in the real
+    2.0 frame."""
     return lambda router: offers_route(router, page)
-
-
-def offers_page_with(total: int, page: int = 1, per_page: int = 10, empty: bool = False) -> Any:
-    data = offers_page()
-    if empty:
-        data["data"] = []
-    data["pagination"] = {"page": page, "perPage": per_page, "total": total, "totalPages": 1}
-    return data
 
 
 def offers_answer(status: int, **kw: Any) -> Router:

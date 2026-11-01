@@ -1,0 +1,39 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "7-miast",
+    "population"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Ludność według płci (stan na 31 grudnia) · Top 7 miast Polski [7-miast]",
+    "Źródło: GUS · rocznie · okresy: pokazano 12 z 21 (dane od 2005).",
+    "Wskazówka: Pokazano ostatnie 12 z 21 okresów (dane od 2005); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe#gus-wiek",
+    "Kolumny:",
+    "  [1] Razem (osoby)",
+    "  [2] Kobiety (osoby)",
+    "  [3] Mężczyźni (osoby)",
+    "Okres        [1]        [2]        [3]",
+    "2014   5 092 795  2 733 793  2 359 002",
+    "2015   5 094 236  2 733 954  2 360 282",
+    "2016   5 104 600  2 739 039  2 365 561",
+    "2017   5 110 164  2 740 897  2 369 267",
+    "2018   5 124 352  2 747 548  2 376 804",
+    "2019   5 144 651  2 757 611  2 387 040",
+    "2020   5 288 958  2 831 305  2 457 653",
+    "2021   5 280 831  2 826 693  2 454 138",
+    "2022   5 268 315  2 819 882  2 448 433",
+    "2023   5 260 557  2 815 053  2 445 504",
+    "2024   5 256 474  2 811 626  2 444 848",
+    "2025   5 258 113  2 810 551  2 447 562",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

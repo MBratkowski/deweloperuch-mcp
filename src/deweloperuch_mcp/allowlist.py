@@ -36,6 +36,7 @@ API_PATHS = (
     "/api/developers",
     "/api/investments",
     "/api/offers/city-sales/{citySlug}",
+    "/api/map/offer-snapshot/{citySlug}",
     "/api/map/investments",
     "/api/map/investments/visible/{investmentSlug}",
     "/api/investments/{investId}/sale-events",
@@ -50,6 +51,7 @@ API_PATHS = (
     "/api/map/powiat-stats",
     "/api/map/powiat-investments/{powiatId}",
     "/api/map/powiat-sales/{powiatId}",
+    "/api/statystyki/raw-transactions",
     "/api/map/transactions/visible/{investRcnSlug}",
     "/api/sale-events-rcn/batch",
     # 4. Statystyki
@@ -74,6 +76,8 @@ DUMP_PATHS = (
     # D5: prop rawTransactions, every transaction of the city (Warszawa: HTML 12.9 MB).
     # Not the `/mapa` variant: it carries only powiat aggregates.
     "/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}",
+    # D5: its 2.0 successor, every transaction of a city or powiat (never requested).
+    "/api/statystyki/raw-transactions",
 )
 
 PAGE_ROUTES = (
@@ -86,6 +90,7 @@ PAGE_ROUTES = (
     "/ceny-ofertowe/{city}/deweloperzy/{developerSlug}/{investmentSlug}/raport-mieszkania-{slug}",
     "/ceny-ofertowe/{city}/deweloperzy/{developerSlug}/{investmentSlug}/raport-inwestycji",
     "/ceny-ofertowe/{city}/mapa",
+    "/ceny-ofertowe/{city}/{district}/mieszkania",
     # Ceny transakcyjne (RCN)
     "/ceny-transakcyjne/{city}/{mieszkania|domy|adresy}",
     "/ceny-transakcyjne/{city}/{adresy|domy}/{investRcnSlug}",
@@ -93,11 +98,10 @@ PAGE_ROUTES = (
     # Statystyki
     "/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}",
     "/statystyki/ceny-transakcyjne/{type}/{city}/mapa",
-    # Since 2.0 (2026-10-29) a 308 to /statystyki/{location}/dane-rzadowe; kept so the
-    # redirect can still be checked, the package reads the new route.
     "/statystyki/statystyki-rzadowe/{location}",
-    "/statystyki/{location}/dane-rzadowe",
     "/statystyki/portale-ogloszeniowe/{type}/{region}",
+    "/statystyki/{location}/transakcje",
+    "/statystyki/{location}/dane-rzadowe",
     # Inne
     "/zglos-dewelopera/mapa-zgloszen",
 )

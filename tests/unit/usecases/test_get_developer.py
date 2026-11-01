@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from deweloperuch_mcp.models.developer_profile import DeveloperInvestment
+from deweloperuch_mcp.models.developer_profile import DeveloperInvestment, DeveloperProfile
 from deweloperuch_mcp.models.errors import InvalidInputError, NotFoundError
 from deweloperuch_mcp.models.values import (
     AreaM2,
@@ -13,7 +13,11 @@ from deweloperuch_mcp.models.values import (
     DeveloperSlug,
     InvestmentsLimit,
 )
-from deweloperuch_mcp.usecases.get_developer import GetDeveloper, GetDeveloperRequest
+from deweloperuch_mcp.usecases.get_developer import (
+    GetDeveloper,
+    GetDeveloperRequest,
+    GetDeveloperResult,
+)
 from deweloperuch_mcp.usecases.get_government_statistics import GetGovernmentStatisticsRequest
 from deweloperuch_mcp.usecases.get_investment import GetInvestmentRequest
 from deweloperuch_mcp.usecases.get_market_statistics import GetMarketStatisticsRequest
@@ -70,6 +74,32 @@ def test_a_developer_without_investments_in_a_city_points_to_the_whole_country()
     )
 
 
+def result_of(city: str, *, cities_from_investments: bool) -> GetDeveloperResult:
+    """The result of a profile with one investment in ``city``."""
+    listing = DeveloperProfile(
+        developer=DEVELOPER,
+        city=CitySlug(city),
+        investments=(project("a", 3),),
+        cities=(),
+        cities_from_investments=cities_from_investments,
+    ).listing(InvestmentsLimit(20))
+    return GetDeveloperResult(listing=listing, developer_url=None, investment_urls=(None,))
+
+
+def test_a_city_profile_without_the_services_list_of_cities_says_so() -> None:
+    """Its cities are those of its investments in that city: the developer may build
+    elsewhere too ([W] a page without the list is a developer in one city)."""
+    assert result_of("warszawa", cities_from_investments=True).hint == (
+        "Serwis nie podał listy miast dewelopera: cities to tylko miasta inwestycji w city "
+        "(wszystkie: city=polska)."
+    )
+
+
+def test_the_cities_of_the_whole_countrys_investments_are_complete_so_no_hint() -> None:
+    assert result_of("polska", cities_from_investments=True).hint is None
+    assert result_of("warszawa", cities_from_investments=False).hint is None
+
+
 @pytest.mark.parametrize(
     ("city", "message"),
     [
@@ -84,11 +114,13 @@ def test_a_developer_without_investments_in_a_city_points_to_the_whole_country()
             "Nie znaleziono dewelopera 'nikt' w 'krakow'. Slug dewelopera podaje "
             "search_developers (po nazwie) albo pole developer_slug w search_offers, "
             "get_investment i get_offer; city to city_slug z search_locations albo polska (cała "
-            "Polska).",
+            "Polska). Albo deweloper nie ma w tym mieście aktywnych ofert: spróbuj city=polska.",
         ),
     ],
 )
 def test_an_unknown_developer_says_where_slugs_come_from(city: str, message: str) -> None:
+    """In a city the service may answer so for a known developer without offers there
+    (T39, [H]): the message does not send the model only to check the slug."""
     fake = FakeCatalogs(errors={f"developer nikt {city}": NotFoundError("brak")})
 
     with pytest.raises(NotFoundError) as caught:
@@ -103,7 +135,7 @@ def test_an_unknown_developer_says_where_slugs_come_from(city: str, message: str
 
 def test_the_market_and_developer_arguments_with_their_defaults() -> None:
     market = GetMarketStatisticsRequest.parse(city=" krakow ", area_max=60).criteria
-    assert (market.city, market.price, market.top) == (CitySlug("krakow"), None, DeveloperCount(10))
+    assert (market.city.value, market.price, market.top) == ("krakow", None, DeveloperCount(10))
     assert market.area is not None and market.area.high == AreaM2(60)
     assert GetDeveloperRequest.parse(developer_slug=" atal ") == GetDeveloperRequest(
         developer=DeveloperSlug("atal"),

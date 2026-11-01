@@ -32,7 +32,7 @@ pytestmark = pytest.mark.usefixtures("unix_sockets_for_the_event_loop")
         ({"sort": ""}, {}),
         ({"sort": None}, {}),
         ({"sort": " price_asc "}, {"sortBy": "amount", "sortOrder": "asc"}),
-        # null for an argument with a default is the default
+        # null for an argument with a default is the default (page 1 goes without `page`)
         ({"page": None, "per_page": None}, {"perPage": "10"}),
     ],
 )

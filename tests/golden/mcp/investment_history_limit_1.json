@@ -29,43 +29,42 @@
           "name": "Invest Komfort Spółka Akcyjna Sp.K."
         },
         "developer_url": "https://deweloperuch.pl/ceny-ofertowe/sopot/deweloperzy/invest-komfort-spolka-akcyjna",
-        "avg_price": 1566392.0,
-        "avg_area_m2": 63.97,
-        "avg_price_per_m2": 24487.63,
-        "offers_active": 3,
-        "offers_total": 16,
+        "avg_price": 2108801.25,
+        "avg_area_m2": 70.31,
+        "avg_price_per_m2": 29992.91,
+        "offers_active": 4,
+        "offers_total": 17,
         "offers": [
           {
-            "offer_id": 206087,
-            "name": "C234",
+            "offer_id": 206523,
+            "name": "C121",
             "status": "active",
-            "price": 1679796.0,
+            "price": 3735107.0,
             "currency": "PLN",
-            "area_m2": 65.9,
-            "price_per_m2": 25490.08,
+            "area_m2": 95.49,
+            "price_per_m2": 39115.16,
             "price_change_since_start": 0.0,
             "price_change_since_start_pct": 0.0,
-            "creation_date": "2026-10-03",
-            "last_event_date": "2026-10-03",
-            "last_change_date": "2026-10-03",
+            "creation_date": "2026-10-24",
+            "last_event_date": "2026-10-30",
+            "last_change_date": "2026-10-24",
             "price_history": [
               {
-                "date": "2026-10-03",
+                "date": "2026-10-24",
                 "kind": "offer",
-                "price": 1679796.0
+                "price": 3735107.0
               }
             ]
           }
         ],
         "offers_returned": 1,
-        "offers_omitted": 2,
+        "offers_omitted": 16,
         "truncated": true
       }
     }
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]",
-    "GET https://deweloperuch.pl/api/investments/33/sale-events [accept: application/json]"
+    "GET https://deweloperuch.pl/api/map/investments/visible/smolna [accept: application/json]"
   ]
 }

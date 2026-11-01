@@ -1,0 +1,25 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "warszawa",
+        "district": "Ωμέγα"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Serwis nie zna dzielnicy 'Ωμέγα' w mieście 'warszawa'. Podaj nazwę dzielnicy tak, jak zwraca ją search_locations (kind=district, pole name), razem z city_slug jej miasta.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Serwis nie zna dzielnicy 'Ωμέγα' w mieście 'warszawa'. Podaj nazwę dzielnicy tak, jak zwraca ją search_locations (kind=district, pole name), razem z city_slug jej miasta. Szczegóły: nazwa dzielnicy bez liter i cyfr, z których serwis tworzy adres listy"
+    ]
+  ],
+  "requests": []
+}

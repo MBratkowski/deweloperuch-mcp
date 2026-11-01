@@ -12,8 +12,9 @@ where they came from::
     ├── ServiceBlockedError      STOP: 401, 403, Cloudflare challenge, or a STOP that
     │   │                        any process recorded earlier; end the series
     │   └── RateLimitedError     STOP: 429; ``pause_seconds`` recorded in the limiter
-    ├── ServiceError             5xx, network, redirect, other 4xx, body too big or too slow
-    │   └── UnexpectedResponseError   a 2xx whose data does not match the contract
+    ├── ServiceError             5xx, network, other 4xx, body too big or too slow
+    │   └── UnexpectedResponseError   the service changed: a 2xx whose data does not
+    │                                 match the contract, a redirect, a removed route, 410
     ├── LimiterWaitError         the shared limiter asks for a longer pause than allowed;
     │                            nothing was sent
     └── SessionClosedError       the session was closed; nothing was sent
@@ -40,9 +41,10 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 SERVICE_CHANGED = (
-    "Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi."
+    "Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi."
 )
-"""What to do about data that does not match the contract (``UnexpectedResponseError``)."""
+"""What to do about an answer that does not match the contract (``UnexpectedResponseError``):
+the call, not the session, ends (the MCP server's instructions say so in the same words)."""
 
 
 class DeweloperuchError(Exception):
@@ -67,6 +69,7 @@ class ValueName(StrEnum):
 
     QUERY = "szukany tekst"
     CITY = "miasto"
+    OFFERS_CITY = "miasto ofert"
     INVESTMENT = "inwestycja"
     DEVELOPER = "deweloper"
     STATISTICS_LOCATION = "lokalizacja statystyk"
@@ -98,6 +101,7 @@ class ValueName(StrEnum):
     DEVELOPER_NAME = "nazwa dewelopera"
     DEVELOPER_MATCHES = "liczba znalezionych deweloperów"
     INVESTMENTS_CITY = "miasto inwestycji"
+    MARKET_CITY = "miasto statystyk rynku"
     INVESTMENT_NAME = "nazwa inwestycji"
     INVESTMENT_SORT = "kolejność inwestycji"
     TRANSACTIONS_CITY = "miasto statystyk transakcji"
@@ -246,7 +250,8 @@ class InvalidValueError(InvalidInputError):
 
 
 class NotFoundError(DeweloperuchError):
-    """The service does not know the requested object (HTTP 404 or missing in the data)."""
+    """The service does not know the requested object (its "unknown" answer, e.g. a JSON
+    404, or missing in the data)."""
 
 
 class ServiceBlockedError(DeweloperuchError):
@@ -282,7 +287,9 @@ class ServiceError(DeweloperuchError):
 
 
 class UnexpectedResponseError(ServiceError):
-    """A 2xx whose data does not match the contract (not JSON, missing prop, other shape).
+    """An answer that does not match the contract: a 2xx with other data (not JSON, a
+    missing prop, another shape), a redirect, a 410, or a 404 that is not the service's
+    "unknown" answer (a removed route). Never an unknown entity (D21).
 
     Usually the service changed after a deploy: run the drift check (flow C).
     """

@@ -10,6 +10,7 @@
     "Średnia powierzchnia użytkowa mieszkania lub domu oddanego przez deweloperów · Polska [polska]",
     "Źródło: GUS · rocznie · okresy: pokazano 12 z 22 (dane od 2005).",
     "Wskazówka: Pokazano ostatnie 12 z 22 okresów (dane od 2005); starsze pokaże większa wartość periods.",
+    "Uwaga: Ostatni rok (2026) bywa niepełny: GUS dopisuje go kwartałami, więc porównuj go ostrożnie z pełnymi latami.",
     "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/polska/dane-rzadowe#gus-srednia-powierzchnia",
     "Kolumny:",
     "  [1] Średnia powierzchnia (m²)",
@@ -32,6 +33,6 @@
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/polska/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

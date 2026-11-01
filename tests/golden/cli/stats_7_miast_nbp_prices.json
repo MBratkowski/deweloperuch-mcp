@@ -1,0 +1,40 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "7-miast",
+    "nbp_prices"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Średnie ceny mieszkań za m² według NBP · Top 7 miast Polski [7-miast]",
+    "Źródło: NBP · kwartalnie · okresy: pokazano 12 z 80 (dane od 2006-Q3).",
+    "Wskazówka: Pokazano ostatnie 12 z 80 okresów (dane od 2006-Q3); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe#nbp",
+    "Kolumny:",
+    "  [1] Rynek pierwotny: cena ofertowa (PLN/m²)",
+    "  [2] Rynek pierwotny: cena transakcyjna (PLN/m²)",
+    "  [3] Rynek wtórny: cena ofertowa (PLN/m²)",
+    "  [4] Rynek wtórny: cena transakcyjna (PLN/m²)",
+    "Okres       [1]     [2]     [3]     [4]",
+    "2023-Q3  13 200  12 110  12 623  11 318",
+    "2023-Q4  13 772  12 879  13 645  11 688",
+    "2024-Q1  14 403  13 674  14 133  12 470",
+    "2024-Q2  14 796  14 061  14 683  13 245",
+    "2024-Q3  15 060  14 251  14 625  13 639",
+    "2024-Q4  14 989  14 380  14 487  13 732",
+    "2025-Q1  15 245  14 306  14 918  13 605",
+    "2025-Q2  15 414  14 358  14 907  13 557",
+    "2025-Q3  15 294  14 284  15 116  13 537",
+    "2025-Q4  15 442  14 293  14 996  13 651",
+    "2026-Q1  15 637  14 241  15 138  13 636",
+    "2026-Q2  15 889  14 444  15 263  13 657",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

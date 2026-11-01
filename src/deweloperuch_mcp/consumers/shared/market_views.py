@@ -1,9 +1,10 @@
-"""The views of the offer market of a city (D15): what ``get_market_statistics`` shows, for
-the CLI (``--json``) and the MCP presenter. Each builds itself from the use case's result
-(``from_result``) or a model (``from_model``); prices are whole PLN and areas to 0.01 m²
-(the models keep them exact)."""
+"""The views of the offer market of a city (D15, D20): what ``get_market_statistics``
+shows, for the CLI (``--json``) and the MCP presenter. Each builds itself from the use
+case's result (``from_result``) or a model (``from_model``); prices are whole PLN and
+areas to 0.01 m² (the models keep them exact)."""
 
 import dataclasses
+import datetime as dt
 from typing import Self
 
 from deweloperuch_mcp.consumers.shared.view import View
@@ -32,6 +33,7 @@ class SpreadView(View):
 
 class DeveloperShareView(View):
     developer_slug: str
+    developer_name: str | None = None
     offers: int
     investments: int
     median_price_per_m2: int | None = None
@@ -43,6 +45,7 @@ class DeveloperShareView(View):
         median = share.median_price_per_m2
         return cls(
             developer_slug=share.developer_slug,
+            developer_name=share.developer_name,
             offers=share.offers,
             investments=share.investments,
             median_price_per_m2=None if median is None else round(median),
@@ -54,6 +57,8 @@ class MarketStatisticsView(View):
     """Active offers of a city that match the filters, summed up (``get_market_statistics``)."""
 
     city_slug: str
+    as_of: dt.date | None = None
+    """The day of the offers summed up, as the service gives it."""
     offers: int
     investments: int
     developers: int
@@ -75,6 +80,7 @@ class MarketStatisticsView(View):
         result = found.statistics
         return cls(
             city_slug=result.criteria.city.value,
+            as_of=result.as_of,
             offers=result.offers,
             investments=result.investments,
             developers=result.developers,

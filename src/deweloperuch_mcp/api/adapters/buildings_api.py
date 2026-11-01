@@ -47,10 +47,12 @@ class BuildingsApi:
     @staticmethod
     def _building(target: str, reply: Reply) -> BuildingDto:
         data = JsonEndpoint.body(reply, target)
-        # [H] docs/discovery/endpoints.md says nothing of an unknown slug. A 404 is the
-        # transport's NotFoundError, as for an unknown investment [P]; a 200 with null, or
-        # with an error object and no building, is taken the same way instead of as a
-        # changed service (the live suite, tests/e2e, finds out which one it is).
+        # [P 2026-10-30] docs/discovery/endpoints.md section 9: the service answers an
+        # unknown slug with a JSON 404, {"error":"Investment not found"}, which the transport
+        # turns into NotFoundError before this decoder runs. [W] a defence kept from before
+        # that answer was known: a 200 with null, or with an error object and no building,
+        # was never seen; it still reads as an unknown building, not as a changed service
+        # (tests/unit/api/adapters/test_buildings_api.py).
         if data is None or (isinstance(data, dict) and "error" in data and "slug" not in data):
             raise NotFoundError(
                 "Serwis nie zna takiego budynku.", detail=f"{target}: 200 bez budynku"

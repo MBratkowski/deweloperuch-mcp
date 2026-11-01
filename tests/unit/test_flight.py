@@ -17,11 +17,15 @@ import pytest
 
 import flight as recon_flight
 from deweloperuch_mcp import flight as package_flight
-from deweloperuch_mcp.api.dto.offers_page_dto import OffersPageDto
 from deweloperuch_mcp.flight import Row, error_digests, rows
 from flight import component_props, find_json_after, flight, flight_from_html
 from support.paths import REPO
-from support.providers.rsc import OFFERS_UNKNOWN_CITY, OFFERS_WARSZAWA, raw
+from support.providers.rsc import (
+    DEVELOPER_WARSZAWA_20261031,
+    OFFERS_UNKNOWN_CITY,
+    OFFERS_WARSZAWA,
+    raw,
+)
 
 FLIGHT = REPO / "recon" / "flight.py"
 
@@ -189,17 +193,51 @@ def test_recon_flight_defines_no_decoder_of_its_own() -> None:
 @pytest.mark.parametrize(
     ("target", "expected"),
     [
-        ("/ceny-ofertowe/warszawa/mieszkania", "/ceny-ofertowe/warszawa/mieszkania?_rsc"),
+        ("/ceny-ofertowe/warszawa/mieszkania", "/ceny-ofertowe/warszawa/mieszkania?_rsc="),
         (
-            "/ceny-ofertowe/warszawa/mieszkania?page=2",
-            "/ceny-ofertowe/warszawa/mieszkania?page=2&_rsc",
+            "/ceny-ofertowe/warszawa/mieszkania?page=2&perPage=50",
+            "/ceny-ofertowe/warszawa/mieszkania?page=2&perPage=50&_rsc=",
         ),
     ],
 )
-def test_with_rsc_query_appends_an_empty_rsc_as_the_last_parameter(
+def test_with_rsc_token_appends_an_empty_rsc_as_the_last_parameter(
     target: str, expected: str
 ) -> None:
-    assert package_flight.with_rsc_query(target) == expected
+    """[P z kodu 2026-10-30] the 2.0 client sends an empty ``_rsc`` when it sends none of
+    the router headers; [P 2026-10-29] the server redirects any other value to the empty
+    one, which returns the payload [P 2026-10-31] (T63, resolved)."""
+    assert package_flight.with_rsc_token(target) == expected
+
+
+def test_the_rsc_target_is_never_the_address_of_the_html_page() -> None:
+    """Cloudflare ignores ``Vary: RSC``: the RSC request needs an address of its own, or it
+    gets the cached HTML page (docs/discovery/pages-rsc.md)."""
+    target = "/ceny-ofertowe/warszawa/mieszkania?perPage=10"
+
+    assert package_flight.with_rsc_token(target) != target
+    assert package_flight.with_rsc_token(target).startswith(target + "&")
+
+
+def test_the_rsc_value_no_longer_depends_on_the_target() -> None:
+    """The token of the old service (a hash of the target) is gone; every page gets the
+    same empty value."""
+    first = package_flight.with_rsc_token("/ceny-ofertowe/warszawa/mieszkania")
+    second = package_flight.with_rsc_token("/ceny-ofertowe/krakow/mieszkania?page=2")
+
+    assert first.rsplit("_rsc=", 1)[1] == second.rsplit("_rsc=", 1)[1] == ""
+
+
+def test_the_props_of_a_client_element_inside_another_ones_props_are_yielded() -> None:
+    """[P 2026-10-31] the 2.0 developer page keeps its data in the ``hero`` element, the
+    value of a prop of another client element: its props come too, after that prop."""
+    props = list(component_props(raw(DEVELOPER_WARSZAWA_20261031)))
+    names = [name for name, _ in props]
+
+    hero = next(value for name, value in props if name == "hero")
+    assert hero[0] == "$" and str(hero[1]).startswith("$L")
+    assert {"investments", "developerSlug", "developerName", "developerId"} <= set(hero[3])
+    assert names.index("hero") < names.index("developerName")
+    assert ("developerName", "ATAL S.A.") in props and ("developerId", 43) in props
 
 
 def test_rows_split_ids_tags_and_data() -> None:
@@ -374,12 +412,11 @@ def test_component_props_finds_the_offers_in_the_real_payload() -> None:
     ]
 
     assert len(values) == 1
-    page = OffersPageDto.model_validate(values[0])
-    assert len(page.data) == 10
-    assert page.pagination.perPage == 10
-    assert page.pagination.page == 1
-    assert page.pagination.total > 10
-    assert all(offer.invest.city_slug == "warszawa" for offer in page.data)
+    page = values[0]  # the 1.0 prop, which no adapter reads any more
+    assert len(page["data"]) == 10
+    assert (page["pagination"]["perPage"], page["pagination"]["page"]) == (10, 1)
+    assert page["pagination"]["total"] > 10
+    assert all(offer["invest"]["city_slug"] == "warszawa" for offer in page["data"])
 
 
 def test_component_props_on_the_real_payload_inlined_in_html() -> None:

@@ -10,7 +10,7 @@
   ],
   "stderr": [
     "Błąd: Serwis nie zna miasta 'sopot'. Podaj city_slug z search_locations.",
-    "Szczegóły: /api/map/investments?citySlug=sopot",
+    "Szczegóły: /api/map/investments?citySlug=sopot: HTTP 404, application/json",
     ""
   ],
   "requests": [

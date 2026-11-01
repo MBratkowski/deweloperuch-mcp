@@ -8,16 +8,20 @@ from support.golden.cli import (
     INJECTED_BODY,
     Case,
     case,
-    history_missing,
     investment_changed,
     investment_fail,
     mixed_statuses,
 )
 from support.golden.routes import investment_answer, investment_is
+from support.providers.error_answers import removed_route, unknown_entity
 from support.providers.routes.investments import (
     investment_routes,
+    smolna_with_events,
 )
 from support.providers.samples import body
+
+WITH_EVENTS = investment_is(smolna_with_events())
+"""The 2.0 answer: every offer with its price events (the history of 2.0)."""
 
 CASES: dict[str, Case] = {
     "help_investments_get": case("investments", "get", "--help"),
@@ -27,13 +31,13 @@ CASES: dict[str, Case] = {
         "investments", "get", "smolna", "--json", service=investment_routes
     ),
     "investments_get_history": case(
-        "investments", "get", "smolna", "--history", service=investment_routes
+        "investments", "get", "smolna", "--history", service=WITH_EVENTS
     ),
     "investments_get_history_json": case(
-        "investments", "get", "smolna", "--history", "--json", service=investment_routes
+        "investments", "get", "smolna", "--history", "--json", service=WITH_EVENTS
     ),
     "investments_get_history_limit_1": case(
-        "investments", "get", "smolna", "--history", "--limit", "1", service=investment_routes
+        "investments", "get", "smolna", "--history", "--limit", "1", service=WITH_EVENTS
     ),
     "investments_get_limit_0": case(
         "investments", "get", "smolna", "--limit", "0", service=investment_routes
@@ -73,7 +77,12 @@ CASES: dict[str, Case] = {
         "smolna",
         service=investment_is(investment_changed(currency="", avg_amount="", avg_size=None)),
     ),
-    "investments_get_404": case("investments", "get", "smolna", service=investment_answer(404)),
+    "investments_get_404": case(
+        "investments", "get", "smolna", service=investment_answer(404, **unknown_entity())
+    ),
+    "investments_get_removed_route": case(
+        "investments", "get", "smolna", service=investment_answer(404, **removed_route())
+    ),
     "investments_get_500": case(
         "investments", "get", "smolna", service=investment_answer(500, text=INJECTED_BODY)
     ),
@@ -115,8 +124,9 @@ CASES: dict[str, Case] = {
     "investments_get_network_error": case(
         "investments", "get", "smolna", service=investment_fail(httpx.ConnectError(INJECTED_BODY))
     ),
-    "investments_get_history_404": case(
-        "investments", "get", "smolna", "--history", service=history_missing
+    # The answer before 2.0 (the sample) has no price events: the history alone fails.
+    "investments_get_history_without_events": case(
+        "investments", "get", "smolna", "--history", service=investment_routes
     ),
     "investments_get_slug_capitals": case("investments", "get", "Smolna"),
     "investments_get_slug_path": case("investments", "get", "smolna/../x"),

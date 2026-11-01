@@ -53,10 +53,10 @@ get_government_statistics(location=nazwa miasta małymi literami bez polskich zn
 myślnikami zamiast spacji, np. krakow, bielsko-biala; dataset=wages albo unemployment). \
 Nie wymaga search_locations; dane są tylko dla miast na prawach powiatu.
 
-Wynik: jedna tabela, wiersz na miasto: mediana ceny ofertowej za m², liczba ofert, cena \
-transakcyjna za m² z okresem, którego dotyczy, liczba transakcji (i wynagrodzenie albo \
-bezrobocie, jeśli je pobrano). Pod tabelą krótkie wnioski i linki list_url i stats_url. \
-Gdy dla miasta brak danych, wpisz „brak” zamiast zgadywać.
+Wynik: jedna tabela, wiersz na miasto: mediana ceny ofertowej za m², liczba ofert i dzień, \
+na który serwis je podał (as_of), cena transakcyjna za m² z okresem, którego dotyczy, liczba \
+transakcji (i wynagrodzenie albo bezrobocie, jeśli je pobrano). Pod tabelą krótkie wnioski i \
+linki list_url i stats_url. Gdy dla miasta brak danych, wpisz „brak” zamiast zgadywać.
 
 Pamiętaj:
 - Ceny ofertowe (ile chcą deweloperzy) i transakcyjne (za ile sprzedano) to różne miary: \

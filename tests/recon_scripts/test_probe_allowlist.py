@@ -138,6 +138,10 @@ def test_page_routes_are_all_documented() -> None:
         "/api/valuation-pdf",
         "/api",
         "/ceny-ofertowe/warszawa/mieszkania",
+        # 2.0 paths still in the tables of endpoints.md section 7, not headings
+        "/api/map/offer-snapshot",
+        "/api/statystyki/powiat-map-stats",
+        "/api/map/tx-cities",
     ],
 )
 def test_api_rejects_undocumented_paths(path: str) -> None:
@@ -158,6 +162,11 @@ def test_api_rejects_undocumented_paths(path: str) -> None:
         "/ceny-transakcyjne/krakow/miasta",
         "/statystyki/ceny-transakcyjne/dzialki/warszawa",
         "/api/cities",
+        # 2.0 routes still in the tables of pages-rsc.md, not headings
+        "/statystyki/polska/oferty",
+        "/statystyki/warszawa/bemowo/transakcje",
+        "/statystyki/warszawa/transakcje/extra",
+        "/ceny-ofertowe/warszawa/bemowo/inwestycje",
     ],
 )
 def test_page_rejects_undocumented_routes(path: str) -> None:
@@ -191,6 +200,15 @@ def test_powiat_sales_is_a_documented_read_but_a_dump() -> None:
     assert match_dump("/api/map/powiat-sales/208") == "/api/map/powiat-sales/{powiatId}"
 
 
+def test_raw_transactions_is_a_documented_read_but_a_dump() -> None:
+    """D5: the 2.0 successor of the ``rawTransactions`` prop (endpoints.md section 3);
+    recon may read it (within its body limit), the package's client never does."""
+    path = "/api/statystyki/raw-transactions"
+
+    assert match_api(path) == path
+    assert match_dump(path) == path
+
+
 def test_dumps_are_documented_read_channels() -> None:
     assert set(DUMP_PATHS) <= set(API_PATHS) | set(PAGE_ROUTES)
 
@@ -216,6 +234,12 @@ def test_stats_page_with_raw_transactions_is_a_documented_read_but_a_dump(path: 
         "/api/cities",
         "/statystyki/ceny-transakcyjne/mieszkania/warszawa/mapa",
         "/ceny-transakcyjne/warszawa/mieszkania",
+        # 2.0: D20 reads offer-snapshot inside the process (aggregates only), and the
+        # statistics page has no rawTransactions any more (pages-rsc.md)
+        "/api/map/offer-snapshot/krakow",
+        "/statystyki/warszawa/transakcje",
+        "/statystyki/warszawa/dane-rzadowe",
+        "/ceny-ofertowe/warszawa/bemowo/mieszkania",
     ],
 )
 def test_other_endpoints_are_not_dumps(path: str) -> None:

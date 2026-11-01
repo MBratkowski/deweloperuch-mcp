@@ -14,6 +14,12 @@ Complete response bodies of `GET /api/*` endpoints, byte for byte as the service
 | `avg_trend_building_152198_20261015.json` | `/api/avg-price-trend/building/152198` | 200, `{"data":[],"radiusKm":0}`: no quarters and a radius of 0 for the building of `tx_visible_cisna_20261015.json` | 24 B |
 | `avg_trend_city_warszawa_20261016.json` | `/api/avg-price-trend/city/warszawa` | 200, `scope` `city`, `scopeName` null, 39 quarters 2017-Q1..2026-Q3; the tail: 2025-Q3 3,902, 2025-Q4 3,605, 2026-Q1 3,721, 2026-Q2 1,034, 2026-Q3 37 with `avgPriceSqm` 33,176; each quarter's `count` is about 2% above the sum of its months in `monthly_tx_warszawa_20261015.json` (2026-Q1 3,721 vs 3,643) | 2,133 B |
 | `monthly_tx_karpacz_20261016.json` | `/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=karpacz` | 200, `scope.label` `city`, 60 months 2021-01..2025-12 (no rows after 2025-12), a small town: median 1 transaction a month, 26 months with 0 (every measure 0), at most 7 | 8,824 B |
+| `offer_snapshot_sopot_20261031.json` | `/api/map/offer-snapshot/sopot` | 200, `{citySlug, asOf "2026-10-31", investments ×2, sales ×8}`; each sale a 7-element array `[sale_id, invest_id, 0, amount, price per m², size, start_amount_difference]` (docs/discovery/endpoints.md) | 880 B |
+| `offer_snapshot_warszawa_20261031.json` | `/api/map/offer-snapshot/warszawa` | 200, `asOf` 2026-10-31, 268 investments, 11,672 sales (the `totalCount` of `tests/fixtures/rsc/offers_warszawa_20261031.rsc`), position 2 is 0 in every sale, 2,167 sales with a negative `start_amount_difference` | 532,198 B |
+| `offer_snapshot_wroclaw_20261030.json` | `/api/map/offer-snapshot/wroclaw` | 200, `asOf` 2026-10-30, 110 investments, 5,836 sales, position 2 is 0 in every sale, 1,312 sales with a negative `start_amount_difference`, 12 with a fractional one (one of them negative, -12282.51); captured with the package's `HttpClient` in PR #16 | 261,340 B |
+| `map_inv_visible_smolna_20261031.json` | `/api/map/investments/visible/smolna` | 200, the 2.0 shape: a top-level `description`; `sale` ×17 (4 `active`, 13 `archived`), each with `floor` and `ev`, the price events `[date, amount, type index, source index]` (1 to 5 per offer, 38 in all) | 6,990 B |
+| `city_districts_warszawa_tx_20261031.json` | `/api/city-districts?citySlug=warszawa&variant=transactions` | 200, 18 districts `{name, slug, count}`, sorted by `count` (first: Mokotów, `mokotow`) | 952 B |
+| `city_districts_krakow_tx_20261031.json` | `/api/city-districts?citySlug=krakow&variant=transactions` | 200, 18 districts `{name, slug, count}` (first: Prądnik Biały, `pradnik-bialy`) | 1,118 B |
 
 ## Provenance
 
@@ -25,6 +31,7 @@ Complete response bodies of `GET /api/*` endpoints, byte for byte as the service
 - `*_20261016.json`: captured on 2026-10-16 the same way, two requests in one series, no STOP before or after, after the review of the incomplete-period rule asked for real quarters and a small town. Both `s-maxage=86400`; byte-exact, no personal data.
 - `Cache-Control` of the 2026-10-15 captures: `s-maxage=86400` (city stats, monthly stats, building trend), `s-maxage=3600` (powiat stats, building), `s-maxage=300` (valuation).
 - Personal data: every `additionalInfo` value of `tx_visible_cisna_20261015.json` (14) was replaced with `"[usunięte]"` in the raw text, the rest of the body is byte-exact. The other 2026-10-15 files are byte-exact; they hold RCN unit identifiers (`unitNumber`, as in the samples), no personal data.
+- `*_20261031.json`: captured on 2026-10-31 for the 2.0 repairs of the tools with the package's own client (`HttpClient`, JSON headers), in one sequential series through the shared limiter together with the twelve `*_20261031.rsc` files of `tests/fixtures/rsc/`; no STOP before or after. `Cache-Control`: `s-maxage=3600` (both snapshots, `smolna`), `s-maxage=300` (`city-districts`); the snapshots were Cloudflare HITs (Sopot 1,427 s old, Warszawa 39,097 s), the others MISSes. Byte-exact; no personal data (e-mail addresses, phone numbers and `email`, `phone`, `telefon` and `additionalInfo` values were checked by script).
 
 ## Rules
 
@@ -34,10 +41,16 @@ Complete response bodies of `GET /api/*` endpoints, byte for byte as the service
 
 ## Used by
 
-- `city_sales_*`: `tests/support/providers/rsc.py` (`CITY_SALES`) and `tests/support/providers/routes/city_sales.py` (the `city-sales` routes), and through them the contract, unit, safeguards and characterization tests.
+- `city_sales_*`: no test reads them since D20 retired `city-sales` from the code (2026-10-31); they stay as the record of the route the market statistics used before.
 - `city_tx_stats_20261015.json`, `powiat_stats_20261015.json`: `tests/support/providers/routes/rankings.py` (`CITIES_2026_10_15`, `POWIATS_2026_10_15`, `captured_ranking_routes`).
-- `monthly_tx_warszawa_20261015.json`, `avg_trend_city_warszawa_20261016.json`, `monthly_tx_karpacz_20261016.json`: `tests/support/builders/transactions.py` (`MONTHLY_WARSZAWA`, `QUARTERLY_WARSZAWA`, `MONTHLY_KARPACZ`).
+- `avg_trend_city_warszawa_20261016.json`: `tests/support/builders/transactions.py` (`QUARTERLY_WARSZAWA`). `monthly_tx_warszawa_20261015.json` and `monthly_tx_karpacz_20261016.json` (the monthly JSON series of 1.0, a removed route since 2026-10-29): `tests/contract/api/dto/test_transaction_stats_page_dto.py` compares them with the 2.0 page the monthly series is read from now (`tests/fixtures/rsc/stats_tx_*_20261031.rsc`).
 - `standalone_val_cisna_20261015.json`: `tests/support/providers/routes/valuation.py` (`CISNA`, `cisna()`, `cisna_route`).
 - `tx_visible_cisna_20261015.json`, `avg_trend_building_152198_20261015.json`: `tests/support/providers/routes/buildings.py` (`CISNA_BODY`, `CISNA_TREND_BODY`, `cisna_routes()`).
 
 Through them the contract, unit and characterization tests of the RCN tools read these files.
+
+- `*_20261031.json`: the 2.0 repairs of `get_market_statistics` (the snapshots, D20), the `get_investment` history (`smolna`) and the district of `search_offers` (`city-districts`); each repair lists its users here.
+  - `offer_snapshot_sopot_20261031.json`, `offer_snapshot_warszawa_20261031.json`, `offer_snapshot_wroclaw_20261030.json`: `tests/support/providers/routes/offer_snapshot.py` (`OFFER_SNAPSHOT`, `snapshot`, `offer_snapshot_routes`, `changed_snapshot_route`), and through it the contract, unit, safeguards and characterization tests of `get_market_statistics` and `stats market`.
+- `map_inv_visible_smolna_20261031.json`: `tests/support/providers/routes/investments.py` (`SMOLNA_2026_10_31`, `smolna_with_events()`), and through it the contract, unit, integration and characterization tests of the `get_investment` history (`ev`), the price flags' property test (`tests/unit/models/test_price_history.py`), the views' test (`test_offer_views.py`) and the leak checks (`tests/safeguards/test_e2e_gate.py`, `test_search_locations_tool.py`).
+- `offer_snapshot_warszawa_20261031.json`: also `tests/contract/api/dto/test_developer_page_dto.py`, the meaning of an investment's figures on the developer page of the same day (`get_developer`).
+- `city_districts_warszawa_tx_20261031.json`, `city_districts_krakow_tx_20261031.json`: `tests/support/builders/offers.py` (`district_pages`), for `tests/unit/api/queries/test_offers_query.py`: the slug `search_offers` makes of a district's name is the service's own for each of their 36 districts.

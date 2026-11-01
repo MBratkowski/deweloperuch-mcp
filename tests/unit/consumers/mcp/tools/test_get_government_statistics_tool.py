@@ -7,19 +7,22 @@ import respx
 from mcp import Client
 from mcp.server.mcpserver import MCPServer
 
-from deweloperuch_mcp import bootstrap
+from deweloperuch_mcp import bootstrap, identity
 from deweloperuch_mcp.models.government_statistics import Dataset
 from support.checks.leaks import LEAKS, SIZE_BUDGET
 from support.providers.mcp import call, data, has_null, text, tools, with_client
 from support.providers.routes.government_statistics import (
     UNKNOWN_LOCATION,
     stats_routes,
-    stats_url,
     unknown_location_route,
 )
 
 # The MCP server runs behind the SDK's in-memory client: its event loop needs Unix sockets.
 pytestmark = pytest.mark.usefixtures("unix_sockets_for_the_event_loop")
+
+
+STATS = identity.BASE_URL + "/statystyki"
+"""The statistics pages; the government ones are ``{STATS}/{location}/dane-rzadowe``."""
 
 
 def test_government_statistics_input_schema(server: MCPServer[bootstrap.Session]) -> None:
@@ -28,11 +31,13 @@ def test_government_statistics_input_schema(server: MCPServer[bootstrap.Session]
 
     assert schema["required"] == ["location", "dataset"]
     assert fields["location"]["type"] == "string"
-    assert "jastrzebie" in fields["location"]["description"]
+    assert "jastrzebie-zdroj" in fields["location"]["description"]  # jastrzebie on 1.0
     assert fields["location"]["description"].endswith(
         "Dane są tylko dla 66 miast na prawach powiatu, a nie dla dzielnic i mniejszych "
         "miejscowości."
     )
+    assert "dla Polski miesięcznie wg Eurostatu" in fields["dataset"]["description"]
+    assert "Agregat 7-miast nie ma wages ani unemployment" in fields["dataset"]["description"]
     assert "Częstotliwość zwraca pole frequency." in fields["dataset"]["description"]
     assert "ok. 10 tys. znaków" in fields["periods"]["description"]
     assert fields["dataset"]["enum"] == [dataset.value for dataset in Dataset]
@@ -73,7 +78,7 @@ def test_government_statistics_as_a_table(
             "Pokazano ostatnie 2 z 80 okresów (dane od 2006-Q3); starsze pokaże większe "
             "periods (najwyżej 120)."
         ),
-        "stats_url": stats_url("warszawa", "#nbp"),
+        "stats_url": STATS + "/warszawa/dane-rzadowe#nbp",
         "periods": ["2026-Q1", "2026-Q2"],
         "series": [
             {
@@ -116,9 +121,24 @@ def test_government_statistics_with_the_defaults(
     assert (result["total"], result["returned"], result["truncated"]) == (22, 12, True)
     assert result["periods"] == [str(year) for year in range(2015, 2027)]
     assert result["series"][0]["values"][-1] == 62.5
-    assert result["stats_url"] == stats_url("polska", "#gus-srednia-powierzchnia")
-    assert "note" not in result  # no null fields
-    assert not has_null(result)
+    assert result["stats_url"] == STATS + "/polska/dane-rzadowe#gus-srednia-powierzchnia"
+    assert result["note"] == (
+        "Ostatni rok (2026) bywa niepełny: GUS dopisuje go kwartałami, więc porównuj go "
+        "ostrożnie z pełnymi latami."
+    )
+    assert not has_null(result)  # no null fields
+
+
+def test_government_statistics_without_a_note_have_no_note_field(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    stats_routes(service)
+
+    result = data(
+        call(server, "get_government_statistics", location="polska", dataset="unemployment")
+    )
+
+    assert "note" not in result
 
 
 def test_government_statistics_keep_null_values_in_place(
@@ -222,8 +242,38 @@ def test_government_statistics_nbp_prices_of_poland_point_to_cities(
 
     assert result.is_error is True
     assert text(result).startswith("NBP nie podaje jednej ceny dla całej Polski")
-    assert "6-miast-bez-warszawy, krakow" in text(result) and "sopot" not in text(result)
+    assert "7-miast, 10-miast, 6-miast-bez-warszawy" in text(result)
+    assert "warszawa, krakow" in text(result) and "sopot" not in text(result)
     assert not LEAKS.search(text(result))
+
+
+@pytest.mark.parametrize("dataset", ["wages", "unemployment"])
+def test_government_statistics_an_aggregate_without_a_dataset_says_where_it_is(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter, dataset: str
+) -> None:
+    """``7-miast`` has no wages and no unemployment rate of its own [P 2026-10-31]: not
+    published (fix the call), never a changed service."""
+    stats_routes(service)
+
+    result = call(server, "get_government_statistics", location="7-miast", dataset=dataset)
+
+    assert result.is_error is True
+    assert text(result).startswith(f"Serwis nie publikuje zestawu '{dataset}'")
+    assert text(result).endswith("Podaj polska albo miasto na prawach powiatu, np. warszawa.")
+    assert not LEAKS.search(text(result))
+
+
+def test_government_statistics_the_demography_of_poland_is_eurostats(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    stats_routes(service)
+
+    result = data(
+        call(server, "get_government_statistics", location="polska", dataset="demography")
+    )
+
+    assert (result["source"], result["frequency"]) == ("Eurostat", "month")
+    assert result["stats_url"] == STATS + "/polska/dane-rzadowe#eurostat-demografia"
 
 
 def test_government_statistics_of_an_unknown_location(
@@ -237,10 +287,10 @@ def test_government_statistics_of_an_unknown_location(
     assert text(result) == (
         f"Serwis nie ma statystyk rządowych dla lokalizacji {UNKNOWN_LOCATION!r}. Podaj "
         "polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta na "
-        "prawach powiatu bez polskich znaków, np. warszawa, krakow. Jeśli nie znasz sluga "
-        "miasta, spróbuj city_slug z search_locations (zwykle jest taki sam, ale nie "
-        "zawsze, np. dla Jastrzębia-Zdroju użyj jastrzebie). Statystyki są tylko dla miast "
-        "na prawach powiatu."
+        "prawach powiatu: nazwa małymi literami bez polskich znaków, z myślnikami zamiast "
+        "spacji, np. warszawa, krakow, jastrzebie-zdroj. Jeśli nie znasz sluga miasta, "
+        "spróbuj city_slug z search_locations (zwykle jest taki sam). Statystyki są tylko "
+        "dla miast na prawach powiatu."
     )
     assert not LEAKS.search(text(result))
 
@@ -255,7 +305,7 @@ def test_government_statistics_location_in_capitals_is_the_slug(
     result = data(call(server, "get_government_statistics", location=location, dataset="wages"))
 
     assert (result["location_slug"], routes["warszawa"].call_count) == ("warszawa", 1)
-    assert result["stats_url"] == stats_url("warszawa", "#gus-wynagrodzenia")
+    assert result["stats_url"] == STATS + "/warszawa/dane-rzadowe#gus-wynagrodzenia"
 
 
 @pytest.mark.parametrize(

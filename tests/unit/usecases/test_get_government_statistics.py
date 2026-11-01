@@ -78,3 +78,21 @@ def test_an_unknown_location_says_what_to_give() -> None:
                 location=LocationSlug("x"), dataset=Dataset.UNEMPLOYMENT, periods=PeriodCount()
             )
         )
+
+
+def test_an_unknown_location_is_told_the_accepted_forms_of_a_location() -> None:
+    """Without the 1.0 list of locations: ``polska``, the three aggregates and a city slug,
+    as the 2.0 page of ``polska`` links them (``jastrzebie-zdroj``, ``jastrzebie`` on 1.0)."""
+    fake = FakeCatalogs(errors={"location_statistics x wages": NotFoundError("404")})
+
+    with pytest.raises(NotFoundError) as caught:
+        GetGovernmentStatistics(fake, EchoPageLinks()).execute(
+            GetGovernmentStatisticsRequest(
+                location=LocationSlug("x"), dataset=Dataset.WAGES, periods=PeriodCount()
+            )
+        )
+
+    message = str(caught.value)
+    assert "Podaj polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy)" in message
+    assert "z myślnikami zamiast spacji, np. warszawa, krakow, jastrzebie-zdroj." in message
+    assert "jastrzebie)" not in message and "użyj jastrzebie" not in message

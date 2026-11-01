@@ -129,5 +129,6 @@ class GetTransactionStatistics:
         return (
             f"Serwis nie ma cen transakcyjnych mieszkań dla miasta {city.value!r}. Sprawdź "
             "city_slug w search_locations (np. warszawa, krakow); statystyki są dla całych "
-            "miast, nie dla dzielnic ani ulic."
+            "miast, nie dla dzielnic ani ulic. Jeśli city_slug pochodzi z search_locations, "
+            "serwis nie ma dla niego statystyk: powiedz to użytkownikowi."
         )

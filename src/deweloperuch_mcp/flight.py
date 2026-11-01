@@ -3,7 +3,7 @@
 The one implementation, shared by the package's RSC adapter and the ``recon/`` scripts
 (through ``recon/config.py``; ``recon/flight.py`` re-exports it and adds a CLI)::
 
-    with_rsc_query(target)       -> the path with an empty ``_rsc`` appended to its query
+    with_rsc_token(target)       -> the path with an empty ``_rsc`` appended to its query
     flight_from_html(html)       -> concatenated flight text from the inline scripts of a page
                                     (``self.__next_f.push``)
     flight(path)                 -> the same for a saved HTML page
@@ -44,22 +44,28 @@ _ROW_ID = re.compile(rb"([0-9a-fA-F]*):")
 _LENGTH = re.compile(rb"([0-9a-fA-F]+),")
 
 
-RSC_QUERY = "_rsc"
-"""The empty ``_rsc`` parameter of an RSC request.
+def with_rsc_token(target: str) -> str:
+    """``target`` (a percent-encoded path and query) with an empty ``_rsc`` as its last
+    query parameter: ``/a?page=2`` -> ``/a?page=2&_rsc=``, ``/a`` -> ``/a?_rsc=``.
 
-Cloudflare ignores ``Vary: RSC``, so without ``_rsc`` the page comes back as cached HTML
-(docs/discovery/pages-rsc.md). [P 2026-10-30] Since the 2.0 build (Next.js 15.5,
-2026-10-29) the server checks ``_rsc`` against a hash of the router headers; with none of
-them sent (only ``RSC: 1``) the expected value is empty, and any other value gets a 307
-to the same URL with a bare ``_rsc``. The bare parameter is that target, so the request
-needs no redirect.
-"""
+    docs/discovery/pages-rsc.md, "How to fetch":
 
-
-def with_rsc_query(target: str) -> str:
-    """``target`` (percent-encoded path and query) with ``RSC_QUERY`` as the last query
-    parameter."""
-    return target + ("&" if "?" in target else "?") + RSC_QUERY
+    - ``_rsc`` gives the RSC request an address of its own: Cloudflare ignores
+      ``Vary: RSC``, so the page's own address comes back as cached HTML [P 2026-10-10];
+    - the value is the one the service's client computes for a request like ours
+      [P z kodu 2026-10-30]: Next.js 15.5.25 (chunk 1255, module 13485,
+      ``setCacheBustingSearchParam``) hashes the router headers ``Next-Router-Prefetch``,
+      ``Next-Router-Segment-Prefetch``, ``Next-Router-State-Tree`` and ``Next-Url`` into
+      it, and leaves it empty when none is sent (a prefetch of ``0`` counts as none); this
+      package and probe send only ``RSC: 1``;
+    - the 2.0 server answers any other value with 307 to the same address with an empty
+      ``_rsc`` [P 2026-10-29], and the empty one gets the payload (T63, resolved): ``200
+      text/x-component`` on every existing page requested, without a redirect
+      [P 2026-10-31; the first page of the offers list in the samples
+      ``page.offers_list.v2_sales`` and ``page.offers_list.v2_pagination``], also
+      ``?page=2&perPage=10`` [P 2026-10-31, docs/open-questions.md T63].
+    """
+    return target + ("&" if "?" in target else "?") + "_rsc="
 
 
 def flight_from_html(html: str) -> str:

@@ -9,11 +9,11 @@
     ""
   ],
   "stderr": [
-    "Błąd: Wyszukiwanie ofert w 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
-    "Szczegóły: /ceny-ofertowe/warszawa/mieszkania nie zawiera danych w propsie 'initialData/sales/serverPaginationData' (propsy z danymi: other)",
+    "Błąd: Wyszukiwanie ofert w 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.",
+    "Szczegóły: /ceny-ofertowe/warszawa/mieszkania nie zawiera danych w propsach 'sales', 'serverPaginationData' (propsy z danymi: other)",
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?perPage=10&_rsc [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?perPage=10&_rsc= [rsc: 1] [accept: */*]"
   ]
 }

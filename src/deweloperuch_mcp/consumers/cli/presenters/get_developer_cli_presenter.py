@@ -8,21 +8,26 @@ from deweloperuch_mcp.usecases.get_developer import GetDeveloperResult
 
 
 class GetDeveloperCliPresenter:
-    """The developer's profile: its view as JSON (``--json``) or as Polish text."""
+    """The developer's profile: its view as JSON (``--json``) or as Polish text. The text
+    names where its cities come from: the whole country, or only the investments in the
+    profile's city when the service sent no list of cities."""
 
     def __init__(self, *, as_json: bool) -> None:
         self._as_json = as_json
 
     def present(self, result: GetDeveloperResult) -> None:
-        show(DeveloperProfileView.from_result(result), self._as_json, self._text)
+        in_scope_only = result.listing.profile.cities_in_scope_only
+        show(
+            DeveloperProfileView.from_result(result),
+            self._as_json,
+            lambda profile: self._text(profile, cities_in_scope_only=in_scope_only),
+        )
 
     @staticmethod
-    def _text(profile: DeveloperProfileView) -> str:
+    def _text(profile: DeveloperProfileView, *, cities_in_scope_only: bool) -> str:
         developer = profile.developer
         scope = "cała Polska" if profile.city_slug == WHOLE_COUNTRY else f"[{profile.city_slug}]"
         lines = [f"{developer.name} [{developer.developer_slug}] · {scope}"]
-        if developer.website:
-            lines.append(f"Strona dewelopera: {developer.website}")
         if profile.developer_url:
             lines.append(f"Profil dewelopera: {profile.developer_url}")
         summary = profile.summary
@@ -61,11 +66,15 @@ class GetDeveloperCliPresenter:
             if item.investment_url:
                 lines.append(f"    {item.investment_url}")
         if profile.cities:
-            lines.append("Miasta dewelopera (cała Polska):")
+            where = (
+                f"tylko z inwestycji w [{profile.city_slug}]"
+                if cities_in_scope_only
+                else "cała Polska"
+            )
+            lines.append(f"Miasta dewelopera ({where}):")
             lines += [
                 f"  {city.city} [{city.city_slug}] · inwestycje {count_text(city.investments)} · "
                 f"aktywne oferty {count_text(city.active_offers)} · "
-                f"{amount_text(city.avg_price, 'PLN')} · "
                 f"{amount_text(city.avg_price_per_m2, 'PLN/m²')}"
                 for city in profile.cities
             ]

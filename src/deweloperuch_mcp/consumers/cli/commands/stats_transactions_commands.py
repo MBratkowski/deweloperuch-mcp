@@ -28,7 +28,8 @@ def stats_transactions(
             metavar="CITY",
             help=(
                 "Slug miasta bez polskich znaków, np. warszawa, krakow (podaje go "
-                "deweloperuch locations search). Bez dzielnic, ulic i całej Polski."
+                "deweloperuch locations search). Bez dzielnic, ulic, agregatów (np. 7-miast) "
+                "i całej Polski."
             ),
         ),
     ],
@@ -37,8 +38,8 @@ def stats_transactions(
         typer.Option(
             "--granularity",
             help=(
-                "month: miesiące (mediany i średnie); quarter: kwartały (średnia cena za m², "
-                "dłuższa historia)."
+                "month: miesiące, tylko rynek wtórny (mediany i średnie); quarter: kwartały "
+                "(tylko mediana ceny za m², rynek nieokreślony)."
             ),
         ),
     ] = Granularity.MONTH,
@@ -47,7 +48,10 @@ def stats_transactions(
     ] = DEFAULT_PERIODS,
     as_json: JsonFlag = False,
 ) -> None:
-    """Pokaż ceny transakcyjne mieszkań (RCN) w mieście, miesiąc po miesiącu albo kwartałami."""
+    """Pokaż ceny transakcyjne mieszkań (RCN) w mieście, miesiąc po miesiącu albo kwartałami.
+
+    Dane od 2017 r.; miesiące obejmują tylko rynek wtórny.
+    """
 
     def get(session: Session) -> GetTransactionStatisticsResult:
         request = GetTransactionStatisticsRequest.parse(

@@ -11,17 +11,17 @@
   "results": [
     {
       "is_error": true,
-      "text": "Statystyki rządowe dla 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+      "text": "Statystyki rządowe dla 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "UnexpectedResponseError: Statystyki rządowe dla 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi. Szczegóły: /statystyki/warszawa/dane-rzadowe nie zawiera spisu treści 'tocItems' (propsy z danymi: other)"
+      "UnexpectedResponseError: Statystyki rządowe dla 'warszawa': Na stronie serwisu brakuje oczekiwanych danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi. Szczegóły: /statystyki/warszawa/dane-rzadowe nie zawiera listy sekcji 'blocks.govSections' (propsy z danymi: other)"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

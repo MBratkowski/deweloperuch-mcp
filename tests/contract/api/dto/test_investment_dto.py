@@ -7,18 +7,14 @@ from pydantic import ValidationError
 
 from deweloperuch_mcp.api.dto import investment_dto
 from support.builders.investments import sale
+from support.providers.routes.investments import smolna_with_events
 from support.providers.samples import body
 
 
 def test_investment_sample_keeps_values_as_sent() -> None:
     parsed = investment_dto.InvestmentDto.model_validate(body("api.map_inv_visible"))
 
-    assert (parsed.invest_id, parsed.slug, parsed.name, parsed.status) == (
-        33,
-        "smolna",
-        "Smolna",
-        "active",
-    )
+    assert (parsed.slug, parsed.name, parsed.status) == ("smolna", "Smolna", "active")
     assert (parsed.city, parsed.city_slug, parsed.street) == ("Sopot", "sopot", "Świemirowo")
     # 1:1 with the backend: coordinates and offer amounts arrive as strings [P].
     assert parsed.latitude == "54.42735985"
@@ -33,6 +29,22 @@ def test_investment_sample_keeps_values_as_sent() -> None:
     assert parsed.sale[2].start_amount_difference == "-10795"
     assert parsed.sale[2].start_amount_difference_percent == "-0.77"
     assert first.creation_date == "2026-10-03"
+
+
+def test_the_2_0_answer_reads_as_the_investment() -> None:
+    """[P 2026-10-31] tests/fixtures/api/map_inv_visible_smolna_20261031.json: the keys 2.0
+    added (``description``; ``floor`` and ``ev`` of each offer) are not read here."""
+    parsed = investment_dto.InvestmentDto.model_validate(smolna_with_events())
+
+    assert (parsed.slug, parsed.active_offers, parsed.total_offers) == ("smolna", 4, 17)
+    assert len(parsed.sale) == 17
+    first = parsed.sale[0]
+    assert (first.sale_id, first.amount, first.size, first.status) == (
+        206523,
+        "3735107",
+        "95.49",
+        "active",
+    )
 
 
 @pytest.mark.parametrize("value", ["994012", 994012, 994012.5, "-0.77", "1e3", "", None])

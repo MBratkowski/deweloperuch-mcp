@@ -10,17 +10,17 @@
   "results": [
     {
       "is_error": true,
-      "text": "Serwis nie zna miasta 'nieistniejace-miasto'. Podaj city_slug z search_locations albo polska (cały kraj).",
+      "text": "Serwis nie zna miasta 'nieistniejace-miasto'. Podaj city_slug miasta z search_locations.",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "NotFoundError: Serwis nie zna miasta 'nieistniejace-miasto'. Podaj city_slug z search_locations albo polska (cały kraj). Szczegóły: /ceny-ofertowe/nieistniejace-miasto/mieszkania: brak propsa 'initialData/sales/serverPaginationData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
+      "NotFoundError: Serwis nie zna miasta 'nieistniejace-miasto'. Podaj city_slug miasta z search_locations. Szczegóły: /ceny-ofertowe/nieistniejace-miasto/mieszkania: brak propsów 'sales', 'serverPaginationData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/nieistniejace-miasto/mieszkania?perPage=10&_rsc [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/nieistniejace-miasto/mieszkania?perPage=10&_rsc= [rsc: 1] [accept: */*]"
   ]
 }

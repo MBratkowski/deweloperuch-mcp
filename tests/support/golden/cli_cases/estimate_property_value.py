@@ -3,6 +3,7 @@
 from support.builders.valuation import CISNA_OPTIONS, valuation_with_comparables
 from support.golden.cli import ESCAPES, ESTIMATE, INJECTED_BODY, Case, case, with_the_first_address
 from support.golden.routes import valuation_answer, without_an_estimate
+from support.providers.error_answers import unknown_entity
 from support.providers.routes.valuation import cisna_route, valuation_route
 
 CASES: dict[str, Case] = {
@@ -40,7 +41,9 @@ CASES: dict[str, Case] = {
     "valuation_estimate_address_too_short": case(*ESTIMATE, "--address", "ab"),
     "valuation_estimate_limit_negative": case(*ESTIMATE, "--limit", "-1"),
     "valuation_estimate_without_area": case("valuation", "estimate", "--lat", "52", "--lng", "21"),
-    "valuation_estimate_404": case(*ESTIMATE, service=valuation_answer(404)),
+    "valuation_estimate_404": case(
+        *ESTIMATE, service=valuation_answer(404, **unknown_entity({"error": INJECTED_BODY}))
+    ),
     "valuation_estimate_500": case(*ESTIMATE, service=valuation_answer(500, text=INJECTED_BODY)),
     "valuation_estimate_escapes_in_the_address": case(
         *ESTIMATE,

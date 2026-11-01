@@ -21,16 +21,16 @@ Oferty mieszkań od deweloperów.
 
 ### `deweloperuch offers search [OPTIONS] CITY`
 
-Szukaj ofert mieszkań w mieście; najwyżej 20 stron wyników.
+Szukaj ofert mieszkań w mieście albo w jego dzielnicy; najwyżej 20 stron wyników.
 
-- `CITY`: Slug miasta (np. warszawa; podaje go `locations search`) albo polska. [required]
+- `CITY`: Slug jednego miasta (np. warszawa; podaje go `locations search`), nie polska. [required]
 - `--price-min <int>`: Najniższa cena w PLN.
 - `--price-max <int>`: Najwyższa cena w PLN.
 - `--area-min <int>`: Najmniejszy metraż w m².
 - `--area-max <int>`: Największy metraż w m².
 - `--price-per-m2-min <int>`: Najniższa cena za m² w PLN.
 - `--price-per-m2-max <int>`: Najwyższa cena za m² w PLN.
-- `--district <str>`: Dzielnica miasta jak w `locations search` (np. Mokotów); nie z polska.
+- `--district <str>`: Dzielnica miasta: jej nazwa jak w `locations search` (np. Praga-Południe).
 - `--price-dropped`: Tylko oferty tańsze niż ich pierwsza cena.
 - `--status <active|archived|all>`: active (domyślnie), archived (wycofane) albo all (obie).
 - `--sort <price_asc|price_desc|price_per_m2_asc|price_per_m2_desc|area_asc|area_desc|biggest_drop>`: Kolejność: po cenie, cenie za m², metrażu albo najpierw największa obniżka od pierwszej ceny; bez opcji domyślna kolejność serwisu.
@@ -55,7 +55,7 @@ Inwestycje deweloperskie.
 Pokaż inwestycję z deweloperem i ofertami.
 
 - `SLUG`: Slug inwestycji (investment_slug z `offers search`). [required]
-- `--history`: Dołącz historię ceny każdej oferty (wolniej).
+- `--history`: Dołącz historię ceny każdej oferty.
 - `--limit <int>`: Najwięcej pokazanych ofert (najpierw aktywne); domyślnie wszystkie.
 - `--json`: Wypisz wynik jako JSON (model domenowy).
 
@@ -150,8 +150,10 @@ Pokaż statystyki aktywnych ofert miasta: ceny, metraże, największych dewelope
 
 Pokaż ceny transakcyjne mieszkań (RCN) w mieście, miesiąc po miesiącu albo kwartałami.
 
-- `CITY`: Slug miasta bez polskich znaków, np. warszawa, krakow (podaje go deweloperuch locations search). Bez dzielnic, ulic i całej Polski. [required]
-- `--granularity <month|quarter>`: month: miesiące (mediany i średnie); quarter: kwartały (średnia cena za m², dłuższa historia). [default: month]
+Dane od 2017 r.; miesiące obejmują tylko rynek wtórny.
+
+- `CITY`: Slug miasta bez polskich znaków, np. warszawa, krakow (podaje go deweloperuch locations search). Bez dzielnic, ulic, agregatów (np. 7-miast) i całej Polski. [required]
+- `--granularity <month|quarter>`: month: miesiące, tylko rynek wtórny (mediany i średnie); quarter: kwartały (tylko mediana ceny za m², rynek nieokreślony). [default: month]
 - `--periods <int>`: Ile ostatnich okresów pokazać (miesięcy, kwartałów). [default: 12]
 - `--json`: Wypisz wynik jako JSON (model domenowy).
 

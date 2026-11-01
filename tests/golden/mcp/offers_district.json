@@ -1,0 +1,203 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "warszawa",
+        "district": "Mokotów"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "total": 959,
+        "returned": 10,
+        "truncated": true,
+        "page": 1,
+        "per_page": 10,
+        "pages_available": 20,
+        "hint": "Pasujących ofert jest 959, a można przejrzeć najwyżej 20 stron po 10 (200). Zawęź filtry (cena, metraż).",
+        "list_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/mokotow/mieszkania?perPage=10",
+        "items": [
+          {
+            "offer_id": 4487,
+            "investment_slug": "apartamenty-beethovena",
+            "name": "A2",
+            "price": 810660.0,
+            "area_m2": 35.4,
+            "price_per_m2": 22900.0,
+            "status": "active",
+            "investment_name": "Apartamenty Beethovena",
+            "district": "Mokotów",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/dom-development/apartamenty-beethovena",
+            "developer_name": "Dom Development S.A.",
+            "developer_slug": "dom-development",
+            "last_price_change_kind": "increase",
+            "last_price_change_pct": 6.51,
+            "price_change_since_start_pct": 0.08
+          },
+          {
+            "offer_id": 4527,
+            "investment_slug": "apartamenty-beethovena",
+            "name": "B36",
+            "price": 1324896.0,
+            "area_m2": 59.68,
+            "price_per_m2": 22200.0,
+            "status": "active",
+            "investment_name": "Apartamenty Beethovena",
+            "district": "Mokotów",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/dom-development/apartamenty-beethovena",
+            "developer_name": "Dom Development S.A.",
+            "developer_slug": "dom-development",
+            "last_price_change_kind": "increase",
+            "last_price_change_pct": 6.73,
+            "price_change_since_start_pct": 1.14
+          },
+          {
+            "offer_id": 4580,
+            "investment_slug": "apartamenty-beethovena",
+            "name": "B52",
+            "price": 1561804.0,
+            "area_m2": 73.67,
+            "price_per_m2": 21200.0,
+            "status": "active",
+            "investment_name": "Apartamenty Beethovena",
+            "district": "Mokotów",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/dom-development/apartamenty-beethovena",
+            "developer_name": "Dom Development S.A.",
+            "developer_slug": "dom-development",
+            "last_price_change_kind": "increase",
+            "last_price_change_pct": 7.61,
+            "price_change_since_start_pct": 1.42
+          },
+          {
+            "offer_id": 4586,
+            "investment_slug": "apartamenty-beethovena",
+            "name": "A35",
+            "price": 1402908.0,
+            "area_m2": 63.48,
+            "price_per_m2": 22100.0,
+            "status": "active",
+            "investment_name": "Apartamenty Beethovena",
+            "district": "Mokotów",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/dom-development/apartamenty-beethovena",
+            "developer_name": "Dom Development S.A.",
+            "developer_slug": "dom-development",
+            "last_price_change_kind": "increase",
+            "last_price_change_pct": 6.76,
+            "price_change_since_start_pct": 0.93
+          },
+          {
+            "offer_id": 52503,
+            "investment_slug": "ananasowa",
+            "name": "B.0.02",
+            "price": 869352.0,
+            "area_m2": 48.84,
+            "price_per_m2": 17800.0,
+            "status": "active",
+            "investment_name": "Ananasowa",
+            "district": "Mokotów",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/sgi/ananasowa",
+            "developer_name": "SGI Sp. z o.o.",
+            "developer_slug": "sgi",
+            "last_price_change_kind": "no_change",
+            "last_price_change_pct": 0.0,
+            "price_change_since_start_pct": -4.47
+          },
+          {
+            "offer_id": 52510,
+            "investment_slug": "ananasowa",
+            "name": "D.0.04",
+            "price": 1051245.0,
+            "area_m2": 53.91,
+            "price_per_m2": 19500.0,
+            "status": "active",
+            "investment_name": "Ananasowa",
+            "district": "Mokotów",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/sgi/ananasowa",
+            "developer_name": "SGI Sp. z o.o.",
+            "developer_slug": "sgi",
+            "last_price_change_kind": "no_change",
+            "last_price_change_pct": 0.0,
+            "price_change_since_start_pct": 9.5
+          },
+          {
+            "offer_id": 52532,
+            "investment_slug": "ananasowa",
+            "name": "C.0.04",
+            "price": 1035456.0,
+            "area_m2": 53.93,
+            "price_per_m2": 19200.0,
+            "status": "active",
+            "investment_name": "Ananasowa",
+            "district": "Mokotów",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/sgi/ananasowa",
+            "developer_name": "SGI Sp. z o.o.",
+            "developer_slug": "sgi",
+            "last_price_change_kind": "no_change",
+            "last_price_change_pct": 0.0,
+            "price_change_since_start_pct": 10.15
+          },
+          {
+            "offer_id": 52542,
+            "investment_slug": "ananasowa",
+            "name": "E.1.06",
+            "price": 1211760.0,
+            "area_m2": 64.8,
+            "price_per_m2": 18700.0,
+            "status": "active",
+            "investment_name": "Ananasowa",
+            "district": "Mokotów",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/sgi/ananasowa",
+            "developer_name": "SGI Sp. z o.o.",
+            "developer_slug": "sgi",
+            "last_price_change_kind": "no_change",
+            "last_price_change_pct": 0.0,
+            "price_change_since_start_pct": 9.17
+          },
+          {
+            "offer_id": 52549,
+            "investment_slug": "ananasowa",
+            "name": "A.1.04",
+            "price": 943425.0,
+            "area_m2": 53.91,
+            "price_per_m2": 17500.0,
+            "status": "active",
+            "investment_name": "Ananasowa",
+            "district": "Mokotów",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/sgi/ananasowa",
+            "developer_name": "SGI Sp. z o.o.",
+            "developer_slug": "sgi",
+            "last_price_change_kind": "no_change",
+            "last_price_change_pct": 0.0,
+            "price_change_since_start_pct": 1.44
+          },
+          {
+            "offer_id": 59990,
+            "investment_slug": "sadyba-spot",
+            "name": "67",
+            "price": 915029.0,
+            "area_m2": 39.87,
+            "price_per_m2": 22950.31,
+            "status": "active",
+            "investment_name": "Sadyba Spot",
+            "district": "Mokotów",
+            "investment_url": "https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/unidevelopment/sadyba-spot",
+            "developer_name": "Unidevelopment S.A.",
+            "developer_slug": "unidevelopment",
+            "last_price_change_kind": "increase",
+            "last_price_change_pct": 0.0,
+            "price_change_since_start_pct": 6.4
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/mokotow/mieszkania?perPage=10&_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

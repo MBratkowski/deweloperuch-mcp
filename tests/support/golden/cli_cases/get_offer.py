@@ -2,6 +2,7 @@
 
 from support.golden.cli import Case, case, history_missing, sale_events_answer
 from support.golden.routes import investment_answer
+from support.providers.error_answers import unknown_entity
 from support.providers.routes.investments import (
     investment_routes,
 )
@@ -25,7 +26,12 @@ CASES: dict[str, Case] = {
         "offers", "get", "2377", "--investment", "smolna", service=sale_events_answer(500)
     ),
     "offers_get_unknown_investment": case(
-        "offers", "get", "2377", "--investment", "smolna", service=investment_answer(404)
+        "offers",
+        "get",
+        "2377",
+        "--investment",
+        "smolna",
+        service=investment_answer(404, **unknown_entity()),
     ),
     "offers_get_offer_0": case("offers", "get", "0", "--investment", "smolna"),
     "offers_get_offer_text": case("offers", "get", "abc", "--investment", "smolna"),

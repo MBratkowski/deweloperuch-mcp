@@ -40,7 +40,7 @@ from config import (
     StoppedError,
     WaitTooLongError,
     is_html,
-    with_rsc_query,
+    with_rsc_token,
 )
 
 # Explicit re-exports (`X as X`): probe's documented limits and transport, used by its
@@ -265,8 +265,8 @@ def make_plan(
         headers["Accept"] = "application/json"
     else:
         headers["RSC"] = "1"
-        # The same empty `_rsc` as the package's RSC adapter (deweloperuch_mcp.flight).
-        target = with_rsc_query(target)
+        # The same empty _rsc as the package's RSC adapter (deweloperuch_mcp.flight).
+        target = with_rsc_token(target)
     return Plan(mode, given, BASE_URL + target, headers, prop, save_to)
 
 

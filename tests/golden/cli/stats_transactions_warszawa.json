@@ -7,19 +7,19 @@
   "exit_code": 0,
   "stdout": [
     "Ceny transakcyjne mieszkań (RCN) · warszawa · miesięcznie",
-    "Okresy: pokazano 3 z 3 (dane od 2021-01).",
+    "Okresy: pokazano 3 z 3 (dane od 2017-01).",
     "Uwaga: Ostatnie miesiące są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z okresami o zwykłej liczbie transakcji.",
-    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/ceny-transakcyjne/mieszkania/warszawa",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/warszawa/transakcje",
     "Okres    Transakcje  Mediana PLN/m²  Średnia PLN/m²  Mediana m²  Mediana ceny PLN",
-    "2021-01         963          10 651          10 876        49,4           502 000",
-    "2021-02       1 165          10 575          10 854        48,8           495 000",
-    "2021-03       1 327          10 858          10 981        48,5           510 000",
+    "2017-01         890           7 656           7 903        47,9           355 000",
+    "2017-02         880           7 528           7 793        49,2           357 000",
+    "2017-03       1 086           7 626           7 989          48           360 000",
     ""
   ],
   "stderr": [
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa [accept: application/json]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/transakcje?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

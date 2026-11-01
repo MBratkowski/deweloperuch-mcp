@@ -1,4 +1,4 @@
-"""``GetMarketStatisticsTool``: the offer market of one city in numbers (D15)."""
+"""``GetMarketStatisticsTool``: the offer market of one city in numbers (D15, D20)."""
 
 from typing import Annotated
 
@@ -20,26 +20,28 @@ TopDevelopers = Annotated[int, Field(ge=1, le=TOP_DEVELOPERS_MAX)]
 
 
 class GetMarketStatisticsTool(ToolBase):
-    # D15: every active offer of the city in one request, summed up in the domain; no single
-    # offer leaves the process. [P 2026-10-10] active offers only, `polska` refused by the
-    # service (refused here before any request). [W] the counts may differ a little from the
-    # offers list's total (Kraków 2026-10-13: 7325 here, 7307 on the list a minute apart).
+    # D15, D20: every active offer of the city in one request (the service's offer snapshot),
+    # summed up in the domain; no single offer leaves the process. [P 2026-10-31] active
+    # offers only, as many as the offers list's total of the same day (Warszawa 11,672), and
+    # Cloudflare may serve a copy more than half a day old (`as_of` is the day of the data),
+    # so the counts may differ a little from search_offers. `polska` is refused before any
+    # request.
     name = "get_market_statistics"
     title = "Statystyki rynku miasta"
     description = """\
 Zwraca statystyki rynku ofert deweloperskich w jednym mieście: liczbę ofert, inwestycji \
 i deweloperów, rozkład cen (PLN), cen za m² (PLN/m²) i metraży (m²) jako min, p25, \
-median, p75 i max oraz największych deweloperów wg liczby ofert (developer_slug, \
-offers, investments, median_price_per_m2, developer_url; developer_slug to \
-identyfikator, a nazwę dewelopera daje get_developer). Opcjonalnie tylko oferty z \
-zakresu ceny i metrażu. Użyj, gdy pytanie dotyczy rynku miasta (typowe ceny, kto ma \
-najwięcej ofert), a nie konkretnych mieszkań (search_offers).
+median, p75 i max oraz największych deweloperów wg liczby ofert (developer_name, \
+developer_slug, offers, investments, median_price_per_m2, developer_url). Opcjonalnie \
+tylko oferty z zakresu ceny i metrażu. Użyj, gdy pytanie dotyczy rynku miasta (typowe \
+ceny, kto ma najwięcej ofert), a nie konkretnych mieszkań (search_offers; inwestycje \
+dewelopera daje get_developer).
 
 Ograniczenia: tylko aktywne oferty (bez archiwalnych) i tylko jedno miasto (city_slug z \
-search_locations; polska nie działa). Liczby mogą się nieco różnić od total w \
-search_offers. Pojedynczych ofert tu nie ma: list_url to lista tych ofert na \
-deweloperuch.pl z tymi samymi filtrami, a developer_url profil dewelopera: podawaj je \
-użytkownikowi jako linki."""
+search_locations; polska nie działa). Liczby to stan na dzień z pola wyniku as_of i mogą \
+się nieco różnić od total w search_offers. Pojedynczych ofert tu nie ma: list_url to \
+lista tych ofert na deweloperuch.pl z tymi samymi filtrami, a developer_url profil \
+dewelopera: podawaj je użytkownikowi jako linki."""
 
     async def __call__(
         self,

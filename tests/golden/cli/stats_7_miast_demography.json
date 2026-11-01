@@ -1,0 +1,39 @@
+{
+  "args": [
+    "stats",
+    "government",
+    "7-miast",
+    "demography"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Urodzenia żywe, zgony i przyrost naturalny · Top 7 miast Polski [7-miast]",
+    "Źródło: GUS · rocznie · okresy: pokazano 12 z 31 (dane od 1995).",
+    "Wskazówka: Pokazano ostatnie 12 z 31 okresów (dane od 1995); starsze pokaże większa wartość periods.",
+    "Strona na deweloperuch.pl: https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe#gus-demografia",
+    "Kolumny:",
+    "  [1] Urodzenia żywe (osoby)",
+    "  [2] Zgony (osoby)",
+    "  [3] Przyrost naturalny (osoby)",
+    "Okres     [1]     [2]      [3]",
+    "2014   52 134  53 998   -1 864",
+    "2015   53 045  56 489   -3 444",
+    "2016   57 014  54 810    2 204",
+    "2017   58 245  57 055    1 190",
+    "2018   58 520  58 402      118",
+    "2019   57 979  57 028      951",
+    "2020   55 837  65 334   -9 497",
+    "2021   53 673  70 539  -16 866",
+    "2022   49 513  62 058  -12 545",
+    "2023   43 609  56 855  -13 246",
+    "2024   40 774  53 959  -13 185",
+    "2025   39 772  52 565  -12 793",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/7-miast/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

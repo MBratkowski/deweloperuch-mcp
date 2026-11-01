@@ -22,7 +22,9 @@ from deweloperuch_mcp.usecases.get_investment import GetInvestmentResult
 
 
 class InvestmentOfferItem(OfferFields):
-    price_history: list[PriceEventItem] | None = None
+    price_history: list[PriceEventItem] | None = Field(
+        None, description="Zdarzenia ceny oferty od najstarszego; tylko z include_history=true."
+    )
 
 
 class InvestmentResult(McpModel):

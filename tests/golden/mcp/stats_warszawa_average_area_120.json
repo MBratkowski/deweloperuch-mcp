@@ -24,6 +24,7 @@
         "returned": 22,
         "truncated": false,
         "available_from": "2005",
+        "note": "Ostatni rok (2026) bywa niepełny: GUS dopisuje go kwartałami, więc porównuj go ostrożnie z pełnymi latami.",
         "stats_url": "https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#gus-srednia-powierzchnia",
         "periods": [
           "2005",
@@ -85,6 +86,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

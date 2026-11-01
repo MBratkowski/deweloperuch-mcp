@@ -14,7 +14,7 @@ from deweloperuch_mcp.usecases.get_transaction_statistics import GetTransactionS
 Measure = Callable[[TransactionPeriodView], float | None]
 
 # The columns of the text, in this order; a column without any value is left out (the
-# quarters have only the average price of one m²). The averages of area and price are
+# quarters have only the median price of one m²). The averages of area and price are
 # in ``--json``.
 _COLUMNS: tuple[tuple[str, Measure], ...] = (
     ("Mediana PLN/m²", lambda item: item.median_price_per_m2),

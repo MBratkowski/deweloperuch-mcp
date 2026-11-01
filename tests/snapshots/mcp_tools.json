@@ -1,7 +1,7 @@
 {
   "server": {
     "name": "deweloperuch",
-    "instructions": "Dane z deweloperuch.pl o mieszkaniach w Polsce. Typowy plan: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście z filtrami), potem get_offer (oferta z historią ceny) albo get_investment (oferty jednej inwestycji). Projekty w mieście i slug inwestycji po nazwie daje search_investments, slug dewelopera po nazwie search_developers (dalej get_developer). Ocena ceny oferty: get_offer (price_flags), potem porównaj z get_market_statistics albo estimate_property_value.\n\nTrzy rodzaje cen, nie mieszaj ich: ofertowe deweloperów (search_offers, get_market_statistics, search_investments); transakcyjne z rejestru RCN (get_transaction_statistics, rank_locations, get_building, estimate_property_value; najnowsze okresy są niepełne, get_transaction_statistics oznacza je incomplete); oficjalne NBP i GUS, obok cen także mieszkania oddane, bezrobocie i wynagrodzenia (get_government_statistics). Jego location to nazwa miasta małymi literami bez polskich znaków; nie wymaga search_locations.\n\nSerwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Gdy narzędzie odrzuci argumenty, popraw wskazane pola zgodnie z komunikatem i ponów. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert."
+    "instructions": "Dane z deweloperuch.pl o mieszkaniach w Polsce. Typowy plan: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście albo dzielnicy, z filtrami), potem get_offer (oferta z historią ceny) albo get_investment (oferty jednej inwestycji). Projekty w mieście i slug inwestycji po nazwie daje search_investments, slug dewelopera po nazwie search_developers (dalej get_developer). Ocena ceny oferty: get_offer (price_flags), potem porównaj z get_market_statistics albo estimate_property_value.\n\nTrzy rodzaje cen, nie mieszaj ich: ofertowe deweloperów (search_offers, get_offer, search_investments, get_investment, get_developer, get_market_statistics); transakcyjne z rejestru RCN (get_transaction_statistics, rank_locations, get_building, estimate_property_value; najnowsze okresy są niepełne, get_transaction_statistics oznacza je incomplete, a jego miesiące to tylko rynek wtórny); oficjalne NBP, GUS i Eurostatu, obok cen także mieszkania oddane, bezrobocie i wynagrodzenia (get_government_statistics). Jego location: polska, agregat (np. 7-miast) albo slug miasta (małe litery, bez polskich znaków, myślniki); search_locations tylko pomocniczo.\n\nSerwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Gdy narzędzie odrzuci argumenty, popraw wskazane pola zgodnie z komunikatem i ponów. Gdy błąd mówi, że serwis mógł się zmienić, nie ponawiaj tego wywołania i powiedz o tym użytkownikowi; inne narzędzia mogą nadal działać. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert."
   },
   "tools": [
     {
@@ -174,12 +174,12 @@
     {
       "name": "search_offers",
       "title": "Szukaj ofert mieszkań",
-      "description": "Wyszukuje oferty mieszkań od deweloperów (tylko rynek pierwotny, ceny ofertowe, nie transakcyjne) w jednym mieście albo w całej Polsce (city=polska). Filtry: cena, metraż, cena za m², dzielnica, status (aktywne, archiwalne) i obniżka od pierwszej ceny; sortowanie po cenie, cenie za m², metrażu albo największej obniżce. Nie filtruje po liczbie pokoi ani piętrze (serwis nie ma takich danych) ani po deweloperze (jego inwestycje daje get_developer).\n\nZwraca jedną stronę: total (wszystkie pasujące), returned, page, per_page, pages_available, truncated, hint, list_url i items (offer_id, investment_slug, investment_url (strona inwestycji), name, cena w PLN, metraż w m², cena za m², status, inwestycja, deweloper z developer_slug, zmiany ceny w procentach; miasto tylko przy city=polska). Pozycje są skrócone; szczegóły oferty i historię ceny daje get_offer. list_url to ta lista na deweloperuch.pl z tymi samymi filtrami. Linki podawaj użytkownikowi.\n\nOgraniczenia: można przejrzeć najwyżej 20 stron po per_page ofert. Gdy truncated=true, zawęź filtry zamiast przeglądać kolejne strony. Wszystkie oferty jednej inwestycji daje get_investment, ceny całego miasta get_market_statistics.",
+      "description": "Wyszukuje oferty mieszkań od deweloperów (tylko rynek pierwotny, ceny ofertowe, nie transakcyjne) w jednym mieście albo w jego dzielnicy; city=polska nie działa. city_slug i nazwę dzielnicy daje search_locations. Filtry: cena, metraż, cena za m², dzielnica, status (aktywne, archiwalne) i obniżka od pierwszej ceny; sortowanie po cenie, cenie za m², metrażu albo największej obniżce; lista ofert nie filtruje po pokojach ani piętrze, ani po deweloperze (jego inwestycje daje get_developer).\n\nZwraca jedną stronę: total (wszystkie pasujące), returned, page, per_page, pages_available, truncated, hint, list_url i items (offer_id, investment_slug, investment_url, name, cena w PLN, metraż w m², cena za m², status, inwestycja z dzielnicą, deweloper z developer_slug, zmiany ceny w procentach). Pozycje są skrócone; szczegóły oferty i historię ceny daje get_offer. Linki podawaj użytkownikowi.\n\nOgraniczenia: można przejrzeć najwyżej 20 stron po per_page ofert. Gdy truncated=true, zawęź filtry (np. dzielnica, cena) zamiast przeglądać kolejne strony. Wszystkie oferty jednej inwestycji daje get_investment, ceny całego miasta get_market_statistics.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "city": {
-            "description": "city_slug miasta z search_locations (np. warszawa, krakow) albo polska dla całego kraju.",
+            "description": "city_slug jednego miasta z search_locations, np. warszawa, krakow (nie polska: serwis nie ma listy ofert całego kraju).",
             "title": "Miasto",
             "type": "string"
           },
@@ -283,7 +283,7 @@
               }
             ],
             "default": null,
-            "description": "Nazwa dzielnicy dokładnie tak, jak podaje ją search_locations (kind=district, pole name), np. Mokotów; tylko z miastem tej dzielnicy, nie z polska.",
+            "description": "Nazwa dzielnicy dokładnie tak, jak podaje ją search_locations (kind=district, pole name), np. Mokotów, Praga-Południe; razem z city_slug miasta tej dzielnicy.",
             "title": "Dzielnica"
           },
           "price_dropped": {
@@ -307,7 +307,7 @@
               }
             ],
             "default": "active",
-            "description": "active (domyślnie): oferty obecnie w cennikach; archived: tylko wycofane; all: aktywne i wycofane.",
+            "description": "active (domyślnie): oferty obecnie w cennikach; archived: tylko wycofane; all: aktywne i wycofane (total przy all może być większy niż suma active i archived: serwis liczy je niejasno).",
             "title": "Status ofert"
           },
           "sort": {
@@ -329,12 +329,12 @@
               }
             ],
             "default": null,
-            "description": "price_asc: od najtańszych, price_desc: od najdroższych, price_per_m2_asc i price_per_m2_desc: po cenie za m², area_asc i area_desc: po metrażu, biggest_drop: najpierw największa obniżka od pierwszej ceny (w %); brak: domyślna kolejność serwisu (nie jest gwarantowana).",
+            "description": "price_asc: od najtańszych, price_desc: od najdroższych, price_per_m2_asc i price_per_m2_desc: po cenie za m², area_asc i area_desc: po metrażu, biggest_drop: najpierw największa obniżka od pierwszej ceny (w %); brak: domyślna kolejność serwisu (nie jest gwarantowana; zwykle najstarsze oferty, grupami po inwestycji; to nie ranking), więc do przeglądu miasta podaj sort.",
             "title": "Kolejność"
           },
           "page": {
             "default": 1,
-            "description": "Numer strony wyników, 1–20.",
+            "description": "Numer strony wyników, 1–20 (dalej serwis nie udostępnia: zawęź filtry).",
             "maximum": 20,
             "minimum": 1,
             "title": "Strona",
@@ -370,6 +370,7 @@
                 "type": "string"
               },
               "name": {
+                "description": "Oznaczenie mieszkania u dewelopera (np. A2, D1.1.1.4); nazwa inwestycji jest w investment_name.",
                 "title": "Name",
                 "type": "string"
               },
@@ -421,6 +422,19 @@
                 "title": "Investment Name",
                 "type": "string"
               },
+              "district": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Dzielnica inwestycji, nazwa jak w search_locations (kind=district): można ją podać w district. Brak, gdy serwis jej nie podaje (np. Sopot).",
+                "title": "District"
+              },
               "investment_url": {
                 "anyOf": [
                   {
@@ -453,7 +467,7 @@
                   }
                 ],
                 "default": null,
-                "description": "increase, decrease albo no_change.",
+                "description": "increase, decrease, no_change albo new_offer (oferta bez zmiany ceny od dodania).",
                 "title": "Last Price Change Kind"
               },
               "last_price_change_pct": {
@@ -481,32 +495,6 @@
                 "default": null,
                 "description": "Zmiana ceny od pierwszej zaobserwowanej, w procentach (ujemna = tańsza).",
                 "title": "Price Change Since Start Pct"
-              },
-              "city": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "default": null,
-                "description": "Tylko przy city=polska.",
-                "title": "City"
-              },
-              "city_slug": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "default": null,
-                "description": "Tylko przy city=polska.",
-                "title": "City Slug"
               }
             },
             "required": [
@@ -1318,7 +1306,7 @@
     {
       "name": "get_investment",
       "title": "Inwestycja z ofertami",
-      "description": "Zwraca inwestycję (projekt deweloperski): miasto, ulicę, współrzędne, dewelopera, średnie ceny aktywnych ofert, liczbę ofert i listę ofert (najpierw aktywne, potem archiwalne). Użyj, gdy chcesz zobaczyć mieszkania jednego projektu. investment_slug daje search_investments, search_offers albo get_developer. investment_url i developer_url to strony inwestycji i dewelopera na deweloperuch.pl: podawaj je użytkownikowi jako linki.\n\nOgraniczenia: zwraca najwyżej limit ofert (domyślnie 20); offers_returned mówi, ile ich jest na liście, truncated i offers_omitted, czy i ile pominięto. offers_total to liczba z serwisu, a pominięte oferty liczy offers_omitted. Przy dużej inwestycji nie zwiększaj limitu bez potrzeby; offers_omitted > 0 znaczy, że lista jest niepełna. include_history=true dodaje historię ceny każdej zwróconej oferty: wynik jest dłuższy i powstaje wolniej. Dla jednej oferty lepiej użyć get_offer.",
+      "description": "Zwraca inwestycję (projekt deweloperski): miasto, ulicę, współrzędne, dewelopera, średnie ceny aktywnych ofert, liczbę ofert i listę ofert (najpierw aktywne, potem archiwalne). Użyj, gdy chcesz zobaczyć mieszkania jednego projektu. investment_slug daje search_investments, search_offers albo get_developer. investment_url i developer_url to strony inwestycji i dewelopera na deweloperuch.pl: podawaj je użytkownikowi jako linki.\n\nOgraniczenia: zwraca najwyżej limit ofert (domyślnie 20); offers_returned mówi, ile ich jest na liście, truncated i offers_omitted, czy i ile pominięto. offers_total to liczba z serwisu, a pominięte oferty liczy offers_omitted. Przy dużej inwestycji nie zwiększaj limitu bez potrzeby; offers_omitted > 0 znaczy, że lista jest niepełna. include_history=true dodaje każdej zwróconej ofercie price_history (zdarzenia ceny od najstarszego): ok. 150 znaków więcej na ofertę, czyli przy limicie 20 do ok. 10 tys. znaków zamiast ok. 6 tys. Zmianę od pierwszej ceny ma każda oferta także bez historii (price_change_since_start), więc historię dodawaj, gdy liczy się przebieg ceny. Dla jednej oferty lepiej użyć get_offer.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1329,13 +1317,13 @@
           },
           "include_history": {
             "default": false,
-            "description": "true: dołącz historię ceny każdej zwróconej oferty (dłuższy wynik).",
+            "description": "true: dołącz price_history każdej zwróconej oferty (ok. 150 znaków więcej na ofertę).",
             "title": "Z historią cen",
             "type": "boolean"
           },
           "limit": {
             "default": 20,
-            "description": "Najwięcej ofert w wyniku (najpierw aktywne), domyślnie 20, 0 = tylko podsumowanie inwestycji. Ile pominięto, mówi offers_omitted. Każda oferta to ok. 300 znaków wyniku, z historią ceny kilkaset więcej. Maksimum 200 daje ok. 60 tys. znaków; zwykle wystarcza domyślne 20.",
+            "description": "Najwięcej ofert w wyniku (najpierw aktywne), domyślnie 20, 0 = tylko podsumowanie inwestycji. Ile pominięto, mówi offers_omitted. Każda oferta to ok. 300 znaków wyniku, z historią ceny ok. 450 (zdarzenie to ok. 55 znaków). Maksimum 200 daje ok. 60 tys. znaków; zwykle wystarcza domyślne 20.",
             "maximum": 200,
             "minimum": 0,
             "title": "Limit ofert",
@@ -1536,6 +1524,7 @@
                   }
                 ],
                 "default": null,
+                "description": "Zdarzenia ceny oferty od najstarszego; tylko z include_history=true.",
                 "title": "Price History"
               }
             },
@@ -1926,24 +1915,24 @@
     {
       "name": "get_developer",
       "title": "Profil dewelopera",
-      "description": "Zwraca profil dewelopera: nazwę, stronę www, podsumowanie jego aktywnych ofert (summary: active_offers, cities, avg_price, avg_area_m2, avg_price_per_m2), inwestycje z aktywnymi ofertami (najpierw te z największą liczbą aktywnych ofert: investment_slug, name, city, active_offers, total_offers razem z archiwalnymi, średnie aktywnych ofert, investment_url) i jego miasta (cities: inwestycje, aktywne oferty, średnia cena i cena za m²). Użyj, gdy pytanie dotyczy dewelopera: gdzie i ile buduje, w jakich cenach. developer_slug weź z search_developers (po nazwie) albo z pól developer_slug w search_offers, get_investment, get_offer. developer_url i investment_url to strony na deweloperuch.pl: podawaj je użytkownikowi jako linki.\n\ncity zawęża summary i investments do jednego miasta (city_slug z search_locations); domyślnie polska (cała Polska). cities zawsze obejmuje całą Polskę.\n\nOgraniczenia: najwyżej limit inwestycji (domyślnie 20); investments_omitted i truncated mówią, ile pominięto. Pojedynczych ofert tu nie ma: oferty inwestycji daje get_investment.",
+      "description": "Zwraca profil dewelopera: nazwę, podsumowanie jego aktywnych ofert (summary), inwestycje z aktywnymi ofertami (najpierw te z największą liczbą aktywnych ofert) i jego miasta (cities, od miasta z największą liczbą aktywnych ofert). Nie podaje strony www dewelopera. Użyj, gdy pytanie dotyczy dewelopera: gdzie i ile buduje, w jakich cenach. developer_slug weź z search_developers (po nazwie) albo z pól developer_slug w search_offers, get_investment, get_offer i get_market_statistics (top_developers). developer_url i investment_url to strony na deweloperuch.pl: podawaj je użytkownikowi jako linki.\n\ncity zawęża summary i investments do jednego miasta (city_slug z search_locations albo z cities); domyślnie polska (cała Polska). cities obejmuje całą Polskę (gdy serwis nie podaje listy miast, tylko miasta inwestycji: wtedy hint). summary liczy narzędzie z inwestycji w zakresie city; summary.cities to liczba miast. Średnia cena oferty w jednym mieście: city=<city_slug>, pole summary.avg_price.\n\nOgraniczenia: najwyżej limit inwestycji (domyślnie 20); o pominięciu mówią investments_omitted (ile), truncated i hint. Pojedynczych ofert tu nie ma: oferty inwestycji daje get_investment.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "developer_slug": {
-            "description": "developer_slug z search_developers (po nazwie) albo z pól developer_slug w search_offers, get_investment, get_offer, np. atal.",
+            "description": "developer_slug z search_developers (po nazwie) albo z pól developer_slug w search_offers, get_investment, get_offer, get_market_statistics (top_developers), np. atal.",
             "title": "Deweloper",
             "type": "string"
           },
           "city": {
             "default": "polska",
-            "description": "city_slug miasta z search_locations (np. krakow) albo polska (domyślnie: cała Polska).",
+            "description": "city_slug miasta z search_locations albo z cities wyniku get_developer (np. krakow), albo polska (domyślnie: cała Polska).",
             "title": "Miasto",
             "type": "string"
           },
           "limit": {
             "default": 20,
-            "description": "Najwięcej inwestycji w wyniku (najpierw te z największą liczbą aktywnych ofert), 1–100, domyślnie 20. Inwestycja to ok. 350 znaków wyniku; zwykle wystarcza domyślne 20.",
+            "description": "Najwięcej inwestycji w wyniku (najpierw te z największą liczbą aktywnych ofert), 1–100, domyślnie 20. Inwestycja to 350–400 znaków wyniku; zwykle wystarcza domyślne 20.",
             "maximum": 100,
             "minimum": 1,
             "title": "Limit inwestycji",
@@ -1967,18 +1956,6 @@
               "name": {
                 "title": "Name",
                 "type": "string"
-              },
-              "website": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "default": null,
-                "title": "Website"
               }
             },
             "required": [
@@ -2021,20 +1998,8 @@
                   }
                 ],
                 "default": null,
+                "description": "Aktywne oferty dewelopera w mieście.",
                 "title": "Active Offers"
-              },
-              "avg_price": {
-                "anyOf": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "default": null,
-                "description": "Średnia cena aktywnych ofert w PLN.",
-                "title": "Avg Price"
               },
               "avg_price_per_m2": {
                 "anyOf": [
@@ -2046,6 +2011,7 @@
                   }
                 ],
                 "default": null,
+                "description": "Średnia cena za m² aktywnych ofert wg serwisu albo liczona z inwestycji.",
                 "title": "Avg Price Per M2"
               }
             },
@@ -2105,6 +2071,7 @@
                   }
                 ],
                 "default": null,
+                "description": "Aktywne oferty inwestycji.",
                 "title": "Active Offers"
               },
               "total_offers": {
@@ -2143,6 +2110,7 @@
                   }
                 ],
                 "default": null,
+                "description": "Średni metraż aktywnych ofert.",
                 "title": "Avg Area M2"
               },
               "avg_price_per_m2": {
@@ -2155,6 +2123,7 @@
                   }
                 ],
                 "default": null,
+                "description": "Cena za m² aktywnych ofert: ich łączna cena przez łączny metraż.",
                 "title": "Avg Price Per M2"
               },
               "investment_url": {
@@ -2243,7 +2212,7 @@
                   }
                 ],
                 "default": null,
-                "description": "Średnia cena za m² aktywnych ofert wg serwisu.",
+                "description": "Średnia cena za m² aktywnych ofert: ceny za m² inwestycji ważone liczbą ich ofert (jak w serwisie), liczona z inwestycji; dla jednego miasta może różnić się o 1 zł od wiersza w cities i nie jest ilorazem avg_price / avg_area_m2.",
                 "title": "Avg Price Per M2"
               }
             },
@@ -2315,7 +2284,7 @@
             "type": "array"
           },
           "cities": {
-            "description": "Wszystkie miasta dewelopera w Polsce, niezależnie od argumentu city (także przy city=warszawa).",
+            "description": "Wszystkie miasta dewelopera w Polsce, niezależnie od argumentu city (także przy city=warszawa), od miasta z największą liczbą aktywnych ofert.",
             "items": {
               "$ref": "#/$defs/DeveloperCityItem"
             },
@@ -2345,7 +2314,7 @@
     {
       "name": "get_market_statistics",
       "title": "Statystyki rynku miasta",
-      "description": "Zwraca statystyki rynku ofert deweloperskich w jednym mieście: liczbę ofert, inwestycji i deweloperów, rozkład cen (PLN), cen za m² (PLN/m²) i metraży (m²) jako min, p25, median, p75 i max oraz największych deweloperów wg liczby ofert (developer_slug, offers, investments, median_price_per_m2, developer_url; developer_slug to identyfikator, a nazwę dewelopera daje get_developer). Opcjonalnie tylko oferty z zakresu ceny i metrażu. Użyj, gdy pytanie dotyczy rynku miasta (typowe ceny, kto ma najwięcej ofert), a nie konkretnych mieszkań (search_offers).\n\nOgraniczenia: tylko aktywne oferty (bez archiwalnych) i tylko jedno miasto (city_slug z search_locations; polska nie działa). Liczby mogą się nieco różnić od total w search_offers. Pojedynczych ofert tu nie ma: list_url to lista tych ofert na deweloperuch.pl z tymi samymi filtrami, a developer_url profil dewelopera: podawaj je użytkownikowi jako linki.",
+      "description": "Zwraca statystyki rynku ofert deweloperskich w jednym mieście: liczbę ofert, inwestycji i deweloperów, rozkład cen (PLN), cen za m² (PLN/m²) i metraży (m²) jako min, p25, median, p75 i max oraz największych deweloperów wg liczby ofert (developer_name, developer_slug, offers, investments, median_price_per_m2, developer_url). Opcjonalnie tylko oferty z zakresu ceny i metrażu. Użyj, gdy pytanie dotyczy rynku miasta (typowe ceny, kto ma najwięcej ofert), a nie konkretnych mieszkań (search_offers; inwestycje dewelopera daje get_developer).\n\nOgraniczenia: tylko aktywne oferty (bez archiwalnych) i tylko jedno miasto (city_slug z search_locations; polska nie działa). Liczby to stan na dzień z pola wyniku as_of i mogą się nieco różnić od total w search_offers. Pojedynczych ofert tu nie ma: list_url to lista tych ofert na deweloperuch.pl z tymi samymi filtrami, a developer_url profil dewelopera: podawaj je użytkownikowi jako linki.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2434,9 +2403,22 @@
           "DeveloperShareItem": {
             "properties": {
               "developer_slug": {
-                "description": "Identyfikator dewelopera (bez nazwy); nazwę i inwestycje daje get_developer.",
+                "description": "Identyfikator dewelopera: inwestycje i ceny daje get_developer (city = city_slug wyniku).",
                 "title": "Developer Slug",
                 "type": "string"
+              },
+              "developer_name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Nazwa dewelopera.",
+                "title": "Developer Name"
               },
               "offers": {
                 "description": "Pasujące aktywne oferty dewelopera w mieście.",
@@ -2556,12 +2538,27 @@
             "title": "City Slug",
             "type": "string"
           },
+          "as_of": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Dzień, na który serwis podał oferty (może być wczorajszy): podawaj go przy liczbach.",
+            "title": "As Of"
+          },
           "offers": {
             "description": "Pasujące aktywne oferty.",
             "title": "Offers",
             "type": "integer"
           },
           "investments": {
+            "description": "Inwestycje z pasującymi ofertami.",
             "title": "Investments",
             "type": "integer"
           },
@@ -2674,18 +2671,18 @@
     {
       "name": "get_transaction_statistics",
       "title": "Ceny transakcyjne w czasie",
-      "description": "Zwraca ceny transakcyjne mieszkań w mieście z Rejestru Cen Nieruchomości (RCN) w kolejnych miesiącach albo kwartałach: liczbę transakcji i ceny za m². To ceny faktycznych sprzedaży, a nie ceny ofertowe deweloperów (search_offers, get_market_statistics) ani oficjalne ceny NBP (get_government_statistics).\n\ngranularity=month (domyślnie): mediana i średnia ceny za m², mediana metrażu i mediana ceny mieszkania. granularity=quarter: tylko średnia cena za m² i liczba transakcji, za to dłuższa historia. Miesiące i kwartały to różne statystyki: nie łącz ich w jeden wykres ani szereg.\n\nZwraca periods (od najstarszego; okres bez transakcji nie ma cen) oraz total, returned, truncated, available_from, last_complete_period, hint, note i stats_url (link).\n\nOgraniczenia: tylko mieszkania i całe miasta (city_slug z search_locations; bez dzielnic, ulic i całej Polski). Domyślnie ostatnie 12 okresów; truncated=true znaczy, że są starsze (zwiększ periods, najwyżej 60). Najnowsze okresy są niepełne (opóźnienie RCN). Okres z incomplete=true pomiń: nie podawaj jego cen jako trendu. Trend kończ na last_complete_period (jego dane też mogą się zmienić); brak pola (za mało transakcji): czytaj hint.",
+      "description": "Zwraca ceny transakcyjne mieszkań w mieście z Rejestru Cen Nieruchomości (RCN) od 2017 r., w kolejnych miesiącach albo kwartałach: liczbę transakcji i ceny za m². To ceny faktycznych sprzedaży, a nie ceny ofertowe deweloperów (search_offers, get_market_statistics) ani oficjalne ceny NBP (get_government_statistics).\n\ngranularity=month (domyślnie): tylko rynek wtórny; mediana i średnia ceny za m², mediana metrażu i mediana ceny mieszkania. granularity=quarter: tylko mediana ceny za m² i liczba transakcji; rynek nieokreślony. Miesiące i kwartały to różne statystyki: nie łącz ich w jeden wykres ani szereg.\n\nOgraniczenia: tylko mieszkania i całe miasta (city_slug z search_locations; bez dzielnic, ulic, agregatów (np. 7-miast) i całej Polski). Domyślnie ostatnie 12 okresów; truncated=true znaczy, że są starsze (zwiększ periods, najwyżej 60; całą historię od 2017 r. daje tylko quarter). Dane RCN spływają z opóźnieniem, więc najnowsze okresy są niepełne: okres z incomplete=true pomiń, nie podawaj jego cen jako trendu. Okres bez transakcji nie ma cen. Trend kończ na last_complete_period (jego dane też mogą się zmienić); brak pola (za mało transakcji): czytaj hint.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "city": {
-            "description": "city_slug miasta z search_locations, np. warszawa, krakow, gdansk (małe litery bez polskich znaków). Statystyki są dla całych miast; dzielnice, ulice i cała Polska (polska) nie są obsługiwane.",
+            "description": "city_slug miasta z search_locations, np. warszawa, krakow, gdansk (małe litery bez polskich znaków). Statystyki są dla całych miast; dzielnice, ulice, agregaty miast (np. 7-miast) i cała Polska (polska) nie są obsługiwane.",
             "title": "Miasto",
             "type": "string"
           },
           "granularity": {
             "default": "month",
-            "description": "month (domyślnie): miesiące, z medianą i średnią ceny za m², medianą metrażu i medianą ceny mieszkania; quarter: kwartały, tylko średnia cena za m² i liczba transakcji, ale dłuższa historia.",
+            "description": "month (domyślnie): miesiące, tylko rynek wtórny, z medianą i średnią ceny za m², medianą metrażu i medianą ceny mieszkania; quarter: kwartały, tylko mediana ceny za m² i liczba transakcji (rynek nieokreślony), za to cała historia od 2017 r. w jednym wywołaniu (periods=60).",
             "enum": [
               "month",
               "quarter"
@@ -2745,7 +2742,7 @@
                   }
                 ],
                 "default": null,
-                "description": "Mediana ceny transakcyjnej 1 m² w PLN (tylko month).",
+                "description": "Mediana ceny transakcyjnej 1 m² w PLN.",
                 "title": "Median Price Per M2"
               },
               "average_price_per_m2": {
@@ -2758,7 +2755,7 @@
                   }
                 ],
                 "default": null,
-                "description": "Średnia cena transakcyjna 1 m² w PLN.",
+                "description": "Średnia cena transakcyjna 1 m² w PLN (tylko granularity=month).",
                 "title": "Average Price Per M2"
               },
               "median_area_m2": {
@@ -2771,7 +2768,7 @@
                   }
                 ],
                 "default": null,
-                "description": "Mediana metrażu w m² (tylko month).",
+                "description": "Mediana metrażu w m² (tylko granularity=month).",
                 "title": "Median Area M2"
               },
               "median_price": {
@@ -2784,7 +2781,7 @@
                   }
                 ],
                 "default": null,
-                "description": "Mediana ceny transakcyjnej mieszkania w PLN (tylko month).",
+                "description": "Mediana ceny transakcyjnej mieszkania w PLN (tylko granularity=month).",
                 "title": "Median Price"
               }
             },
@@ -4077,18 +4074,18 @@
     },
     {
       "name": "get_government_statistics",
-      "title": "Statystyki GUS i NBP",
-      "description": "Zwraca oficjalne statystyki GUS i NBP jako szeregi czasowe dla Polski, agregatu miast albo miasta na prawach powiatu: mieszkania oddane do użytkowania i rozpoczęte (razem, wg form budownictwa, na wynajem), średnią powierzchnię mieszkań oddanych przez deweloperów, średnie ceny m² wg NBP (rynek pierwotny i wtórny, ceny ofertowe i transakcyjne), stopę bezrobocia, wynagrodzenia, demografię i ludność. Użyj jako kontekstu rynku; ofert i cen konkretnych mieszkań tu nie ma (search_offers).\n\nZwraca periods (od najstarszego) i series (series_id, label, unit, values wyrównane z periods; null = brak danych) oraz frequency, source, total, returned, truncated, available_from, note i stats_url (sekcja strony na deweloperuch.pl: podaj ją użytkownikowi jako link).\n\nOgraniczenia: domyślnie ostatnie 12 okresów; truncated=true znaczy, że są starsze (zwiększ periods, najwyżej 120). nbp_prices: tylko 17 dużych miast i 3 agregaty, nie polska. Nie każdy zestaw jest dostępny dla każdej lokalizacji (błąd wskaże, co podać); dane GUS i NBP są publikowane z opóźnieniem, ostatni okres bywa sprzed kilku tygodni lub miesięcy. Przeczytaj note: ostatni okres bywa niepełny.",
+      "title": "Statystyki GUS, NBP i Eurostatu",
+      "description": "Zwraca oficjalne statystyki GUS, NBP i Eurostatu (demografia Polski) jako szeregi czasowe dla Polski, agregatu miast albo miasta na prawach powiatu: mieszkania oddane i rozpoczęte, średnią powierzchnię mieszkań deweloperskich, ceny m² wg NBP, bezrobocie, wynagrodzenia, demografię i ludność (zestawy: parametr dataset). Użyj jako kontekstu rynku; ofert i cen konkretnych mieszkań tu nie ma (search_offers), a ceny z rejestru RCN daje get_transaction_statistics.\n\nZwraca periods (od najstarszego) i series (series_id, label, unit, values wyrównane z periods; null = brak danych) oraz frequency, source, total, returned, truncated, available_from, note i stats_url (sekcja strony na deweloperuch.pl: podaj ją użytkownikowi jako link).\n\nOgraniczenia: domyślnie ostatnie 12 okresów; truncated=true znaczy, że są starsze (zwiększ periods, najwyżej 120). nbp_prices: tylko 3 agregaty i część dużych miast (np. warszawa, krakow), nie polska. Nie każdy zestaw jest dostępny dla każdej lokalizacji (błąd wskaże, co podać); dane GUS i NBP są publikowane z opóźnieniem, ostatni okres bywa sprzed kilku tygodni, miesięcy, a dla demografii Polski nawet roku. Przeczytaj note: ostatni okres bywa niepełny.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "location": {
-            "description": "polska (cała Polska), agregat 7-miast, 10-miast albo 6-miast-bez-warszawy, albo jedno z 66 miast na prawach powiatu: nazwa małymi literami bez polskich znaków, z myślnikami zamiast spacji, np. warszawa, krakow, lodz, bielsko-biala, zielona-gora; Jastrzębie-Zdrój to jastrzebie. Dane są tylko dla 66 miast na prawach powiatu, a nie dla dzielnic i mniejszych miejscowości.",
+            "description": "polska (cała Polska), agregat 7-miast, 10-miast albo 6-miast-bez-warszawy, albo jedno z 66 miast na prawach powiatu: nazwa małymi literami bez polskich znaków, z myślnikami zamiast spacji, np. warszawa, krakow, lodz, bielsko-biala, zielona-gora, jastrzebie-zdroj. Dane są tylko dla 66 miast na prawach powiatu, a nie dla dzielnic i mniejszych miejscowości.",
             "title": "Lokalizacja",
             "type": "string"
           },
           "dataset": {
-            "description": "dwellings_quarterly: mieszkania oddane do użytkowania i rozpoczęte (razem, wg form budownictwa, na wynajem), kwartalnie; dwellings_monthly: to samo miesięcznie; average_area: średnia powierzchnia mieszkania oddanego przez deweloperów (m², rocznie); demography: urodzenia żywe, zgony, przyrost naturalny (dla Polski miesięcznie, dla miast rocznie); population: ludność, kobiety i mężczyźni (rocznie); unemployment: stopa bezrobocia rejestrowanego (%, miesięcznie); wages: przeciętne miesięczne wynagrodzenie brutto w PLN (dla Polski miesięcznie, dla miast rocznie, czasem z relacją do średniej krajowej); nbp_prices: średnie ceny m² wg NBP, rynek pierwotny i wtórny, ofertowe i transakcyjne (PLN/m², kwartalnie). Częstotliwość zwraca pole frequency.",
+            "description": "dwellings_quarterly: mieszkania oddane do użytkowania i rozpoczęte (razem, wg form budownictwa, na wynajem), kwartalnie; dwellings_monthly: to samo miesięcznie; average_area: średnia powierzchnia mieszkania oddanego przez deweloperów (m², rocznie); demography: urodzenia żywe, zgony, przyrost naturalny (dla Polski miesięcznie wg Eurostatu, dla miast rocznie wg GUS); population: ludność, kobiety i mężczyźni (rocznie); unemployment: stopa bezrobocia rejestrowanego (%, miesięcznie); wages: przeciętne miesięczne wynagrodzenie brutto w PLN (dla Polski miesięcznie, dla miast rocznie, czasem z relacją do średniej krajowej); nbp_prices: średnie ceny m² wg NBP, rynek pierwotny i wtórny, ofertowe i transakcyjne (PLN/m², kwartalnie). Częstotliwość zwraca pole frequency. Agregat 7-miast nie ma wages ani unemployment (są dla miast i polska).",
             "enum": [
               "dwellings_quarterly",
               "dwellings_monthly",

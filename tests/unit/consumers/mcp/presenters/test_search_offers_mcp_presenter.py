@@ -10,4 +10,9 @@ pytestmark = pytest.mark.usefixtures("unix_sockets_for_the_event_loop")
 
 
 def test_search_items_are_compact() -> None:
-    assert set(OfferItem.model_fields) == COMPACT_OFFER | {"city", "city_slug"}
+    """A search is of one city (``polska`` is refused), so an item has no city of its own;
+    its district comes right after its investment."""
+    fields = list(OfferItem.model_fields)
+
+    assert set(fields) == COMPACT_OFFER
+    assert fields[fields.index("investment_name") + 1] == "district"

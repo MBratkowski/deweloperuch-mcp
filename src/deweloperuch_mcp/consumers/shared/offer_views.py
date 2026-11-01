@@ -117,6 +117,8 @@ class OfferSummaryView(OfferBaseView):
     """The investment's page on the service."""
     city: str | None = None
     city_slug: str | None = None
+    district: str | None = None
+    """The investment's district, as the locations search names it."""
     developer_slug: str
     developer_name: str
 
@@ -135,6 +137,7 @@ class OfferSummaryView(OfferBaseView):
             investment_url=investment_url,
             city=ref.city,
             city_slug=ref.city_slug,
+            district=ref.district,
             developer_slug=ref.developer.developer_slug,
             developer_name=ref.developer.name,
         )

@@ -161,6 +161,30 @@ Documentation is written in English. Product text (tool descriptions, messages, 
 - **U1 (resolved 2026-10-14):** the authors of deweloperuch.pl agreed to the project's use of the service, with no conditions; the client identifies itself with an honest project User-Agent (D2).
 - **Repository content before publication:** internal working material (development handoffs, agent memory, prompts) is removed from the published tree; samples are reviewed for personal data (RCN unit identifiers get pseudonymised) and for content outside the project's scope.
 
+## D19. Caching of the bulk statistics routes (proposed 2026-10-30)
+
+**Context.** The 2.0 client of the service reads bulk statistics routes, `/api/map/tx-cities` and `/api/statystyki/powiat-map-stats` [P z kodu, T59]. The per-process cache of D2 (at most 300 s) would refetch them in every CLI run and after every MCP server restart.
+**Options.** (a) TTL from `s-maxage` for these routes in each process; (b) (a) plus a disk cache shared by processes; (c) a disk cache for every route. Not decided; needed before `rank_locations` reads these routes.
+
+## D20. `offer-snapshot` replaces `city-sales` for offer-market statistics (accepted 2026-10-30)
+
+**Context.** The relaunch of the service on 2026-10-29 removed `GET /api/offers/city-sales/{citySlug}`, the source of D15 (404 [P 2026-10-29]). The 2.0 client reads `GET /api/map/offer-snapshot/{citySlug}`, which lists every active offer of a city in compact rows [P z kodu 2026-10-30]. It is an internal route of the service and may change without notice.
+**Decision.**
+- `get_market_statistics` (MCP) and `stats market` (CLI) read `offer-snapshot` for one city and compute the same aggregates as under D15; the output contract stays.
+- As under D15, the response stays inside the process; outputs carry only aggregates and a bounded list of developers. The route is a read channel under the D2 client.
+- The code relies only on fields confirmed in a captured response ([P]). `polska` is refused before any request.
+- `city-sales` is retired from the code.
+
+## D21. Tools stay on pages and internal routes where the service has no stable route (accepted 2026-10-30)
+
+**Context.** The relaunch of 2026-10-29 changed page props, moved routes and removed JSON endpoints without notice (T55–T62). Most data the tools serve is exposed only through server-rendered pages (RSC) and internal JSON routes, which can change at any deploy.
+**Decision.**
+- No tool is retired in 0.2.0; tools keep reading pages and internal routes where no stable route exists.
+- Each such adapter names its channel as internal in a comment. A removed route (an HTML 404) or a redirect reads as a change of the service, never as an unknown city or entity.
+- After each deploy of the service: a drift scan and the live e2e suite (D7, D9).
+- The project asks the service authors for stable routes for the most used data.
+- Rejected: retiring every tool without a stable route (it would cut the server down to a few search and statistics tools); following redirects.
+
 ---
 
 ## History

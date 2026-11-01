@@ -1,0 +1,19 @@
+{
+  "args": [
+    "stats",
+    "transactions",
+    "warszawa"
+  ],
+  "exit_code": 6,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: Ceny transakcyjne dla 'warszawa': Narzędzie nie może pobrać tych danych, bo serwis przeniósł je w inne miejsce albo przestał je udostępniać. To nie musi znaczyć, że argumenty są błędne ani że szukanego obiektu nie ma. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.",
+    "Szczegóły: /statystyki/warszawa/transakcje?_rsc=: HTTP 404, text/html, 250 B",
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/statystyki/warszawa/transakcje?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

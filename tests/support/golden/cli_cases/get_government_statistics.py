@@ -3,28 +3,24 @@
 from deweloperuch_mcp.models.government_statistics import Dataset
 from support.golden.cli import INJECTED_BODY, Case, case
 from support.golden.routes import stats_answer
+from support.providers.error_answers import unknown_location_page
 from support.providers.routes.government_statistics import (
+    STATS_PAGES,
     UNKNOWN_LOCATION,
     stats_routes,
     unknown_location_route,
 )
-from support.providers.rsc import (
-    STATS_POLSKA,
-    raw,
-)
+from support.providers.rsc import raw
 from support.providers.samples import rsc_payload
 
 CASES: dict[str, Case] = {
     "help_stats_government": case("stats", "government", "--help"),
-    "stats_government_wroclaw_2_0_wages": case(
-        "stats", "government", "wroclaw", "wages", "--periods", "3", service=stats_routes
-    ),
-    # stats government: the real pages
+    # stats government: the real 2.0 pages
     **{
-        f"stats_{location}_{dataset.value}": case(
+        f"stats_{location.replace('-', '_')}_{dataset.value}": case(
             "stats", "government", location, dataset.value, service=stats_routes
         )
-        for location in ("polska", "warszawa")
+        for location in ("polska", "warszawa", "7-miast")
         for dataset in Dataset
     },
     **{
@@ -74,7 +70,14 @@ CASES: dict[str, Case] = {
         "government",
         "krakow",
         "wages",
-        service=stats_answer("krakow", 200, content=raw(STATS_POLSKA)),
+        service=stats_answer("krakow", 200, content=raw(STATS_PAGES["polska"])),
+    ),
+    "stats_polska_404": case(
+        "stats",
+        "government",
+        "polska",
+        "wages",
+        service=stats_answer("polska", 404, **unknown_location_page()),
     ),
     "stats_page_without_data": case(
         "stats",

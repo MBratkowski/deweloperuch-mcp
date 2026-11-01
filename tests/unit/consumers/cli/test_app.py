@@ -39,7 +39,7 @@ def test_types_and_enums_are_checked_before_a_session_opens(
     ("args", "message"),
     [
         (["offers", "search", "warszawa", "--page", "21"], "page musi być liczbą całkowitą"),
-        (["offers", "search", "Kraków"], "city: oczekiwano slug miasta"),
+        (["offers", "search", "Kraków"], "city: oczekiwano city_slug jednego miasta"),
         (["offers", "search", "warszawa", "--price-min", "7", "--price-max", "5"], "price_min"),
         (["offers", "search", "warszawa", "--area-min", "-1"], "area_min"),
         (["offers", "get", "0", "--investment", "smolna"], "offer_id"),

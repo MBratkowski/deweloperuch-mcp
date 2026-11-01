@@ -68,7 +68,7 @@ class OfferCatalog(Protocol):
 
     def search(self, criteria: OfferSearchCriteria) -> OfferSearchPage:
         """One page of the offers matching ``criteria``; ``NotFoundError`` when the
-        service does not know the city."""
+        service does not know the city or its district."""
         ...
 
     def price_events(self, offer_id: OfferId) -> tuple[PriceEvent, ...]:
@@ -83,15 +83,17 @@ class InvestmentCatalog(Protocol):
         """The investment with every offer (without their events)."""
         ...
 
-    def price_events_of_offers(
-        self, investment: Investment
-    ) -> Mapping[int, tuple[PriceEvent, ...]]:
-        """Offer id -> its price events, oldest first, for the offers that have any."""
+    def price_events_of_offers(self, slug: InvestmentSlug) -> Mapping[int, tuple[PriceEvent, ...]]:
+        """Offer id -> its price events, oldest first, for every offer of investment ``slug``
+        (an empty entry for an offer without events). The service sends them in the answer
+        ``investment`` reads: after ``investment`` they cost no request of their own, and an
+        ``UnexpectedResponseError`` here is about the events alone. An answer the client
+        could not keep is read again and may be a later one, whose offers differ."""
         ...
 
 
 class CityOffersSource(Protocol):
-    """Every active offer of a city, compact, for the market summary (D15)."""
+    """Every active offer of a city, compact, for the market summary (D20)."""
 
     def city_offers(self, city: CitySlug) -> CityOffers:
         """The offers of one city (never the whole country); ``NotFoundError`` when the

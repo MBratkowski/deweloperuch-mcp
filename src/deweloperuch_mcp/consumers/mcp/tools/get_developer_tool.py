@@ -17,37 +17,45 @@ from deweloperuch_mcp.models.values import WHOLE_COUNTRY
 from deweloperuch_mcp.usecases.get_developer import GetDeveloperRequest
 
 MAX_DEVELOPER_LIMIT = 100
-"""Investments ``get_developer`` may return: about 38k characters at most; the default 20
-gives about 9.5k (a developer of 42 investments: 17k for all, [P 2026-10-13])."""
+"""Investments ``get_developer`` may return: about 40k characters at most (350–400 per
+investment: ATAL 330 on average, Dom Development 389, at most 474 [P 2026-10-31]); the
+default 20 gives about 8.5k (a developer of 42 investments: 15.7k for all,
+tests/golden/mcp/developer_*.json)."""
 Limit = Annotated[int, Field(ge=1, le=MAX_DEVELOPER_LIMIT)]
 
 
 class GetDeveloperTool(ToolBase):
-    # [P 2026-10-13] tests/fixtures/rsc/developer_atal_*.rsc: the profile lists the
-    # investments with active offers (all `active`, every one with active offers; the
-    # developer has more investments by name), `cities` are the same 14 on the city's and
-    # the country's page, and the figures of `summary` and `cities` match the page's own
-    # offers (tests/contract/api/dto/test_developer_page_dto.py). An unknown city with a
-    # known developer is [H].
+    # [P 2026-10-31] tests/fixtures/rsc/developer_*_20261031.rsc (the 2.0 page, an internal
+    # channel of the site's UI, D21): the profile lists the investments with active offers
+    # (all `active`), `cities` are the same 14 on ATAL's city page and country page (a
+    # developer in one city has no chart of cities: its city comes from its investments;
+    # [W] that every page without the chart is such a developer, so a city's profile then
+    # says in its hint that `cities` may be that city only), `summary` is summed up from
+    # the investments and agrees with the page's chart of cities, and the investments'
+    # figures match the offer snapshot of the same day
+    # (tests/contract/api/dto/test_developer_page_dto.py). The page names no website. A
+    # known developer in a city without its offers, and an unknown city, are [H] (T39).
     name = "get_developer"
     title = "Profil dewelopera"
     description = """\
-Zwraca profil dewelopera: nazwę, stronę www, podsumowanie jego aktywnych ofert (summary: \
-active_offers, cities, avg_price, avg_area_m2, avg_price_per_m2), inwestycje z \
-aktywnymi ofertami (najpierw te z największą liczbą aktywnych ofert: investment_slug, \
-name, city, active_offers, total_offers razem z archiwalnymi, średnie aktywnych ofert, \
-investment_url) i jego miasta (cities: inwestycje, aktywne oferty, średnia cena i cena \
-za m²). Użyj, gdy pytanie dotyczy dewelopera: gdzie i ile buduje, w jakich cenach. \
+Zwraca profil dewelopera: nazwę, podsumowanie jego aktywnych ofert (summary), inwestycje \
+z aktywnymi ofertami (najpierw te z największą liczbą aktywnych ofert) i jego miasta \
+(cities, od miasta z największą liczbą aktywnych ofert). Nie podaje strony www \
+dewelopera. Użyj, gdy pytanie dotyczy dewelopera: gdzie i ile buduje, w jakich cenach. \
 developer_slug weź z search_developers (po nazwie) albo z pól developer_slug w \
-search_offers, get_investment, get_offer. developer_url i investment_url to strony na \
-deweloperuch.pl: podawaj je użytkownikowi jako linki.
+search_offers, get_investment, get_offer i get_market_statistics (top_developers). \
+developer_url i investment_url to strony na deweloperuch.pl: podawaj je użytkownikowi jako \
+linki.
 
-city zawęża summary i investments do jednego miasta (city_slug z search_locations); \
-domyślnie polska (cała Polska). cities zawsze obejmuje całą Polskę.
+city zawęża summary i investments do jednego miasta (city_slug z search_locations albo z \
+cities); domyślnie polska (cała Polska). cities obejmuje całą Polskę (gdy serwis nie \
+podaje listy miast, tylko miasta inwestycji: wtedy hint). summary liczy narzędzie z \
+inwestycji w zakresie city; summary.cities to liczba miast. Średnia cena oferty w jednym \
+mieście: city=<city_slug>, pole summary.avg_price.
 
-Ograniczenia: najwyżej limit inwestycji (domyślnie 20); investments_omitted i truncated \
-mówią, ile pominięto. Pojedynczych ofert tu nie ma: oferty inwestycji daje \
-get_investment."""
+Ograniczenia: najwyżej limit inwestycji (domyślnie 20); o pominięciu mówią \
+investments_omitted (ile), truncated i hint. Pojedynczych ofert tu nie ma: oferty \
+inwestycji daje get_investment."""
 
     async def __call__(
         self,
@@ -57,7 +65,8 @@ get_investment."""
                 title="Deweloper",
                 description=(
                     "developer_slug z search_developers (po nazwie) albo z pól developer_slug w "
-                    "search_offers, get_investment, get_offer, np. atal."
+                    "search_offers, get_investment, get_offer, get_market_statistics "
+                    "(top_developers), np. atal."
                 ),
             ),
         ],
@@ -68,8 +77,8 @@ get_investment."""
             Field(
                 title="Miasto",
                 description=(
-                    "city_slug miasta z search_locations (np. krakow) albo polska (domyślnie: "
-                    "cała Polska)."
+                    "city_slug miasta z search_locations albo z cities wyniku get_developer "
+                    "(np. krakow), albo polska (domyślnie: cała Polska)."
                 ),
             ),
         ] = WHOLE_COUNTRY,
@@ -80,7 +89,7 @@ get_investment."""
                 title="Limit inwestycji",
                 description=(
                     "Najwięcej inwestycji w wyniku (najpierw te z największą liczbą aktywnych "
-                    "ofert), 1–100, domyślnie 20. Inwestycja to ok. 350 znaków wyniku; zwykle "
+                    "ofert), 1–100, domyślnie 20. Inwestycja to 350–400 znaków wyniku; zwykle "
                     "wystarcza domyślne 20."
                 ),
             ),

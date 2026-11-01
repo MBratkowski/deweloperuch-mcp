@@ -1,15 +1,16 @@
-"""Use case ``GetMarketStatistics``: the offer market of one city in numbers (D15)."""
+"""Use case ``GetMarketStatistics``: the offer market of one city in numbers (D15, D20)."""
 
 from dataclasses import dataclass
 from typing import Self
 
 from deweloperuch_mcp.models.market_statistics import (
     DEFAULT_TOP_DEVELOPERS,
+    MarketCity,
     MarketCriteria,
     MarketStatistics,
 )
 from deweloperuch_mcp.models.offer import OfferSearchCriteria
-from deweloperuch_mcp.models.values import AreaRange, CitySlug, DeveloperCount, PriceRange
+from deweloperuch_mcp.models.values import AreaRange, DeveloperCount, PriceRange
 from deweloperuch_mcp.usecases.ports import CityOffersSource, PageLinks
 from deweloperuch_mcp.usecases.support.arguments import ParameterCheck
 from deweloperuch_mcp.usecases.support.failures import ReportedAs
@@ -37,7 +38,7 @@ class GetMarketStatisticsRequest:
         with ParameterCheck():
             return cls(
                 criteria=MarketCriteria(
-                    city=MarketCriteria.one_city(CitySlug.parse(city)),
+                    city=MarketCriteria.one_city(MarketCity.parse(city)),
                     price=PriceRange.parse(price_min, price_max),
                     area=AreaRange.parse(area_min, area_max),
                     top=DeveloperCount.parse(top_developers),
@@ -68,7 +69,7 @@ class GetMarketStatisticsResult:
 
 class GetMarketStatistics:
     """Every active offer of the city in one request; the domain sums them up and names
-    the largest developers. Single offers stay here (D15)."""
+    the largest developers. Single offers stay here (D15, D20)."""
 
     def __init__(self, source: CityOffersSource, links: PageLinks) -> None:
         self._source = source
@@ -94,7 +95,10 @@ class GetMarketStatistics:
 
     @staticmethod
     def _unknown_city(city: str) -> str:
+        # [H] (T69): a place with no offers (offer_count=0 in search_locations) and an
+        # aggregate were never asked for; they may well answer as an unknown city does.
         return (
-            f"Serwis nie zna miasta {city!r}. Podaj city_slug z search_locations "
-            "(statystyki rynku są tylko dla jednego miasta)."
+            f"Serwis nie zna miasta {city!r} albo nie ma w nim ofert. Podaj city_slug z "
+            "search_locations (miejscowości z offer_count=0 nie mają statystyk; statystyki "
+            "rynku są tylko dla jednego miasta)."
         )

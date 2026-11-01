@@ -17,11 +17,13 @@ class GetMarketStatisticsCliPresenter:
 
     @classmethod
     def _text(cls, result: MarketStatisticsView) -> str:
-        """Head lines, a table of the spreads, then the largest developers."""
+        """Head lines (with the day of the data, when known), a table of the spreads, then
+        the largest developers."""
+        as_of = "" if result.as_of is None else f" · stan na {result.as_of.isoformat()}"
         lines = [
             f"Rynek ofert [{result.city_slug}] · aktywne oferty: {number_text(result.offers)} · "
             f"inwestycje: {number_text(result.investments)} · deweloperzy: "
-            f"{number_text(result.developers)}."
+            f"{number_text(result.developers)}{as_of}."
         ]
         if result.hint:
             lines.append(f"Wskazówka: {result.hint}")
@@ -33,8 +35,11 @@ class GetMarketStatisticsCliPresenter:
                 f"Najwięcej ofert (pokazano {len(result.top_developers)} z {result.developers}):"
             )
             for share in result.top_developers:
+                named = share.developer_slug
+                if share.developer_name:
+                    named = f"{share.developer_name} [{share.developer_slug}]"
                 lines.append(
-                    f"  {share.developer_slug} · oferty {number_text(share.offers)} · inwestycje "
+                    f"  {named} · oferty {number_text(share.offers)} · inwestycje "
                     f"{number_text(share.investments)} · mediana "
                     f"{amount_text(share.median_price_per_m2, 'PLN/m²')}"
                 )

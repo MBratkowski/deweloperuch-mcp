@@ -16,22 +16,16 @@ from deweloperuch_mcp.errors import (
     UnexpectedResponseError,
 )
 from support.providers import operations
+from support.providers.error_answers import CHANGED_SERVICE, unknown_location_page
 from support.providers.routes.government_statistics import (
+    STATS_PAGES,
     UNKNOWN_LOCATION,
     stats_path,
     stats_routes,
     unknown_location_route,
 )
-from support.providers.rsc import (
-    STATS_POLSKA,
-    raw,
-)
+from support.providers.rsc import raw
 from support.providers.service import BASE
-
-NBP_LOCATIONS = (
-    "warszawa, 10-miast, 7-miast, 6-miast-bez-warszawy, krakow, gdansk, wroclaw, gdynia, poznan"
-)
-"""[P 2026-10-30] the locations of the NBP grid of the 2.0 page of ``polska``."""
 
 
 def test_government_statistics_the_latest_periods_of_a_dataset(
@@ -85,11 +79,11 @@ def test_government_statistics_of_one_location_take_one_request(
     assert routes["polska"].call_count == 1
 
 
-@pytest.mark.parametrize("location", ["polska", "warszawa"])
+@pytest.mark.parametrize("location", ["polska", "warszawa", "7-miast"])
 def test_government_statistics_note_the_incomplete_last_quarter(
     session: bootstrap.Session, service: respx.MockRouter, location: str
 ) -> None:
-    """[P 2026-10-11] both pages: 2026-Q3 is July and August only."""
+    """[P 2026-10-31] every page: 2026-Q3 is July and August only."""
     stats_routes(service)
 
     result = operations.get_government_statistics(session, location, "dwellings_quarterly")
@@ -112,9 +106,47 @@ def test_government_nbp_prices_of_the_whole_country_point_to_cities(
         operations.get_government_statistics(session, "polska", "nbp_prices")
 
     assert str(caught.value) == (
-        "NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj jedną "
-        f"z lokalizacji: {NBP_LOCATIONS}."
+        "NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj "
+        "agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo duże miasto, np. warszawa, "
+        "krakow, gdansk, wroclaw, gdynia, poznan."
     )
+
+
+@pytest.mark.parametrize(
+    ("dataset", "frequency", "source", "section"),
+    [
+        ("average_area", "year", "GUS", "gus-srednia-powierzchnia"),
+        ("demography", "year", "GUS", "gus-demografia"),
+        ("nbp_prices", "quarter", "NBP", "nbp"),
+    ],
+)
+def test_government_statistics_of_an_aggregate(
+    session: bootstrap.Session,
+    service: respx.MockRouter,
+    dataset: str,
+    frequency: str,
+    source: str,
+    section: str,
+) -> None:
+    """``7-miast``, its name from the page, its sections linked [P 2026-10-31]."""
+    stats_routes(service)
+
+    result = operations.get_government_statistics(session, "7-miast", dataset)
+
+    assert (result.location_slug, result.location_name) == ("7-miast", "Top 7 miast Polski")
+    assert (result.frequency, result.source) == (frequency, source)
+    assert result.stats_url == f"{BASE}/statystyki/7-miast/dane-rzadowe#{section}"
+
+
+@pytest.mark.parametrize("dataset", ["wages", "unemployment"])
+def test_government_statistics_an_aggregate_lacks_are_not_published(
+    session: bootstrap.Session, service: respx.MockRouter, dataset: str
+) -> None:
+    """``7-miast`` has no wages, and its unemployment only city by city [P 2026-10-31]."""
+    stats_routes(service)
+
+    with pytest.raises(NotFoundError, match=f"^Serwis nie publikuje zestawu '{dataset}'"):
+        operations.get_government_statistics(session, "7-miast", dataset)
 
 
 def test_government_statistics_of_an_unknown_location_are_not_found(
@@ -128,19 +160,51 @@ def test_government_statistics_of_an_unknown_location_are_not_found(
     assert str(caught.value) == (
         f"Serwis nie ma statystyk rządowych dla lokalizacji {UNKNOWN_LOCATION!r}. Podaj "
         "polska, agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo slug miasta na "
-        "prawach powiatu bez polskich znaków, np. warszawa, krakow. Jeśli nie znasz sluga "
-        "miasta, spróbuj city_slug z search_locations (zwykle jest taki sam, ale nie "
-        "zawsze, np. dla Jastrzębia-Zdroju użyj jastrzebie). Statystyki są tylko dla miast "
-        "na prawach powiatu."
+        "prawach powiatu: nazwa małymi literami bez polskich znaków, z myślnikami zamiast "
+        "spacji, np. warszawa, krakow, jastrzebie-zdroj. Jeśli nie znasz sluga miasta, "
+        "spróbuj city_slug z search_locations (zwykle jest taki sam). Statystyki są tylko "
+        "dla miast na prawach powiatu."
     )
-    assert caught.value.detail is not None and "NEXT_HTTP_ERROR_FALLBACK;404" in caught.value.detail
+    assert caught.value.detail == (
+        f"/statystyki/{UNKNOWN_LOCATION}/dane-rzadowe?_rsc=: HTTP 404, text/x-component"
+    )
+
+
+@pytest.mark.parametrize("location", ["polska", "7-miast", "warszawa"])
+def test_government_statistics_of_a_known_location_are_never_unknown(
+    session: bootstrap.Session, service: respx.MockRouter, location: str
+) -> None:
+    """A 404 for ``polska``, an aggregate or a city the pages link: a changed service
+    (D21), not "give a valid location" to a model that gave one."""
+    service.get(path=stats_path(location)).respond(404, **unknown_location_page())
+
+    with pytest.raises(UnexpectedResponseError) as caught:
+        operations.get_government_statistics(session, location, "average_area")
+
+    assert str(caught.value) == f"Statystyki rządowe dla {location!r}: {CHANGED_SERVICE}"
+
+
+def test_government_statistics_of_the_old_slug_of_a_city_say_what_to_give(
+    session: bootstrap.Session, service: respx.MockRouter
+) -> None:
+    """``jastrzebie`` (1.0) is no location of the 2.0 pages: unknown, with the slug they
+    link (``jastrzebie-zdroj``) in the message."""
+    service.get(path=stats_path("jastrzebie")).respond(404, **unknown_location_page())
+
+    with pytest.raises(NotFoundError) as caught:
+        operations.get_government_statistics(session, "jastrzebie", "average_area")
+
+    assert str(caught.value).startswith(
+        "Serwis nie ma statystyk rządowych dla lokalizacji 'jastrzebie'."
+    )
+    assert "jastrzebie-zdroj" in str(caught.value)
 
 
 def test_government_statistics_of_a_page_about_another_location_are_unexpected(
     session: bootstrap.Session, service: respx.MockRouter
 ) -> None:
     """The root page served for an unknown location (a fallback, [H]): never its data."""
-    service.get(path=stats_path("krakow")).respond(200, content=raw(STATS_POLSKA))
+    service.get(path=stats_path("krakow")).respond(200, content=raw(STATS_PAGES["polska"]))
 
     with pytest.raises(UnexpectedResponseError) as caught:
         operations.get_government_statistics(session, "krakow", "average_area")
@@ -149,7 +213,7 @@ def test_government_statistics_of_a_page_about_another_location_are_unexpected(
         "Statystyki rządowe dla 'krakow': Serwis zwrócił statystyki innej lokalizacji"
     )
     assert SERVICE_CHANGED in str(caught.value)
-    assert "currentSlug" not in str(caught.value)
+    assert "citySlug" not in str(caught.value)
 
 
 def test_government_statistics_errors_name_the_location(

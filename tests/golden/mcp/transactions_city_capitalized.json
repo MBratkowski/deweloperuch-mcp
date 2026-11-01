@@ -17,33 +17,33 @@
         "total": 3,
         "returned": 3,
         "truncated": false,
-        "available_from": "2021-01",
+        "available_from": "2017-01",
         "note": "Ostatnie miesiące są niepełne: transakcje trafiają do Rejestru Cen Nieruchomości z kilkumiesięcznym opóźnieniem, więc najnowsze okresy mają zaniżoną liczbę transakcji i mniej pewne ceny. Nie porównuj ich z okresami o zwykłej liczbie transakcji.",
-        "stats_url": "https://deweloperuch.pl/statystyki/ceny-transakcyjne/mieszkania/warszawa",
+        "stats_url": "https://deweloperuch.pl/statystyki/warszawa/transakcje",
         "periods": [
           {
-            "period": "2021-01",
-            "transactions": 963,
-            "median_price_per_m2": 10651,
-            "average_price_per_m2": 10876,
-            "median_area_m2": 49.4,
-            "median_price": 502000
+            "period": "2017-01",
+            "transactions": 890,
+            "median_price_per_m2": 7656,
+            "average_price_per_m2": 7903,
+            "median_area_m2": 47.9,
+            "median_price": 355000
           },
           {
-            "period": "2021-02",
-            "transactions": 1165,
-            "median_price_per_m2": 10575,
-            "average_price_per_m2": 10854,
-            "median_area_m2": 48.8,
-            "median_price": 495000
+            "period": "2017-02",
+            "transactions": 880,
+            "median_price_per_m2": 7528,
+            "average_price_per_m2": 7793,
+            "median_area_m2": 49.2,
+            "median_price": 357000
           },
           {
-            "period": "2021-03",
-            "transactions": 1327,
-            "median_price_per_m2": 10858,
-            "average_price_per_m2": 10981,
-            "median_area_m2": 48.5,
-            "median_price": 510000
+            "period": "2017-03",
+            "transactions": 1086,
+            "median_price_per_m2": 7626,
+            "average_price_per_m2": 7989,
+            "median_area_m2": 48,
+            "median_price": 360000
           }
         ]
       }
@@ -51,6 +51,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=warszawa [accept: application/json]"
+    "GET https://deweloperuch.pl/statystyki/warszawa/transakcje?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

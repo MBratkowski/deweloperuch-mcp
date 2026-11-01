@@ -58,12 +58,12 @@ od 0).{district_step}
 2. search_offers z city=city_slug, filtrami z kryteriów (nazwa parametru w nawiasie) i \
 sort=price_per_m2_asc (od najniższej ceny za m²), per_page=10. Kwoty i metraże podaj jako \
 liczby całkowite (np. 800 tys. zł to 800000).
-3. Pokaż wynik w tabeli: inwestycja, deweloper, cena, metraż, cena za m², zmiana ceny od \
-pierwszej i link investment_url. Pod tabelą podaj total (ile ofert pasuje) i list_url \
+3. Pokaż wynik w tabeli: inwestycja, dzielnica, deweloper, cena, metraż, cena za m², zmiana \
+ceny od pierwszej i link investment_url. Pod tabelą podaj total (ile ofert pasuje) i list_url \
 (ta lista na deweloperuch.pl).
 
 Uwagi:
-- search_offers nie filtruje po liczbie pokoi ani piętrze (serwis nie ma takich danych): \
+- search_offers nie filtruje po liczbie pokoi ani piętrze (lista ofert ich nie podaje): \
 gdy użytkownikowi chodzi o pokoje, powiedz to i zawęź metraż.
 - Gdy truncated=true, zaproponuj węższe kryteria zamiast przeglądać kolejne strony.
 - To ceny ofertowe deweloperów, nie transakcyjne. Historię ceny jednej oferty daje \

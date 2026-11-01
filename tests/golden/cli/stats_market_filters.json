@@ -2,7 +2,7 @@
   "args": [
     "stats",
     "market",
-    "krakow",
+    "warszawa",
     "--price-max",
     "700000",
     "--area-min",
@@ -12,25 +12,25 @@
   ],
   "exit_code": 0,
   "stdout": [
-    "Rynek ofert [krakow] · aktywne oferty: 879 · inwestycje: 63 · deweloperzy: 39.",
-    "Te oferty na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/krakow/mieszkania?filterPrice=0-700000&filterSize=40-9999&perPage=10",
+    "Rynek ofert [warszawa] · aktywne oferty: 1 107 · inwestycje: 75 · deweloperzy: 41 · stan na 2026-10-31.",
+    "Te oferty na deweloperuch.pl: https://deweloperuch.pl/ceny-ofertowe/warszawa/mieszkania?filterPrice=0-700000&filterSize=40-9999&perPage=10",
     "                      min      p25  mediana      p75      max",
-    "Cena (PLN)        519 807  618 957  650 097  676 170  699 706",
-    "Cena za m² (PLN)   10 907   14 099   14 800   15 700   17 450",
-    "Metraż (m²)         40,01    41,17    42,78    46,51    59,12",
-    "Najwięcej ofert (pokazano 3 z 39):",
-    "  atal · oferty 167 · inwestycje 5 · mediana 12 256 PLN/m²",
-    "      https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal",
-    "  develia · oferty 140 · inwestycje 4 · mediana 14 449 PLN/m²",
-    "      https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/develia",
-    "  dom-development · oferty 92 · inwestycje 6 · mediana 15 100 PLN/m²",
-    "      https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/dom-development",
+    "Cena (PLN)        485 099  605 081  643 928  676 138  699 890",
+    "Cena za m² (PLN)    9 699   12 454   13 500   15 272   17 447",
+    "Metraż (m²)            40    41,97    44,92     49,6    63,68",
+    "Najwięcej ofert (pokazano 3 z 41):",
+    "  Home Invest Sp. z o.o. [home-invest] · oferty 102 · inwestycje 6 · mediana 16 038 PLN/m²",
+    "      https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/home-invest",
+    "  JANPUL [janpul] · oferty 86 · inwestycje 2 · mediana 13 200 PLN/m²",
+    "      https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/janpul",
+    "  Polski Holding Nieruchomości S.A. [polski-holding-nieruchomosci] · oferty 77 · inwestycje 1 · mediana 13 300 PLN/m²",
+    "      https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/polski-holding-nieruchomosci",
     ""
   ],
   "stderr": [
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/offers/city-sales/krakow [accept: application/json]"
+    "GET https://deweloperuch.pl/api/map/offer-snapshot/warszawa [accept: application/json]"
   ]
 }

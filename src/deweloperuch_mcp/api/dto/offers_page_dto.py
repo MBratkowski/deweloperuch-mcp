@@ -1,20 +1,15 @@
-"""``OffersPageDto``: prop ``initialData`` of ``/ceny-ofertowe/{city}/mieszkania`` (RSC) [P]
-(samples ``page.offers_list``, ``page.offers_list.filtered``): one page of offers, each
-with its investment and developer.
+"""``OffersPageDto``: one page of the offers list of a city or of a district
+(``/ceny-ofertowe/{city}[/{district}]/mieszkania``, RSC) [P 2026-10-31]: the props ``sales``
+(the offers, each with its investment and developer) and ``serverPaginationData``
+(samples ``page.offers_list.v2_sales``, ``page.offers_list.v2_pagination``; whole pages in
+tests/fixtures/rsc/offers_warszawa_20261031.rsc and offers_warszawa_mokotow_20261031.rsc).
+The 1.0 prop ``initialData`` is gone since 2026-10-29."""
 
-Since the 2.0 build (2026-10-29) the page has no ``initialData``: the rows are the prop
-``sales`` (the same fields) and the paging is ``serverPaginationData`` [P 2026-10-30, live
-RSC payload of the package client]; ``from_props`` reads either shape.
-"""
-
-from collections.abc import Mapping
 from dataclasses import replace
-from typing import Any, Self
 
 from deweloperuch_mcp.api.dto.developer_dto import DeveloperDto
 from deweloperuch_mcp.api.dto.dto import Dto, Number
 from deweloperuch_mcp.api.dto.sale_dto import SaleDto
-from deweloperuch_mcp.models.errors import SERVICE_CHANGED, UnexpectedResponseError
 from deweloperuch_mcp.models.offer import InvestmentRef, ListedOffer, OfferSearchPage
 from deweloperuch_mcp.models.price_history import DECREASE, INCREASE, NO_CHANGE, PriceChange
 
@@ -22,11 +17,17 @@ _CHANGE_KINDS = {"PRICE_INCREASE": INCREASE, "PRICE_DECREASE": DECREASE, "NO_CHA
 
 
 class SaleListInvestDto(Dto):
+    """``invest`` of a row. 2.0 added ``district`` and ``street`` [P 2026-10-31]: the district
+    is a name, as the locations search gives it (``Mokotów``), and the search shows it; the
+    street is not shown. ``""`` where the investment has none (Sopot in the offer snapshot
+    [P 2026-10-31])."""
+
     invest_id: int | None = None
     name: str
     city: str | None = None
     city_slug: str | None = None
     slug: str
+    district: str | None = None
     developer: DeveloperDto
 
     def to_model(self) -> InvestmentRef:
@@ -35,6 +36,7 @@ class SaleListInvestDto(Dto):
             name=self.name,
             city=self._text(self.city),
             city_slug=self._text(self.city_slug),
+            district=self._text(self.district),
             developer=self.developer.to_model(),
         )
 
@@ -62,58 +64,31 @@ class SaleListItemDto(SaleDto):
     @classmethod
     def _change_kind(cls, value: str | None) -> str | None:
         """``PRICE_INCREASE`` -> ``increase``, ``PRICE_DECREASE`` -> ``decrease``,
-        ``NO_CHANGE`` -> ``no_change``; unknown ones lowercased."""
+        ``NO_CHANGE`` -> ``no_change``; unknown ones (``NEW_OFFER`` [P 2026-10-31])
+        lowercased."""
         raw = cls._text(value)
         return None if raw is None else _CHANGE_KINDS.get(raw, raw.lower())
 
 
-class PaginationDto(Dto):
-    page: int
+class ServerPaginationDto(Dto):
+    """``serverPaginationData``: integers [P 2026-10-31]. ``totalPages`` (capped at 20),
+    ``startItem`` and ``endItem`` are not read: the model counts the pages itself."""
+
+    currentPage: int
     perPage: int
-    total: int
-    totalPages: int | None = None
-
-
-OFFERS_PROPS = ("initialData", "sales", "serverPaginationData")
-"""The props ``from_props`` reads: the old shape (``initialData``) or the 2.0 one."""
+    totalCount: int
 
 
 class OffersPageDto(Dto):
-    data: list[SaleListItemDto]
-    pagination: PaginationDto
-
-    @classmethod
-    def from_props(cls, props: Mapping[str, list[Any]], *, path: str) -> Self:
-        """The page from ``OFFERS_PROPS`` (``RscPage.props``): ``initialData`` as it is, or
-        the 2.0 props ``sales`` and ``serverPaginationData`` (``currentPage``, ``perPage``,
-        ``totalCount``, ``totalPages``) [P 2026-10-30]."""
-        old = [value for value in props.get("initialData", ()) if isinstance(value, dict)]
-        if old:
-            return Dto.validated(cls, old[0], f"{path} (prop initialData)")
-        sales = [value for value in props.get("sales", ()) if isinstance(value, list)]
-        paging = [v for v in props.get("serverPaginationData", ()) if isinstance(v, dict)]
-        if not sales or not paging:
-            raise UnexpectedResponseError(
-                f"Na stronie serwisu brakuje oczekiwanych danych. {SERVICE_CHANGED}",
-                detail=f"{path}: brak propsów sales i serverPaginationData (2.0)",
-            )
-        page = paging[0]
-        data = {
-            "data": sales[0],
-            "pagination": {
-                "page": page.get("currentPage"),
-                "perPage": page.get("perPage"),
-                "total": page.get("totalCount"),
-                "totalPages": page.get("totalPages"),
-            },
-        }
-        return Dto.validated(cls, data, f"{path} (propsy sales, serverPaginationData)")
+    sales: list[SaleListItemDto]
+    serverPaginationData: ServerPaginationDto
 
     def to_model(self) -> OfferSearchPage:
-        """The page as the service paged it (its own ``page`` and ``perPage``)."""
+        """The page as the service paged it (its own page and page size)."""
+        paging = self.serverPaginationData
         return OfferSearchPage(
-            items=tuple(item.to_model() for item in self.data),
-            total=self.pagination.total,
-            page=self.pagination.page,
-            per_page=self.pagination.perPage,
+            items=tuple(item.to_model() for item in self.sales),
+            total=paging.totalCount,
+            page=paging.currentPage,
+            per_page=paging.perPage,
         )

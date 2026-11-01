@@ -11,7 +11,7 @@ from deweloperuch_mcp.models.government_statistics import Dataset
 from support.checks.leaks import BACKEND_NAMES
 from support.providers.mcp import Sessions, call, data, has_null, keys, tools, with_client
 from support.providers.routes.government_statistics import stats_routes
-from support.providers.routes.investments import investment_routes
+from support.providers.routes.investments import investment_routes, smolna_with_events
 from support.providers.routes.locations import location_routes
 from support.providers.routes.offers import offers_route
 from support.providers.samples import body
@@ -60,13 +60,13 @@ def test_results_have_no_backend_names(
 ) -> None:
     location_routes(service)
     offers_route(service)
-    investment_routes(service)
+    investment_routes(service, smolna_with_events())  # 2.0: with the price events
     stats_routes(service)
 
     async def every_tool(client: Client) -> list[CallToolResult]:
         return [
             await client.call_tool("search_locations", {"query": "krak"}),
-            await client.call_tool("search_offers", {"city": "polska"}),
+            await client.call_tool("search_offers", {"city": "warszawa", "district": "Mokotów"}),
             await client.call_tool("get_offer", {"offer_id": 2377, "investment_slug": "smolna"}),
             await client.call_tool(
                 "get_investment", {"investment_slug": "smolna", "include_history": True}

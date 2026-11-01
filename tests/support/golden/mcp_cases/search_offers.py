@@ -2,18 +2,21 @@
 
 import httpx
 
-from support.builders.offers import offers_page
+from support.builders.offers import UNKNOWN_DISTRICT, offers_page
 from support.golden.mcp import FILTERED, INJECTED, OFFERS, WARSZAWA, Case, case
-from support.golden.routes import offers_answer, offers_page_with, offers_with
-from support.providers.routes.offers import offers_route, unknown_city_route, wroclaw_offers_route
+from support.golden.routes import offers_answer, offers_with
+from support.providers.routes.offers import (
+    district_route,
+    offers_route,
+    unknown_city_route,
+    unknown_district_route,
+)
 from support.providers.rsc import UNKNOWN_CITY
 from support.providers.samples import rsc_payload
 
 CASES: dict[str, Case] = {
     # search_offers
     "offers": case(OFFERS, offers_route, **WARSZAWA),
-    # the 2.0 build: `sales` and `serverPaginationData`; page 1 is sent without `page`
-    "offers_wroclaw_2_0": case(OFFERS, wroclaw_offers_route, city="wroclaw"),
     "offers_whole_country": case(OFFERS, offers_route, city="polska"),
     "offers_every_argument": case(
         OFFERS,
@@ -39,7 +42,7 @@ CASES: dict[str, Case] = {
     "offers_sort_desc": case(OFFERS, offers_route, city="krakow", sort="price_desc"),
     "offers_page_2": case(OFFERS, offers_route, city="warszawa", page=2),
     "offers_per_page_50": case(
-        OFFERS, offers_with(offers_page(count=50)), city="warszawa", per_page=50
+        OFFERS, offers_with(offers_page(per_page=50)), city="warszawa", per_page=50
     ),
     "offers_per_page_text": case(OFFERS, offers_route, city="warszawa", per_page="50"),
     "offers_page_text": case(OFFERS, offers_route, city="warszawa", page="2"),
@@ -67,11 +70,11 @@ CASES: dict[str, Case] = {
     "offers_sort_with_spaces": case(OFFERS, offers_route, city="warszawa", sort=" price_asc "),
     "offers_city_with_spaces": case(OFFERS, offers_route, city=" warszawa "),
     "offers_unknown_argument": case(OFFERS, offers_route, city="warszawa", max_price=500_000),
-    "offers_nothing": case(OFFERS, offers_with(offers_page_with(0, empty=True)), **WARSZAWA),
+    "offers_nothing": case(OFFERS, offers_with(offers_page(total=0)), **WARSZAWA),
     "offers_past_the_last_page": case(
-        OFFERS, offers_with(offers_page_with(30, 9, empty=True)), city="warszawa", page=9
+        OFFERS, offers_with(offers_page(total=30, page=9)), city="warszawa", page=9
     ),
-    "offers_not_truncated": case(OFFERS, offers_with(offers_page_with(3)), **WARSZAWA),
+    "offers_not_truncated": case(OFFERS, offers_with(offers_page(total=3)), **WARSZAWA),
     "offers_unknown_city": case(OFFERS, unknown_city_route, city=UNKNOWN_CITY),
     "offers_city_name": case(OFFERS, offers_route, city="Kraków"),
     "offers_city_capitalized": case(OFFERS, offers_route, city="Warszawa"),
@@ -107,6 +110,13 @@ CASES: dict[str, Case] = {
         OFFERS, offers_route, city="krakow", status="all", sort="area_asc"
     ),
     "offers_district_whole_country": case(OFFERS, offers_route, city="polska", district="Wola"),
+    "offers_district": case(
+        OFFERS, (district_route, offers_route), city="warszawa", district="Mokotów"
+    ),
+    "offers_unknown_district": case(
+        OFFERS, (unknown_district_route, offers_route), city="warszawa", district=UNKNOWN_DISTRICT
+    ),
+    "offers_district_without_slug": case(OFFERS, offers_route, city="warszawa", district="Ωμέγα"),
     "offers_district_blank_and_nulls": case(
         OFFERS, offers_route, city="warszawa", district=" ", status=None, price_dropped=None
     ),

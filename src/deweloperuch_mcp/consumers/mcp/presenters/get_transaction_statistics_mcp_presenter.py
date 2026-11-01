@@ -1,6 +1,6 @@
 """``GetTransactionStatisticsMcpPresenter``: ``get_transaction_statistics``' result for a
-model, compact (a list of periods, no ``null`` fields: the quarterly data has no medians),
-and its output schema (``TransactionStatisticsResult``)."""
+model, compact (a list of periods, no ``null`` fields: the quarterly data has only the
+median price of one m²), and its output schema (``TransactionStatisticsResult``)."""
 
 from typing import Annotated
 
@@ -13,8 +13,9 @@ from deweloperuch_mcp.usecases.get_transaction_statistics import GetTransactionS
 
 MAX_PERIODS = 60
 """Periods one call may return: 5 years of months, about 9k characters (a month is
-about 140); the service has 67 months and 39 quarters [P 2026-10-09], so a longer
-trend is one call with quarters (about 75 characters each)."""
+about 140); the service has 115 months with data from 2017-01 (Warsaw [P 2026-10-31]) and
+about 40 quarters from 2017-Q1 [P 2026-10-30], so a longer trend is one call with quarters
+(about 75 characters each)."""
 
 
 def _compact(value: float | None) -> int | float | None:
@@ -45,13 +46,15 @@ class TransactionPeriodItem(McpModel):
             "jest tylko przy takich okresach."
         ),
     )
-    median_price_per_m2: Value = Field(
-        None, description="Mediana ceny transakcyjnej 1 m² w PLN (tylko month)."
+    median_price_per_m2: Value = Field(None, description="Mediana ceny transakcyjnej 1 m² w PLN.")
+    average_price_per_m2: Value = Field(
+        None, description="Średnia cena transakcyjna 1 m² w PLN (tylko granularity=month)."
     )
-    average_price_per_m2: Value = Field(None, description="Średnia cena transakcyjna 1 m² w PLN.")
-    median_area_m2: Value = Field(None, description="Mediana metrażu w m² (tylko month).")
+    median_area_m2: Value = Field(
+        None, description="Mediana metrażu w m² (tylko granularity=month)."
+    )
     median_price: Value = Field(
-        None, description="Mediana ceny transakcyjnej mieszkania w PLN (tylko month)."
+        None, description="Mediana ceny transakcyjnej mieszkania w PLN (tylko granularity=month)."
     )
 
 

@@ -23,7 +23,8 @@ JSON_HEADERS = {"Accept": "application/json"}
 class JsonEndpoint:
     """``target`` (a path with its encoded query) read through ``http`` with the JSON
     headers: the one JSON path of the client. ``unknown``: the statuses that mean the
-    service does not know what was asked for (``HttpClient.get``)."""
+    service does not know what was asked for (``HttpClient.get``); a 404 means it only as
+    the service's own answer, any other 404 is a removed route (a changed service, D21)."""
 
     def __init__(
         self, http: HttpClient, target: str, *, unknown: Collection[int] = (NOT_FOUND,)

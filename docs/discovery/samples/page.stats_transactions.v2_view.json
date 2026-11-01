@@ -1,0 +1,605 @@
+{
+  "_request": "GET /statystyki/warszawa/transakcje (RSC)",
+  "_prop": "view",
+  "_captured": "2026-10-31",
+  "value": {
+    "monthly": [
+      {
+        "month": "2017-01",
+        "transaction_count": 890,
+        "secondary_count": 890,
+        "unknown_count": 0,
+        "med_price_sqm": 7656,
+        "avg_price_sqm": 7903,
+        "med_size": 47.9,
+        "avg_size": 53.3,
+        "med_amount": 355000,
+        "avg_amount": 423836
+      },
+      {
+        "month": "2017-02",
+        "transaction_count": 880,
+        "secondary_count": 880,
+        "unknown_count": 0,
+        "med_price_sqm": 7528,
+        "avg_price_sqm": 7793,
+        "med_size": 49.2,
+        "avg_size": 54.1,
+        "med_amount": 357000,
+        "avg_amount": 427362
+      },
+      {
+        "month": "2017-03",
+        "transaction_count": 1086,
+        "secondary_count": 1086,
+        "unknown_count": 0,
+        "med_price_sqm": 7626,
+        "avg_price_sqm": 7989,
+        "med_size": 48,
+        "avg_size": 53,
+        "med_amount": 360000,
+        "avg_amount": 424490
+      },
+      "... (115 more, 118 total)"
+    ],
+    "anchor": "2026-Q1",
+    "quarterly": {
+      "current": {
+        "count": 3643,
+        "med_price_sqm": 16399,
+        "avg_price_sqm": 16969,
+        "med_size": 48.7,
+        "avg_size": 54.5,
+        "med_amount": 788000,
+        "avg_amount": 930382
+      },
+      "prev": {
+        "count": 3531,
+        "med_price_sqm": 16414,
+        "avg_price_sqm": 16944,
+        "med_size": 48.6,
+        "avg_size": 53.9,
+        "med_amount": 780000,
+        "avg_amount": 922256
+      },
+      "yearAgo": {
+        "count": 3040,
+        "med_price_sqm": 16470,
+        "avg_price_sqm": 17031,
+        "med_size": 49.2,
+        "avg_size": 54.5,
+        "med_amount": 790000,
+        "avg_amount": 938636
+      },
+      "quarterLabel": "I kw. 2026",
+      "prevQuarterLabel": "IV kw. 2025",
+      "yearAgoQuarterLabel": "I kw. 2025"
+    },
+    "priceChange": null,
+    "slices": {
+      "quarterlyAnchor": "2026-Q1",
+      "yoyView": {
+        "kind": "yoy",
+        "period": "2026-Q1",
+        "periodLabel": "I kw. 2026",
+        "prevPeriod": "2025-Q1",
+        "prevPeriodLabel": "I kw. 2025",
+        "deltaLabel": "r/r",
+        "groups": [
+          {
+            "category": "size",
+            "label": "Według metrażu",
+            "slices": [
+              {
+                "id": "size-lt35",
+                "name": "do 35 m²",
+                "count": 525,
+                "medPriceSqm": 17333,
+                "avgPriceSqm": 17829,
+                "medAmount": 505000,
+                "avgAmount": 526879,
+                "medSize": 30.4,
+                "avgSize": 29.7,
+                "prevMedPriceSqm": 17568,
+                "prevAvgPriceSqm": 17755,
+                "deltaPct": -1.3,
+                "avgDeltaPct": 0.4
+              },
+              {
+                "id": "size-35-60",
+                "name": "35-60 m²",
+                "count": 2063,
+                "medPriceSqm": 16000,
+                "avgPriceSqm": 16482,
+                "medAmount": 740000,
+                "avgAmount": 766394,
+                "medSize": 46.5,
+                "avgSize": 46.6,
+                "prevMedPriceSqm": 15968,
+                "prevAvgPriceSqm": 16407,
+                "deltaPct": 0.2,
+                "avgDeltaPct": 0.5
+              },
+              {
+                "id": "size-60-90",
+                "name": "60-90 m²",
+                "count": 771,
+                "medPriceSqm": 16616,
+                "avgPriceSqm": 17101,
+                "medAmount": 1170000,
+                "avgAmount": 1218996,
+                "medSize": 69.4,
+                "avgSize": 71.1,
+                "prevMedPriceSqm": 16472,
+                "prevAvgPriceSqm": 17150,
+                "deltaPct": 0.9,
+                "avgDeltaPct": -0.3
+              },
+              "... (1 more, 4 total)"
+            ]
+          },
+          {
+            "category": "rooms",
+            "label": "Według liczby izb",
+            "slices": [
+              {
+                "id": "rooms-1",
+                "name": "1 izba",
+                "count": 208,
+                "medPriceSqm": 17950,
+                "avgPriceSqm": 18652,
+                "medAmount": 530000,
+                "avgAmount": 608910,
+                "medSize": 29,
+                "avgSize": 32.3,
+                "prevMedPriceSqm": 18558,
+                "prevAvgPriceSqm": 19230,
+                "deltaPct": -3.3,
+                "avgDeltaPct": -3
+              },
+              {
+                "id": "rooms-2",
+                "name": "2 izby",
+                "count": 1108,
+                "medPriceSqm": 17166,
+                "avgPriceSqm": 17625,
+                "medAmount": 670000,
+                "avgAmount": 714569,
+                "medSize": 39.1,
+                "avgSize": 40.5,
+                "prevMedPriceSqm": 17453,
+                "prevAvgPriceSqm": 17598,
+                "deltaPct": -1.6,
+                "avgDeltaPct": 0.2
+              },
+              {
+                "id": "rooms-3",
+                "name": "3 izby",
+                "count": 1338,
+                "medPriceSqm": 16063,
+                "avgPriceSqm": 16594,
+                "medAmount": 805000,
+                "avgAmount": 882675,
+                "medSize": 50.8,
+                "avgSize": 52.6,
+                "prevMedPriceSqm": 15908,
+                "prevAvgPriceSqm": 16430,
+                "deltaPct": 1,
+                "avgDeltaPct": 1
+              },
+              "... (1 more, 4 total)"
+            ]
+          }
+        ]
+      },
+      "qoqView": {
+        "kind": "qoq",
+        "period": "2026-Q1",
+        "periodLabel": "I kw. 2026",
+        "prevPeriod": "2025-Q4",
+        "prevPeriodLabel": "IV kw. 2025",
+        "deltaLabel": "kw/kw",
+        "groups": [
+          {
+            "category": "size",
+            "label": "Według metrażu",
+            "slices": [
+              {
+                "id": "size-lt35",
+                "name": "do 35 m²",
+                "count": 525,
+                "medPriceSqm": 17333,
+                "avgPriceSqm": 17829,
+                "medAmount": 505000,
+                "avgAmount": 526879,
+                "medSize": 30.4,
+                "avgSize": 29.7,
+                "prevMedPriceSqm": 17409,
+                "prevAvgPriceSqm": 17762,
+                "deltaPct": -0.4,
+                "avgDeltaPct": 0.4
+              },
+              {
+                "id": "size-35-60",
+                "name": "35-60 m²",
+                "count": 2063,
+                "medPriceSqm": 16000,
+                "avgPriceSqm": 16482,
+                "medAmount": 740000,
+                "avgAmount": 766394,
+                "medSize": 46.5,
+                "avgSize": 46.6,
+                "prevMedPriceSqm": 15932,
+                "prevAvgPriceSqm": 16289,
+                "deltaPct": 0.4,
+                "avgDeltaPct": 1.2
+              },
+              {
+                "id": "size-60-90",
+                "name": "60-90 m²",
+                "count": 771,
+                "medPriceSqm": 16616,
+                "avgPriceSqm": 17101,
+                "medAmount": 1170000,
+                "avgAmount": 1218996,
+                "medSize": 69.4,
+                "avgSize": 71.1,
+                "prevMedPriceSqm": 16667,
+                "prevAvgPriceSqm": 17307,
+                "deltaPct": -0.3,
+                "avgDeltaPct": -1.2
+              },
+              "... (1 more, 4 total)"
+            ]
+          },
+          {
+            "category": "rooms",
+            "label": "Według liczby izb",
+            "slices": [
+              {
+                "id": "rooms-1",
+                "name": "1 izba",
+                "count": 208,
+                "medPriceSqm": 17950,
+                "avgPriceSqm": 18652,
+                "medAmount": 530000,
+                "avgAmount": 608910,
+                "medSize": 29,
+                "avgSize": 32.3,
+                "prevMedPriceSqm": 17848,
+                "prevAvgPriceSqm": 18563,
+                "deltaPct": 0.6,
+                "avgDeltaPct": 0.5
+              },
+              {
+                "id": "rooms-2",
+                "name": "2 izby",
+                "count": 1108,
+                "medPriceSqm": 17166,
+                "avgPriceSqm": 17625,
+                "medAmount": 670000,
+                "avgAmount": 714569,
+                "medSize": 39.1,
+                "avgSize": 40.5,
+                "prevMedPriceSqm": 17169,
+                "prevAvgPriceSqm": 17471,
+                "deltaPct": "$-0",
+                "avgDeltaPct": 0.9
+              },
+              {
+                "id": "rooms-3",
+                "name": "3 izby",
+                "count": 1338,
+                "medPriceSqm": 16063,
+                "avgPriceSqm": 16594,
+                "medAmount": 805000,
+                "avgAmount": 882675,
+                "medSize": 50.8,
+                "avgSize": 52.6,
+                "prevMedPriceSqm": 15994,
+                "prevAvgPriceSqm": 16432,
+                "deltaPct": 0.4,
+                "avgDeltaPct": 1
+              },
+              "... (1 more, 4 total)"
+            ]
+          }
+        ]
+      }
+    },
+    "segmentSeries": [
+      {
+        "quarter": "2017-Q1",
+        "total": 2918,
+        "seg": {
+          "size-lt35": {
+            "count": 473,
+            "medPriceSqm": 8299,
+            "avgPriceSqm": 8377,
+            "medAmount": 238000,
+            "avgAmount": 242336,
+            "sharePct": 16.2
+          },
+          "size-35-60": {
+            "count": 1611,
+            "medPriceSqm": 7403,
+            "avgPriceSqm": 7643,
+            "medAmount": 340000,
+            "avgAmount": 352098,
+            "sharePct": 55.2
+          },
+          "size-60-90": {
+            "count": 622,
+            "medPriceSqm": 7456,
+            "avgPriceSqm": 7753,
+            "medAmount": 520000,
+            "avgAmount": 549286,
+            "sharePct": 21.3
+          },
+          "size-90plus": {
+            "count": 212,
+            "medPriceSqm": 8442,
+            "avgPriceSqm": 9352,
+            "medAmount": 945000,
+            "avgAmount": 1110982,
+            "sharePct": 7.3
+          }
+        }
+      },
+      {
+        "quarter": "2017-Q2",
+        "total": 2846,
+        "seg": {
+          "size-lt35": {
+            "count": 482,
+            "medPriceSqm": 8245,
+            "avgPriceSqm": 8419,
+            "medAmount": 236494,
+            "avgAmount": 246050,
+            "sharePct": 16.9
+          },
+          "size-35-60": {
+            "count": 1548,
+            "medPriceSqm": 7550,
+            "avgPriceSqm": 7750,
+            "medAmount": 346100,
+            "avgAmount": 361346,
+            "sharePct": 54.4
+          },
+          "size-60-90": {
+            "count": 597,
+            "medPriceSqm": 7518,
+            "avgPriceSqm": 7789,
+            "medAmount": 525000,
+            "avgAmount": 556125,
+            "sharePct": 21
+          },
+          "size-90plus": {
+            "count": 219,
+            "medPriceSqm": 8200,
+            "avgPriceSqm": 8843,
+            "medAmount": 885031,
+            "avgAmount": 1056619,
+            "sharePct": 7.7
+          }
+        }
+      },
+      {
+        "quarter": "2017-Q3",
+        "total": 2889,
+        "seg": {
+          "size-lt35": {
+            "count": 429,
+            "medPriceSqm": 8511,
+            "avgPriceSqm": 8739,
+            "medAmount": 248000,
+            "avgAmount": 256853,
+            "sharePct": 14.8
+          },
+          "size-35-60": {
+            "count": 1675,
+            "medPriceSqm": 7689,
+            "avgPriceSqm": 7926,
+            "medAmount": 350000,
+            "avgAmount": 367941,
+            "sharePct": 58
+          },
+          "size-60-90": {
+            "count": 565,
+            "medPriceSqm": 7606,
+            "avgPriceSqm": 7894,
+            "medAmount": 522500,
+            "avgAmount": 567193,
+            "sharePct": 19.6
+          },
+          "size-90plus": {
+            "count": 220,
+            "medPriceSqm": 8599,
+            "avgPriceSqm": 9148,
+            "medAmount": 932500,
+            "avgAmount": 1143008,
+            "sharePct": 7.6
+          }
+        }
+      },
+      "... (37 more, 40 total)"
+    ],
+    "brackets": {
+      "amount": {
+        "table": {
+          "anchor": "2026-Q1",
+          "periodLabel": "I kw. 2026",
+          "yoyPrevLabel": "I kw. 2025",
+          "qoqPrevLabel": "IV kw. 2025",
+          "totalCount": 3719,
+          "totalYoyDeltaPct": 19.8,
+          "totalQoqDeltaPct": 3.2,
+          "brackets": [
+            {
+              "id": "do-300",
+              "name": "do 300 tys. zł",
+              "count": 2,
+              "sharePct": 0.1,
+              "yoyDeltaPct": null,
+              "qoqDeltaPct": null,
+              "medSize": null
+            },
+            {
+              "id": "300-400",
+              "name": "300-400 tys. zł",
+              "count": 55,
+              "sharePct": 1.5,
+              "yoyDeltaPct": 7.8,
+              "qoqDeltaPct": -20.3,
+              "medSize": 27.6
+            },
+            {
+              "id": "400-600",
+              "name": "400-600 tys. zł",
+              "count": 761,
+              "sharePct": 20.5,
+              "yoyDeltaPct": 25.2,
+              "qoqDeltaPct": 1.5,
+              "medSize": 35.2
+            },
+            "... (5 more, 8 total)"
+          ]
+        },
+        "quarterly": [
+          {
+            "quarter": "2017-Q1",
+            "total": 2918,
+            "counts": {
+              "do-300": 939,
+              "300-400": 828,
+              "400-600": 716,
+              "600-800": 227,
+              "800-1000": 88,
+              "1000-1500": 76,
+              "1500-2000": 25,
+              "ponad-2000": 19
+            }
+          },
+          {
+            "quarter": "2017-Q2",
+            "total": 2846,
+            "counts": {
+              "do-300": 839,
+              "300-400": 786,
+              "ponad-2000": 18,
+              "400-600": 784,
+              "600-800": 222,
+              "800-1000": 109,
+              "1000-1500": 70,
+              "1500-2000": 18
+            }
+          },
+          {
+            "quarter": "2017-Q3",
+            "total": 2889,
+            "counts": {
+              "do-300": 780,
+              "300-400": 859,
+              "1500-2000": 29,
+              "400-600": 781,
+              "600-800": 250,
+              "800-1000": 98,
+              "1000-1500": 69,
+              "ponad-2000": 23
+            }
+          },
+          "... (37 more, 40 total)"
+        ]
+      },
+      "sqm": {
+        "table": {
+          "anchor": "2026-Q1",
+          "periodLabel": "I kw. 2026",
+          "yoyPrevLabel": "I kw. 2025",
+          "qoqPrevLabel": "IV kw. 2025",
+          "totalCount": 3719,
+          "totalYoyDeltaPct": 19.8,
+          "totalQoqDeltaPct": 3.2,
+          "brackets": [
+            {
+              "id": "do-6k",
+              "name": "do 6 tys. zł/m²",
+              "count": 1,
+              "sharePct": 0,
+              "yoyDeltaPct": null,
+              "qoqDeltaPct": null,
+              "medSize": null
+            },
+            {
+              "id": "6-8k",
+              "name": "6-8 tys. zł/m²",
+              "count": 19,
+              "sharePct": 0.5,
+              "yoyDeltaPct": 26.7,
+              "qoqDeltaPct": 26.7,
+              "medSize": 73.5
+            },
+            {
+              "id": "8-10k",
+              "name": "8-10 tys. zł/m²",
+              "count": 43,
+              "sharePct": 1.2,
+              "yoyDeltaPct": 22.9,
+              "qoqDeltaPct": -2.3,
+              "medSize": 68.7
+            },
+            "... (6 more, 9 total)"
+          ]
+        },
+        "quarterly": [
+          {
+            "quarter": "2017-Q1",
+            "total": 2918,
+            "counts": {
+              "8-10k": 796,
+              "6-8k": 1203,
+              "do-6k": 490,
+              "10-12k": 279,
+              "12-14k": 80,
+              "14-16k": 33,
+              "ponad-22k": 4,
+              "16-18k": 16,
+              "18-22k": 17
+            }
+          },
+          {
+            "quarter": "2017-Q2",
+            "total": 2846,
+            "counts": {
+              "10-12k": 256,
+              "6-8k": 1208,
+              "8-10k": 838,
+              "do-6k": 403,
+              "12-14k": 81,
+              "14-16k": 39,
+              "18-22k": 9,
+              "ponad-22k": 2,
+              "16-18k": 10
+            }
+          },
+          {
+            "quarter": "2017-Q3",
+            "total": 2889,
+            "counts": {
+              "6-8k": 1146,
+              "8-10k": 876,
+              "do-6k": 388,
+              "12-14k": 103,
+              "10-12k": 307,
+              "14-16k": 41,
+              "16-18k": 17,
+              "18-22k": 7,
+              "ponad-22k": 4
+            }
+          },
+          "... (37 more, 40 total)"
+        ]
+      }
+    }
+  }
+}

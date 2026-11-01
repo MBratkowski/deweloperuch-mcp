@@ -14,6 +14,12 @@ from support.builders.investment_search import (
     KOMFORT,
     city_with_investments,
 )
+from support.providers.error_answers import (
+    CHANGED_SERVICE,
+    UNKNOWN_CITY_ERROR,
+    removed_route,
+    unknown_entity,
+)
 from support.providers.routes.investment_search import CITY_INVESTMENTS, investment_search_routes
 from support.providers.samples import body
 from support.providers.service import PAGES
@@ -113,7 +119,18 @@ def test_cli_json_is_the_view(
             "Błąd: limit musi być liczbą całkowitą z zakresu 1–500",
         ),
         (("sopot", "--sort", "cheap"), None, 2, ""),
-        (("sopot",), httpx.Response(404), 7, "Błąd: Serwis nie zna miasta 'sopot'."),
+        (
+            ("sopot",),
+            httpx.Response(404, **unknown_entity(UNKNOWN_CITY_ERROR)),
+            7,
+            "Błąd: Serwis nie zna miasta 'sopot'.",
+        ),
+        (
+            ("sopot",),
+            httpx.Response(404, **removed_route()),
+            6,
+            f"Błąd: Wyszukiwanie inwestycji w 'sopot': {CHANGED_SERVICE}",
+        ),
         (
             ("sopot",),
             httpx.Response(500, text=INJECTED),

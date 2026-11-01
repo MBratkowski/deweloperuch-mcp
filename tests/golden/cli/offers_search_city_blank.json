@@ -9,7 +9,7 @@
     ""
   ],
   "stderr": [
-    "Błąd: city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje search_locations; podano ' '.",
+    "Błąd: city: oczekiwano city_slug jednego miasta (małe litery bez polskich znaków, np. warszawa, krakow), nie polska; slug podaje search_locations; podano ' '.",
     ""
   ],
   "requests": []

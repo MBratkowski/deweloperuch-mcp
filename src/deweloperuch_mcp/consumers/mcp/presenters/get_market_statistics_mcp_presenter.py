@@ -1,6 +1,8 @@
 """``GetMarketStatisticsMcpPresenter``: ``get_market_statistics``'s result for a model and
 its output schema (``MarketStatisticsResult``)."""
 
+import datetime as dt
+
 from pydantic import Field
 
 from deweloperuch_mcp.consumers.mcp.support.mcp_model import DEVELOPER_URL, McpModel
@@ -20,8 +22,12 @@ class SpreadItem(McpModel):
 
 class DeveloperShareItem(McpModel):
     developer_slug: str = Field(
-        description="Identyfikator dewelopera (bez nazwy); nazwę i inwestycje daje get_developer."
+        description=(
+            "Identyfikator dewelopera: inwestycje i ceny daje get_developer (city = "
+            "city_slug wyniku)."
+        )
     )
+    developer_name: str | None = Field(None, description="Nazwa dewelopera.")
     offers: int = Field(description="Pasujące aktywne oferty dewelopera w mieście.")
     investments: int
     median_price_per_m2: int | None = Field(None, description="Mediana ceny za m² w PLN.")
@@ -30,8 +36,14 @@ class DeveloperShareItem(McpModel):
 
 class MarketStatisticsResult(McpModel):
     city_slug: str
+    as_of: dt.date | None = Field(
+        None,
+        description=(
+            "Dzień, na który serwis podał oferty (może być wczorajszy): podawaj go przy liczbach."
+        ),
+    )
     offers: int = Field(description="Pasujące aktywne oferty.")
-    investments: int
+    investments: int = Field(description="Inwestycje z pasującymi ofertami.")
     developers: int = Field(description="Wszyscy deweloperzy z pasującymi ofertami.")
     price: SpreadItem | None = Field(None, description="Ceny w PLN: min, kwartyle, mediana, max.")
     price_per_m2: SpreadItem | None = Field(None, description="Ceny za m² w PLN.")

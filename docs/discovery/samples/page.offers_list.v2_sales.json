@@ -1,0 +1,101 @@
+{
+  "_request": "GET /ceny-ofertowe/warszawa/mieszkania (RSC)",
+  "_prop": "sales",
+  "_captured": "2026-10-31",
+  "value": [
+    {
+      "sale_id": 4487,
+      "name": "A2",
+      "amount": "810660",
+      "start_amount_difference": "660",
+      "start_amount_difference_percent": "0.08",
+      "last_amount_difference": "49560",
+      "last_amount_difference_percent": "6.51",
+      "last_event_type": "PRICE_INCREASE",
+      "total_events": 6,
+      "currency": "PLN",
+      "size": "35.4",
+      "status": "active",
+      "last_event_date": "2026-10-30",
+      "last_change_event_date": "2026-10-30",
+      "creation_date": "2025-02-25",
+      "invest": {
+        "invest_id": 55,
+        "name": "Apartamenty Beethovena",
+        "city": "Warszawa",
+        "city_slug": "warszawa",
+        "slug": "apartamenty-beethovena",
+        "district": "Mokotów",
+        "street": "Mokotów",
+        "developer": {
+          "developer_id": 44,
+          "name": "Dom Development S.A.",
+          "slug": "dom-development"
+        }
+      }
+    },
+    {
+      "sale_id": 4527,
+      "name": "B36",
+      "amount": "1324896",
+      "start_amount_difference": "14896",
+      "start_amount_difference_percent": "1.14",
+      "last_amount_difference": "83552",
+      "last_amount_difference_percent": "6.73",
+      "last_event_type": "PRICE_INCREASE",
+      "total_events": 4,
+      "currency": "PLN",
+      "size": "59.68",
+      "status": "active",
+      "last_event_date": "2026-10-30",
+      "last_change_event_date": "2026-10-30",
+      "creation_date": "2025-02-25",
+      "invest": {
+        "invest_id": 55,
+        "name": "Apartamenty Beethovena",
+        "city": "Warszawa",
+        "city_slug": "warszawa",
+        "slug": "apartamenty-beethovena",
+        "district": "Mokotów",
+        "street": "Mokotów",
+        "developer": {
+          "developer_id": 44,
+          "name": "Dom Development S.A.",
+          "slug": "dom-development"
+        }
+      }
+    },
+    {
+      "sale_id": 4580,
+      "name": "B52",
+      "amount": "1561804",
+      "start_amount_difference": "21804",
+      "start_amount_difference_percent": "1.42",
+      "last_amount_difference": "110505",
+      "last_amount_difference_percent": "7.61",
+      "last_event_type": "PRICE_INCREASE",
+      "total_events": 7,
+      "currency": "PLN",
+      "size": "73.67",
+      "status": "active",
+      "last_event_date": "2026-10-30",
+      "last_change_event_date": "2026-10-30",
+      "creation_date": "2025-02-25",
+      "invest": {
+        "invest_id": 55,
+        "name": "Apartamenty Beethovena",
+        "city": "Warszawa",
+        "city_slug": "warszawa",
+        "slug": "apartamenty-beethovena",
+        "district": "Mokotów",
+        "street": "Mokotów",
+        "developer": {
+          "developer_id": 44,
+          "name": "Dom Development S.A.",
+          "slug": "dom-development"
+        }
+      }
+    },
+    "... (22 more, 25 total)"
+  ]
+}

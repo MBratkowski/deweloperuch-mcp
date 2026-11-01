@@ -24,7 +24,7 @@
 
 Ask an AI assistant about new-build apartments in Poland: asking prices with their history, real transaction prices and official statistics.
 
-An unofficial [MCP](https://modelcontextprotocol.io) server and command-line tool over the public data of [deweloperuch.pl](https://deweloperuch.pl): developers' asking prices (with price history), transaction prices from the Real Estate Price Register (RCN) and statistics of GUS and NBP. Thirteen read-only tools, usable from an MCP client such as Claude Desktop or Claude Code, or from the `deweloperuch` CLI.
+An unofficial [MCP](https://modelcontextprotocol.io) server and command-line tool over the public data of [deweloperuch.pl](https://deweloperuch.pl): developers' asking prices (with price history), transaction prices from the Real Estate Price Register (RCN) and statistics of GUS, NBP and Eurostat. Thirteen read-only tools, usable from an MCP client such as Claude Desktop or Claude Code, or from the `deweloperuch` CLI.
 
 > **Disclaimer.** This is an independent project. It is **not affiliated with, endorsed by or sponsored by** deweloperuch.pl, GUS, NBP or the Register's publishers. The authors of deweloperuch.pl have agreed to the project's use of their service; the client identifies itself as `deweloperuch-mcp/<version>` with a link to this repository.
 >
@@ -160,18 +160,18 @@ Overview, argument rules, errors and result sizes: [docs/mcp/README.md](docs/mcp
 | Tool | Description |
 |---|---|
 | [`search_locations`](docs/mcp/tools/search_locations.md) | Finds cities, districts and streets by a name fragment and returns `city_slug`. |
-| [`search_offers`](docs/mcp/tools/search_offers.md) | A page of developers' apartment offers in a city or the whole of Poland, with price, area, price-per-m², district, status and price-drop filters and sorting. |
+| [`search_offers`](docs/mcp/tools/search_offers.md) | A page of developers' apartment offers in a city or one of its districts, with price, area, price-per-m², district, status and price-drop filters and sorting. |
 | [`get_offer`](docs/mcp/tools/get_offer.md) | One offer with its full price history and price flags (lowest price in 30/90 days, suspicious reduction). |
 | [`search_investments`](docs/mcp/tools/search_investments.md) | Investments of a city (averages, sorting, filter by developer) or by name across Poland. |
-| [`get_investment`](docs/mcp/tools/get_investment.md) | An investment with its developer, average prices and a list of offers. |
+| [`get_investment`](docs/mcp/tools/get_investment.md) | An investment with its developer, average prices and a list of offers, optionally with each offer's price history. |
 | [`search_developers`](docs/mcp/tools/search_developers.md) | Finds developers by a name fragment and returns `developer_slug`. |
 | [`get_developer`](docs/mcp/tools/get_developer.md) | A developer profile: summary, investments with active offers and cities. |
-| [`get_market_statistics`](docs/mcp/tools/get_market_statistics.md) | Offer-market statistics of one city: counts, price, price per m² and area distributions, the largest developers. |
-| [`get_transaction_statistics`](docs/mcp/tools/get_transaction_statistics.md) | Transaction prices (RCN) of a city by month or quarter. |
+| [`get_market_statistics`](docs/mcp/tools/get_market_statistics.md) | Offer-market statistics of one city as of a day: counts, price, price per m² and area distributions, the largest developers. |
+| [`get_transaction_statistics`](docs/mcp/tools/get_transaction_statistics.md) | Transaction prices (RCN) of a city by month or quarter, since 2017; months: secondary market only. |
 | [`rank_locations`](docs/mcp/tools/rank_locations.md) | A ranking of places or powiats by RCN transactions and price per m². |
 | [`get_building`](docs/mcp/tools/get_building.md) | A building from the RCN with its units and transactions. |
 | [`estimate_property_value`](docs/mcp/tools/estimate_property_value.md) | An approximate apartment value at a point from nearby RCN transactions. |
-| [`get_government_statistics`](docs/mcp/tools/get_government_statistics.md) | Official GUS and NBP time series (dwellings, NBP prices, unemployment, wages, demography) for Poland, aggregates and 66 cities. |
+| [`get_government_statistics`](docs/mcp/tools/get_government_statistics.md) | Official GUS, NBP and Eurostat time series (dwellings, NBP prices, unemployment, wages, demography) for Poland, aggregates and 66 cities. |
 
 Every tool rejects arguments that are not in its schema with an error that lists the allowed names. Tool descriptions, error messages and CLI output are in Polish, because the service and its users are Polish.
 
@@ -193,7 +193,7 @@ Overview, output format and exit codes: [docs/cli/README.md](docs/cli/README.md)
 | Command | Description |
 |---|---|
 | [`deweloperuch locations search QUERY`](docs/cli/commands/locations-search.md) | Finds cities, districts and streets; returns the city slug. |
-| [`deweloperuch offers search CITY`](docs/cli/commands/offers-search.md) | Searches offers in a city or the whole of Poland with filters and sorting. |
+| [`deweloperuch offers search CITY`](docs/cli/commands/offers-search.md) | Searches offers in a city or one of its districts with filters and sorting. |
 | [`deweloperuch offers get OFFER_ID --investment SLUG`](docs/cli/commands/offers-get.md) | Shows an offer with its price history and price flags. |
 | [`deweloperuch investments search [CITY]`](docs/cli/commands/investments-search.md) | Searches investments of a city or by name. |
 | [`deweloperuch investments get SLUG`](docs/cli/commands/investments-get.md) | Shows an investment with its developer and offers. |
@@ -201,10 +201,10 @@ Overview, output format and exit codes: [docs/cli/README.md](docs/cli/README.md)
 | [`deweloperuch developers get SLUG`](docs/cli/commands/developers-get.md) | Shows a developer profile. |
 | [`deweloperuch buildings get SLUG`](docs/cli/commands/buildings-get.md) | Shows a building from the RCN with its units and transactions. |
 | [`deweloperuch valuation estimate --lat --lng --area`](docs/cli/commands/valuation-estimate.md) | Estimates an apartment's value at a point. |
-| [`deweloperuch stats market CITY`](docs/cli/commands/stats-market.md) | Shows offer-market statistics of one city. |
-| [`deweloperuch stats transactions CITY`](docs/cli/commands/stats-transactions.md) | Shows RCN transaction prices of a city by month or quarter. |
+| [`deweloperuch stats market CITY`](docs/cli/commands/stats-market.md) | Shows offer-market statistics of one city as of a day. |
+| [`deweloperuch stats transactions CITY`](docs/cli/commands/stats-transactions.md) | Shows RCN transaction prices of a city by month or quarter, since 2017; months: secondary market only. |
 | [`deweloperuch stats cities`](docs/cli/commands/stats-cities.md) | Shows a ranking of places or powiats by RCN transactions. |
-| [`deweloperuch stats government LOCATION DATASET`](docs/cli/commands/stats-government.md) | Shows GUS and NBP statistics of a location as a table of periods. |
+| [`deweloperuch stats government LOCATION DATASET`](docs/cli/commands/stats-government.md) | Shows GUS and NBP statistics (Eurostat for the demography of Poland) of a location as a table of periods. |
 | [`deweloperuch stop status [--json]`](docs/cli/commands/stop-status.md) | Shows the STOP lock shared by all processes (offline; exit code 3 when active). |
 | [`deweloperuch stop clear`](docs/cli/commands/stop-clear.md) | Clears the STOP lock, after you have checked the cause. |
 | [`deweloperuch skill install\|show\|path`](docs/cli/commands/skill.md) | Installs, prints or locates the `deweloperuch-cli` agent skill (offline). |
@@ -276,7 +276,7 @@ Both the variable and `-m live` are required. Scenarios and request budget: [tes
 
 - **deweloperuch.pl**: the source of all offer, investment, developer and statistics data. Its terms apply to your use of the data.
 - **RCN** (Real Estate Price Register) transaction data, reached through the service. The service's authors publish raw RCN data as CC0 in their public repository.
-- **GUS** (Central Statistical Office) and **NBP** (National Bank of Poland) statistics, reached through the service. Name them as the source when you republish figures.
+- **GUS** (Central Statistical Office), **NBP** (National Bank of Poland) and **Eurostat** (the monthly demography of Poland) statistics, reached through the service. Name them as the source when you republish figures.
 
 The code is licensed under the [MIT licence](LICENSE). The licence covers code only; the samples and fixtures used for testing contain data from the sources above and are described in [NOTICE](NOTICE). The project's icon is not covered by the MIT licence either: all rights reserved, used with permission of the deweloperuch.pl authors (see [NOTICE](NOTICE)).
 

@@ -1,0 +1,28 @@
+{
+  "args": [
+    "developers",
+    "get",
+    "ceres-development",
+    "--city",
+    "warszawa"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Ceres Development Sp. z o.o. [ceres-development] · [warszawa]",
+    "Profil dewelopera: https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/ceres-development",
+    "Aktywne oferty: 110 · inwestycje: 1 · miasta: 1 · średnio: 662 273 PLN · 50,96 m² · 12 996 PLN/m²",
+    "Inwestycje: pokazano 1 z 1.",
+    "Wskazówka: Serwis nie podał listy miast dewelopera: cities to tylko miasta inwestycji w city (wszystkie: city=polska).",
+    "[osiedle-sprawna-warszawa] Osiedle Sprawna · Warszawa · aktywna · aktywne oferty 110 z 114 · 662 273 PLN · 50,96 m² · 12 996 PLN/m²",
+    "    https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/ceres-development/osiedle-sprawna-warszawa",
+    "Miasta dewelopera (tylko z inwestycji w [warszawa]):",
+    "  Warszawa [warszawa] · inwestycje 1 · aktywne oferty 110 · 12 996 PLN/m²",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/ceres-development?_rsc= [rsc: 1] [accept: */*]"
+  ]
+}

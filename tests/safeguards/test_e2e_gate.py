@@ -42,16 +42,15 @@ from e2e import (
 from support.e2e import live
 from support.fakes.pytest_objects import FakeItem, fake_config
 from support.paths import TESTS
-from support.providers.routes.city_sales import city_sales_routes
 from support.providers.routes.developer_profiles import developer_routes
 from support.providers.routes.government_statistics import (
     UNKNOWN_LOCATION,
     stats_routes,
-    stats_url,
     unknown_location_route,
 )
-from support.providers.routes.investments import investment_routes
+from support.providers.routes.investments import investment_routes, smolna_with_events
 from support.providers.routes.locations import location_routes
+from support.providers.routes.offer_snapshot import offer_snapshot_routes
 from support.providers.routes.offers import offers_route, unknown_city_route
 from support.providers.rsc import UNKNOWN_CITY, UNKNOWN_DEVELOPER
 
@@ -200,7 +199,7 @@ def test_a_stop_ends_the_session() -> None:
         '{"invest_id": 1}',
         '{"sale_id": 1}',
         "/ceny-ofertowe/warszawa/mieszkania",
-        "/statystyki/polska/dane-rzadowe",
+        "/statystyki/statystyki-rzadowe/polska",
         "brak propsa 'tocItems'",
         "currentSlug ['polska']",
         "sortedLocations",
@@ -279,7 +278,9 @@ def test_values_are_not_checked_for_backend_names(text: str) -> None:
 PAGES = identity.BASE_URL + "/ceny-ofertowe"
 SMOLNA = PAGES + "/sopot/deweloperzy/invest-komfort-spolka-akcyjna/smolna"
 LIST = PAGES + "/krakow/mieszkania?filterPrice=0-700000&sortBy=amount&sortOrder=asc&perPage=10"
-TRANSACTIONS = identity.BASE_URL + "/statystyki/ceny-transakcyjne/mieszkania"
+STATS = identity.BASE_URL + "/statystyki"
+"""The statistics pages of a location (2026-10-29): ``{STATS}/{location}/dane-rzadowe`` and
+``{STATS}/{city}/transakcje``."""
 
 
 def as_result(value: dict[str, Any]) -> list[str]:
@@ -292,15 +293,17 @@ def as_result(value: dict[str, Any]) -> list[str]:
     [
         {"investment_url": SMOLNA},
         {"list_url": LIST, "items": [{"investment_url": SMOLNA}]},
+        # the list of a district (its own route since 2026-10-31)
+        {"list_url": PAGES + "/warszawa/praga-poludnie/mieszkania?filterPrice=0-700000&perPage=10"},
         {"investment_url": SMOLNA, "developer_url": PAGES + "/sopot/deweloperzy/invest-komfort"},
         {"investment_url": PAGES + "/krak%C3%B3w/deweloperzy/a%2Fb/x"},
-        {"stats_url": stats_url("polska", "#gus-srednia-powierzchnia")},
-        {"stats_url": stats_url("6-miast-bez-warszawy", "#nbp"), "periods": ["2026-Q2"]},
-        {"stats_url": stats_url("warszawa")},
+        {"stats_url": STATS + "/polska/dane-rzadowe#gus-srednia-powierzchnia"},
+        {"stats_url": STATS + "/6-miast-bez-warszawy/dane-rzadowe#nbp", "periods": ["2026-Q2"]},
+        {"stats_url": STATS + "/warszawa/dane-rzadowe"},
         # The transaction statistics of a city (2026-10-13, the user's decision): a link
-        # for people to a [P] page the client never requests (a D5 dump).
-        {"stats_url": TRANSACTIONS + "/krakow"},
-        {"stats_url": TRANSACTIONS + "/bielsko-biala", "periods": [{"period": "2026-07"}]},
+        # for people to a [P] page.
+        {"stats_url": STATS + "/krakow/transakcje"},
+        {"stats_url": STATS + "/bielsko-biala/transakcje", "periods": [{"period": "2026-07"}]},
         {"ranking_url": identity.BASE_URL + "/ceny-transakcyjne/polska/miasta"},
         {"building_url": identity.BASE_URL + "/ceny-transakcyjne/sopot/adresy/23-marca-79c-sopot"},
     ],
@@ -331,31 +334,43 @@ def test_page_links_in_link_fields_pass(value: dict[str, Any]) -> None:
         {"investment_url": PAGES + "/./deweloperzy/atal/smolna"},
         {"investment_url": PAGES + "/sopot/deweloperzy/atal/smolna/raport-inwestycji"},
         {"list_url": PAGES + "/x/y/z/w/v?q=1"},
+        {"list_url": PAGES + "/warszawa/a/b/mieszkania?perPage=10"},
+        {"list_url": PAGES + "/warszawa/../mieszkania?perPage=10"},
+        # a district is a slug of the service: [a-z0-9] words joined by hyphens
+        {"list_url": PAGES + "/warszawa/Mokotow/mieszkania?perPage=10"},
+        {"list_url": PAGES + "/warszawa/mokot%C3%B3w/mieszkania?perPage=10"},
+        {"list_url": PAGES + "/warszawa/-mokotow/mieszkania?perPage=10"},
+        {"list_url": PAGES + "/warszawa/praga--poludnie/mieszkania?perPage=10"},
         {"ranking_url": identity.BASE_URL + "/ceny-transakcyjne/krakow/miasta"},
         {"ranking_url": identity.BASE_URL + "/ceny-transakcyjne/polska/miasta?x=1"},
         {"list_url": PAGES + "/warszawa/inwestycje"},
         {"developer_url": PAGES + "/sopot/deweloperzy"},
         {"developer_url": PAGES + "/sopot/deweloperzy/"},
         # the government statistics: the page of a location, at most a section id
-        {"title": stats_url("polska", "#nbp")},
-        {"stats_url": stats_url("polska", "?_rsc=b3d11c70")},
-        {"stats_url": stats_url("polska", "/x#nbp")},
-        {"stats_url": stats_url("..", "#nbp")},
-        {"stats_url": stats_url("%2e%2e", "#nbp")},
-        {"stats_url": stats_url("polska", "#Nbp")},
-        {"stats_url": stats_url("polska", "#nbp x")},
-        {"stats_url": stats_url("polska", "#")},
-        {"stats_url": identity.BASE_URL + "/statystyki/dane-rzadowe#nbp"},
-        {"stats_url": identity.BASE_URL + "/statystyki/portale-ogloszeniowe/x/y"},
-        # the transaction statistics: only flats of one city, nothing after it
-        {"note": TRANSACTIONS + "/krakow"},
-        {"stats_url": identity.BASE_URL + "/statystyki/ceny-transakcyjne/domy/krakow"},
-        {"stats_url": TRANSACTIONS + "/krakow/mapa"},
-        {"stats_url": TRANSACTIONS + "/krakow?filterPrice=0-1"},
-        {"stats_url": TRANSACTIONS + "/krakow#x"},
-        {"stats_url": TRANSACTIONS + "/.."},
-        {"stats_url": TRANSACTIONS + "/%2e%2e"},
-        {"stats_url": TRANSACTIONS},
+        {"title": STATS + "/polska/dane-rzadowe#nbp"},
+        {"stats_url": STATS + "/polska/dane-rzadowe?_rsc="},
+        {"stats_url": STATS + "/polska/dane-rzadowe?_rsc=b3d11c70"},
+        {"stats_url": STATS + "/polska/x/dane-rzadowe#nbp"},
+        {"stats_url": STATS + "/../dane-rzadowe#nbp"},
+        {"stats_url": STATS + "/%2e%2e/dane-rzadowe#nbp"},
+        {"stats_url": STATS + "/polska/dane-rzadowe#Nbp"},
+        {"stats_url": STATS + "/polska/dane-rzadowe#nbp x"},
+        {"stats_url": STATS + "/polska/dane-rzadowe#"},
+        {"stats_url": STATS + "/dane-rzadowe#nbp"},
+        {"stats_url": STATS + "/polska/oferty"},
+        {"stats_url": STATS + "/portale-ogloszeniowe/x/y"},
+        # the routes before 2026-10-29: they answer 308, links.py builds them no more
+        {"stats_url": STATS + "/statystyki-rzadowe/polska#nbp"},
+        {"stats_url": STATS + "/ceny-transakcyjne/mieszkania/krakow"},
+        # the transaction statistics: one city, nothing after it
+        {"note": STATS + "/krakow/transakcje"},
+        {"stats_url": STATS + "/ceny-transakcyjne/domy/krakow"},
+        {"stats_url": STATS + "/krakow/transakcje/mapa"},
+        {"stats_url": STATS + "/krakow/transakcje?filterPrice=0-1"},
+        {"stats_url": STATS + "/krakow/transakcje#x"},
+        {"stats_url": STATS + "/../transakcje"},
+        {"stats_url": STATS + "/%2e%2e/transakcje"},
+        {"stats_url": STATS + "/transakcje"},
     ],
 )
 def test_links_elsewhere_or_of_another_kind_are_leaks(value: dict[str, Any]) -> None:
@@ -364,7 +379,7 @@ def test_links_elsewhere_or_of_another_kind_are_leaks(value: dict[str, Any]) -> 
 
 def test_a_link_in_an_error_message_is_a_leak() -> None:
     assert live.leaks(f"Nie znaleziono inwestycji 'smolna'. Zobacz {SMOLNA}")
-    assert live.leaks(f"NBP nie podaje cen. Zobacz {stats_url('polska')}#nbp-grid")
+    assert live.leaks(f"NBP nie podaje cen. Zobacz {STATS}/polska/dane-rzadowe#nbp-grid")
 
 
 def test_the_tool_listing_has_no_leaks() -> None:
@@ -384,7 +399,7 @@ def unix_sockets() -> None:
 CALLS: list[tuple[str, dict[str, Any]]] = [
     ("search_locations", {"query": "krak"}),
     ("search_offers", {"city": "warszawa"}),
-    ("search_offers", {"city": "polska"}),
+    ("search_offers", {"city": "warszawa", "district": "Praga-Południe"}),
     ("search_offers", {"city": UNKNOWN_CITY}),
     ("search_offers", {"city": "Kraków"}),
     ("search_offers", {"city": "warszawa", "per_page": 100}),
@@ -397,7 +412,7 @@ CALLS: list[tuple[str, dict[str, Any]]] = [
     ("get_government_statistics", {"location": UNKNOWN_LOCATION, "dataset": "wages"}),
     ("get_developer", {"developer_slug": "atal"}),
     ("get_developer", {"developer_slug": UNKNOWN_DEVELOPER, "city": "warszawa"}),
-    ("get_market_statistics", {"city": "krakow"}),
+    ("get_market_statistics", {"city": "warszawa"}),
     ("search_offers", {"city": "warszawa", "max_price": 1}),
 ]
 
@@ -416,9 +431,9 @@ def test_real_results_pass_the_leak_check(tmp_path: Path, unix_sockets: None) ->
         location_routes(router)
         unknown_city_route(router)
         developer_routes(router)
-        city_sales_routes(router)
+        offer_snapshot_routes(router)
         offers_route(router)
-        investment_routes(router)
+        investment_routes(router, smolna_with_events())  # 2.0: with the price events
         stats_routes(router)
         unknown_location_route(router)
         results = anyio.run(every_call)
@@ -443,16 +458,17 @@ def test_real_results_pass_the_leak_check(tmp_path: Path, unix_sockets: None) ->
     # Links (D12) in their fields pass: the list, its investments, the offer's pages.
     assert calls[1].text.count('"investment_url":"' + PAGES) == 10
     assert '"list_url":"' + PAGES + "/warszawa/mieszkania?" in calls[1].text
+    assert '"list_url":"' + PAGES + "/warszawa/praga-poludnie/mieszkania?" in calls[2].text
     assert '"developer_url":"' + PAGES in calls[7].text
     # The statistics link to the section of their page.
-    assert '"stats_url":"' + stats_url("warszawa", "#nbp") + '"' in calls[9].text
-    assert '"stats_url":"' + stats_url("polska", "#gus-mieszkania") + '"' in calls[10].text
+    assert '"stats_url":"' + STATS + '/warszawa/dane-rzadowe#nbp"' in calls[9].text
+    assert '"stats_url":"' + STATS + '/polska/dane-rzadowe#gus-mieszkania"' in calls[10].text
     # Validation errors in Polish: the field and what it allows, no link to pydantic's docs.
     assert "per_page musi być jedną z wartości 10, 50" in calls[5].text
     assert "Nieznany argument narzędzia search_offers: 'max_price'" in calls[16].text
     # The developer's profile and the market: only their page links, no single offers.
     assert '"developer_url":"' + PAGES + '/polska/deweloperzy/atal"' in calls[13].text
-    assert '"developer_url":"' + PAGES + "/krakow/deweloperzy/" in calls[15].text
+    assert '"developer_url":"' + PAGES + "/warszawa/deweloperzy/" in calls[15].text
 
 
 @pytest.mark.parametrize(
@@ -507,7 +523,7 @@ def test_the_harness_counts_paces_and_ends_the_session(fake_server: Path, tmp_pa
             mcp.call_network("search_offers", city="warszawa")  # cached: nothing logged
         calls, logged = mcp.parallel(
             ("search_offers", {"city": "warszawa", "page": 2}),
-            ("search_offers", {"city": "polska"}),
+            ("search_offers", {"city": "warszawa", "district": "Mokotów"}),
         )
         with pytest.raises(pytest.exit.Exception) as unavailable:  # checked in parallel too
             mcp.parallel(

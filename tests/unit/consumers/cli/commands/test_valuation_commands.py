@@ -18,6 +18,7 @@ from support.builders.valuation import (
     at_the_widest_radius,
 )
 from support.providers.cli import run_cli
+from support.providers.error_answers import unknown_entity
 from support.providers.routes.valuation import (
     VALUATION,
     VALUATION_PATH,
@@ -258,7 +259,7 @@ def test_cli_input_checked_before_any_request(
 def test_cli_not_found_has_its_exit_code(
     limiter: RequestLimiter, service: respx.MockRouter
 ) -> None:
-    service.get(path=VALUATION_PATH).respond(404)
+    service.get(path=VALUATION_PATH).respond(404, **unknown_entity({"error": "Not found"}))
 
     result = run_cli(limiter, *ESTIMATE)
 

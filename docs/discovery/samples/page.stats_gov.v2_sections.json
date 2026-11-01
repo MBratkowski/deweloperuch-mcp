@@ -1,0 +1,11 @@
+{
+  "_request": "GET /statystyki/warszawa/dane-rzadowe (RSC)",
+  "_prop": "govSections",
+  "_captured": "2026-10-31",
+  "value": [
+    "gus-mieszkania",
+    "gus-formy-budownictwa",
+    "gus-srednia-powierzchnia",
+    "... (5 more, 8 total)"
+  ]
+}

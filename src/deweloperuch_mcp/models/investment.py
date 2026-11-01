@@ -18,9 +18,6 @@ class Investment:
     """A development project with its developer and all its offers, in the service's
     order."""
 
-    investment_id: int
-    """The catalog's own number of the investment (its price histories are kept under
-    it); never shown."""
     investment_slug: str
     name: str
     status: str
@@ -71,13 +68,18 @@ class OfferListing:
     omitted: int
 
     def with_price_events(self, events: Mapping[int, Sequence[PriceEvent]]) -> Self:
-        """Every offer kept with its events (offer id -> events, oldest first); an offer
-        the map does not name has none."""
+        """Every offer kept with its events (offer id -> events, oldest first).
+
+        Every offer kept needs an entry, an empty one for an offer without events: events
+        that miss an offer are those of other offers (e.g. a later state of the
+        investment), so ``ValueError`` names the offers they miss instead of giving them an
+        empty history."""
+        missing = [offer.offer_id for offer in self.offers if offer.offer_id not in events]
+        if missing:
+            raise ValueError(f"brak historii ofert {', '.join(map(str, missing))}")
         return replace(
             self,
-            offers=tuple(
-                offer.with_price_events(events.get(offer.offer_id, ())) for offer in self.offers
-            ),
+            offers=tuple(offer.with_price_events(events[offer.offer_id]) for offer in self.offers),
         )
 
 

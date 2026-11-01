@@ -16,13 +16,13 @@ Periods are labels that sort in time order within one frequency: ``2025`` (year)
 without data (e.g. dwellings started for rent before the statistics existed).
 
 A table knows the ``section`` of the service's page that shows it (an id of the page's
-table of contents), so the application can link to it (``ports.PageLinks``); the domain
+list of sections), so the application can link to it (``ports.PageLinks``); the domain
 holds no addresses.
 """
 
 import re
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import StrEnum
 
 from deweloperuch_mcp.models.errors import (
@@ -232,8 +232,8 @@ class TimeSeries:
 class StatisticsTable:
     """All series of one dataset for one location; they share their periods.
 
-    ``section``: where the service's page shows this data (an id of its table of
-    contents), the anchor of a link for people (D12); ``None`` when the page has none.
+    ``section``: where the service's page shows this data (an id of its list of
+    sections), the anchor of a link for people (D12); ``None`` when the page has none.
     It is knowledge of the service's page passing through the domain on purpose: which
     section holds a dataset depends on the page itself (``polska`` shows its demography in
     another section than a city), so only the adapter that read the page can say, and
@@ -267,17 +267,6 @@ class StatisticsTable:
 
 
 @dataclass(frozen=True)
-class StatisticsLocation:
-    """A location of the service's list of these statistics."""
-
-    slug: str
-    name: str
-    is_aggregate: bool
-    has_nbp_prices: bool
-    """NBP publishes prices only for some big cities and their aggregates [P 2026-10-11]."""
-
-
-@dataclass(frozen=True)
 class GovernmentStatistics:
     """The latest periods of one dataset for one location (D4: the cut is explicit)."""
 
@@ -305,17 +294,27 @@ class GovernmentStatistics:
         return self.series[0].periods
 
 
+_WITH_NBP_PRICES = (
+    "Podaj agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo duże miasto, np. warszawa, "
+    "krakow, gdansk, wroclaw, gdynia, poznan."
+)
+"""Where NBP prices are [P 2026-10-31]: the grid of NBP prices on the page of ``polska`` has
+a series for each of these locations, and the page of ``7-miast`` has its own. NBP covers
+more big cities than the grid (the text of the same page names the prices of
+``zielona-gora``, ``lodz`` and ``rzeszow``), so these are examples, not the list."""
+
+_CITY_WITH_EVERY_DATASET = "miasto na prawach powiatu, np. warszawa"
+"""A location with every dataset: ``warszawa`` has all eight, ``polska`` all but
+``nbp_prices`` [P 2026-10-31]."""
+
+
 @dataclass(frozen=True)
 class LocationStatistics:
-    """What the service publishes for one location: a table per dataset it shows.
-
-    ``locations``: the service's list of locations of these statistics (for hints).
-    """
+    """What the service publishes for one location: a table per dataset it shows."""
 
     location: LocationSlug
     name: str
     tables: Mapping[Dataset, StatisticsTable]
-    locations: tuple[StatisticsLocation, ...] = field(default=())
 
     def statistics(self, dataset: Dataset, periods: PeriodCount) -> GovernmentStatistics:
         """The last ``periods`` periods of ``dataset``; ``NotFoundError`` when the service
@@ -343,21 +342,32 @@ class LocationStatistics:
         )
 
     def _not_published(self, dataset: Dataset) -> str:
+        """What the location lacks and where to find it (``_WITH_NBP_PRICES``,
+        ``_CITY_WITH_EVERY_DATASET``)."""
         where = f"lokalizacji {self.location.value!r}"
+        whole_country = self.location.whole_country
         if dataset is Dataset.NBP_PRICES:
-            with_prices = [loc.slug for loc in self.locations if loc.has_nbp_prices]
-            if self.location.whole_country:
+            if whole_country:
                 head = "NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów."
             else:
                 head = f"NBP nie publikuje cen mieszkań dla {where}."
-            if with_prices:
-                return f"{head} Podaj jedną z lokalizacji: {', '.join(with_prices)}."
-            return head
-        return f"Serwis nie publikuje zestawu {dataset.value!r} ({dataset.label}) dla {where}."
+            return f"{head} {_WITH_NBP_PRICES}"
+        others = (
+            _CITY_WITH_EVERY_DATASET if whole_country else f"polska albo {_CITY_WITH_EVERY_DATASET}"
+        )
+        missing = f"Serwis nie publikuje zestawu {dataset.value!r} ({dataset.label}) dla {where}."
+        return f"{missing} Podaj {others}."
 
     def _note(self, dataset: Dataset, table: StatisticsTable) -> str | None:
-        """Quarters are sums of months [P 2026-10-11: every quarter of both fixtures]; the
-        last quarter is incomplete when the monthly data ends before its last month."""
+        """Quarters are sums of months [P 2026-10-11, P 2026-10-31: every quarter of the pages
+        captured]; the last quarter is incomplete when the monthly data ends before its last
+        month. The last year of the average area may be incomplete too: [P 2026-10-31] the
+        page says so, „Ostatni rok bywa niepełny — GUS dopisuje go kwartałami”."""
+        if dataset is Dataset.AVERAGE_AREA:
+            return (
+                f"Ostatni rok ({table.periods[-1]}) bywa niepełny: GUS dopisuje go kwartałami, "
+                "więc porównuj go ostrożnie z pełnymi latami."
+            )
         if dataset is not Dataset.DWELLINGS_QUARTERLY:
             return None
         monthly = self.tables.get(Dataset.DWELLINGS_MONTHLY)

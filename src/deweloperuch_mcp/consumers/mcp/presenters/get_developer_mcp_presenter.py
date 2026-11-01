@@ -16,13 +16,14 @@ from deweloperuch_mcp.usecases.get_developer import GetDeveloperResult
 
 
 class DeveloperBrief(McpModel):
+    # [P 2026-10-31] the 2.0 page names the developer only: no website, no description.
     developer_slug: str
     name: str
-    website: str | None = None
 
 
 class DeveloperSummaryItem(McpModel):
-    # [P 2026-10-13] the meaning of every field: tests/contract/api/dto/test_developer_page_dto.py.
+    # Summed up from the investments (DeveloperProfile.summary); [P 2026-10-31] the meaning
+    # of their figures: tests/contract/api/dto/test_developer_page_dto.py.
     active_offers: int | None = Field(None, description="Aktywne oferty w zakresie city.")
     cities: int | None = Field(
         None,
@@ -34,21 +35,30 @@ class DeveloperSummaryItem(McpModel):
     avg_price: float | None = Field(None, description="Średnia cena aktywnych ofert w PLN.")
     avg_area_m2: float | None = Field(None, description="Średni metraż aktywnych ofert.")
     avg_price_per_m2: float | None = Field(
-        None, description="Średnia cena za m² aktywnych ofert wg serwisu."
+        None,
+        description=(
+            "Średnia cena za m² aktywnych ofert: ceny za m² inwestycji ważone liczbą ich ofert "
+            "(jak w serwisie), liczona z inwestycji; dla jednego miasta może różnić się o 1 zł "
+            "od wiersza w cities i nie jest ilorazem avg_price / avg_area_m2."
+        ),
     )
 
 
 class DeveloperInvestmentItem(McpModel):
+    # [P 2026-10-31] the figures against the offer snapshot of the same day:
+    # tests/contract/api/dto/test_developer_page_dto.py.
     investment_slug: str
     name: str
     city: str | None = None
     city_slug: str | None = None
     status: str = Field(description=STATUS)
-    active_offers: int | None = None
+    active_offers: int | None = Field(None, description="Aktywne oferty inwestycji.")
     total_offers: int | None = Field(None, description="Aktywne i archiwalne oferty.")
     avg_price: float | None = Field(None, description="Średnia cena aktywnych ofert w PLN.")
-    avg_area_m2: float | None = None
-    avg_price_per_m2: float | None = None
+    avg_area_m2: float | None = Field(None, description="Średni metraż aktywnych ofert.")
+    avg_price_per_m2: float | None = Field(
+        None, description="Cena za m² aktywnych ofert: ich łączna cena przez łączny metraż."
+    )
     investment_url: str | None = Field(None, description=INVESTMENT_URL)
 
 
@@ -56,9 +66,10 @@ class DeveloperCityItem(McpModel):
     city: str
     city_slug: str
     investments: int | None = Field(None, description="Inwestycje z aktywnymi ofertami.")
-    active_offers: int | None = None
-    avg_price: float | None = Field(None, description="Średnia cena aktywnych ofert w PLN.")
-    avg_price_per_m2: float | None = None
+    active_offers: int | None = Field(None, description="Aktywne oferty dewelopera w mieście.")
+    avg_price_per_m2: float | None = Field(
+        None, description="Średnia cena za m² aktywnych ofert wg serwisu albo liczona z inwestycji."
+    )
 
 
 class DeveloperResult(McpModel):
@@ -75,14 +86,15 @@ class DeveloperResult(McpModel):
     cities: list[DeveloperCityItem] = Field(
         description=(
             "Wszystkie miasta dewelopera w Polsce, niezależnie od argumentu city (także "
-            "przy city=warszawa)."
+            "przy city=warszawa), od miasta z największą liczbą aktywnych ofert."
         )
     )
 
 
 class GetDeveloperMcpPresenter:
     """The profile as its view has it (``DeveloperProfileView``) with the D4 counters; a
-    truncated result gets a hint: a larger ``limit``, up to ``max_limit`` (the tool's)."""
+    truncated result gets a hint, after the use case's own: a larger ``limit``, up to
+    ``max_limit`` (the tool's)."""
 
     def __init__(self, *, max_limit: int) -> None:
         self._max_limit = max_limit
@@ -93,8 +105,9 @@ class GetDeveloperMcpPresenter:
         returned = len(view.investments)
         data["investments_returned"] = returned
         data["truncated"] = view.investments_omitted > 0
-        if data["truncated"] and view.hint is None:
-            data["hint"] = self._larger_limit(returned, view.investments_total)
+        if data["truncated"]:
+            larger = self._larger_limit(returned, view.investments_total)
+            data["hint"] = f"{view.hint} {larger}" if view.hint else larger
         return DeveloperResult.model_validate(data)
 
     def _larger_limit(self, returned: int, total: int) -> str:

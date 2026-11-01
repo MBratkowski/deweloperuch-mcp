@@ -13,9 +13,9 @@ from deweloperuch_mcp.api.dto import (
     offers_page_dto,
     sale_events_dto,
 )
-from deweloperuch_mcp.api.dto.city_sales_dto import CitySalesDto
-from deweloperuch_mcp.api.dto.investment_sale_events_dto import InvestmentSaleEventsDto
+from deweloperuch_mcp.api.dto.investment_price_events_dto import InvestmentPriceEventsDto
 from deweloperuch_mcp.api.dto.location_search_dto import LocationSearchDto
+from deweloperuch_mcp.api.dto.offer_snapshot_dto import OfferSnapshotDto
 from deweloperuch_mcp.api.dto.sale_events_dto import SaleEventDto
 from deweloperuch_mcp.consumers.mcp.presenters.get_investment_mcp_presenter import (
     InvestmentOfferItem,
@@ -44,7 +44,6 @@ from deweloperuch_mcp.consumers.shared.offer_views import (
     OfferView,
     PriceEventView,
 )
-from deweloperuch_mcp.flight import component_props
 from deweloperuch_mcp.models.investment import OfferDetail
 from deweloperuch_mcp.models.location import LocationSearchResult
 from deweloperuch_mcp.models.market_statistics import MarketCriteria
@@ -60,7 +59,9 @@ from deweloperuch_mcp.usecases.get_market_statistics import GetMarketStatisticsR
 from deweloperuch_mcp.usecases.get_offer import GetOfferResult
 from deweloperuch_mcp.usecases.search_locations import SearchLocationsResult
 from deweloperuch_mcp.usecases.search_offers import SearchOffersRequest, SearchOffersResult
-from support.providers.rsc import CITY_SALES, DEVELOPER_POLSKA, raw
+from support.providers.routes.investments import smolna_with_events
+from support.providers.routes.offer_snapshot import OFFER_SNAPSHOT
+from support.providers.rsc import DEVELOPER_POLSKA_20261031, raw
 from support.providers.samples import body
 
 BACKEND_KEY = re.compile(r"^(invest|sale)(_|$)|sale|amount|size|sqm|^data$")
@@ -79,21 +80,24 @@ def keys(value: Any) -> set[str]:
 
 def view_results() -> list[BaseModel]:
     investment = investment_dto.InvestmentDto.model_validate(body("api.map_inv_visible")).to_model()
-    histories = InvestmentSaleEventsDto.model_validate(body("api.inv_sale_events")).root
-    events = {offer_id: SaleEventDto.price_events(items) for offer_id, items in histories.items()}
+    events = InvestmentPriceEventsDto.model_validate(smolna_with_events()).to_model()
     one = sale_events_dto.SaleEventsDto.model_validate(body("api.sale_events")).events
     found_offer = investment.find_offer(OfferId(2377))
     assert found_offer is not None
-    page = offers_page_dto.OffersPageDto.model_validate(body("page.offers_list")).to_model()
+    page = offers_page_dto.OffersPageDto.model_validate(
+        {
+            "sales": body("page.offers_list.v2_sales"),
+            "serverPaginationData": body("page.offers_list.v2_pagination"),
+        }
+    ).to_model()
     places = LocationSearchDto.model_validate(body("api.location_search")).to_model(limit=6)
-    props = component_props(raw(DEVELOPER_POLSKA))
-    developer = next(v for k, v in props if k == "data" and isinstance(v, dict))
-    profile = developer_page_dto.DeveloperPageDto.model_validate(developer).to_model(
-        CitySlug("polska")
-    )
+    profile = developer_page_dto.DeveloperPageDto.from_payload(
+        raw(DEVELOPER_POLSKA_20261031), path="/ceny-ofertowe/polska/deweloperzy/atal"
+    ).to_model(CitySlug("polska"))
     listing = profile.listing(InvestmentsLimit(5))
-    sales = CitySalesDto.model_validate_json(CITY_SALES["krakow"].read_bytes())
-    market = sales.to_model(CitySlug("krakow")).statistics(MarketCriteria(city=CitySlug("krakow")))
+    snapshot = OfferSnapshotDto.model_validate_json(OFFER_SNAPSHOT["warszawa"].read_bytes())
+    warszawa = CitySlug("warszawa")
+    market = snapshot.to_model(warszawa).statistics(MarketCriteria(city=warszawa))
     return [
         InvestmentView.from_result(
             GetInvestmentResult(

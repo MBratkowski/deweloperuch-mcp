@@ -11,7 +11,7 @@
     ""
   ],
   "stderr": [
-    "Błąd: district działa tylko z jednym miastem: podaj jako city slug miasta tej dzielnicy (search_locations zwraca go przy dzielnicy), a nie polska; podano 'Mokotów'.",
+    "Błąd: city=polska nie działa przy wyszukiwaniu ofert: serwis nie ma jednej listy ofert całej Polski. Podaj city_slug jednego miasta z search_locations (np. warszawa); oferty kilku miast wyszukaj osobno dla każdego.",
     ""
   ],
   "requests": []

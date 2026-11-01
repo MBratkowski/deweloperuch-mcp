@@ -9,11 +9,11 @@
     ""
   ],
   "stderr": [
-    "Błąd: Serwis nie ma cen transakcyjnych mieszkań dla miasta 'nieistniejace-miasto'. Sprawdź city_slug w search_locations (np. warszawa, krakow); statystyki są dla całych miast, nie dla dzielnic ani ulic.",
-    "Szczegóły: /api/monthly-transaction-stats?propertyType=mieszkania&citySlug=nieistniejace-miasto",
+    "Błąd: Serwis nie ma cen transakcyjnych mieszkań dla miasta 'nieistniejace-miasto'. Sprawdź city_slug w search_locations (np. warszawa, krakow); statystyki są dla całych miast, nie dla dzielnic ani ulic. Jeśli city_slug pochodzi z search_locations, serwis nie ma dla niego statystyk: powiedz to użytkownikowi.",
+    "Szczegóły: /statystyki/nieistniejace-miasto/transakcje?_rsc=: HTTP 404, text/x-component",
     ""
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/monthly-transaction-stats?propertyType=mieszkania&citySlug=nieistniejace-miasto [accept: application/json]"
+    "GET https://deweloperuch.pl/statystyki/nieistniejace-miasto/transakcje?_rsc= [rsc: 1] [accept: */*]"
   ]
 }

@@ -1,6 +1,6 @@
 """The ``deweloperuch stats`` group (``stats_app``) with ``stats government``, GUS and NBP
 statistics of a location, and ``stats market``, the offer market of one city in numbers
-(D15): each command parses its request and executes the use case in a session (``call``:
+(D20): each command parses its request and executes the use case in a session (``call``:
 a package error ends the run with its code), then hands the result to its presenter."""
 
 from typing import Annotated

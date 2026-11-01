@@ -10,7 +10,7 @@
   ],
   "stderr": [
     "Błąd: Nie znaleziono inwestycji 'smolna'. Slug inwestycji podaje search_investments, search_offers albo get_developer (pole investment_slug).",
-    "Szczegóły: /api/map/investments/visible/smolna",
+    "Szczegóły: /api/map/investments/visible/smolna: HTTP 404, application/json",
     ""
   ],
   "requests": [

@@ -9,7 +9,7 @@
     ""
   ],
   "stderr": [
-    "Błąd: Inwestycja 'smolna': Serwis zwrócił stronę HTML zamiast danych. Serwis mógł się zmienić po aktualizacji: ponawianie nie pomoże, zgłoś to użytkownikowi.",
+    "Błąd: Inwestycja 'smolna': Serwis zwrócił stronę HTML zamiast danych. Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.",
     "Szczegóły: /api/map/investments/visible/smolna: oczekiwano JSON, przyszedł HTML",
     ""
   ],

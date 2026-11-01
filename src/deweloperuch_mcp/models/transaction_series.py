@@ -35,7 +35,8 @@ from deweloperuch_mcp.models.values import WHOLE_COUNTRY, Slug
 
 @dataclass(frozen=True)
 class TransactionCity(Slug):
-    """The city of transaction statistics: a city slug, never the whole country.
+    """The city of transaction statistics: a city slug, never the whole country nor a
+    group of cities (``AGGREGATES``).
 
     Whether the service has these statistics for ``polska`` is not known (only city
     slugs were ever asked for, docs/discovery/endpoints.md), so it is refused here
@@ -44,9 +45,21 @@ class TransactionCity(Slug):
 
     NAME: ClassVar[ValueName] = ValueName.TRANSACTIONS_CITY
 
+    # [P 2026-10-30] docs/discovery/pages-rsc.md: the statistics pages take, besides a city
+    # slug and `polska`, the aggregates `7-miast`, `10-miast` and `6-miast-bez-warszawy`
+    # (links of the saved pages). `9-miast` is in no 2.0 capture (the 1.0 docs named it); it
+    # is refused all the same. What the transaction statistics show for a group of cities is
+    # [H], and the statistics
+    # here are for whole cities, so each is refused before any request. Kept here, not
+    # shared with the government statistics, which take them.
+    AGGREGATES: ClassVar[frozenset[str]] = frozenset(
+        {"7-miast", "9-miast", "10-miast", "6-miast-bez-warszawy"}
+    )
+    """The groups of cities of the service's statistics: no city of their own."""
+
     def __post_init__(self) -> None:
         super().__post_init__()
-        if self.value == WHOLE_COUNTRY:
+        if self.value == WHOLE_COUNTRY or self.value in self.AGGREGATES:
             raise self.refused(self.value)
 
     @classmethod
@@ -94,7 +107,9 @@ class Granularity(StrEnum):
         [P] docs/discovery/endpoints.md, monthly transaction statistics: the latest months
         have few transactions (RCN feed lag; 2026-07 had 2 transactions on 2026-10-09).
         [W] "kilkumiesięcznym": the service's own statistics page took 2026-03 as its
-        latest full month on 2026-10-09 (sample page.stats_transactions, ``latestSummary``).
+        latest full month on 2026-10-09 (sample page.stats_transactions, ``latestSummary``),
+        and 2026-04 on 2026-10-31, when 2026-05..2026-07 had 22, 0 and 35 transactions after
+        986 in 2026-04 (tests/fixtures/rsc/stats_tx_warszawa_20261031.rsc).
         """
         latest = "Ostatnie miesiące" if self is Granularity.MONTH else "Ostatnie kwartały"
         return (
@@ -120,6 +135,12 @@ class Granularity(StrEnum):
 # long, so a lasting drop of the market, once older than that, is not taken for the lag.
 # The period right before the run is the last complete one when it is judged usual
 # itself; it may still grow (a usual number of transactions, not final data).
+# [P 2026-10-31] re-checked on the 2.0 series (tests/fixtures/rsc/stats_tx_*_20261031.rsc)
+# without the empty months its page pads its end with (api/dto/transaction_stats_page_dto.py),
+# so it ends where the 1.0 series ended: for Warsaw the rule flags 2026-05, 2026-06 and
+# 2026-07 (22, 0, 35), as on 1.0, and names 2026-04 (986) the last complete month, the month
+# the service's page itself summarises as its latest (`latestSummary`); for Karpacz it judges
+# nothing, and the page summarises no month.
 
 INCOMPLETE_SHARE = 0.5
 """A run of periods at the end of a series with fewer transactions than this share of the
@@ -133,7 +154,8 @@ or two periods would decide it, and nothing is judged."""
 # period below half of it. A Poisson simulation in the review of 2026-10-16 had the rule
 # name a wrong last complete period in 85% of runs at 0.5 transactions a month, 31% at 1
 # and 6% at 3; tests/fixtures/api/monthly_tx_karpacz_20261016.json (a small town) has a
-# median of 1 a month and 26 months of 60 without any.
+# median of 1 a month and 26 months of 60 without any (41 of 108 on the 2.0 page,
+# tests/fixtures/rsc/stats_tx_karpacz_20261031.rsc, to 2025-12 as well).
 MIN_USUAL_TRANSACTIONS = 10
 """Below this usual number of transactions a period is not judged: nothing is flagged,
 and no period is known to be complete."""

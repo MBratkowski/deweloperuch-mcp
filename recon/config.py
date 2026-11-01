@@ -8,8 +8,8 @@ what the package's HTTP client uses too, so recon and the client share it:
 - ``parse_retry_after`` (``deweloperuch_mcp.retry_after``), the one ``Retry-After`` parser;
 - the response policy (``deweloperuch_mcp.http_policy``): what stops a series of
   requests, how long the limiter pauses, the body size limit;
-- the RSC ("flight") request token and decoder (``deweloperuch_mcp.flight``), which
-  ``recon/flight.py`` re-exports;
+- the RSC ("flight") request shape (the empty ``_rsc``) and decoder
+  (``deweloperuch_mcp.flight``), which ``recon/flight.py`` re-exports;
 - the read allowlist (``deweloperuch_mcp.allowlist``), which ``recon/allowlist.py``
   re-exports;
 - the single limiter implementation (``deweloperuch_mcp.throttle``), so they share
@@ -58,7 +58,7 @@ from deweloperuch_mcp.flight import (  # noqa: E402
     find_json_after,
     flight,
     flight_from_html,
-    with_rsc_query,
+    with_rsc_token,
 )
 from deweloperuch_mcp.http_policy import (  # noqa: E402
     MAX_BODY_BYTES,
@@ -120,5 +120,5 @@ __all__ = [
     "pause_seconds",
     "stop_cause",
     "stop_reason",
-    "with_rsc_query",
+    "with_rsc_token",
 ]

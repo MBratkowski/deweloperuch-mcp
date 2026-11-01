@@ -3,24 +3,24 @@
     {
       "tool": "get_market_statistics",
       "arguments": {
-        "city": "nieznane"
+        "city": "nieistniejace-miasto"
       }
     }
   ],
   "results": [
     {
       "is_error": true,
-      "text": "Serwis nie zna miasta 'nieznane'. Podaj city_slug z search_locations (statystyki rynku są tylko dla jednego miasta).",
+      "text": "Serwis nie zna miasta 'nieistniejace-miasto' albo nie ma w nim ofert. Podaj city_slug z search_locations (miejscowości z offer_count=0 nie mają statystyk; statystyki rynku są tylko dla jednego miasta).",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "NotFoundError: Serwis nie zna miasta 'nieznane'. Podaj city_slug z search_locations (statystyki rynku są tylko dla jednego miasta). Szczegóły: /api/offers/city-sales/nieznane: {\"error\":\"Invalid citySlug\"}"
+      "NotFoundError: Serwis nie zna miasta 'nieistniejace-miasto' albo nie ma w nim ofert. Podaj city_slug z search_locations (miejscowości z offer_count=0 nie mają statystyk; statystyki rynku są tylko dla jednego miasta). Szczegóły: /api/map/offer-snapshot/nieistniejace-miasto: HTTP 404, application/json"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/offers/city-sales/nieznane [accept: application/json]"
+    "GET https://deweloperuch.pl/api/map/offer-snapshot/nieistniejace-miasto [accept: application/json]"
   ]
 }

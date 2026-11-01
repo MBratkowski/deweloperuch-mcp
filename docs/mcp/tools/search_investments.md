@@ -22,7 +22,7 @@ Title: „Szukaj inwestycji”. Annotations: `readOnlyHint=true`, `openWorldHint
 A structured result and the same compact JSON in the content; `null` fields are omitted.
 
 - `total`, `returned`, `truncated`, `hint` (when truncated or nothing matched) and `items`.
-- With `city`, an item has `investment_slug`, `name`, `city_slug`, `status`, `offers_active`, `offers_total` and, when the service gives them, `street`, `avg_price`, `avg_area_m2`, `avg_price_per_m2` (active offers only), `developer_slug`, `developer_name`, `investment_url`, `developer_url`.
+- With `city`, an item has `investment_slug`, `name`, `city_slug`, `status`, `offers_active`, `offers_total` and, when the service gives them, `district` (the investment's district), `street`, `avg_price`, `avg_area_m2`, `avg_price_per_m2` (active offers only), `developer_slug`, `developer_name`, `investment_url`, `developer_url`.
 - With `name` only, an item has `investment_slug`, `name` and `offers_active`, in the service's order.
 
 ## Data limitations
