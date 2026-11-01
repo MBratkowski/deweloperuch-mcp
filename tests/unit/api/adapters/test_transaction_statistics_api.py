@@ -245,9 +245,12 @@ def test_a_month_of_another_market_is_refused_with_its_own_message(
 @pytest.mark.parametrize(
     "refused",
     [
-        page_with_months([{**month_rows(1)[0], "month": "2017-1"}]),  # off the contract
-        page_with_months([{**month_rows(1)[0], "secondary_count": 1}]),  # another market
+        page_with_months([{**month_rows(1)[0], "month": "2017-1"}]),
+        page_with_months([{**month_rows(1)[0], "secondary_count": 1}]),
     ],
+    # Named ids: an id made of the page would pass the 32,767 characters of a Windows
+    # environment variable (PYTEST_CURRENT_TEST).
+    ids=["off the contract", "another market"],
 )
 def test_a_refused_page_is_not_kept_in_the_cache(
     http: HttpClient, service: respx.MockRouter, refused: bytes
@@ -291,10 +294,11 @@ def test_a_trend_off_the_contract_is_an_unexpected_response(
 @pytest.mark.parametrize(
     "page",
     [
-        raw(OFFERS_WARSZAWA_20261031),  # another page: no prop view
+        raw(OFFERS_WARSZAWA_20261031),
         page_with_months([{**month_rows(1)[0], "month": "2017-1"}]),
         page_with_months([{"month": "2017-01"}]),
     ],
+    ids=["another page, no prop view", "a malformed month", "a month without counts"],
 )
 def test_a_page_off_the_contract_is_an_unexpected_response(
     http: HttpClient, service: respx.MockRouter, page: bytes
