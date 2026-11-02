@@ -1,0 +1,24 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "sort": "value_desc"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "sort value_desc i value_asc działa tylko z indicator; podaj indicator albo sort transactions_desc, price_per_m2_desc lub price_per_m2_asc.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: sort value_desc i value_asc działa tylko z indicator; podaj indicator albo sort transactions_desc, price_per_m2_desc lub price_per_m2_asc."
+    ]
+  ],
+  "requests": []
+}

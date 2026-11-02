@@ -1,0 +1,25 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "indicator": "average_wage",
+        "market": "primary"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "market nie działa z indicator: rynek dotyczy transakcji powiatów; pomiń market.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: market nie działa z indicator: rynek dotyczy transakcji powiatów; pomiń market."
+    ]
+  ],
+  "requests": []
+}

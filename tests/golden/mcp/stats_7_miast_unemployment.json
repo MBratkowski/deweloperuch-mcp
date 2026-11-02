@@ -18,7 +18,7 @@
   "log": [
     [
       "INFO",
-      "NotFoundError: Serwis nie publikuje zestawu 'unemployment' (Stopa bezrobocia rejestrowanego) dla lokalizacji '7-miast'. Podaj polska albo miasto na prawach powiatu, np. warszawa. Szczegóły: None"
+      "NotFoundError: Serwis nie publikuje zestawu 'unemployment' (Stopa bezrobocia rejestrowanego) dla lokalizacji '7-miast'. Podaj polska albo miasto na prawach powiatu, np. warszawa."
     ]
   ],
   "requests": [

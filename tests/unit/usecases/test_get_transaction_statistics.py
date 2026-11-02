@@ -25,6 +25,7 @@ from support.builders.transactions import (
     counted,
     series,
 )
+from support.fakes.places import VILLAGE, FakePlaces, unknown_place_message
 from support.fakes.transactions import FakeTransactionLinks, FakeTransactionSource
 
 WARSZAWA_TAIL = counted("2025-04", *WARSZAWA_LAST_16_MONTHS)
@@ -36,8 +37,12 @@ LAST_COMPLETE = (
 )
 
 
-def use_case(source: FakeTransactionSource) -> GetTransactionStatistics:
-    return GetTransactionStatistics(source, FakeTransactionLinks())
+def use_case(
+    source: FakeTransactionSource, places: FakePlaces | None = None
+) -> GetTransactionStatistics:
+    """``places`` cannot tell by default (every lookup fails): the use case's own words."""
+    unknown = FakePlaces(failure=ServiceError("503")) if places is None else places
+    return GetTransactionStatistics(source, FakeTransactionLinks(), unknown)
 
 
 def request(granularity: Granularity, periods: int) -> GetTransactionStatisticsRequest:
@@ -134,6 +139,45 @@ def test_a_city_without_data_points_to_search_locations(
     )
     assert "search_locations" in str(caught.value)
     assert "HTTP" not in str(caught.value)
+
+
+def not_found_in(city: str, places: FakePlaces) -> NotFoundError:
+    source = FakeTransactionSource(NotFoundError("Serwis nie zna żądanych danych (HTTP 404)."))
+    with pytest.raises(NotFoundError) as caught:
+        use_case(source, places).execute(GetTransactionStatisticsRequest.parse(city=city))
+    return caught.value
+
+
+def test_an_unknown_place_says_there_is_no_such_place() -> None:
+    places = FakePlaces()
+
+    found = not_found_in("nieistniejace-miasto", places)
+
+    assert str(found) == (unknown_place_message("nieistniejace-miasto"))
+    assert places.calls == ["nieistniejace-miasto"]
+
+
+def test_a_known_place_without_transaction_statistics_says_so() -> None:
+    found = not_found_in(VILLAGE.slug, FakePlaces.knowing(VILLAGE))
+
+    assert str(found) == (
+        "Miejscowość 'Ignatki-osiedle' istnieje, ale serwis nie ma dla niej statystyk "
+        "transakcji. Nie ponawiaj; powiedz to użytkownikowi."
+    )
+
+
+def test_a_series_without_periods_never_looks_up() -> None:
+    """The service answered with data (no periods): no "not found" of the service, so no
+    lookup; the use case's own words."""
+    places = FakePlaces.knowing(VILLAGE)
+
+    with pytest.raises(NotFoundError) as caught:
+        use_case(FakeTransactionSource(series()), places).execute(
+            GetTransactionStatisticsRequest.parse(city=VILLAGE.slug)
+        )
+
+    assert str(caught.value).startswith("Serwis nie ma cen transakcyjnych mieszkań dla miasta")
+    assert places.calls == []
 
 
 def test_a_failure_of_the_service_says_what_it_was_about() -> None:

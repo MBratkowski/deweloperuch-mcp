@@ -169,6 +169,23 @@ def test_error_results_carry_no_backend_details(
     assert re.search(r"/api|/ceny-|/statystyki", logged)
 
 
+def test_a_refusal_without_details_logs_no_empty_details(
+    server: MCPServer[bootstrap.Session],
+    service: respx.MockRouter,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A refused argument has no detail: the log line is the message alone, never
+    „Szczegóły: None”."""
+    caplog.set_level(logging.INFO, logger=calls.LOGGER_NAME)
+
+    result = call(server, "rank_locations", market="primary")
+
+    assert result.is_error is True
+    logged = [record.getMessage() for record in caplog.records]
+    assert logged == [f"InvalidInputError: {text(result)}"]
+    assert service.calls.call_count == 0
+
+
 def test_terminal_sequences_from_the_service_are_escaped_in_the_log(
     server: MCPServer[bootstrap.Session],
     service: respx.MockRouter,

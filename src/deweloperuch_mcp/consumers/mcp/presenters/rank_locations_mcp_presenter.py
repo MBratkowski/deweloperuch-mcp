@@ -24,30 +24,70 @@ class RankedLocationItem(McpModel):
             "go nie przyjmuje."
         ),
     )
-    transaction_count: int = Field(
+    transaction_count: int | None = Field(
+        None,
         description=(
-            "Liczba transakcji wg serwisu; okresu serwis nie podaje (dla powiatów wiele lat: "
-            "tylko do uporządkowania)."
-        )
+            "Liczba transakcji wg serwisu: dla powiatu w okresie period_start–period_end, "
+            "dla miejscowości w okresie, którego serwis nie podaje."
+        ),
     )
     price_per_m2: float | None = Field(
         None, description="Cena transakcyjna za m² w PLN, podana przez serwis."
     )
     area_m2: float | None = Field(None, description="Metraż w m², podany przez serwis.")
     price: float | None = Field(None, description="Cena transakcyjna w PLN, podana przez serwis.")
+    value: float | None = Field(
+        None, description="Wartość wskaźnika (indicator) w jednostce unit za okres period."
+    )
+    stats_url: str | None = Field(
+        None,
+        description=(
+            "Link do strony wskaźnika miasta na deweloperuch.pl (tylko z indicator): podaj "
+            "go użytkownikowi."
+        ),
+    )
 
 
 class LocationRankingResult(McpModel):
     level: str = Field(description="city (miejscowości) albo powiat (powiaty).")
     sort: str = Field(description="Kolejność rankingu, jak w argumencie sort.")
-    min_transactions: int = Field(
+    min_transactions: int | None = Field(
+        None,
         description=(
             "Zastosowany próg: min_transactions z argumentu, a bez niego domyślny: 20 przy "
-            "sortowaniu po cenie, 0 przy transactions_desc (0 = wszystkie miejsca)."
-        )
+            "sortowaniu po cenie, 0 przy transactions_desc (0 = wszystkie miejsca). Brak "
+            "przy indicator."
+        ),
+    )
+    market: str | None = Field(
+        None, description="Rynek rankingu powiatów: secondary, primary albo all."
+    )
+    period_start: str | None = Field(
+        None, description="Pierwszy dzień okresu transakcji powiatów (RRRR-MM-01)."
+    )
+    period_end: str | None = Field(
+        None,
+        description="Ostatni miesiąc okresu transakcji powiatów (RRRR-MM), wliczony w okres.",
+    )
+    indicator: str | None = Field(None, description="Wskaźnik rankingu, jak w argumencie.")
+    unit: str | None = Field(
+        None,
+        description=(
+            "Jednostka value: %, PLN/mies., mieszkania (suma 12 miesięcy), m², osoby albo PLN/m²."
+        ),
+    )
+    period: str | None = Field(
+        None,
+        description=(
+            "Okres wartości wskaźnika: miesiąc (RRRR-MM), kwartał (RRRR-Qn) albo rok (RRRR); "
+            "dla dwellings_completed i dwellings_started ostatni miesiąc okna 12 miesięcy."
+        ),
     )
     total: int = Field(
-        description="Wszystkie miejsca tego poziomu z co najmniej min_transactions transakcji."
+        description=(
+            "Wszystkie miejsca spełniające kryteria: z co najmniej min_transactions "
+            "transakcji, z danymi dla market albo z wartością wskaźnika."
+        )
     )
     returned: int = Field(description="Pozycje w items: pierwsze z rankingu.")
     truncated: bool = Field(
@@ -56,15 +96,16 @@ class LocationRankingResult(McpModel):
     hint: str | None = Field(
         None,
         description=(
-            "Co zrobić, gdy wynik jest obcięty albo pusty, oraz czy przy sortowaniu po cenie "
-            "pominięto małe miejsca (domyślny próg)."
+            "Co zrobić, gdy wynik jest obcięty albo pusty, oraz co pominięto: małe miejsca "
+            "przy sortowaniu po cenie (domyślny próg), powiaty bez danych dla market, miasta "
+            "bez wskaźnika."
         ),
     )
     ranking_url: str | None = Field(
         None,
         description=(
-            "Strona rankingu miast na deweloperuch.pl (tylko level=city): podaj ją "
-            "użytkownikowi jako link."
+            "Strona rankingu miast na deweloperuch.pl (tylko level=city bez indicator): "
+            "podaj ją użytkownikowi jako link."
         ),
     )
     items: list[RankedLocationItem]

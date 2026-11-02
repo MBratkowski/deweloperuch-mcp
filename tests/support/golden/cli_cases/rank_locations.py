@@ -13,17 +13,24 @@ CASES: dict[str, Case] = {
     "help_stats_cities": case("stats", "cities", "--help"),
     "stats_cities": case("stats", "cities", service=ranking_routes),
     "stats_cities_json": case("stats", "cities", "--json", service=ranking_routes),
-    "stats_cities_powiat_price_asc_min_transactions": case(
+    "stats_cities_powiat_primary_price_asc": case(
         "stats",
         "cities",
         "--level",
         "powiat",
+        "--market",
+        "primary",
         "--sort",
         "price_per_m2_asc",
-        "--min-transactions",
-        "200000",
         service=ranking_routes,
     ),
+    "stats_cities_indicator_unemployment": case(
+        "stats", "cities", "--indicator", "unemployment_rate", service=ranking_routes
+    ),
+    "stats_cities_indicator_json": case(
+        "stats", "cities", "--indicator", "nbp_price_per_m2", "--json", service=ranking_routes
+    ),
+    "stats_cities_market_at_city_level": case("stats", "cities", "--market", "primary"),
     "stats_cities_price_desc_limit_2_of_2448": case(
         "stats",
         "cities",

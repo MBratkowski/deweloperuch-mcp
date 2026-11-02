@@ -1,0 +1,28 @@
+{
+  "calls": [
+    {
+      "tool": "get_developer",
+      "arguments": {
+        "developer_slug": "atal",
+        "city": "krakow"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Miejscowość 'Kraków' istnieje, ale serwis nie ma dla niej aktywnych ofert tego dewelopera. Sprawdź developer_slug (search_developers) albo spróbuj city=polska (cała Polska).",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Miejscowość 'Kraków' istnieje, ale serwis nie ma dla niej aktywnych ofert tego dewelopera. Sprawdź developer_slug (search_developers) albo spróbuj city=polska (cała Polska). Szczegóły: /ceny-ofertowe/krakow/deweloperzy/atal: brak propsów 'developerSlug', 'developerName', 'investments', strona przekierowuje do /ceny-ofertowe/polska/deweloperzy/atal"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/krakow/deweloperzy/atal?_rsc= [rsc: 1] [accept: */*]",
+    "GET https://deweloperuch.pl/api/city-lookup?slug=krakow&source=transactions [accept: application/json]"
+  ]
+}

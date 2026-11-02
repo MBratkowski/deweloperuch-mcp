@@ -168,7 +168,7 @@ Overview, argument rules, errors and result sizes: [docs/mcp/README.md](docs/mcp
 | [`get_developer`](docs/mcp/tools/get_developer.md) | A developer profile: summary, investments with active offers and cities. |
 | [`get_market_statistics`](docs/mcp/tools/get_market_statistics.md) | Offer-market statistics of one city as of a day: counts, price, price per m² and area distributions, the largest developers. |
 | [`get_transaction_statistics`](docs/mcp/tools/get_transaction_statistics.md) | Transaction prices (RCN) of a city by month or quarter, since 2017; months: secondary market only. |
-| [`rank_locations`](docs/mcp/tools/rank_locations.md) | A ranking of places or powiats by RCN transactions and price per m². |
+| [`rank_locations`](docs/mcp/tools/rank_locations.md) | A ranking of places or powiats by RCN transactions and price per m², or of the 66 cities with powiat rights by a GUS or NBP indicator. |
 | [`get_building`](docs/mcp/tools/get_building.md) | A building from the RCN with its units and transactions. |
 | [`estimate_property_value`](docs/mcp/tools/estimate_property_value.md) | An approximate apartment value at a point from nearby RCN transactions. |
 | [`get_government_statistics`](docs/mcp/tools/get_government_statistics.md) | Official GUS, NBP and Eurostat time series (dwellings, NBP prices, unemployment, wages, demography) for Poland, aggregates and 66 cities. |
@@ -203,7 +203,7 @@ Overview, output format and exit codes: [docs/cli/README.md](docs/cli/README.md)
 | [`deweloperuch valuation estimate --lat --lng --area`](docs/cli/commands/valuation-estimate.md) | Estimates an apartment's value at a point. |
 | [`deweloperuch stats market CITY`](docs/cli/commands/stats-market.md) | Shows offer-market statistics of one city as of a day. |
 | [`deweloperuch stats transactions CITY`](docs/cli/commands/stats-transactions.md) | Shows RCN transaction prices of a city by month or quarter, since 2017; months: secondary market only. |
-| [`deweloperuch stats cities`](docs/cli/commands/stats-cities.md) | Shows a ranking of places or powiats by RCN transactions. |
+| [`deweloperuch stats cities`](docs/cli/commands/stats-cities.md) | Shows a ranking of places or powiats by RCN transactions, or of the 66 cities with powiat rights by a GUS or NBP indicator. |
 | [`deweloperuch stats government LOCATION DATASET`](docs/cli/commands/stats-government.md) | Shows GUS and NBP statistics (Eurostat for the demography of Poland) of a location as a table of periods. |
 | [`deweloperuch stop status [--json]`](docs/cli/commands/stop-status.md) | Shows the STOP lock shared by all processes (offline; exit code 3 when active). |
 | [`deweloperuch stop clear`](docs/cli/commands/stop-clear.md) | Clears the STOP lock, after you have checked the cause. |

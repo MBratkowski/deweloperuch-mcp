@@ -7,6 +7,7 @@ from typing import Any
 import respx
 
 from support.builders.offers import MOKOTOW_OFFERS, offers_page
+from support.providers.routes.city_lookup import KNOWN_CITY, city_lookup_routes
 from support.providers.rsc import (
     OFFERS_UNKNOWN_CITY_20261031,
     OFFERS_UNKNOWN_DISTRICT_20261031,
@@ -32,9 +33,22 @@ def offers_route(router: respx.MockRouter, page: Any = None) -> respx.Route:
 
 def unknown_city_route(router: respx.MockRouter) -> respx.Route:
     """The offers list of ``rsc.UNKNOWN_CITY``: the real 200 without data, with
-    Next.js's 404 marker [P 2026-10-31]. Add it before ``offers_route`` (the first match
-    answers)."""
+    Next.js's 404 marker [P 2026-10-31], and the place lookup that follows it
+    (``city_lookup_routes``). Add it before ``offers_route`` (the first match answers)."""
+    city_lookup_routes(router)
     return router.route(method="GET", path=f"/ceny-ofertowe/{UNKNOWN_CITY}/mieszkania").respond(
+        200, content=raw(OFFERS_UNKNOWN_CITY_20261031), headers=RSC_HEADERS
+    )
+
+
+def known_place_without_offers_route(router: respx.MockRouter) -> respx.Route:
+    """The offers list of ``city_lookup.KNOWN_CITY`` answered as the list of a city the
+    service does not know: the real 200 without data, with Next.js's 404 marker
+    (``OFFERS_UNKNOWN_CITY_20261031``). [W] how the list of a place the service knows
+    without offers answers was not requested; this pins what the tool says if it answers
+    so. The place's lookup is ``city_lookup_routes``. Add it before ``offers_route``."""
+    city_lookup_routes(router)
+    return router.route(method="GET", path=f"/ceny-ofertowe/{KNOWN_CITY}/mieszkania").respond(
         200, content=raw(OFFERS_UNKNOWN_CITY_20261031), headers=RSC_HEADERS
     )
 

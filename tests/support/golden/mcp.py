@@ -26,6 +26,7 @@ from support.golden.routes import (
 )
 from support.providers.error_answers import unknown_entity
 from support.providers.routes.buildings import building_routes
+from support.providers.routes.city_lookup import city_lookup_routes
 from support.providers.routes.developer_search import developer_search_route
 from support.providers.routes.government_statistics import (
     stats_routes,
@@ -195,6 +196,8 @@ def check_case(
 ) -> None:
     """Runs the case ``name`` and checks the results, the server's log and the requests
     against ``tests/golden/mcp/<name>.json``."""
+    # A tool's "not found" about a city is followed by the place's lookup (PlaceCheck).
+    city_lookup_routes(service)
     for answer in golden.service:
         answer(service)
     limiter = RequestLimiter(tmp_path, min_interval=0, testing_only_allow_fast_interval=True)

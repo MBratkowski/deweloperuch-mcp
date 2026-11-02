@@ -43,10 +43,10 @@ async def run(call: Callable[[], McpModel]) -> CallToolResult:
     try:
         result = await asyncio.to_thread(call)
     except ServiceBlockedError as err:
-        logger.warning("%s Szczegóły: %s", err, _detail(err))
+        logger.warning("%s%s", err, _details(err))
         return _error(str(err))
     except DeweloperuchError as err:
-        logger.info("%s: %s Szczegóły: %s", type(err).__name__, err, _detail(err))
+        logger.info("%s: %s%s", type(err).__name__, err, _details(err))
         return _error(str(err))
     except Exception:
         logger.exception("Nieoczekiwany błąd narzędzia")
@@ -61,5 +61,7 @@ def _error(message: str) -> CallToolResult:
     return CallToolResult(content=[TextContent(type="text", text=message)], is_error=True)
 
 
-def _detail(err: DeweloperuchError) -> str | None:
-    return None if err.detail is None else printable(err.detail)
+def _details(err: DeweloperuchError) -> str:
+    """`` Szczegóły: …`` for the log, escaped; nothing when the error has no detail (an
+    argument the server refused)."""
+    return "" if err.detail is None else f" Szczegóły: {printable(err.detail)}"

@@ -19,9 +19,9 @@ from mcp.types.version import LATEST_HANDSHAKE_VERSION
 
 import deweloperuch_mcp.mcp_server
 from deweloperuch_mcp.consumers.mcp import server as mcp_server
-from support.builders.offers import UNKNOWN_CITY_MESSAGE
 from support.paths import TESTS
 from support.providers.mcp import TOOLS, data, text
+from support.providers.routes.city_lookup import UNKNOWN_PLACE_MESSAGE
 from support.providers.rsc import UNKNOWN_CITY
 
 # The MCP server runs behind the SDK's in-memory client: its event loop needs Unix sockets.
@@ -256,7 +256,7 @@ def test_the_entry_point_over_stdio_on_the_real_payloads(tmp_path: Path) -> None
     assert (result["total"], result["returned"], result["per_page"]) == (11672, 10, 10)
     assert all({"offer_id", "investment_slug", "price"} <= set(item) for item in result["items"])
     assert unknown.is_error is True
-    assert text(unknown) == UNKNOWN_CITY_MESSAGE
+    assert text(unknown) == UNKNOWN_PLACE_MESSAGE
     area = data(stats)
     assert (area["periods"], area["series"][0]["values"]) == (
         ["2024", "2025", "2026"],

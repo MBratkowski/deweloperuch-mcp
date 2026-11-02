@@ -15,8 +15,8 @@ checked here:
 - an average of 0 in the city's list means no active offers
   (``test_a_city_lists_its_investments``: an average only with active offers).
 
-Not checked (it could end the run as "service unavailable"): what the city's list
-answers for an unknown city.
+What the city's list answers for an unknown city is checked last
+(``test_an_unknown_city_is_not_found_or_empty``): a 5xx would end the run.
 """
 
 import warnings
@@ -33,6 +33,7 @@ from support.e2e.live import Budget, Call, McpLive, mcp_server, page_url
 pytestmark = pytest.mark.live
 
 TOOL = "search_investments"
+UNKNOWN_CITY = "nieistniejace-miasto"
 CITY = "sopot"
 """A city with few investments: two on 2026-10-09 (sample api.map_investments_sopot)."""
 NAME = "nowy"
@@ -157,3 +158,22 @@ def test_the_offer_count_of_a_match_is_its_active_offers(mcp: McpLive, by_name: 
     assert investment["investment_slug"] == match["investment_slug"]
     assert investment["name"] == match["name"]
     assert investment.get("offers_active") == match.get("offers_active"), (match, investment)
+
+
+def test_an_unknown_city_is_not_found_or_empty(mcp: McpLive) -> None:
+    """[H] the city's list of a city the service does not know: its own "not found" (then
+    one lookup of the place says there is none [P 2026-11-02]) or an empty list with the
+    domain's hint (no lookup: the service answered with data). Last: a 5xx ends the run."""
+    call = mcp.call_network(TOOL, city=UNKNOWN_CITY)
+
+    if call.error:
+        assert call.text == (
+            f"Nie znaleziono miejscowości o city_slug {UNKNOWN_CITY!r}. Jeśli slug nie "
+            "pochodzi z search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla "
+            "niej tych danych: powiedz to użytkownikowi i nie ponawiaj."
+        ), call.text
+        assert call.sent == 2
+    else:
+        result = call.data
+        assert result["items"] == [] and "search_locations" in result["hint"], result
+        assert call.sent == 1

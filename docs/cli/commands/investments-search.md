@@ -20,7 +20,7 @@ deweloperuch investments search [OPTIONS] [CITY]
 | `--help` | flag | | Show the help. |
 
 ## Exit codes
-See the [exit code table](../README.md#exit-codes). Most common: 0, 2 (neither `CITY` nor `--name`, `CITY=polska`, `--developer` or `--sort` without `CITY`, a capitalised or non-slug `CITY`, `--limit` outside the range, `--sort` outside the list), 3 STOP, 4 service error, 6 unexpected response, 7 unknown city (`Błąd: Serwis nie zna miasta 'sopot'. Podaj city_slug z search_locations.`).
+See the [exit code table](../README.md#exit-codes). Most common: 0, 2 (neither `CITY` nor `--name`, `CITY=polska`, `--developer` or `--sort` without `CITY`, a capitalised or non-slug `CITY`, `--limit` outside the range, `--sort` outside the list), 3 STOP, 4 service error, 6 unexpected response, 7 unknown city (after the service's „unknown” one `city-lookup` request tells the cases apart: `Błąd: Nie znaleziono miejscowości o city_slug 'nieistniejace-miasto'. Jeśli slug nie pochodzi z search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla niej tych danych: powiedz to użytkownikowi i nie ponawiaj.`; a known city without investments: `Błąd: Miejscowość 'Kraków' istnieje, ale serwis nie ma dla niej inwestycji. Nie ponawiaj; powiedz to użytkownikowi.`; if the lookup fails, or gives a place with another slug, the earlier `Błąd: Serwis nie zna miasta 'sopot'. Podaj city_slug z search_locations.` stays).
 
 ## Examples
 ```

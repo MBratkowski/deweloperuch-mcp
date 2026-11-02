@@ -10,18 +10,24 @@ from deweloperuch_mcp.models.errors import (
 )
 from deweloperuch_mcp.models.location_ranking import (
     DEFAULT_RANKING_LIMIT,
+    DEFAULT_RANKING_MARKET,
     PRICE_ORDER_MIN_TRANSACTIONS,
     RANKING_LIMIT_MAX,
     TRANSACTIONS_MAX,
     LocationRanking,
+    LocationTransactions,
     MinTransactions,
+    PlaceNames,
+    PowiatTransactions,
     RankingCriteria,
     RankingLevel,
     RankingLimit,
+    RankingMarket,
     RankingOrder,
+    TransactionPeriod,
 )
 from support.builders.rankings import criteria, names
-from support.fakes.rankings import CITIES, city
+from support.fakes.rankings import CITIES, POWIATS, SOPOT_SECONDARY, city
 
 
 def test_the_default_ranking_is_by_transactions_most_first() -> None:
@@ -99,7 +105,7 @@ def test_by_transactions_no_place_is_left_out_unless_asked() -> None:
 
 
 @pytest.mark.parametrize("given", [0, 5, 50])
-@pytest.mark.parametrize("order", list(RankingOrder))
+@pytest.mark.parametrize("order", [order for order in RankingOrder if not order.by_value])
 def test_a_given_threshold_wins_over_the_default_even_0(given: int, order: RankingOrder) -> None:
     ranking = LocationRanking.of(criteria(order, min_transactions=given), SMALL)
 
@@ -117,6 +123,9 @@ def test_a_given_threshold_wins_over_the_default_even_0(given: int, order: Ranki
         (RankingLevel.parse, RankingLevel.POWIAT, RankingLevel.POWIAT),
         (RankingOrder.parse, "price_per_m2_asc", RankingOrder.PRICE_PER_M2_ASC),
         (RankingOrder.parse, " transactions_desc", RankingOrder.TRANSACTIONS_DESC),
+        (RankingOrder.parse, "value_asc", RankingOrder.VALUE_ASC),
+        (RankingMarket.parse, " primary ", RankingMarket.PRIMARY),
+        (RankingMarket.parse, RankingMarket.ALL, RankingMarket.ALL),
         (RankingLimit.parse, 1, RankingLimit(1)),
         (RankingLimit.parse, RANKING_LIMIT_MAX, RankingLimit(100)),
         (MinTransactions.parse, 0, MinTransactions(0)),
@@ -137,6 +146,8 @@ def test_value_objects_take_their_values(
         (RankingLevel.parse, None, ValueName.RANKING_LEVEL),
         (RankingOrder.parse, "price_desc", ValueName.RANKING_ORDER),
         (RankingOrder.parse, 1, ValueName.RANKING_ORDER),
+        (RankingMarket.parse, "wtorny", ValueName.RANKING_MARKET),
+        (RankingMarket.parse, None, ValueName.RANKING_MARKET),
         (RankingLimit.parse, 0, ValueName.RANKING_LIMIT),
         (RankingLimit.parse, RANKING_LIMIT_MAX + 1, ValueName.RANKING_LIMIT),
         (RankingLimit.parse, True, ValueName.RANKING_LIMIT),
@@ -154,3 +165,92 @@ def test_value_objects_refuse_other_values(
 
     assert caught.value.value is value
     assert caught.value.given == given
+
+
+# --- powiats: one market over one period -------------------------------------------------------
+
+
+def test_powiat_ranking_leaves_out_powiats_without_the_market() -> None:
+    """[P 2026-11-01] a missing market is no object, not 0 transactions: powiat Sopot has
+    none on the primary market. It is not ranked there, and the figures say how many
+    powiats were left out for it; on the secondary market it is."""
+    primary = POWIATS.on(RankingMarket.PRIMARY)
+    secondary = POWIATS.on(RankingMarket.SECONDARY)
+
+    assert "powiat Sopot" not in [place.name for place in primary]
+    assert SOPOT_SECONDARY in secondary
+    assert (POWIATS.without(RankingMarket.PRIMARY), POWIATS.without(RankingMarket.SECONDARY)) == (
+        1,
+        0,
+    )
+    ranking = LocationRanking.of(criteria(level=RankingLevel.POWIAT), primary)
+    assert ranking.total == len(primary) == 2
+
+
+def test_the_period_of_the_powiats_is_the_services() -> None:
+    assert POWIATS.period == TransactionPeriod(start="2025-11-01", end="2026-10")
+
+
+def test_the_market_of_a_powiat_ranking_defaults_to_the_secondary() -> None:
+    """The user's decision of 2026-11-01: the service's default view in 343 of 380
+    powiats [P 2026-11-01], and the months of the transaction statistics are secondary only."""
+    assert DEFAULT_RANKING_MARKET is RankingMarket.SECONDARY
+    assert criteria(level=RankingLevel.POWIAT).powiat_market is RankingMarket.SECONDARY
+    given = RankingCriteria(level=RankingLevel.POWIAT, market=RankingMarket.ALL)
+    assert given.powiat_market is RankingMarket.ALL
+
+
+def test_market_is_refused_at_city_level() -> None:
+    """The city ranking has no market split; the request words the refusal for the caller
+    (``RankLocationsRequest``), the domain only refuses the combination."""
+    with pytest.raises(ValueError, match="market"):
+        RankingCriteria(level=RankingLevel.CITY, market=RankingMarket.PRIMARY)
+
+
+@pytest.mark.parametrize("order", [RankingOrder.VALUE_DESC, RankingOrder.VALUE_ASC])
+def test_value_orders_rank_no_transactions(order: RankingOrder) -> None:
+    assert order.by_value is True
+    with pytest.raises(ValueError, match="indicator"):
+        RankingCriteria(order=order)
+
+
+def test_an_empty_market_is_no_market() -> None:
+    lonely = LocationTransactions(name="powiat Sopot", powiat_id=208, transaction_count=310)
+    figures = PowiatTransactions(
+        period=TransactionPeriod(start="2025-11-01", end="2026-10"),
+        powiats=1,
+        markets={RankingMarket.SECONDARY: (lonely,)},
+    )
+
+    assert figures.on(RankingMarket.ALL) == ()
+    assert figures.without(RankingMarket.ALL) == 1
+
+
+# --- the names of places ------------------------------------------------------------------------
+
+
+NAMES = PlaceNames(
+    powiats={302: "powiat Warszawa", 117: "powiat Tarnobrzeg"},
+    cities={"warszawa": "Warszawa", "tarnobrzeg": "Tarnobrzeg", "lodz": "Łódź"},
+)
+
+
+@pytest.mark.parametrize(
+    ("slug", "name"),
+    [
+        ("tarnobrzeg", "Tarnobrzeg"),
+        ("Tarnobrzeg", "Tarnobrzeg"),  # [P 2026-11-01] the one slug of tx-cities not lowercase
+        (" WARSZAWA ", "Warszawa"),
+        ("Łódź", "Łódź"),
+        ("ŁÓDŹ", "Łódź"),
+    ],
+)
+def test_name_table_folds_case(slug: str, name: str) -> None:
+    """A slug the service writes in another case or with Polish letters finds its city."""
+    assert NAMES.city(slug) == name
+
+
+def test_unknown_places_are_shown_by_their_identity() -> None:
+    assert NAMES.powiat(302) == "powiat Warszawa"
+    assert NAMES.powiat(999) == "powiat 999"
+    assert NAMES.city("nowe-miasto") == "nowe-miasto"

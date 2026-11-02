@@ -24,6 +24,7 @@ from support.builders.transactions import (
 )
 from support.providers.error_answers import removed_route
 from support.providers.mcp import call, calls, data, keys, text
+from support.providers.routes.city_lookup import UNKNOWN_PLACE_MESSAGE, city_lookup_routes
 from support.providers.routes.transactions import (
     CITY_TREND,
     STATS_PAGE,
@@ -597,12 +598,13 @@ def test_an_unknown_city_points_to_search_locations(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter, granularity: str
 ) -> None:
     """The page's 404 with a flight stream [P 2026-10-31], the trend's JSON 404
-    [P 2026-10-30]: a city the service does not know, on both channels."""
+    [P 2026-10-30]: a city the service does not know, on both channels; the place lookup
+    that follows says there is no such place."""
     page, trend = unknown_city_routes(service)
 
     message = error(call(server, TOOL, city="nieistniejace-miasto", granularity=granularity))
 
-    assert message == UNKNOWN_CITY
+    assert message == UNKNOWN_PLACE_MESSAGE
     assert (page.call_count, trend.call_count) == ((1, 0) if granularity == "month" else (0, 1))
 
 
@@ -627,11 +629,12 @@ def test_a_city_without_periods_points_to_search_locations(
 def test_the_service_text_of_an_unknown_city_stays_out(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
+    city_lookup_routes(service)
     service.route(method="GET", path__startswith=TREND_PATH).respond(404, json={"error": INJECTED})
 
     message = error(call(server, TOOL, city="nieistniejace-miasto", granularity="quarter"))
 
-    assert message == UNKNOWN_CITY
+    assert message == UNKNOWN_PLACE_MESSAGE
 
 
 @pytest.mark.parametrize(

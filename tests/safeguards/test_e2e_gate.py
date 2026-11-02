@@ -32,6 +32,7 @@ from e2e import (
     test_live_buildings,
     test_live_cli,
     test_live_developer_search,
+    test_live_districts,
     test_live_investment_search,
     test_live_mcp,
     test_live_rankings,
@@ -122,6 +123,7 @@ def test_with_both_nothing_is_skipped(monkeypatch: pytest.MonkeyPatch) -> None:
         test_live_rankings,
         test_live_buildings,
         test_live_valuation,
+        test_live_districts,
     ],
 )
 def test_every_e2e_module_is_marked_live(module: Any) -> None:
@@ -141,6 +143,7 @@ def test_every_e2e_module_is_listed_here() -> None:
         "test_live_rankings",
         "test_live_buildings",
         "test_live_valuation",
+        "test_live_districts",
     }
 
 

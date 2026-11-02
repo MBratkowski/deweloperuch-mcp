@@ -19,7 +19,7 @@
   "log": [
     [
       "INFO",
-      "InvalidInputError: price_min (700000) jest większe niż price_max (500000); zamień je miejscami. Szczegóły: None"
+      "InvalidInputError: price_min (700000) jest większe niż price_max (500000); zamień je miejscami."
     ]
   ],
   "requests": []

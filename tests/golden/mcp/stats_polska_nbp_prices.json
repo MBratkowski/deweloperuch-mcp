@@ -18,7 +18,7 @@
   "log": [
     [
       "INFO",
-      "NotFoundError: NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo duże miasto, np. warszawa, krakow, gdansk, wroclaw, gdynia, poznan. Szczegóły: None"
+      "NotFoundError: NBP nie podaje jednej ceny dla całej Polski, tylko dla miast i agregatów. Podaj agregat (7-miast, 10-miast, 6-miast-bez-warszawy) albo duże miasto, np. warszawa, krakow, gdansk, wroclaw, gdynia, poznan."
     ]
   ],
   "requests": [

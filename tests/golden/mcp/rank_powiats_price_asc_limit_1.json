@@ -17,18 +17,21 @@
         "level": "powiat",
         "sort": "price_per_m2_asc",
         "min_transactions": 20,
-        "total": 3,
+        "market": "secondary",
+        "period_start": "2025-11-01",
+        "period_end": "2026-10",
+        "total": 2,
         "returned": 1,
         "truncated": true,
-        "hint": "Pokazano pierwsze 1 z 3 powiatów; kolejne pokaże większy limit (najwyżej 100).",
+        "hint": "Przy sortowaniu po cenie pominięto miejsca z mniej niż 20 transakcjami (domyślny próg); wszystkie miejsca pokaże min_transactions=0. Pokazano pierwsze 1 z 2 powiatów; kolejne pokaże większy limit (najwyżej 100).",
         "items": [
           {
-            "name": "powiat Wrocław",
-            "powiat_id": 33,
-            "transaction_count": 166308,
-            "price_per_m2": 12547.0,
-            "area_m2": 50.1,
-            "price": 607000.0
+            "name": "powiat ropczycko-sędziszowski",
+            "powiat_id": 1,
+            "transaction_count": 21,
+            "price_per_m2": 6829.0,
+            "area_m2": 55.9,
+            "price": 390000.0
           }
         ]
       }
@@ -36,6 +39,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/api/map/powiat-stats [accept: application/json]"
+    "GET https://deweloperuch.pl/api/statystyki/powiat-map-stats [accept: application/json]"
   ]
 }

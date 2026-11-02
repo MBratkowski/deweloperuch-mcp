@@ -38,7 +38,9 @@ A structured result and the same compact JSON in the content; `null` fields are 
 | `city=polska` | `city=polska nie działa przy wyszukiwaniu inwestycji: podaj slug jednego miasta (search_locations) albo szukaj w całym kraju po nazwie (name, bez city).` |
 | `city` not a slug (e.g. `Sopot`) | `city: oczekiwano slug jednego miasta (np. warszawa, sopot; nie polska); slug podaje search_locations; podano 'Sopot'.` |
 | `developer_slug` or `sort` without `city` | `developer_slug działa tylko razem z city: podaj slug miasta (search_locations), w którym szukać inwestycji dewelopera.` / `sort działa tylko razem z city; wyniki wyszukiwania po samej nazwie są w kolejności serwisu: pomiń sort albo podaj city.` |
-| Unknown city | `Serwis nie zna miasta 'sopot'. Podaj city_slug z search_locations.` |
+| No such place (with `city`; the service says „unknown” and `city-lookup` finds no place) | `Nie znaleziono miejscowości o city_slug 'nieistniejace-miasto'. Jeśli slug nie pochodzi z search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla niej tych danych: powiedz to użytkownikowi i nie ponawiaj.` |
+| The city exists, the service has no investments for it | `Miejscowość 'Kraków' istnieje, ale serwis nie ma dla niej inwestycji. Nie ponawiaj; powiedz to użytkownikowi.` |
+| The lookup cannot tell (it failed, or gave a place with another slug) | The earlier message stays: `Serwis nie zna miasta 'sopot'. Podaj city_slug z search_locations.` (`tests/golden/mcp/investments_search_404.json`) |
 | `limit` outside 1-30, `sort` outside the list | `Błędny argument narzędzia search_investments: limit musi być liczbą całkowitą z zakresu 1–30, podano 31. Popraw i ponów; nic nie zostało wysłane.` |
 | Unknown argument | `Nieznany argument narzędzia search_investments: '…'. Dozwolone argumenty: city, name, developer_slug, sort, limit. Popraw nazwy i ponów; nic nie zostało wysłane.` |
 | STOP, service error | As in the [MCP overview](../README.md#errors); service errors with the prefix `Wyszukiwanie inwestycji w '<city>': …` |

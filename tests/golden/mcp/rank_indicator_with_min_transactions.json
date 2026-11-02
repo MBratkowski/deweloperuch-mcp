@@ -1,0 +1,25 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "indicator": "average_wage",
+        "min_transactions": 20
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "min_transactions nie działa z indicator: ranking wskaźnika nie liczy transakcji; pomiń min_transactions.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: min_transactions nie działa z indicator: ranking wskaźnika nie liczy transakcji; pomiń min_transactions."
+    ]
+  ],
+  "requests": []
+}

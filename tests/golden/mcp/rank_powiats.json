@@ -15,33 +15,36 @@
         "level": "powiat",
         "sort": "transactions_desc",
         "min_transactions": 0,
+        "market": "secondary",
+        "period_start": "2025-11-01",
+        "period_end": "2026-10",
         "total": 3,
         "returned": 3,
         "truncated": false,
         "items": [
           {
-            "name": "powiat Warszawa",
-            "powiat_id": 302,
-            "transaction_count": 351314,
-            "price_per_m2": 16367.0,
-            "area_m2": 48.6,
-            "price": 780000.0
+            "name": "powiat piaseczyński",
+            "powiat_id": 3,
+            "transaction_count": 1067,
+            "price_per_m2": 12164.0,
+            "area_m2": 56.6,
+            "price": 675000.0
           },
           {
-            "name": "powiat Kraków",
-            "powiat_id": 14,
-            "transaction_count": 225694,
-            "price_per_m2": 14899.0,
-            "area_m2": 47.7,
-            "price": 695000.0
+            "name": "powiat ropczycko-sędziszowski",
+            "powiat_id": 1,
+            "transaction_count": 21,
+            "price_per_m2": 6829.0,
+            "area_m2": 55.9,
+            "price": 390000.0
           },
           {
-            "name": "powiat Wrocław",
-            "powiat_id": 33,
-            "transaction_count": 166308,
-            "price_per_m2": 12547.0,
-            "area_m2": 50.1,
-            "price": 607000.0
+            "name": "powiat łosicki",
+            "powiat_id": 2,
+            "transaction_count": 5,
+            "price_per_m2": 7246.0,
+            "area_m2": 57.2,
+            "price": 400000.0
           }
         ]
       }
@@ -49,6 +52,6 @@
   ],
   "log": [],
   "requests": [
-    "GET https://deweloperuch.pl/api/map/powiat-stats [accept: application/json]"
+    "GET https://deweloperuch.pl/api/statystyki/powiat-map-stats [accept: application/json]"
   ]
 }

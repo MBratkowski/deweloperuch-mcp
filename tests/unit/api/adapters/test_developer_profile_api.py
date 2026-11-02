@@ -17,8 +17,10 @@ from support.providers.rsc import (
     DEVELOPER_CERES_WARSZAWA_20261031,
     DEVELOPER_POLSKA_20261031,
     DEVELOPER_UNKNOWN_20261031,
+    DEVELOPER_UNKNOWN_CITY_20261102,
     DEVELOPER_UNKNOWN_POLSKA_20261031,
     DEVELOPER_WARSZAWA_20261031,
+    UNKNOWN_CITY,
     UNKNOWN_DEVELOPER,
     raw,
 )
@@ -98,6 +100,33 @@ def test_the_page_of_an_unknown_developer_is_not_found(
         DeveloperProfileApi(http).developer_page(city, UNKNOWN_DEVELOPER)
 
     assert caught.value.detail is not None and NOT_FOUND_DIGEST in caught.value.detail
+
+
+def test_developer_page_of_an_unknown_city_is_not_found(
+    http: HttpClient, service: respx.MockRouter
+) -> None:
+    """T39 [P 2026-11-02]: a known developer in a city the service does not know; the page
+    sends the reader on to the developer's page for the whole country."""
+    path = f"/ceny-ofertowe/{UNKNOWN_CITY}/deweloperzy/atal"
+    service.get(path=path).respond(200, content=raw(DEVELOPER_UNKNOWN_CITY_20261102), headers=RSC)
+
+    with pytest.raises(NotFoundError) as caught:
+        DeveloperProfileApi(http).developer(DeveloperSlug("atal"), CitySlug(UNKNOWN_CITY))
+
+    assert caught.value.detail is not None
+    assert caught.value.detail.endswith("przekierowuje do /ceny-ofertowe/polska/deweloperzy/atal")
+
+
+def test_the_page_of_the_whole_country_sent_on_to_itself_is_a_changed_service(
+    http: HttpClient, service: respx.MockRouter
+) -> None:
+    payload = raw(DEVELOPER_UNKNOWN_CITY_20261102)
+    service.get(path="/ceny-ofertowe/polska/deweloperzy/atal").respond(
+        200, content=payload, headers=RSC
+    )
+
+    with pytest.raises(UnexpectedResponseError, match=SERVICE_CHANGED):
+        DeveloperProfileApi(http).developer(DeveloperSlug("atal"), CitySlug("polska"))
 
 
 def test_a_page_without_data_nor_the_404_marker_is_a_changed_service(

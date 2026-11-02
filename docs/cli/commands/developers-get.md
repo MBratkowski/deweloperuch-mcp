@@ -22,7 +22,7 @@ The `summary` is computed from the investments in the scope (the service's page 
 ## Exit codes
 See the [exit code table](../README.md#exit-codes). Most common: 0, 2 (a capitalised or non-slug `SLUG` or `--city`, `--limit` outside 1–1000), 3 STOP, 4 service error, 6 the page has no expected data or the service moved the page, 7 unknown developer (`Błąd: Nie znaleziono dewelopera '…' w '…'. …`, for a city with the end „Albo deweloper nie ma w tym mieście aktywnych ofert: spróbuj city=polska.”).
 
-**Known limitation (not fixed in 0.2.0):** a developer the service knows, asked for with a `--city` the service does not know, can end with exit code 6 and the "service changed" message instead of exit code 7. `--city polska` shows whether the developer exists. A repair is planned (T39).
+A developer asked for with a `--city` the service does not know is a not-found too (exit code 7; fixed in 0.2.0, T39: it was exit code 6 with the "service changed" message). After the service's „unknown”, one more request, `city-lookup`, tells an unknown city (`Błąd: Nie znaleziono miejscowości o city_slug '…'. …`) from a known one where the developer has no active offers (`Błąd: Miejscowość 'Kraków' istnieje, ale serwis nie ma dla niej aktywnych ofert tego dewelopera. …`); see [`get_developer`](../../mcp/tools/get_developer.md#errors). `--city polska` shows whether the developer exists.
 
 ## Examples
 ```

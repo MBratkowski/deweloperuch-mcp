@@ -141,7 +141,9 @@ class EchoPageLinks:
     """``PageLinks`` that says what it was asked for."""
 
     def offers_list(self, criteria: OfferSearchCriteria) -> str | None:
-        return f"list:{criteria.city.value}:{criteria.page.value}"
+        """``list:<city>:<page>``, with ``:<district>`` for a district's list."""
+        where = f"list:{criteria.city.value}:{criteria.page.value}"
+        return where if criteria.district is None else f"{where}:{criteria.district.text}"
 
     def investment(self, investment: InvestmentRef) -> str | None:
         return f"investment:{investment.investment_slug}"

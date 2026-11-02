@@ -18,7 +18,7 @@
   "log": [
     [
       "INFO",
-      "InvalidInputError: city=polska nie działa przy wyszukiwaniu ofert: serwis nie ma jednej listy ofert całej Polski. Podaj city_slug jednego miasta z search_locations (np. warszawa); oferty kilku miast wyszukaj osobno dla każdego. Szczegóły: None"
+      "InvalidInputError: city=polska nie działa przy wyszukiwaniu ofert: serwis nie ma jednej listy ofert całej Polski. Podaj city_slug jednego miasta z search_locations (np. warszawa); oferty kilku miast wyszukaj osobno dla każdego."
     ]
   ],
   "requests": []

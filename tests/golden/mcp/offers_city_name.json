@@ -17,7 +17,7 @@
   "log": [
     [
       "INFO",
-      "InvalidInputError: city: oczekiwano city_slug jednego miasta (małe litery bez polskich znaków, np. warszawa, krakow), nie polska; slug podaje search_locations; podano 'Kraków'. Szczegóły: None"
+      "InvalidInputError: city: oczekiwano city_slug jednego miasta (małe litery bez polskich znaków, np. warszawa, krakow), nie polska; slug podaje search_locations; podano 'Kraków'."
     ]
   ],
   "requests": []

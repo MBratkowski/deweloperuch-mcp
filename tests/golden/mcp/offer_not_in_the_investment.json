@@ -18,7 +18,7 @@
   "log": [
     [
       "INFO",
-      "NotFoundError: Inwestycja 'smolna' nie ma oferty 999. Sprawdź offer_id i investment_slug (oba podaje search_offers); wszystkie oferty inwestycji zwraca get_investment. Szczegóły: None"
+      "NotFoundError: Inwestycja 'smolna' nie ma oferty 999. Sprawdź offer_id i investment_slug (oba podaje search_offers); wszystkie oferty inwestycji zwraca get_investment."
     ]
   ],
   "requests": [

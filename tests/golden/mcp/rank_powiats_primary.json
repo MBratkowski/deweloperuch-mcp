@@ -1,0 +1,58 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "level": "powiat",
+        "market": "primary"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "level": "powiat",
+        "sort": "transactions_desc",
+        "min_transactions": 0,
+        "market": "primary",
+        "period_start": "2025-11-01",
+        "period_end": "2026-10",
+        "total": 3,
+        "returned": 3,
+        "truncated": false,
+        "items": [
+          {
+            "name": "powiat piaseczyński",
+            "powiat_id": 3,
+            "transaction_count": 3335,
+            "price_per_m2": 9900.0,
+            "area_m2": 62.7,
+            "price": 635049.0
+          },
+          {
+            "name": "powiat łosicki",
+            "powiat_id": 2,
+            "transaction_count": 59,
+            "price_per_m2": 6263.0,
+            "area_m2": 44.9,
+            "price": 284000.0
+          },
+          {
+            "name": "powiat ropczycko-sędziszowski",
+            "powiat_id": 1,
+            "transaction_count": 29,
+            "price_per_m2": 8362.0,
+            "area_m2": 54.4,
+            "price": 455000.0
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/statystyki/powiat-map-stats [accept: application/json]"
+  ]
+}

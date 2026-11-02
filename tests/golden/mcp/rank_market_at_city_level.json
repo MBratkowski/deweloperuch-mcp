@@ -1,0 +1,24 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "market": "primary"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "market działa tylko z level=powiat: ranking miejscowości nie dzieli transakcji na rynki; pomiń market albo podaj level=powiat.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: market działa tylko z level=powiat: ranking miejscowości nie dzieli transakcji na rynki; pomiń market albo podaj level=powiat."
+    ]
+  ],
+  "requests": []
+}

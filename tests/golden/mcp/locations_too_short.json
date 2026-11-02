@@ -17,7 +17,7 @@
   "log": [
     [
       "INFO",
-      "InvalidInputError: query: podaj od 2 do 100 znaków nazwy miasta, dzielnicy lub ulicy, podano 'k'. Szczegóły: None"
+      "InvalidInputError: query: podaj od 2 do 100 znaków nazwy miasta, dzielnicy lub ulicy, podano 'k'."
     ]
   ],
   "requests": []

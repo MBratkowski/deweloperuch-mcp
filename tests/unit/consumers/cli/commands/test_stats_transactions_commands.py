@@ -21,6 +21,7 @@ from support.builders.transactions import (
 )
 from support.providers.cli import Cli, ok
 from support.providers.error_answers import removed_route, unknown_location_page
+from support.providers.routes.city_lookup import failed_lookup_route
 from support.providers.routes.offers import RSC_HEADERS
 from support.providers.routes.transactions import STATS_PAGE, transaction_routes
 from support.providers.rsc import OFFERS_WARSZAWA_20261031, raw
@@ -244,6 +245,7 @@ def test_cli_service_answers_map_to_exit_codes(
     run: Cli, service: respx.MockRouter, answer: dict[str, Any], code: ExitCode
 ) -> None:
     rest = dict(answer)
+    failed_lookup_route(service, "warszawa")  # a failed lookup: the first words stand
     service.get(path__regex=STATS_PAGE).respond(rest.pop("status_code"), **rest)
 
     result = run("warszawa")

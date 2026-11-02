@@ -13,6 +13,7 @@ from deweloperuch_mcp.models.errors import NotFoundError, ServiceError, Unexpect
 from deweloperuch_mcp.usecases.search_investments import SearchInvestmentsRequest
 from support.builders.investment_search import city_with_investments
 from support.providers.error_answers import CHANGED_SERVICE, removed_route
+from support.providers.routes.city_lookup import failed_lookup_route
 from support.providers.routes.investment_search import (
     CITY_INVESTMENTS,
     NAMED_INVESTMENTS,
@@ -134,6 +135,7 @@ def test_a_failed_city_says_so_without_the_services_text(
     kind: type[Exception],
     start: str,
 ) -> None:
+    failed_lookup_route(service, "sopot")  # a failed lookup: the first words stand
     service.get(path=CITY_INVESTMENTS).mock(return_value=answer)
 
     with pytest.raises(kind) as caught:

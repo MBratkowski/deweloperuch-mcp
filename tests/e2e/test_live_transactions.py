@@ -305,12 +305,13 @@ def test_an_aggregate_is_refused_without_a_request(mcp: McpLive) -> None:
 def test_an_unknown_city_is_not_found(mcp: McpLive) -> None:
     """[P 2026-10-31] (module docstring): "no such city" with what to give, never "the
     service changed" (the transport reads the page's 404 with a flight stream as the
-    service's own answer)."""
+    service's own answer); one lookup of the place says there is none."""
     call = mcp.call_network(TOOL, city=UNKNOWN_CITY)
 
     assert call.error, call.text
-    assert call.text.startswith(
-        f"Serwis nie ma cen transakcyjnych mieszkań dla miasta {UNKNOWN_CITY!r}."
+    assert call.text == (
+        f"Nie znaleziono miejscowości o city_slug {UNKNOWN_CITY!r}. Jeśli slug nie "
+        "pochodzi z search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla "
+        "niej tych danych: powiedz to użytkownikowi i nie ponawiaj."
     ), call.text
-    assert "Jeśli city_slug pochodzi z search_locations" in call.text
-    assert call.sent == 1
+    assert call.sent == 2  # the page and the place's lookup [P 2026-11-02]

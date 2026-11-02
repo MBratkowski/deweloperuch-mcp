@@ -1,0 +1,76 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "level": "powiat",
+        "market": "primary",
+        "limit": 5
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "level": "powiat",
+        "sort": "transactions_desc",
+        "min_transactions": 0,
+        "market": "primary",
+        "period_start": "2025-11-01",
+        "period_end": "2026-10",
+        "total": 310,
+        "returned": 5,
+        "truncated": true,
+        "hint": "Pominięto powiaty, dla których serwis nie podaje danych rynku pierwotnego (market=primary): 70. Pokazano pierwsze 5 z 310 powiatów; kolejne pokaże większy limit (najwyżej 100).",
+        "items": [
+          {
+            "name": "powiat Warszawa",
+            "powiat_id": 302,
+            "transaction_count": 17531,
+            "price_per_m2": 15468.0,
+            "area_m2": 46.8,
+            "price": 764088.0
+          },
+          {
+            "name": "powiat Kraków",
+            "powiat_id": 14,
+            "transaction_count": 7444,
+            "price_per_m2": 14969.0,
+            "area_m2": 51.0,
+            "price": 755045.0
+          },
+          {
+            "name": "powiat Gdańsk",
+            "powiat_id": 108,
+            "transaction_count": 5630,
+            "price_per_m2": 12787.0,
+            "area_m2": 49.7,
+            "price": 643793.0
+          },
+          {
+            "name": "powiat Wrocław",
+            "powiat_id": 33,
+            "transaction_count": 5073,
+            "price_per_m2": 12845.0,
+            "area_m2": 53.6,
+            "price": 685570.0
+          },
+          {
+            "name": "powiat Łódź",
+            "powiat_id": 110,
+            "transaction_count": 4369,
+            "price_per_m2": 9980.0,
+            "area_m2": 44.4,
+            "price": 457900.0
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/statystyki/powiat-map-stats [accept: application/json]"
+  ]
+}

@@ -12,6 +12,7 @@ from support.providers.error_answers import (
     unknown_entity,
     unknown_location_page,
 )
+from support.providers.routes.city_lookup import city_lookup_routes
 from support.providers.routes.offers import RSC_HEADERS
 from support.providers.rsc import STATS_TX_WARSZAWA_20261031, raw
 from support.providers.samples import body, request_target
@@ -49,7 +50,9 @@ def transaction_routes(
 def unknown_city_routes(router: respx.MockRouter) -> tuple[respx.Route, respx.Route]:
     """Both channels answer as the service does for a city it does not know: the page a
     404 with a flight stream [P 2026-10-31], the trend a JSON 404 with an ``error``
-    [P 2026-10-30] (docs/discovery/endpoints.md section 9)."""
+    [P 2026-10-30] (docs/discovery/endpoints.md section 9); the place lookup that follows
+    answers too (``city_lookup_routes``)."""
+    city_lookup_routes(router)
     return (
         router.get(path__regex=STATS_PAGE).respond(404, **unknown_location_page()),
         router.route(method="GET", path__startswith=TREND_PATH).respond(

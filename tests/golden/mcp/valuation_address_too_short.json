@@ -20,7 +20,7 @@
   "log": [
     [
       "INFO",
-      "InvalidInputError: address: podaj od 3 do 200 znaków adresu albo pomiń ten parametr, podano 'ab'. Szczegóły: None"
+      "InvalidInputError: address: podaj od 3 do 200 znaków adresu albo pomiń ten parametr, podano 'ab'."
     ]
   ],
   "requests": []

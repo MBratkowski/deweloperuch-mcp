@@ -23,6 +23,9 @@ from typing import Any
 import pytest
 
 from deweloperuch_mcp.identity import BASE_URL
+from deweloperuch_mcp.usecases.get_developer import CHECK_THE_DEVELOPER
+from deweloperuch_mcp.usecases.get_market_statistics import ONE_CITY
+from support.builders.districts import warszawa_districts
 from support.e2e.live import (
     SERVICE_CHANGED,
     Budget,
@@ -63,6 +66,20 @@ SIZE_BUDGET_50 = 27_500
 SIZE_BUDGET_DEVELOPER = 15_000
 """get_developer with the default limit: about 8.5k for 20 investments [P 2026-10-31]."""
 UNKNOWN_DEVELOPER = "nieistniejacy-deweloper-e2e"
+UNKNOWN_PLACE = (
+    f"Nie znaleziono miejscowości o city_slug {UNKNOWN_CITY!r}. Jeśli slug nie pochodzi z "
+    "search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla niej tych danych: "
+    "powiedz to użytkownikowi i nie ponawiaj."
+)
+"""What a tool says after the service's "not found" about ``UNKNOWN_CITY``: the place's
+lookup found no such place [P 2026-11-02]; the market and the developer add their own
+sentence (``ONE_CITY``, ``CHECK_THE_DEVELOPER``)."""
+PLACE, PLACE_NAME = "krakowiany", "Krakowiany"
+"""A place the transactions dictionary knows by this name (1 transaction, sample
+api.cities_q.transactions [P 2026-10-30]) with no developer offers (0, sample api.cities_q
+[P 2026-10-09]; [W] still none). Not ``ignatki-osiedle``:
+``get_market_statistics(city="ignatki-osiedle")`` counted 12 offers in this suite's run of
+2026-11-02."""
 PRICE_RANGE = {"price_min": 400_000, "price_max": 700_000}
 AREA_RANGE = {"area_min": 40, "area_max": 60}
 SMALL_CITY = "sopot"
@@ -521,14 +538,15 @@ def test_offers_of_the_whole_country_are_refused_without_a_request(mcp: McpLive)
 
 
 def test_offers_of_an_unknown_city_say_so(mcp: McpLive) -> None:
-    """[P 2026-10-31] the service answers 200 with Next.js's 404 marker, not a 404."""
+    """[P 2026-10-31] the service answers 200 with Next.js's 404 marker, not a 404; then
+    one lookup of the place [P 2026-11-02, a 200 with null fields] says there is none."""
     call = mcp.call_network("search_offers", city=UNKNOWN_CITY)
 
     assert call.error
-    assert "nie zna miasta" in call.text and "search_locations" in call.text
+    assert call.text == UNKNOWN_PLACE, call.text
     assert "polska" not in call.text
     assert SERVICE_CHANGED not in call.text
-    assert call.sent == 1
+    assert call.sent == 2  # the list and the place's lookup (cached for the module after)
 
 
 def test_offers_page_past_the_last_one(mcp: McpLive) -> None:
@@ -663,12 +681,14 @@ def test_offers_city_with_spaces_around_is_trimmed(
 
 def test_offers_district_slug_as_city_is_an_unknown_city(mcp: McpLive) -> None:
     """`mokotow` is a valid slug, so it is sent. [W] The service does not know it as a
-    city: the model reads "no such city" with the way to the right slug."""
+    city, and the transactions dictionary has no place `mokotow` [P 2026-11-02]: the model
+    reads "no such place" with the way to the right slug (the list and the place lookup)."""
     call = mcp.call_network("search_offers", city="mokotow")
 
     assert call.error, f"serwis zna 'mokotow' jako miasto [W]: {call.text[:200]}"
-    assert "nie zna miasta 'mokotow'" in call.text and "search_locations" in call.text
-    assert call.sent == 1
+    assert "Nie znaleziono miejscowości o city_slug 'mokotow'" in call.text
+    assert "search_locations" in call.text
+    assert call.sent == 2
 
 
 # --- get_investment --------------------------------------------------------------------
@@ -1316,14 +1336,21 @@ def test_offers_archived_in_a_district_by_area_descending_50_per_page(
 
 def test_offers_in_an_unknown_district_say_so(mcp: McpLive) -> None:
     """[P 2026-10-31] a district the city does not have: 200 with Next.js's 404 marker, read
-    as "no such district" with the way to the right name, never as a changed service:
-    1 request."""
+    as "no such district", never as a changed service. The city's districts with offers
+    ([P 2026-11-01] city-districts) are read once and the answer names them (up to 25),
+    without their counts, each one of the 18 of the capture of 2026-11-02 (a new district
+    fails: refresh the fixture): 2 requests."""
     call = mcp.call_network("search_offers", city="warszawa", district=UNKNOWN_DISTRICT)
 
     assert call.error
-    assert "nie zna dzielnicy" in call.text and "search_locations (kind=district" in call.text
+    assert "nie zna dzielnicy" in call.text and "Podaj w district jedną z nich" in call.text
     assert SERVICE_CHANGED not in call.text
-    assert call.sent == 1
+    listed = re.search(r"Znane dzielnice tego miasta(?: \(\d+ z \d+\))?: (.+?)\. Podaj", call.text)
+    assert listed, call.text
+    names = listed[1].split(", ")
+    known = {found.name for found in warszawa_districts()}
+    assert names and set(names) <= known, f"Ustalenie [P 2026-11-01]: dzielnice {names}"
+    assert call.sent == 2
 
 
 def test_offers_with_ranges_open_above_keep_their_starts(mcp: McpLive, city_slug: str) -> None:
@@ -1514,8 +1541,20 @@ def test_market_of_an_unknown_city(mcp: McpLive) -> None:
     city", never as a changed service (D21)."""
     call = mcp.call_network("get_market_statistics", city=UNKNOWN_CITY)
 
-    assert call.error and call.text.startswith(f"Serwis nie zna miasta '{UNKNOWN_CITY}'")
-    assert "search_locations" in call.text and SERVICE_CHANGED not in call.text
+    assert call.error and call.text == f"{UNKNOWN_PLACE} {ONE_CITY}", call.text
+    assert SERVICE_CHANGED not in call.text
+    assert call.sent == 1  # the place's lookup from the cache (D19: kept for its s-maxage)
+
+
+def test_market_of_a_known_place_without_offers(mcp: McpLive) -> None:
+    """[P 2026-11-02, live e2e] a place the service knows without developer offers
+    (``PLACE``) has an empty snapshot, not the "Unknown city" 404: an empty market with the
+    domain's hint, and no lookup of the place (the service answered with data)."""
+    call = mcp.call_network("get_market_statistics", city=PLACE)
+
+    result = call.data
+    assert (result["offers"], result["investments"]) == (0, 0), result
+    assert "search_locations" in result["hint"], result
     assert call.sent == 1
 
 
@@ -1638,20 +1677,27 @@ def test_developer_unknown(mcp: McpLive) -> None:
 
 
 def test_developer_in_an_unknown_city(mcp: McpLive, offer: dict[str, Any]) -> None:
-    """[H] a known developer in an unknown city (T39): "not found" (the 404 marker) or a
-    profile without investments (with a hint). Anything else is a finding."""
+    """T39 [P 2026-11-02]: a known developer in a city the service does not know is a page
+    that sends the reader on to the developer's page for the whole country: "not found",
+    never "the service changed"; the place's lookup says there is no such place."""
     call = mcp.call_network(
         "get_developer", developer_slug=offer["developer_slug"], city=UNKNOWN_CITY
     )
 
-    if call.error and "Nie znaleziono dewelopera" in call.text:
-        pass
-    elif not call.error and call.data["investments_total"] == 0:
-        assert "Spróbuj city=polska" in call.data["hint"]
-    else:
-        pytest.xfail(
-            "Ustalenie: profil dewelopera w nieznanym mieście odpowiada inaczej niż "
-            f"„nie znaleziono” albo pusty profil (komunikat: {call.text[:160]!r}). Pozycja do "
-            "docs/open-questions.md."
-        )
-    assert call.sent == 1
+    assert call.error and call.text == f"{UNKNOWN_PLACE} {CHECK_THE_DEVELOPER}", call.text
+    assert SERVICE_CHANGED not in call.text
+    assert call.sent == 1  # the place's lookup from the cache (D19: kept for its s-maxage)
+
+
+def test_developer_in_a_known_place_without_its_offers(mcp: McpLive, offer: dict[str, Any]) -> None:
+    """[P 2026-11-02, live e2e] the developer's page of a place that exists but where it has
+    no offers (``PLACE``) is "not found" too; the lookup names the place and sends the model
+    to the slug or to the whole country."""
+    call = mcp.call_network("get_developer", developer_slug=offer["developer_slug"], city=PLACE)
+
+    assert call.error, f"profil w {PLACE!r} bez błędu: {call.text[:200]}"
+    assert call.text.startswith(f"Miejscowość {PLACE_NAME!r} istnieje, ale serwis nie ma "), (
+        call.text
+    )
+    assert "city=polska" in call.text and SERVICE_CHANGED not in call.text
+    assert call.sent == 2  # the page and the place's first lookup (the market did not ask)

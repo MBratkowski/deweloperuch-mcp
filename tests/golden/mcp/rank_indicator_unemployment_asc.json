@@ -1,0 +1,51 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "indicator": "unemployment_rate",
+        "sort": "value_asc"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "level": "city",
+        "sort": "value_asc",
+        "indicator": "unemployment_rate",
+        "unit": "%",
+        "period": "2026-08",
+        "total": 3,
+        "returned": 3,
+        "truncated": false,
+        "items": [
+          {
+            "name": "Warszawa",
+            "city_slug": "warszawa",
+            "value": 1.6,
+            "stats_url": "https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#gus-bezrobocie"
+          },
+          {
+            "name": "Bydgoszcz",
+            "city_slug": "bydgoszcz",
+            "value": 2.8,
+            "stats_url": "https://deweloperuch.pl/statystyki/bydgoszcz/dane-rzadowe#gus-bezrobocie"
+          },
+          {
+            "name": "Białystok",
+            "city_slug": "bialystok",
+            "value": 6.0,
+            "stats_url": "https://deweloperuch.pl/statystyki/bialystok/dane-rzadowe#gus-bezrobocie"
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/statystyki/gov-map-stats [accept: application/json]"
+  ]
+}

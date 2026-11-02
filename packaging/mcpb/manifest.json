@@ -68,7 +68,7 @@
     },
     {
       "name": "rank_locations",
-      "description": "A ranking of places or powiats by RCN transactions and price per m²."
+      "description": "A ranking of places or powiats by RCN transactions and price per m², or of the 66 cities with powiat rights by a GUS or NBP indicator."
     },
     {
       "name": "get_building",

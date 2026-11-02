@@ -21,18 +21,23 @@ from deweloperuch_mcp.models.values import (
     OfferStatus,
     PricePerM2Pln,
 )
+from support.builders.districts import unlisted_district_message, warszawa_districts_body
 from support.builders.offers import (
     COMPACT_OFFER,
-    UNKNOWN_CITY_MESSAGE,
     UNKNOWN_DISTRICT,
     WHOLE_COUNTRY_MESSAGE,
     offers_page,
-    unknown_district_message,
 )
 from support.checks.leaks import LEAKS
 from support.providers.error_answers import CHANGED_SERVICE, removed_route
 from support.providers.mcp import call, data, has_null, text, tools, with_client
-from support.providers.routes.offers import offers_route, unknown_city_route
+from support.providers.routes.city_lookup import UNKNOWN_PLACE_MESSAGE, city_lookup_routes
+from support.providers.routes.districts import districts_route
+from support.providers.routes.offers import (
+    known_place_without_offers_route,
+    offers_route,
+    unknown_city_route,
+)
 from support.providers.rsc import OFFERS_UNKNOWN_DISTRICT_20261031, UNKNOWN_CITY, raw
 from support.providers.service import PAGES
 
@@ -249,32 +254,54 @@ def test_search_offers_of_an_unknown_city_is_an_error_that_says_so(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     """The real answer (HTTP 200, Next.js's 404 marker) is "no such city", not "the
-    service may have changed": the model can fix the argument."""
+    service may have changed": the model can fix the argument. The place lookup that
+    follows says there is no such place."""
+    routes = city_lookup_routes(service)
     unknown_city_route(service)
 
     result = call(server, "search_offers", city=UNKNOWN_CITY)
 
     assert result.is_error is True
-    assert text(result) == UNKNOWN_CITY_MESSAGE
+    assert text(result) == UNKNOWN_PLACE_MESSAGE
+    assert routes[UNKNOWN_CITY].call_count == 1
     assert not LEAKS.search(text(result))
+
+
+def test_search_offers_of_a_known_place_without_offers_names_the_place(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    """The list answers as for an unknown city ([W]), the lookup knows Kraków (sample)."""
+    known_place_without_offers_route(service)
+
+    result = call(server, "search_offers", city="krakow")
+
+    assert result.is_error is True
+    assert text(result) == (
+        "Miejscowość 'Kraków' istnieje, ale serwis nie ma dla niej ofert. Nie ponawiaj; "
+        "powiedz to użytkownikowi."
+    )
 
 
 def test_search_offers_in_an_unknown_district_is_an_error_that_says_so(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     """The district's list of a district the city does not have (the real 200 with the 404
-    marker, [P 2026-10-31]): the model is sent to the districts of search_locations."""
+    marker, [P 2026-10-31]): the model gets the real districts of the city to pick from
+    (never their counts)."""
     service.get(path="/ceny-ofertowe/warszawa/nieistniejaca-dzielnica/mieszkania").respond(
         200,
         content=raw(OFFERS_UNKNOWN_DISTRICT_20261031),
         headers={"Content-Type": "text/x-component"},
     )
+    districts_route(service)
 
     result = call(server, "search_offers", city="warszawa", district=UNKNOWN_DISTRICT)
 
     assert result.is_error is True
-    assert text(result) == unknown_district_message()
+    assert text(result) == unlisted_district_message(UNKNOWN_DISTRICT)
     assert not LEAKS.search(text(result))
+    counts = {str(row["count"]) for row in warszawa_districts_body()["districts"]}
+    assert not any(count in text(result) for count in counts)
 
 
 @pytest.mark.parametrize(

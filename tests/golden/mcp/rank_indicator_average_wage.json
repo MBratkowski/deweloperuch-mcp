@@ -1,0 +1,50 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "indicator": "average_wage"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "level": "city",
+        "sort": "value_desc",
+        "indicator": "average_wage",
+        "unit": "PLN/mies.",
+        "period": "2025",
+        "total": 3,
+        "returned": 3,
+        "truncated": false,
+        "items": [
+          {
+            "name": "Warszawa",
+            "city_slug": "warszawa",
+            "value": 11677.57,
+            "stats_url": "https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#gus-wynagrodzenia"
+          },
+          {
+            "name": "Bydgoszcz",
+            "city_slug": "bydgoszcz",
+            "value": 9207.5,
+            "stats_url": "https://deweloperuch.pl/statystyki/bydgoszcz/dane-rzadowe#gus-wynagrodzenia"
+          },
+          {
+            "name": "Białystok",
+            "city_slug": "bialystok",
+            "value": 9084.99,
+            "stats_url": "https://deweloperuch.pl/statystyki/bialystok/dane-rzadowe#gus-wynagrodzenia"
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/statystyki/gov-map-stats [accept: application/json]"
+  ]
+}

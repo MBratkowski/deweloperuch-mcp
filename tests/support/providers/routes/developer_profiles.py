@@ -5,14 +5,17 @@
 import respx
 
 from deweloperuch_mcp.flight import component_props
+from support.providers.routes.city_lookup import KNOWN_CITY, city_lookup_routes
 from support.providers.routes.offers import RSC_HEADERS
 from support.providers.rsc import (
     DEVELOPER_CERES_WARSZAWA_20261031,
     DEVELOPER_DOM_DEVELOPMENT_WARSZAWA_20261031,
     DEVELOPER_POLSKA_20261031,
     DEVELOPER_UNKNOWN_20261031,
+    DEVELOPER_UNKNOWN_CITY_20261102,
     DEVELOPER_UNKNOWN_POLSKA_20261031,
     DEVELOPER_WARSZAWA_20261031,
+    UNKNOWN_CITY,
     UNKNOWN_DEVELOPER,
     raw,
     replace_prop,
@@ -28,6 +31,7 @@ DEVELOPER_PAGES = {
     ("warszawa", "dom-development"): DEVELOPER_DOM_DEVELOPMENT_WARSZAWA_20261031,
     ("warszawa", UNKNOWN_DEVELOPER): DEVELOPER_UNKNOWN_20261031,
     ("polska", UNKNOWN_DEVELOPER): DEVELOPER_UNKNOWN_POLSKA_20261031,
+    (UNKNOWN_CITY, "atal"): DEVELOPER_UNKNOWN_CITY_20261102,
 }
 """(city, developer) -> the real page of the developer's profile."""
 
@@ -69,9 +73,12 @@ def developer_routes(router: respx.MockRouter) -> dict[tuple[str, str], respx.Ro
     """The profiles of ATAL in Warsaw and in the whole country, of Ceres Development (one
     city, no chart of cities) and Dom Development in Warsaw, and the pages of an unknown
     developer in Warsaw and in the whole country, byte for byte
-    (tests/fixtures/rsc/developer_*_20261031.rsc), plus the page of a developer without
-    active offers in that city. Add them before ``offers_route`` (it answers every
-    ``/ceny-ofertowe/`` path)."""
+    (tests/fixtures/rsc/developer_*_20261031.rsc), ATAL in a city the service does not know
+    (T39, tests/fixtures/rsc/developer_unknown_city_20261102.rsc) with the place lookup that
+    follows it (``city_lookup_routes``), plus the page of a developer without active offers
+    in that city. Add them before ``offers_route`` (it answers every ``/ceny-ofertowe/``
+    path)."""
+    city_lookup_routes(router)
     routes = {
         key: router.get(path=DEVELOPERS_PATH.format(city=key[0], developer=key[1])).respond(
             200, content=raw(path), headers=RSC_HEADERS
@@ -82,3 +89,17 @@ def developer_routes(router: respx.MockRouter) -> dict[tuple[str, str], respx.Ro
         path=DEVELOPERS_PATH.format(city=WITHOUT_OFFERS_CITY, developer="atal")
     ).respond(200, content=without_offers(raw(DEVELOPER_WARSZAWA_20261031)), headers=RSC_HEADERS)
     return routes
+
+
+def known_place_without_offers_route(router: respx.MockRouter) -> respx.Route:
+    """ATAL's page in ``city_lookup.KNOWN_CITY`` answered as a page of a place where the
+    service shows nothing of the developer: the real T39 page
+    (tests/fixtures/rsc/developer_unknown_city_20261102.rsc), whose redirect to ATAL's page
+    for the whole country is the same whatever the city. [P 2026-11-02, live e2e
+    ``test_developer_in_a_known_place_without_its_offers``] a known place without the
+    developer's offers is "not found" too; which marker its page carried was not recorded.
+    Add it before ``offers_route``."""
+    path = DEVELOPERS_PATH.format(city=KNOWN_CITY, developer="atal")
+    return router.get(path=path).respond(
+        200, content=raw(DEVELOPER_UNKNOWN_CITY_20261102), headers=RSC_HEADERS
+    )

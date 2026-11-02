@@ -151,12 +151,16 @@ def test_offers_search_of_an_unknown_city(cli: Cli) -> None:
     assert run.stdout == ""
     run.readable()
     lines = run.stderr.splitlines()
-    assert lines[0].startswith(f"Błąd: Serwis nie zna miasta '{UNKNOWN_CITY}'.")
-    assert "search_locations" in lines[0] and "polska" not in lines[0]
+    assert lines[0] == (
+        f"Błąd: Nie znaleziono miejscowości o city_slug {UNKNOWN_CITY!r}. Jeśli slug nie "
+        "pochodzi z search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla "
+        "niej tych danych: powiedz to użytkownikowi i nie ponawiaj."
+    )
+    assert "polska" not in lines[0]
     assert SERVICE_CHANGED not in run.stderr
     assert lines[1].startswith("Szczegóły: ")
     assert "<html" not in run.stderr.lower() and "<!doctype" not in run.stderr.lower()
-    assert run.sent == 1
+    assert run.sent == 2  # the list and the place's lookup [P 2026-11-02]
 
 
 def test_stats_government_as_text(cli: Cli) -> None:
@@ -256,16 +260,15 @@ def test_developers_get_in_a_city_as_json(cli: Cli, offer: dict[str, Any]) -> No
 
 def test_developers_get_of_an_unknown_developer(cli: Cli) -> None:
     """[P 2026-10-31] the page of an unknown developer in Warsaw answers 200 with Next.js's
-    404 marker: exit code 7 and where slugs come from, never a changed service: 1 request."""
+    404 marker: exit code 7 and where slugs come from, never a changed service. The place's
+    lookup [P 2026-11-02] finds Warsaw, so the message names it: 2 requests."""
     run = cli("developers", "get", UNKNOWN_DEVELOPER, "--city", "warszawa")
 
     assert run.code == 7, (run.code, run.stderr)
     assert run.stdout == ""
     run.readable()
     lines = run.stderr.splitlines()
-    assert lines[0].startswith(
-        f"Błąd: Nie znaleziono dewelopera '{UNKNOWN_DEVELOPER}' w 'warszawa'."
-    )
-    assert "search_developers" in lines[0]
+    assert lines[0].startswith("Błąd: Miejscowość 'Warszawa' istnieje, ale serwis nie ma "), lines
+    assert "search_developers" in lines[0] and "city=polska" in lines[0]
     assert SERVICE_CHANGED not in run.stderr
-    assert run.sent == 1
+    assert run.sent == 2

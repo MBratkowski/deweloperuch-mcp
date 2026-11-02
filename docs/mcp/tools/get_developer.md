@@ -37,13 +37,15 @@ The `hint` appears in three cases: the developer has no investment with active o
 - Size: an investment is 350-400 characters; the whole-country call at the default `limit` 20 is 8 528 characters (`tests/golden/mcp/developer_whole_country.json`).
 - Single offers are not here; use `get_investment` with an `investment_slug`.
 - Asking prices of the primary market, not transaction prices.
-- **Known limitation (not fixed in 0.2.0):** a developer the service knows, asked for in a city the service does not know, is answered with the "service changed" message instead of „Nie znaleziono dewelopera …”: the service's page for that pair has no developer data and no 404 marker (T39 in [open-questions.md](../../open-questions.md), [P 2026-10-31, live e2e], recorded as an expected failure). The message is then misleading: `city=polska` shows whether the developer exists. A repair is planned.
+- A city the service does not know (T39, fixed in 0.2.0): the service's page for a known developer in an unknown city carries a redirect to the whole-country page of that developer instead of a 404 marker ([P 2026-11-02], `tests/fixtures/rsc/developer_unknown_city_20261102.rsc`; a known place where the developer has no offers answers the same; D21 has a narrow exception for it). The tool reads that as a not-found (CLI exit code 7, before: 6 with the "service changed" message) and asks `city-lookup` once which of the two it is (see Errors). `city=polska` shows whether the developer exists.
 
 ## Errors
 | Situation | Message |
 |---|---|
 | The developer is unknown for `city=polska` (the service answers 200 with Next.js's 404 marker) | `Nie znaleziono dewelopera 'nieistniejacy-deweloper'. Slug dewelopera podaje search_developers (po nazwie) albo pole developer_slug w search_offers, get_investment i get_offer; city to city_slug z search_locations albo polska (cała Polska).` |
-| The developer is unknown in a city | The same, with `w 'warszawa'` after the slug and the end `Albo deweloper nie ma w tym mieście aktywnych ofert: spróbuj city=polska.` |
+| The developer is unknown in a city, and the lookup cannot tell why (it failed) | The same, with `w 'warszawa'` after the slug and the end `Albo deweloper nie ma w tym mieście aktywnych ofert: spróbuj city=polska.` |
+| The city is unknown (after the service's „unknown”, one `city-lookup` request finds no such place) | `Nie znaleziono miejscowości o city_slug 'nieistniejace-miasto'. Jeśli slug nie pochodzi z search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla niej tych danych: powiedz to użytkownikowi i nie ponawiaj. Potem sprawdź developer_slug (search_developers).` |
+| The city exists, the developer has no active offers there (or the slug is wrong) | `Miejscowość 'Kraków' istnieje, ale serwis nie ma dla niej aktywnych ofert tego dewelopera. Sprawdź developer_slug (search_developers) albo spróbuj city=polska (cała Polska).` (`tests/golden/mcp/developer_known_place_without_offers.json`) |
 | `developer_slug` not a slug (e.g. `ATAL`) | `developer_slug: oczekiwano slug dewelopera, np. atal; podają go search_developers, search_offers i search_investments (developer_slug); podano 'ATAL'.` |
 | `city` not a slug (e.g. `Kraków`) | `city: oczekiwano slug miasta (np. warszawa) albo polska; slug podaje search_locations; podano 'Kraków'.` |
 | `limit` outside 1-100 | `Błędny argument narzędzia get_developer: limit musi być liczbą całkowitą z zakresu 1–100, podano 0. Popraw i ponów; nic nie zostało wysłane.` |

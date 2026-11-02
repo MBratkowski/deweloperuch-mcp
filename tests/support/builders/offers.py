@@ -157,9 +157,8 @@ UNKNOWN_CITY_MESSAGE = (
 
 def unknown_district_message(district: str = UNKNOWN_DISTRICT, city: str = "warszawa") -> str:
     return (
-        f"Serwis nie zna dzielnicy {district!r} w mieście {city!r}. Podaj nazwę dzielnicy tak, "
-        "jak zwraca ją search_locations (kind=district, pole name), razem z city_slug jej "
-        "miasta."
+        f"Serwis nie zna dzielnicy {district!r} w mieście {city!r}. Podaj nazwę dzielnicy z "
+        "search_locations (kind=district, pole name), razem z city_slug jej miasta."
     )
 
 

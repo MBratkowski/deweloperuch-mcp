@@ -159,6 +159,7 @@ def test_descriptions_say_when_to_use_the_tool_and_its_limits(
     assert "GUS, NBP i Eurostatu" in stats and "get_transaction_statistics" in stats
     assert len(stats) <= 1_200
     assert "note" in stats and "stats_url" in stats
+    assert "porównanie wielu miast w jednym okresie rank_locations z indicator." in stats
     assert "Nie każdy zestaw jest dostępny dla każdej lokalizacji" in stats
     assert "z opóźnieniem" in stats
     market = described["get_market_statistics"]
@@ -336,6 +337,14 @@ def test_server_info_and_instructions(server: MCPServer[bootstrap.Session]) -> N
     assert "po angielsku" not in instructions
     assert "najnowsze okresy są niepełne, get_transaction_statistics oznacza je incomplete" in (
         instructions
+    )
+    # Three kinds of prices: the ranking without an indicator is RCN, with one official.
+    assert "transakcyjne z rejestru RCN (get_transaction_statistics, rank_locations bez " in (
+        instructions
+    )
+    assert (
+        "(get_government_statistics; porównanie wielu miast w jednym okresie: rank_locations z "
+        "indicator)" in instructions
     )
 
 

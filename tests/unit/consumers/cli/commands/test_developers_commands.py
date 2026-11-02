@@ -5,6 +5,7 @@ import json
 import pytest
 import respx
 
+from deweloperuch_mcp.usecases.get_developer import CHECK_THE_DEVELOPER
 from support.builders.developer_search import (
     ATAL_ROW,
     INJECTED,
@@ -15,7 +16,10 @@ from support.builders.developer_search import (
     developers_found,
 )
 from support.providers.cli import Cli, ok
+from support.providers.routes.city_lookup import UNKNOWN_PLACE_MESSAGE
+from support.providers.routes.developer_profiles import developer_routes
 from support.providers.routes.developer_search import DEVELOPERS, developer_search_route
+from support.providers.rsc import UNKNOWN_CITY
 
 # The MCP server runs behind the SDK's in-memory client: its event loop needs Unix sockets.
 pytestmark = pytest.mark.usefixtures("unix_sockets_for_the_event_loop")
@@ -130,6 +134,19 @@ def test_cli_service_answers_map_to_exit_codes(
     first = result.stderr.splitlines()[0]
     assert first.startswith("Błąd: ")
     assert not LEAKS.search(first)
+
+
+def test_cli_developer_in_an_unknown_city_is_not_found(run: Cli, service: respx.MockRouter) -> None:
+    """T39 [P 2026-11-02]: the page of ATAL in a city the service does not know sends the
+    reader on to its page for the whole country; the place lookup says there is no such
+    place. Exit code 7 (not found), as for any unknown city."""
+    developer_routes(service)
+
+    result = run("developers", "get", "atal", "--city", UNKNOWN_CITY)
+
+    assert result.exit_code == 7  # ExitCode.NOT_FOUND, public API
+    assert result.stdout == ""
+    assert result.stderr.splitlines()[0] == f"Błąd: {UNKNOWN_PLACE_MESSAGE} {CHECK_THE_DEVELOPER}"
 
 
 def test_cli_help_works_offline(run: Cli) -> None:

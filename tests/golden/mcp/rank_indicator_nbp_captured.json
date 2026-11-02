@@ -1,0 +1,64 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "indicator": "nbp_price_per_m2",
+        "limit": 5
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": false,
+      "text": "<the structured content as compact JSON>",
+      "structured_content": {
+        "level": "city",
+        "sort": "value_desc",
+        "indicator": "nbp_price_per_m2",
+        "unit": "PLN/m²",
+        "period": "2026-Q2",
+        "total": 17,
+        "returned": 5,
+        "truncated": true,
+        "hint": "Pominięto miasta, dla których serwis nie podaje tego wskaźnika: 49 z 66. Pokazano pierwsze 5 z 17 miast; kolejne pokaże większy limit (najwyżej 100).",
+        "items": [
+          {
+            "name": "Warszawa",
+            "city_slug": "warszawa",
+            "value": 16723.0,
+            "stats_url": "https://deweloperuch.pl/statystyki/warszawa/dane-rzadowe#nbp"
+          },
+          {
+            "name": "Kraków",
+            "city_slug": "krakow",
+            "value": 14792.0,
+            "stats_url": "https://deweloperuch.pl/statystyki/krakow/dane-rzadowe#nbp"
+          },
+          {
+            "name": "Gdańsk",
+            "city_slug": "gdansk",
+            "value": 14035.0,
+            "stats_url": "https://deweloperuch.pl/statystyki/gdansk/dane-rzadowe#nbp"
+          },
+          {
+            "name": "Wrocław",
+            "city_slug": "wroclaw",
+            "value": 12590.0,
+            "stats_url": "https://deweloperuch.pl/statystyki/wroclaw/dane-rzadowe#nbp"
+          },
+          {
+            "name": "Gdynia",
+            "city_slug": "gdynia",
+            "value": 12267.0,
+            "stats_url": "https://deweloperuch.pl/statystyki/gdynia/dane-rzadowe#nbp"
+          }
+        ]
+      }
+    }
+  ],
+  "log": [],
+  "requests": [
+    "GET https://deweloperuch.pl/api/statystyki/gov-map-stats [accept: application/json]"
+  ]
+}

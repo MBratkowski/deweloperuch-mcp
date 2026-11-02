@@ -25,6 +25,9 @@ from types import TracebackType
 from typing import Self
 
 from deweloperuch_mcp.api.adapters.buildings_api import BuildingsApi
+from deweloperuch_mcp.api.adapters.city_districts_api import CityDistrictsApi
+from deweloperuch_mcp.api.adapters.city_indicators_api import CityIndicatorsApi
+from deweloperuch_mcp.api.adapters.city_lookup_api import CityLookupApi
 from deweloperuch_mcp.api.adapters.developer_profile_api import DeveloperProfileApi
 from deweloperuch_mcp.api.adapters.developer_search_api import DeveloperSearchApi
 from deweloperuch_mcp.api.adapters.government_statistics_api import GovernmentStatisticsApi
@@ -101,21 +104,26 @@ class Session:
         links = ServicePageLinks()
         offers = OffersApi(self._http)
         investments = InvestmentsApi(self._http)
+        places = CityLookupApi(self._http)
         self.search_locations = SearchLocations(LocationsApi(self._http))
-        self.search_offers = SearchOffers(offers, links)
+        self.search_offers = SearchOffers(offers, links, CityDistrictsApi(self._http), places)
         self.get_offer = GetOffer(investments, offers, links, clock or SystemClock())
         self.get_investment = GetInvestment(investments, links)
-        self.get_developer = GetDeveloper(DeveloperProfileApi(self._http), links)
-        self.get_market_statistics = GetMarketStatistics(OfferSnapshotApi(self._http), links)
+        self.get_developer = GetDeveloper(DeveloperProfileApi(self._http), links, places)
+        self.get_market_statistics = GetMarketStatistics(
+            OfferSnapshotApi(self._http), links, places
+        )
         self.get_government_statistics = GetGovernmentStatistics(
             GovernmentStatisticsApi(self._http), links
         )
         self.search_developers = SearchDevelopers(DeveloperSearchApi(self._http), links)
-        self.search_investments = SearchInvestments(InvestmentSearchApi(self._http), links)
+        self.search_investments = SearchInvestments(InvestmentSearchApi(self._http), links, places)
         self.get_transaction_statistics = GetTransactionStatistics(
-            TransactionStatisticsApi(self._http), links
+            TransactionStatisticsApi(self._http), links, places
         )
-        self.rank_locations = RankLocations(TransactionRankingApi(self._http), links)
+        self.rank_locations = RankLocations(
+            TransactionRankingApi(self._http), CityIndicatorsApi(self._http), links
+        )
         self.get_building = GetBuilding(BuildingsApi(self._http), links)
         self.estimate_property_value = EstimatePropertyValue(ValuationApi(self._http))
 

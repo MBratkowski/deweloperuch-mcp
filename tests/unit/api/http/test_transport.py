@@ -56,7 +56,9 @@ from support.providers.error_answers import (
     unknown_location_page,
 )
 
-TARGET = "/api/city-lookup?city=warszawa"
+# A route outside allowlist.LONG_CACHE_PATHS, so the cache tests describe the D2 cap of
+# DEFAULT_TTL; the D19 routes have their own tests below.
+TARGET = "/api/location-search?q=warszawa"
 
 
 URL = identity.BASE_URL + TARGET
@@ -107,7 +109,7 @@ def pause_after_last_request(lock_dir: Path) -> float:
     return state["next_start"] - state["last_end"]
 
 
-OTHER = "/api/city-lookup?city=krakow"
+OTHER = "/api/location-search?q=krakow"
 
 
 FIRST_STOP_END = (
@@ -116,11 +118,13 @@ FIRST_STOP_END = (
 )
 
 
-# Local cache TTL (D2): freshness = s-maxage, else max-age, else DEFAULT_TTL; TTL = that
-# minus Age, at most DEFAULT_TTL; Age at or above the freshness: DEFAULT_TTL (clarification of
-# 2026-10-13); no-store, no-cache or a freshness of 0: not cached. The service sends
-# max-age=28800 without s-maxage for RSC pages and most /api/* [P 2026-10-10], with an Age
-# of thousands of seconds from Cloudflare, sometimes above max-age [P 2026-10-13].
+# Local cache TTL (D2, routes outside allowlist.LONG_CACHE_PATHS): freshness = s-maxage,
+# else max-age, else DEFAULT_TTL; TTL = that minus Age, at most DEFAULT_TTL; Age at or above
+# the freshness: DEFAULT_TTL (clarification of 2026-10-13); no-store, no-cache or a
+# freshness of 0: not cached. On 1.0 the service sent max-age=28800 without s-maxage for RSC
+# pages and most /api/* [P 2026-10-10], with an Age of thousands of seconds from Cloudflare,
+# sometimes above max-age [P 2026-10-13]; on 2.0 every JSON response probed sends an s-maxage
+# of 300 to 86400 s [P 2026-10-30], the pages still only max-age [P 2026-10-31].
 RSC_CONTROL = "private, max-age=28800, must-revalidate"
 
 
@@ -1473,7 +1477,8 @@ def test_the_ttl_is_logged_for_debugging(
 def test_the_cache_never_keeps_a_reply_longer_than_the_default(
     client: HttpClient, service: respx.MockRouter, clock: MonotonicClock
 ) -> None:
-    """D2: whatever the headers say, local data is at most ``DEFAULT_TTL`` old."""
+    """D2: whatever the headers say, local data is at most ``DEFAULT_TTL`` old (outside the
+    D19 routes)."""
     route = service.get(URL).respond(
         200, json={}, headers={"Cache-Control": "public, max-age=31536000, s-maxage=31536000"}
     )
@@ -1522,6 +1527,155 @@ def test_s_maxage_zero_is_not_cached(client: HttpClient, service: respx.MockRout
 
     client.get(TARGET, headers={}, decode=raw)
     client.get(TARGET, headers={}, decode=raw)
+
+    assert route.call_count == 2
+
+
+# D19: the nine dictionary and index routes (allowlist.LONG_CACHE_PATHS) are cached for
+# their freshness minus Age, at most LONG_TTL_MAX; every other D2 rule stays. The headers are
+# the ones the service sends (docs/discovery/endpoints.md, [P 2026-10-30], [P 2026-11-01]).
+POWIAT_MAP_STATS_CONTROL = "public, max-age=172800, s-maxage=86400, stale-while-revalidate=172800"
+TX_CITIES_CONTROL = (
+    "public, max-age=172800, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=86400"
+)
+
+
+def assert_cached_for(
+    client: HttpClient,
+    service: respx.MockRouter,
+    clock: MonotonicClock,
+    target: str,
+    headers: dict[str, str],
+    ttl: float,
+) -> None:
+    """A 200 for ``target`` with ``headers`` is served from the cache for ``ttl`` seconds."""
+    route = service.get(identity.BASE_URL + target).respond(200, json={}, headers=headers)
+
+    client.get(target, headers={}, decode=raw)
+    clock.advance(ttl - 1)
+    client.get(target, headers={}, decode=raw)
+    assert route.call_count == 1
+    clock.advance(2)
+    client.get(target, headers={}, decode=raw)
+    assert route.call_count == 2
+
+
+def test_long_ttl_route_uses_s_maxage(
+    client: HttpClient, service: respx.MockRouter, clock: MonotonicClock
+) -> None:
+    headers = {"Cache-Control": POWIAT_MAP_STATS_CONTROL}
+
+    assert_cached_for(client, service, clock, "/api/statystyki/powiat-map-stats", headers, 86400.0)
+
+
+def test_long_ttl_route_subtracts_age(
+    client: HttpClient, service: respx.MockRouter, clock: MonotonicClock
+) -> None:
+    headers = {"Cache-Control": TX_CITIES_CONTROL, "Age": "600"}
+
+    assert_cached_for(client, service, clock, "/api/map/tx-cities", headers, 3000.0)
+
+
+def test_long_ttl_is_capped_at_a_day(
+    client: HttpClient, service: respx.MockRouter, clock: MonotonicClock
+) -> None:
+    headers = {"Cache-Control": "public, max-age=172800, s-maxage=172800"}
+
+    assert transport.LONG_TTL_MAX == 86400.0
+    assert_cached_for(client, service, clock, "/api/statystyki/gov-map-stats", headers, 86400.0)
+
+
+def test_long_ttl_route_falls_back_to_max_age(
+    client: HttpClient, service: respx.MockRouter, clock: MonotonicClock
+) -> None:
+    """Freshness is ``s-maxage``, else ``max-age`` (D19), as on every route."""
+    headers = {"Cache-Control": "max-age=28800", "Age": "800"}
+
+    assert_cached_for(client, service, clock, "/api/cities?q=krak", headers, 28000.0)
+
+
+def test_internal_route_keeps_the_300_s_cap(
+    client: HttpClient, service: respx.MockRouter, clock: MonotonicClock
+) -> None:
+    headers = {"Cache-Control": POWIAT_MAP_STATS_CONTROL}
+
+    assert_cached_for(client, service, clock, "/api/map/offer-snapshot/x", headers, DEFAULT_TTL)
+
+
+@pytest.mark.parametrize(
+    ("target", "cache_control", "age", "ttl"),
+    [
+        # endpoints.md [P 2026-11-01]: Cloudflare serves both a day past their s-maxage
+        ("/api/statystyki/powiat-map-stats", POWIAT_MAP_STATS_CONTROL, "112792", 86400.0),
+        ("/api/map/tx-cities", TX_CITIES_CONTROL, "112822", 3600.0),
+        ("/api/statystyki/gov-map-stats", "public, s-maxage=172800", "200000", 86400.0),
+    ],
+    ids=["powiat-map-stats", "tx-cities", "capped"],
+)
+def test_long_ttl_route_past_its_freshness_keeps_it_for_the_freshness(
+    client: HttpClient,
+    service: respx.MockRouter,
+    clock: MonotonicClock,
+    target: str,
+    cache_control: str,
+    age: str,
+    ttl: float,
+) -> None:
+    """D19 (user, 2026-11-02): ``Age`` at or above the freshness keeps the reply for the
+    freshness itself, at most ``LONG_TTL_MAX``; never the 300 s of D2, never 0."""
+    headers = {"Cache-Control": cache_control, "Age": age}
+
+    assert_cached_for(client, service, clock, target, headers, ttl)
+
+
+def test_internal_route_past_its_freshness_is_300_s(
+    client: HttpClient, service: respx.MockRouter, clock: MonotonicClock
+) -> None:
+    """D2 outside the D19 routes: the offer-snapshot copy served 15 hours past its
+    ``s-maxage=3600`` (endpoints.md [P 2026-10-31]) is kept for 300 s, not 3600 s."""
+    headers = {"Cache-Control": "public, max-age=172800, s-maxage=3600", "Age": "53556"}
+
+    assert_cached_for(
+        client, service, clock, "/api/map/offer-snapshot/warszawa", headers, DEFAULT_TTL
+    )
+
+
+@pytest.mark.parametrize(
+    "cache_control",
+    [
+        "no-store, s-maxage=86400",
+        "no-cache, s-maxage=86400",
+        "public, max-age=172800, s-maxage=0",
+        "max-age=0",
+    ],
+)
+def test_long_ttl_route_keeps_the_rules_that_disable_the_cache(
+    client: HttpClient, service: respx.MockRouter, cache_control: str
+) -> None:
+    target = "/api/statystyki/powiat-map-stats"
+    route = service.get(identity.BASE_URL + target).respond(
+        200, json={}, headers={"Cache-Control": cache_control}
+    )
+
+    client.get(target, headers={}, decode=raw)
+    client.get(target, headers={}, decode=raw)
+
+    assert route.call_count == 2
+
+
+def test_long_ttl_route_never_caches_an_error(
+    client: HttpClient, service: respx.MockRouter
+) -> None:
+    target = "/api/avg-price-trend/city/nieistniejace-miasto"
+    route = service.get(identity.BASE_URL + target).respond(
+        404,
+        **unknown_entity(UNKNOWN_CITY_ERROR),
+        headers={"Cache-Control": "public, max-age=172800, s-maxage=3600"},
+    )
+
+    for _ in range(2):
+        with pytest.raises(NotFoundError):
+            client.get(target, headers={}, decode=raw)
 
     assert route.call_count == 2
 
@@ -1647,7 +1801,7 @@ def test_the_repeated_stop_keeps_the_detail_of_the_first(
     with pytest.raises(error) as first:
         client.get(TARGET, headers={}, decode=raw)
     with pytest.raises(error) as again:
-        client.get("/api/city-lookup?city=krakow", headers={}, decode=raw)
+        client.get(OTHER, headers={}, decode=raw)
 
     assert isinstance(first.value, DeweloperuchError) and isinstance(again.value, DeweloperuchError)
     pause = ", pauza limitera 60 s" if status == 429 else ""
