@@ -2,6 +2,7 @@
 
 from deweloperuch_mcp.flight import NOT_FOUND_DIGEST
 from support.golden.cli import DEVELOPERS, RSC, Case, case
+from support.golden.routes import lookup_failed
 from support.providers.routes.developer_profiles import developer_routes
 from support.providers.rsc import (
     DEVELOPER_UNKNOWN_20261031,
@@ -33,7 +34,11 @@ CASES: dict[str, Case] = {
         *DEVELOPERS, "atal", "--city", "bialystok", service=developer_routes
     ),
     "developers_get_unknown": case(
-        *DEVELOPERS, UNKNOWN_DEVELOPER, "--city", "warszawa", service=developer_routes
+        *DEVELOPERS,
+        UNKNOWN_DEVELOPER,
+        "--city",
+        "warszawa",
+        service=(developer_routes, lookup_failed("warszawa")),
     ),
     "developers_get_page_without_data": case(
         *DEVELOPERS,

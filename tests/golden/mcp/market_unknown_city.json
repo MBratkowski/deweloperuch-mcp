@@ -10,17 +10,18 @@
   "results": [
     {
       "is_error": true,
-      "text": "Serwis nie zna miasta 'nieistniejace-miasto' albo nie ma w nim ofert. Podaj city_slug z search_locations (miejscowości z offer_count=0 nie mają statystyk; statystyki rynku są tylko dla jednego miasta).",
+      "text": "Nie znaleziono miejscowości o city_slug 'nieistniejace-miasto'. Jeśli slug nie pochodzi z search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla niej tych danych: powiedz to użytkownikowi i nie ponawiaj. Statystyki rynku są tylko dla jednego miasta (nie dla polska ani agregatów).",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "NotFoundError: Serwis nie zna miasta 'nieistniejace-miasto' albo nie ma w nim ofert. Podaj city_slug z search_locations (miejscowości z offer_count=0 nie mają statystyk; statystyki rynku są tylko dla jednego miasta). Szczegóły: /api/map/offer-snapshot/nieistniejace-miasto: HTTP 404, application/json"
+      "NotFoundError: Nie znaleziono miejscowości o city_slug 'nieistniejace-miasto'. Jeśli slug nie pochodzi z search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla niej tych danych: powiedz to użytkownikowi i nie ponawiaj. Statystyki rynku są tylko dla jednego miasta (nie dla polska ani agregatów). Szczegóły: /api/map/offer-snapshot/nieistniejace-miasto: HTTP 404, application/json"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/api/map/offer-snapshot/nieistniejace-miasto [accept: application/json]"
+    "GET https://deweloperuch.pl/api/map/offer-snapshot/nieistniejace-miasto [accept: application/json]",
+    "GET https://deweloperuch.pl/api/city-lookup?slug=nieistniejace-miasto&source=transactions [accept: application/json]"
   ]
 }

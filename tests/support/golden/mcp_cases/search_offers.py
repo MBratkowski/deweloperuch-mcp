@@ -5,8 +5,11 @@ import httpx
 from support.builders.offers import UNKNOWN_DISTRICT, offers_page
 from support.golden.mcp import FILTERED, INJECTED, OFFERS, WARSZAWA, Case, case
 from support.golden.routes import offers_answer, offers_with
+from support.providers.routes.city_lookup import KNOWN_CITY
+from support.providers.routes.districts import districts_route
 from support.providers.routes.offers import (
     district_route,
+    known_place_without_offers_route,
     offers_route,
     unknown_city_route,
     unknown_district_route,
@@ -76,6 +79,9 @@ CASES: dict[str, Case] = {
     ),
     "offers_not_truncated": case(OFFERS, offers_with(offers_page(total=3)), **WARSZAWA),
     "offers_unknown_city": case(OFFERS, unknown_city_route, city=UNKNOWN_CITY),
+    "offers_known_place_without_offers": case(
+        OFFERS, known_place_without_offers_route, city=KNOWN_CITY
+    ),
     "offers_city_name": case(OFFERS, offers_route, city="Kraków"),
     "offers_city_capitalized": case(OFFERS, offers_route, city="Warszawa"),
     "offers_city_capitals": case(OFFERS, offers_route, city="KRAKOW"),
@@ -114,9 +120,14 @@ CASES: dict[str, Case] = {
         OFFERS, (district_route, offers_route), city="warszawa", district="Mokotów"
     ),
     "offers_unknown_district": case(
-        OFFERS, (unknown_district_route, offers_route), city="warszawa", district=UNKNOWN_DISTRICT
+        OFFERS,
+        (unknown_district_route, districts_route, offers_route),
+        city="warszawa",
+        district=UNKNOWN_DISTRICT,
     ),
-    "offers_district_without_slug": case(OFFERS, offers_route, city="warszawa", district="Ωμέγα"),
+    "offers_district_without_slug": case(
+        OFFERS, (districts_route, offers_route), city="warszawa", district="Ωμέγα"
+    ),
     "offers_district_blank_and_nulls": case(
         OFFERS, offers_route, city="warszawa", district=" ", status=None, price_dropped=None
     ),

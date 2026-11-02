@@ -9,11 +9,18 @@ from mcp.types import CallToolResult
 from deweloperuch_mcp import bootstrap
 from deweloperuch_mcp.consumers.mcp.presenters.get_developer_mcp_presenter import DeveloperResult
 from deweloperuch_mcp.consumers.mcp.tools.get_developer_tool import GetDeveloperTool
+from deweloperuch_mcp.usecases.get_developer import CHECK_THE_DEVELOPER
 from support.providers.error_answers import removed_route
 from support.providers.mcp import call, data, text, with_client
+from support.providers.routes.city_lookup import (
+    UNKNOWN_PLACE_MESSAGE,
+    city_lookup_routes,
+    failed_lookup_route,
+)
 from support.providers.routes.developer_profiles import (
     DEVELOPERS_PATH,
     developer_routes,
+    known_place_without_offers_route,
     with_cities_reversed,
     without_cities_chart,
 )
@@ -22,6 +29,7 @@ from support.providers.rsc import (
     DEVELOPER_DOM_DEVELOPMENT_WARSZAWA_20261031,
     DEVELOPER_POLSKA_20261031,
     DEVELOPER_WARSZAWA_20261031,
+    UNKNOWN_CITY,
     raw,
 )
 from support.providers.service import PAGES
@@ -267,6 +275,7 @@ def test_an_unknown_developer_says_where_its_slug_comes_from(
     server: MCPServer[bootstrap.Session], service: respx.MockRouter
 ) -> None:
     developer_routes(service)
+    failed_lookup_route(service, "warszawa")  # a failed lookup: the first words stand
 
     result = call(
         server, "get_developer", developer_slug="nieistniejacy-deweloper", city="warszawa"
@@ -274,6 +283,37 @@ def test_an_unknown_developer_says_where_its_slug_comes_from(
 
     assert result.is_error is True
     assert text(result) == NOT_FOUND_IN_WARSAW
+
+
+def test_a_developer_in_an_unknown_city_says_there_is_no_such_place(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    """T39 [P 2026-11-02]: not "the service changed" (the page sends the reader on to the
+    developer's page for the whole country), and the place lookup tells a wrong city slug
+    from a place without the developer's offers."""
+    routes = developer_routes(service)
+
+    result = call(server, "get_developer", developer_slug="atal", city=UNKNOWN_CITY)
+
+    assert result.is_error is True
+    assert text(result) == f"{UNKNOWN_PLACE_MESSAGE} {CHECK_THE_DEVELOPER}"
+    assert routes[(UNKNOWN_CITY, "atal")].call_count == 1
+
+
+def test_a_developer_in_a_known_place_without_its_offers_names_the_place(
+    server: MCPServer[bootstrap.Session], service: respx.MockRouter
+) -> None:
+    known_place_without_offers_route(service)
+    city_lookup_routes(service)
+
+    result = call(server, "get_developer", developer_slug="atal", city="krakow")
+
+    assert result.is_error is True
+    assert text(result) == (
+        "Miejscowość 'Kraków' istnieje, ale serwis nie ma dla niej aktywnych ofert tego "
+        "dewelopera. Sprawdź developer_slug (search_developers) albo spróbuj city=polska "
+        "(cała Polska)."
+    )
 
 
 def test_an_unknown_developer_in_the_whole_country(

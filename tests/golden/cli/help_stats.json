@@ -19,7 +19,8 @@
     "│ market        Pokaż statystyki aktywnych ofert miasta: ceny, metraże, największych deweloperów.  │",
     "│ transactions  Pokaż ceny transakcyjne mieszkań (RCN) w mieście, miesiąc po miesiącu albo         │",
     "│               kwartałami.                                                                        │",
-    "│ cities        Pokaż ranking miejscowości albo powiatów według transakcji RCN.                    │",
+    "│ cities        Pokaż ranking miejscowości albo powiatów według transakcji RCN albo miast według   │",
+    "│               wskaźnika GUS lub NBP.                                                             │",
     "╰──────────────────────────────────────────────────────────────────────────────────────────────────╯",
     "",
     ""

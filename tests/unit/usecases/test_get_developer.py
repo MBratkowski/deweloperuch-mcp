@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 
 from deweloperuch_mcp.models.developer_profile import DeveloperInvestment, DeveloperProfile
-from deweloperuch_mcp.models.errors import InvalidInputError, NotFoundError
+from deweloperuch_mcp.models.errors import InvalidInputError, NotFoundError, ServiceError
 from deweloperuch_mcp.models.values import (
     AreaM2,
     CitySlug,
@@ -27,6 +27,7 @@ from support.fakes.catalogs import (
     EchoPageLinks,
     FakeCatalogs,
 )
+from support.fakes.places import VILLAGE, FakePlaces, unknown_place_message
 
 
 def project(slug: str, active: int | None) -> DeveloperInvestment:
@@ -48,7 +49,7 @@ def project(slug: str, active: int | None) -> DeveloperInvestment:
 def test_a_developer_is_one_request_with_its_links() -> None:
     fake = FakeCatalogs(projects=(project("a", 1), project("b", 5), project("c", 3)))
 
-    found = GetDeveloper(fake, EchoPageLinks()).execute(
+    found = GetDeveloper(fake, EchoPageLinks(), FakePlaces()).execute(
         GetDeveloperRequest(
             developer=DeveloperSlug("atal"), city=CitySlug("krakow"), limit=InvestmentsLimit(2)
         )
@@ -62,7 +63,7 @@ def test_a_developer_is_one_request_with_its_links() -> None:
 
 
 def test_a_developer_without_investments_in_a_city_points_to_the_whole_country() -> None:
-    found = GetDeveloper(FakeCatalogs(), EchoPageLinks()).execute(
+    found = GetDeveloper(FakeCatalogs(), EchoPageLinks(), FakePlaces()).execute(
         GetDeveloperRequest(
             developer=DeveloperSlug("atal"), city=CitySlug("sopot"), limit=InvestmentsLimit(20)
         )
@@ -119,18 +120,62 @@ def test_the_cities_of_the_whole_countrys_investments_are_complete_so_no_hint() 
     ],
 )
 def test_an_unknown_developer_says_where_slugs_come_from(city: str, message: str) -> None:
-    """In a city the service may answer so for a known developer without offers there
-    (T39, [H]): the message does not send the model only to check the slug."""
+    """Without a lookup that can tell (the whole country has none; in a city it failed):
+    in a city the service answers so for a known developer without offers there too
+    (T39), so the message does not send the model only to check the slug."""
     fake = FakeCatalogs(errors={f"developer nikt {city}": NotFoundError("brak")})
+    places = FakePlaces(failure=ServiceError("503"))
 
     with pytest.raises(NotFoundError) as caught:
-        GetDeveloper(fake, EchoPageLinks()).execute(
+        GetDeveloper(fake, EchoPageLinks(), places).execute(
             GetDeveloperRequest(
                 developer=DeveloperSlug("nikt"), city=CitySlug(city), limit=InvestmentsLimit(5)
             )
         )
 
     assert str(caught.value) == message
+    assert places.calls == ([] if city == "polska" else [city])
+
+
+def developer_not_found_in(city: str, places: FakePlaces) -> NotFoundError:
+    fake = FakeCatalogs(errors={f"developer atal {city}": NotFoundError("brak", detail="d")})
+    with pytest.raises(NotFoundError) as caught:
+        GetDeveloper(fake, EchoPageLinks(), places).execute(
+            GetDeveloperRequest.parse(developer_slug="atal", city=city)
+        )
+    assert caught.value.detail == "d"
+    return caught.value
+
+
+def test_a_developer_in_an_unknown_place_says_there_is_no_such_place() -> None:
+    """T39: the page of a developer in a city the service does not know."""
+    places = FakePlaces()
+
+    found = developer_not_found_in("nieistniejace-miasto", places)
+
+    assert str(found) == (
+        unknown_place_message("nieistniejace-miasto")
+        + " Potem sprawdź developer_slug (search_developers)."
+    )
+    assert places.calls == ["nieistniejace-miasto"]
+
+
+def test_a_developer_in_a_known_place_has_no_offers_there_or_another_slug() -> None:
+    found = developer_not_found_in(VILLAGE.slug, FakePlaces.knowing(VILLAGE))
+
+    assert str(found) == (
+        "Miejscowość 'Ignatki-osiedle' istnieje, ale serwis nie ma dla niej aktywnych ofert "
+        "tego dewelopera. Sprawdź developer_slug (search_developers) albo spróbuj city=polska "
+        "(cała Polska)."
+    )
+
+
+def test_the_whole_country_never_looks_up_a_place() -> None:
+    places = FakePlaces()
+
+    developer_not_found_in("polska", places)
+
+    assert places.calls == []
 
 
 def test_the_market_and_developer_arguments_with_their_defaults() -> None:

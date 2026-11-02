@@ -67,12 +67,19 @@ DEVELOPER_DOM_DEVELOPMENT_WARSZAWA_20261031 = (
 3 cities with a count of thousands (``"1 816"``)."""
 DEVELOPER_UNKNOWN_POLSKA_20261031 = FIXTURES / "developer_unknown_polska_20261031.rsc"
 """``/ceny-ofertowe/polska/deweloperzy/nieistniejacy-deweloper``: 200, the 404 digest."""
+DEVELOPER_UNKNOWN_CITY_20261102 = FIXTURES / "developer_unknown_city_20261102.rsc"
+"""``/ceny-ofertowe/nieistniejace-miasto/deweloperzy/atal`` (T39): 200 without the
+developer's props and without the 404 digest; its error row is a redirect to the
+developer's page for the whole country (``NEXT_REDIRECT;replace;/ceny-ofertowe/polska/
+deweloperzy/atal;308;``)."""
 STATS_GOV_WARSZAWA_20261031 = FIXTURES / "stats_gov_warszawa_20261031.rsc"
 """``/statystyki/warszawa/dane-rzadowe``: ``blocks.govSections`` ×8, ``data``, ``monthlyData``."""
 STATS_GOV_POLSKA_20261031 = FIXTURES / "stats_gov_polska_20261031.rsc"
 """``/statystyki/polska/dane-rzadowe``: ``govSections`` ×9, the NBP grid of cities."""
 STATS_GOV_7_MIAST_20261031 = FIXTURES / "stats_gov_7_miast_20261031.rsc"
 """``/statystyki/7-miast/dane-rzadowe``: an aggregate, ``govSections`` ×8."""
+STATS_GOV_WROCLAW_20261030 = FIXTURES / "stats_gov_wroclaw_20261030.rsc"
+"""``/statystyki/wroclaw/dane-rzadowe``: a second city, the same 8 ``govSections``."""
 STATS_TX_WARSZAWA_20261031 = FIXTURES / "stats_tx_warszawa_20261031.rsc"
 """``/statystyki/warszawa/transakcje``: ``view`` (``monthly`` ×118), ``latestSummary``."""
 STATS_TX_KARPACZ_20261031 = FIXTURES / "stats_tx_karpacz_20261031.rsc"

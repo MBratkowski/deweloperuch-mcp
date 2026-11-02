@@ -11,17 +11,18 @@
   "results": [
     {
       "is_error": true,
-      "text": "Serwis nie zna dzielnicy 'Nieistniejąca Dzielnica' w mieście 'warszawa'. Podaj nazwę dzielnicy tak, jak zwraca ją search_locations (kind=district, pole name), razem z city_slug jej miasta.",
+      "text": "Serwis nie zna dzielnicy 'Nieistniejąca Dzielnica' w mieście 'warszawa'. Znane dzielnice tego miasta: Białołęka, Praga-Północ, Mokotów, Targówek, Bemowo, Włochy, Praga-Południe, Ursus, Ursynów, Wola, Bielany, Ochota, Śródmieście, Rembertów, Wawer, Wilanów, Wesoła, Żoliborz. Podaj w district jedną z nich albo szukaj bez district.",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "NotFoundError: Serwis nie zna dzielnicy 'Nieistniejąca Dzielnica' w mieście 'warszawa'. Podaj nazwę dzielnicy tak, jak zwraca ją search_locations (kind=district, pole name), razem z city_slug jej miasta. Szczegóły: /ceny-ofertowe/warszawa/nieistniejaca-dzielnica/mieszkania: brak propsów 'sales', 'serverPaginationData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
+      "NotFoundError: Serwis nie zna dzielnicy 'Nieistniejąca Dzielnica' w mieście 'warszawa'. Znane dzielnice tego miasta: Białołęka, Praga-Północ, Mokotów, Targówek, Bemowo, Włochy, Praga-Południe, Ursus, Ursynów, Wola, Bielany, Ochota, Śródmieście, Rembertów, Wawer, Wilanów, Wesoła, Żoliborz. Podaj w district jedną z nich albo szukaj bez district. Szczegóły: /ceny-ofertowe/warszawa/nieistniejaca-dzielnica/mieszkania: brak propsów 'sales', 'serverPaginationData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/nieistniejaca-dzielnica/mieszkania?perPage=10&_rsc= [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/nieistniejaca-dzielnica/mieszkania?perPage=10&_rsc= [rsc: 1] [accept: */*]",
+    "GET https://deweloperuch.pl/api/city-districts?citySlug=warszawa [accept: application/json]"
   ]
 }

@@ -1,16 +1,25 @@
 """Use case ``SearchOffers`` (D17 reference): one page of developer offers in a city or in
 one of its districts, with what to do next and the links of D12."""
 
-from dataclasses import dataclass
+from contextlib import AbstractContextManager, nullcontext
+from dataclasses import dataclass, replace
 from typing import Self
 
-from deweloperuch_mcp.models.errors import InvalidInputError, TrueOrFalse, ValueName
+from deweloperuch_mcp.models.district import District
+from deweloperuch_mcp.models.errors import (
+    InvalidInputError,
+    NotFoundError,
+    ServiceError,
+    TrueOrFalse,
+    ValueName,
+)
 from deweloperuch_mcp.models.offer import OffersCity, OfferSearchCriteria, OfferSearchPage
 from deweloperuch_mcp.models.values import (
     BROWSABLE_PAGES,
     DEFAULT_PAGE_SIZE,
     PAGE_SIZES,
     AreaRange,
+    CitySlug,
     DistrictName,
     OfferSort,
     OfferStatus,
@@ -19,9 +28,15 @@ from deweloperuch_mcp.models.values import (
     PricePerM2Range,
     PriceRange,
 )
-from deweloperuch_mcp.usecases.ports import OfferCatalog, PageLinks
+from deweloperuch_mcp.usecases.ports import (
+    DistrictDirectory,
+    OfferCatalog,
+    PageLinks,
+    PlaceDirectory,
+)
 from deweloperuch_mcp.usecases.support.arguments import ParameterCheck
 from deweloperuch_mcp.usecases.support.failures import ReportedAs
+from deweloperuch_mcp.usecases.support.place_check import PlaceCheck
 
 WHOLE_COUNTRY_OFFERS = (
     "city=polska nie działa przy wyszukiwaniu ofert: serwis nie ma jednej listy ofert całej "
@@ -30,6 +45,9 @@ WHOLE_COUNTRY_OFFERS = (
 )
 """[P 2026-10-29] pages-rsc.md: the service's list of Poland is a list of cities (308 to
 ``/ceny-ofertowe/polska/miasta``), not of offers."""
+
+LISTED_DISTRICTS = 25
+"""The most district names a refusal of an unknown district lists."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -122,22 +140,47 @@ class SearchOffersResult:
 
 class SearchOffers:
     """One page of developer offers in a city or in one of its districts; the page says how
-    much of the result can be browsed at all (D4)."""
+    much of the result can be browsed at all (D4). A district the list does not know is
+    looked up among the districts the service gives for the city (``_listed_district``)."""
 
-    def __init__(self, catalog: OfferCatalog, links: PageLinks) -> None:
+    def __init__(
+        self,
+        catalog: OfferCatalog,
+        links: PageLinks,
+        districts: DistrictDirectory,
+        places: PlaceDirectory,
+    ) -> None:
         self._catalog = catalog
         self._links = links
+        self._districts = districts
+        self._places = places
 
     def execute(self, request: SearchOffersRequest) -> SearchOffersResult:
         criteria = request.criteria
-        with ReportedAs(self._subject(criteria), not_found=self._not_found(criteria)):
-            page = self._catalog.search(criteria)
+        try:
+            with (
+                self._unknown_city(criteria),
+                ReportedAs(self._subject(criteria), not_found=self._not_found(criteria)),
+            ):
+                page = self._catalog.search(criteria)
+        except NotFoundError as unknown:
+            if criteria.district is None:
+                raise
+            criteria, page = self._listed_district(criteria, criteria.district, unknown)
         return SearchOffersResult(
             criteria=criteria,
             page=page,
             list_url=self._links.offers_list(criteria),
             investment_urls=tuple(self._links.investment(item.investment) for item in page.items),
         )
+
+    def _unknown_city(self, criteria: OfferSearchCriteria) -> AbstractContextManager[None]:
+        """The first page of a city's list the service does not know: a wrong slug, or a
+        place without offers (``PlaceCheck``, one more request). A district's list and a
+        later page keep their own "not found" (``_not_found``)."""
+        if criteria.district is None and criteria.page.value == 1:
+            return PlaceCheck(self._places, criteria.city, what="ofert")
+        return nullcontext()
 
     @staticmethod
     def _subject(criteria: OfferSearchCriteria) -> str:
@@ -158,8 +201,8 @@ class SearchOffers:
         else:
             unknown = f"nie zna dzielnicy {district.text!r} w mieście {city!r}"
             fix = (
-                "podaj nazwę dzielnicy tak, jak zwraca ją search_locations (kind=district, pole "
-                "name), razem z city_slug jej miasta"
+                "podaj nazwę dzielnicy z search_locations (kind=district, pole name), razem z "
+                "city_slug jej miasta"
             )
         if criteria.page.value > 1:
             return (
@@ -168,3 +211,52 @@ class SearchOffers:
                 f"{fix}."
             )
         return f"Serwis {unknown}. {fix[0].upper()}{fix[1:]}."
+
+    def _listed_district(
+        self, criteria: OfferSearchCriteria, district: DistrictName, unknown: NotFoundError
+    ) -> tuple[OfferSearchCriteria, OfferSearchPage]:
+        """The list of a district the service did not know (``unknown``), after one look at
+        the districts it gives for the city [P 2026-11-01, endpoints.md, city-districts]:
+
+        - the district under another slug than the client made of its name: its list,
+          asked once more with the service's slug (and that search's criteria);
+        - the district under the same slug (a page past the last one): ``unknown``;
+        - no such district: the first ``LISTED_DISTRICTS`` names, in the service's order,
+          or that it gives none for the city.
+
+        ``unknown`` also stands when the districts cannot be read or the second list is not
+        known either; STOP, limiter and session errors pass unchanged.
+        """
+        try:
+            listed = self._districts.districts(criteria.city)
+        except (NotFoundError, ServiceError):
+            raise unknown from None
+        named = next((found for found in listed if found.is_named(district)), None)
+        if named is None:
+            refusal = self._unlisted(district, criteria.city, listed)
+            raise NotFoundError(refusal, detail=unknown.detail) from None
+        retry = replace(criteria, district=DistrictName(named.slug))
+        # The same list address is the same request: the slug the client made of the name
+        # (``PageLinks.offers_list`` is the request without its RSC token).
+        if self._links.offers_list(retry) == self._links.offers_list(criteria):
+            raise unknown
+        with ReportedAs(self._subject(criteria), not_found=str(unknown)):
+            return retry, self._catalog.search(retry)
+
+    @staticmethod
+    def _unlisted(district: DistrictName, city: CitySlug, listed: tuple[District, ...]) -> str:
+        """Why ``district`` is refused, with the names the service gives for ``city``. The
+        service's ``count`` of a district only orders them and is never shown."""
+        unknown = f"Serwis nie zna dzielnicy {district.text!r} w mieście {city.value!r}"
+        if not listed:
+            return (
+                f"{unknown} i nie podaje dla tego miasta żadnych dzielnic z ofertami. Szukaj bez "
+                "district albo sprawdź city_slug w search_locations."
+            )
+        shown = listed[:LISTED_DISTRICTS]
+        counted = f" ({len(shown)} z {len(listed)})" if len(shown) < len(listed) else ""
+        return (
+            f"{unknown}. Znane dzielnice tego miasta{counted}: "
+            f"{', '.join(found.name for found in shown)}. Podaj w district jedną z nich albo "
+            "szukaj bez district."
+        )

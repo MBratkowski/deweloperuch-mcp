@@ -1,7 +1,7 @@
 {
   "server": {
     "name": "deweloperuch",
-    "instructions": "Dane z deweloperuch.pl o mieszkaniach w Polsce. Typowy plan: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście albo dzielnicy, z filtrami), potem get_offer (oferta z historią ceny) albo get_investment (oferty jednej inwestycji). Projekty w mieście i slug inwestycji po nazwie daje search_investments, slug dewelopera po nazwie search_developers (dalej get_developer). Ocena ceny oferty: get_offer (price_flags), potem porównaj z get_market_statistics albo estimate_property_value.\n\nTrzy rodzaje cen, nie mieszaj ich: ofertowe deweloperów (search_offers, get_offer, search_investments, get_investment, get_developer, get_market_statistics); transakcyjne z rejestru RCN (get_transaction_statistics, rank_locations, get_building, estimate_property_value; najnowsze okresy są niepełne, get_transaction_statistics oznacza je incomplete, a jego miesiące to tylko rynek wtórny); oficjalne NBP, GUS i Eurostatu, obok cen także mieszkania oddane, bezrobocie i wynagrodzenia (get_government_statistics). Jego location: polska, agregat (np. 7-miast) albo slug miasta (małe litery, bez polskich znaków, myślniki); search_locations tylko pomocniczo.\n\nSerwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Gdy narzędzie odrzuci argumenty, popraw wskazane pola zgodnie z komunikatem i ponów. Gdy błąd mówi, że serwis mógł się zmienić, nie ponawiaj tego wywołania i powiedz o tym użytkownikowi; inne narzędzia mogą nadal działać. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert."
+    "instructions": "Dane z deweloperuch.pl o mieszkaniach w Polsce. Typowy plan: search_locations (nazwa miejsca -> city_slug), search_offers (oferty w mieście albo dzielnicy, z filtrami), potem get_offer (oferta z historią ceny) albo get_investment (oferty jednej inwestycji). Projekty w mieście i slug inwestycji po nazwie daje search_investments, slug dewelopera po nazwie search_developers (dalej get_developer). Ocena ceny oferty: get_offer (price_flags), potem porównaj z get_market_statistics albo estimate_property_value.\n\nTrzy rodzaje cen, nie mieszaj ich: ofertowe deweloperów (search_offers, get_offer, search_investments, get_investment, get_developer, get_market_statistics); transakcyjne z rejestru RCN (get_transaction_statistics, rank_locations bez indicator, get_building, estimate_property_value; najnowsze okresy są niepełne, get_transaction_statistics oznacza je incomplete, a jego miesiące to tylko rynek wtórny); oficjalne NBP, GUS i Eurostatu, obok cen także mieszkania oddane, bezrobocie i wynagrodzenia (get_government_statistics; porównanie wielu miast w jednym okresie: rank_locations z indicator). location w get_government_statistics: polska, agregat (np. 7-miast) albo slug miasta (małe litery, bez polskich znaków, myślniki); search_locations tylko pomocniczo.\n\nSerwis jest projektem społecznym: pytaj oszczędnie i zawężaj filtry zamiast przeglądać kolejne strony. Gdy błąd narzędzia zawiera STOP, przestań używać tych narzędzi, niczego nie ponawiaj, nie szukaj obejścia i powiedz o tym użytkownikowi, podając powód z komunikatu. Dalsze kroki należą do użytkownika; sam niczego nie odblokowuj ani nie uruchamiaj ponownie. Gdy narzędzie odrzuci argumenty, popraw wskazane pola zgodnie z komunikatem i ponów. Gdy błąd mówi, że serwis mógł się zmienić, nie ponawiaj tego wywołania i powiedz o tym użytkownikowi; inne narzędzia mogą nadal działać. Gdy błąd mówi, że miejscowość istnieje, ale serwis nie ma dla niej danych, nie zgaduj innych slugów: powiedz to użytkownikowi. Pola kończące się na _url to linki do stron deweloperuch.pl: podawaj je użytkownikowi, np. w tabeli ofert."
   },
   "tools": [
     {
@@ -283,7 +283,7 @@
               }
             ],
             "default": null,
-            "description": "Nazwa dzielnicy dokładnie tak, jak podaje ją search_locations (kind=district, pole name), np. Mokotów, Praga-Południe; razem z city_slug miasta tej dzielnicy.",
+            "description": "Nazwa dzielnicy, np. Mokotów albo Praga-Południe (wielkość liter, polskie znaki, spacje i myślniki nie mają znaczenia); razem z city_slug jej miasta. Lista dzielnic: search_locations (kind=district).",
             "title": "Dzielnica"
           },
           "price_dropped": {
@@ -2897,13 +2897,13 @@
     {
       "name": "rank_locations",
       "title": "Ranking miast i powiatów",
-      "description": "Ranking miejscowości (level=city) albo powiatów (level=powiat) w Polsce według transakcji z Rejestru Cen Nieruchomości (RCN): liczba transakcji i cena transakcyjna za m². Dla porównania wielu miast: to narzędzie; dla trendu jednego miasta w czasie: get_transaction_statistics. To ceny transakcyjne, nie ofertowe; oferty deweloperów daje search_offers.\n\nZwraca min_transactions (zastosowany próg), total (miejsca z co najmniej tyloma transakcjami), returned, truncated, hint i items (name, city_slug albo powiat_id, transaction_count, price_per_m2, area_m2, price); dla city także ranking_url (strona rankingu na deweloperuch.pl: podaj ją użytkownikowi jako link). powiat_id jest informacyjny: żadne narzędzie go nie przyjmuje.\n\nOgraniczenia: serwis nie podaje okresu ani tego, czy ceny i metraż to średnie, czy mediany: przedstawiaj je jako wartości podane przez serwis. Liczby transakcji powiatów obejmują wiele lat: służą tylko do uporządkowania, nie są bieżącym wolumenem; nie porównuj ich z liczbami miejscowości. Sortowanie po cenie domyślnie pomija miejsca poniżej 20 transakcji (cena bywa przypadkowa); min_transactions=0 pokazuje wszystkie, np. 50 daje stabilniejsze ceny.",
+      "description": "Porównanie wielu miejsc w jednym okresie; nie zwraca szeregu czasowego. Dwa tryby: (1) bez indicator: ranking miejscowości (level=city) albo powiatów (level=powiat) wg transakcji z RCN (liczba, cena za m²); (2) z indicator: ranking 66 miast na prawach powiatu wg wskaźnika GUS lub NBP. Trend jednego miasta w czasie: get_transaction_statistics (RCN) albo get_government_statistics (GUS, NBP). Bez indicator to ceny transakcyjne z RCN, nie ofertowe; nbp_price_per_m2 to oficjalna cena NBP, nie RCN.\n\nZwraca total, returned, truncated, hint i items. Transakcje: min_transactions (zastosowany próg), items (name, city_slug albo powiat_id, transaction_count, price_per_m2, area_m2, price); dla city ranking_url (link dla użytkownika); dla powiat market i okres 12 miesięcy period_start–period_end. Wskaźnik: indicator, unit, period, items (name, city_slug, value, stats_url: link dla użytkownika).\n\nOgraniczenia: serwis nie mówi, czy ceny i metraż to średnie, czy mediany. Okresu miejscowości serwis nie podaje; nie porównuj liczb transakcji miejscowości i powiatów. Sortowanie po cenie domyślnie pomija miejsca poniżej 20 transakcji (cena bywa przypadkowa); min_transactions=0 pokazuje wszystkie.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "level": {
             "default": "city",
-            "description": "city: miejscowości (miasta, także małe miasteczka i wsie), domyślnie; powiat: powiaty (bez ranking_url i bez odpowiednika w search_locations).",
+            "description": "city: miejscowości (miasta, także małe miasteczka i wsie), domyślnie; powiat: powiaty, tylko transakcje (market); powiaty nie mają city_slug ani ranking_url i nie ma ich w search_locations. Z indicator tylko city.",
             "enum": [
               "city",
               "powiat"
@@ -2912,15 +2912,24 @@
             "type": "string"
           },
           "sort": {
-            "default": "transactions_desc",
-            "description": "transactions_desc: najwięcej transakcji (domyślnie); price_per_m2_desc: najwyższa cena za m²; price_per_m2_asc: najniższa cena za m². Miejsca bez ceny są na końcu.",
-            "enum": [
-              "transactions_desc",
-              "price_per_m2_desc",
-              "price_per_m2_asc"
+            "anyOf": [
+              {
+                "enum": [
+                  "transactions_desc",
+                  "price_per_m2_desc",
+                  "price_per_m2_asc",
+                  "value_desc",
+                  "value_asc"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
             ],
-            "title": "Kolejność",
-            "type": "string"
+            "default": null,
+            "description": "transactions_desc: najwięcej transakcji (domyślnie bez indicator); price_per_m2_desc, price_per_m2_asc: najwyższa, najniższa cena za m² (miejsca bez ceny na końcu); value_desc (domyślnie z indicator), value_asc: najwyższa, najniższa wartość wskaźnika, tylko z indicator.",
+            "title": "Kolejność"
           },
           "limit": {
             "default": 20,
@@ -2942,8 +2951,48 @@
               }
             ],
             "default": null,
-            "description": "Brak = próg domyślny: 20 przy sortowaniu po cenie, 0 przy transactions_desc. 0 = wszystkie miejsca. Pomija miejsca z mniejszą liczbą transakcji; np. 50 daje stabilniejsze ceny.",
+            "description": "Brak = próg domyślny: 20 przy sortowaniu po cenie, 0 przy transactions_desc. 0 = wszystkie miejsca. Pomija miejsca z mniejszą liczbą transakcji; np. 50 daje stabilniejsze ceny. Nie działa z indicator.",
             "title": "Najmniej transakcji"
+          },
+          "market": {
+            "anyOf": [
+              {
+                "enum": [
+                  "secondary",
+                  "primary",
+                  "all"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Tylko level=powiat. secondary: rynek wtórny (domyślnie); primary: pierwotny; all: oba rynki w zestawieniu serwisu (jego liczba transakcji nie zawsze równa się secondary + primary). Powiaty bez danych dla rynku są pominięte (hint).",
+            "title": "Rynek"
+          },
+          "indicator": {
+            "anyOf": [
+              {
+                "enum": [
+                  "unemployment_rate",
+                  "average_wage",
+                  "dwellings_completed",
+                  "dwellings_started",
+                  "average_dwelling_area",
+                  "natural_increase",
+                  "nbp_price_per_m2"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Ranking 66 miast na prawach powiatu według wskaźnika zamiast transakcji (bez level=powiat, min_transactions i market): unemployment_rate: stopa bezrobocia rejestrowanego (%) w miesiącu; average_wage: przeciętne miesięczne wynagrodzenie brutto (PLN), średnia za rok period (jak dataset=wages w get_government_statistics); dwellings_completed, dwellings_started: mieszkania oddane, rozpoczęte w 12 miesiącach do miesiąca period; average_dwelling_area: powierzchnia mieszkania (m²) podana przez serwis za okres period; nie porównuj jej z average_area z get_government_statistics (inna definicja); natural_increase: przyrost naturalny (osoby) w roku; nbp_price_per_m2: cena transakcyjna rynku wtórnego wg NBP (PLN/m²) w kwartale, tylko 17 miast. Miasta bez wartości są pominięte (hint).",
+            "title": "Wskaźnik"
           }
         },
         "title": "rank_locationsArguments",
@@ -2985,9 +3034,17 @@
                 "title": "Powiat Id"
               },
               "transaction_count": {
-                "description": "Liczba transakcji wg serwisu; okresu serwis nie podaje (dla powiatów wiele lat: tylko do uporządkowania).",
-                "title": "Transaction Count",
-                "type": "integer"
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Liczba transakcji wg serwisu: dla powiatu w okresie period_start–period_end, dla miejscowości w okresie, którego serwis nie podaje.",
+                "title": "Transaction Count"
               },
               "price_per_m2": {
                 "anyOf": [
@@ -3027,11 +3084,36 @@
                 "default": null,
                 "description": "Cena transakcyjna w PLN, podana przez serwis.",
                 "title": "Price"
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Wartość wskaźnika (indicator) w jednostce unit za okres period.",
+                "title": "Value"
+              },
+              "stats_url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "description": "Link do strony wskaźnika miasta na deweloperuch.pl (tylko z indicator): podaj go użytkownikowi.",
+                "title": "Stats Url"
               }
             },
             "required": [
-              "name",
-              "transaction_count"
+              "name"
             ],
             "title": "RankedLocationItem",
             "type": "object"
@@ -3049,12 +3131,98 @@
             "type": "string"
           },
           "min_transactions": {
-            "description": "Zastosowany próg: min_transactions z argumentu, a bez niego domyślny: 20 przy sortowaniu po cenie, 0 przy transactions_desc (0 = wszystkie miejsca).",
-            "title": "Min Transactions",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Zastosowany próg: min_transactions z argumentu, a bez niego domyślny: 20 przy sortowaniu po cenie, 0 przy transactions_desc (0 = wszystkie miejsca). Brak przy indicator.",
+            "title": "Min Transactions"
+          },
+          "market": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Rynek rankingu powiatów: secondary, primary albo all.",
+            "title": "Market"
+          },
+          "period_start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Pierwszy dzień okresu transakcji powiatów (RRRR-MM-01).",
+            "title": "Period Start"
+          },
+          "period_end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Ostatni miesiąc okresu transakcji powiatów (RRRR-MM), wliczony w okres.",
+            "title": "Period End"
+          },
+          "indicator": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Wskaźnik rankingu, jak w argumencie.",
+            "title": "Indicator"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Jednostka value: %, PLN/mies., mieszkania (suma 12 miesięcy), m², osoby albo PLN/m².",
+            "title": "Unit"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Okres wartości wskaźnika: miesiąc (RRRR-MM), kwartał (RRRR-Qn) albo rok (RRRR); dla dwellings_completed i dwellings_started ostatni miesiąc okna 12 miesięcy.",
+            "title": "Period"
           },
           "total": {
-            "description": "Wszystkie miejsca tego poziomu z co najmniej min_transactions transakcji.",
+            "description": "Wszystkie miejsca spełniające kryteria: z co najmniej min_transactions transakcji, z danymi dla market albo z wartością wskaźnika.",
             "title": "Total",
             "type": "integer"
           },
@@ -3078,7 +3246,7 @@
               }
             ],
             "default": null,
-            "description": "Co zrobić, gdy wynik jest obcięty albo pusty, oraz czy przy sortowaniu po cenie pominięto małe miejsca (domyślny próg).",
+            "description": "Co zrobić, gdy wynik jest obcięty albo pusty, oraz co pominięto: małe miejsca przy sortowaniu po cenie (domyślny próg), powiaty bez danych dla market, miasta bez wskaźnika.",
             "title": "Hint"
           },
           "ranking_url": {
@@ -3091,7 +3259,7 @@
               }
             ],
             "default": null,
-            "description": "Strona rankingu miast na deweloperuch.pl (tylko level=city): podaj ją użytkownikowi jako link.",
+            "description": "Strona rankingu miast na deweloperuch.pl (tylko level=city bez indicator): podaj ją użytkownikowi jako link.",
             "title": "Ranking Url"
           },
           "items": {
@@ -3105,7 +3273,6 @@
         "required": [
           "level",
           "sort",
-          "min_transactions",
           "total",
           "returned",
           "truncated",
@@ -4075,7 +4242,7 @@
     {
       "name": "get_government_statistics",
       "title": "Statystyki GUS, NBP i Eurostatu",
-      "description": "Zwraca oficjalne statystyki GUS, NBP i Eurostatu (demografia Polski) jako szeregi czasowe dla Polski, agregatu miast albo miasta na prawach powiatu: mieszkania oddane i rozpoczęte, średnią powierzchnię mieszkań deweloperskich, ceny m² wg NBP, bezrobocie, wynagrodzenia, demografię i ludność (zestawy: parametr dataset). Użyj jako kontekstu rynku; ofert i cen konkretnych mieszkań tu nie ma (search_offers), a ceny z rejestru RCN daje get_transaction_statistics.\n\nZwraca periods (od najstarszego) i series (series_id, label, unit, values wyrównane z periods; null = brak danych) oraz frequency, source, total, returned, truncated, available_from, note i stats_url (sekcja strony na deweloperuch.pl: podaj ją użytkownikowi jako link).\n\nOgraniczenia: domyślnie ostatnie 12 okresów; truncated=true znaczy, że są starsze (zwiększ periods, najwyżej 120). nbp_prices: tylko 3 agregaty i część dużych miast (np. warszawa, krakow), nie polska. Nie każdy zestaw jest dostępny dla każdej lokalizacji (błąd wskaże, co podać); dane GUS i NBP są publikowane z opóźnieniem, ostatni okres bywa sprzed kilku tygodni, miesięcy, a dla demografii Polski nawet roku. Przeczytaj note: ostatni okres bywa niepełny.",
+      "description": "Zwraca oficjalne statystyki GUS, NBP i Eurostatu (demografia Polski) jako szeregi czasowe dla Polski, agregatu miast albo miasta na prawach powiatu: mieszkania oddane i rozpoczęte, średnią powierzchnię mieszkań deweloperskich, ceny m² wg NBP, bezrobocie, wynagrodzenia, demografię i ludność (parametr dataset). Ofert mieszkań tu nie ma (search_offers), ceny z rejestru RCN daje get_transaction_statistics, a porównanie wielu miast w jednym okresie rank_locations z indicator.\n\nZwraca periods (od najstarszego) i series (series_id, label, unit, values wyrównane z periods; null = brak danych) oraz frequency, source, total, returned, truncated, available_from, note i stats_url (sekcja strony na deweloperuch.pl: podaj ją użytkownikowi jako link).\n\nOgraniczenia: domyślnie ostatnie 12 okresów; truncated=true: są starsze (zwiększ periods, najwyżej 120). nbp_prices: tylko 3 agregaty i część dużych miast (np. warszawa, krakow), nie polska. Nie każdy zestaw jest dostępny dla każdej lokalizacji (błąd wskaże, co podać); dane GUS i NBP są publikowane z opóźnieniem: ostatni okres bywa sprzed kilku tygodni lub miesięcy, dla demografii Polski nawet roku. Przeczytaj note: ostatni okres bywa niepełny.",
       "inputSchema": {
         "type": "object",
         "properties": {

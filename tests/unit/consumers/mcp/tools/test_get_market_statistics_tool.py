@@ -5,9 +5,16 @@ import respx
 from mcp.server.mcpserver import MCPServer
 
 from deweloperuch_mcp import bootstrap
+from deweloperuch_mcp.usecases.get_market_statistics import ONE_CITY
 from support.checks.leaks import SIZE_BUDGET
-from support.providers.error_answers import CHANGED_SERVICE, removed_route
+from support.providers.error_answers import (
+    CHANGED_SERVICE,
+    UNKNOWN_CITY_ERROR,
+    removed_route,
+    unknown_entity,
+)
 from support.providers.mcp import call, calls, data, keys, text
+from support.providers.routes.city_lookup import UNKNOWN_PLACE_MESSAGE, VILLAGE, failed_lookup_route
 from support.providers.routes.offer_snapshot import OFFER_SNAPSHOT_PATH, offer_snapshot_routes
 from support.providers.rsc import UNKNOWN_CITY
 from support.providers.service import PAGES
@@ -130,12 +137,21 @@ def test_the_market_never_shows_single_offers_and_fits_its_budget(
             "polskich znaków (np. warszawa, sopot; nie polska); podano 'Kraków'.",
             0,
         ),
-        (
-            UNKNOWN_CITY,
-            f"Serwis nie zna miasta '{UNKNOWN_CITY}' albo nie ma w nim ofert. Podaj city_slug "
-            "z search_locations (miejscowości z offer_count=0 nie mają statystyk; statystyki "
+        pytest.param(UNKNOWN_CITY, f"{UNKNOWN_PLACE_MESSAGE} {ONE_CITY}", 2, id="unknown-place"),
+        pytest.param(
+            VILLAGE,
+            "Miejscowość 'Ignatki-osiedle' istnieje, ale serwis nie ma dla niej statystyk "
+            "rynku. Nie ponawiaj; powiedz to użytkownikowi.",
+            2,
+            id="known-place",
+        ),
+        pytest.param(
+            "atlantyda",
+            "Serwis nie zna miasta 'atlantyda' albo nie ma w nim ofert. Podaj city_slug z "
+            "search_locations (miejscowości z offer_count=0 nie mają statystyk; statystyki "
             "rynku są tylko dla jednego miasta).",
-            1,
+            2,
+            id="lookup-failed",
         ),
     ],
 )
@@ -147,6 +163,11 @@ def test_the_market_of_the_whole_country_or_an_unknown_city(
     sent: int,
 ) -> None:
     offer_snapshot_routes(service)
+    failed_lookup_route(service, "atlantyda")
+    for unknown in (VILLAGE, "atlantyda"):  # answered as UNKNOWN_CITY's [P 2026-10-31]
+        service.get(path=OFFER_SNAPSHOT_PATH + unknown).respond(
+            404, **unknown_entity(UNKNOWN_CITY_ERROR)
+        )
 
     result = call(server, "get_market_statistics", city=city)
 

@@ -58,6 +58,11 @@ CITIES_CHART = "ceny-w-miastach"
 HERO_PROPS = ("developerSlug", "developerName", "investments")
 """The props of the ``hero`` element that are read: the developer and its investments."""
 
+REDIRECT_DIGEST = "NEXT_REDIRECT"
+"""The first field of the ``digest`` of a page's redirect in its error row,
+``NEXT_REDIRECT;<kind>;<path>;<status>;`` [P 2026-11-02,
+tests/fixtures/rsc/developer_unknown_city_20261102.rsc]."""
+
 INVESTMENTS_TIP = "inwestycje"
 """The ``key`` of the tip row with a city's number of investments [P 2026-10-31]."""
 
@@ -197,14 +202,16 @@ class DeveloperPageDto(Dto):
     cities: CitiesChartDto | None
 
     @classmethod
-    def from_payload(cls, payload: str | bytes, *, path: str) -> Self:
+    def from_payload(cls, payload: str | bytes, *, path: str, country: str | None = None) -> Self:
         """The developer, its investments and its cities, from the page at ``path``.
 
         The developer and its investments are the props of the first element held by a
         prop ``hero``; a name counts when its value is not null and no ``$…`` reference, and
         ``investments`` when it is a list [P 2026-10-31]. ``NotFoundError`` for the page of
-        a developer the service does not know (Next.js's 404 marker [P 2026-10-31]);
-        ``UnexpectedResponseError`` for a page without them and without the marker.
+        a developer the service does not know (Next.js's 404 marker [P 2026-10-31]) and for
+        a city's page that sends the reader on to ``country``, the developer's page for the
+        whole country (``None`` on that page itself); ``UnexpectedResponseError`` for a page
+        without them and without either.
         """
         hero: dict[str, Any] | None = None
         chart: dict[str, Any] | None = None
@@ -219,7 +226,7 @@ class DeveloperPageDto(Dto):
         found = {name: value for name, value in (hero or {}).items() if cls._is_data(name, value)}
         absent = [name for name in HERO_PROPS if name not in found]
         if absent:
-            raise cls._without_developer(payload, path, absent, names)
+            raise cls._without_developer(payload, path, absent, names, country)
         return Dto.validated(cls, {**found, "cities": chart}, f"{path} (profil dewelopera)")
 
     def to_model(self, city: CitySlug) -> DeveloperProfile:
@@ -243,6 +250,12 @@ class DeveloperPageDto(Dto):
             cities=cities,
             cities_from_investments=self.cities is None,
         )
+
+    @staticmethod
+    def _redirects_to(digest: str, target: str) -> bool:
+        """``digest`` is a redirect (``NEXT_REDIRECT;<kind>;<path>;<status>;``) to ``target``."""
+        fields = digest.split(";")
+        return len(fields) >= 3 and fields[0] == REDIRECT_DIGEST and fields[2] == target
 
     @staticmethod
     def _is_element(value: object) -> bool:
@@ -273,15 +286,32 @@ class DeveloperPageDto(Dto):
 
     @staticmethod
     def _without_developer(
-        payload: str | bytes, path: str, absent: list[str], names: list[str]
+        payload: str | bytes, path: str, absent: list[str], names: list[str], country: str | None
     ) -> NotFoundError | UnexpectedResponseError:
-        """The page of a developer the service does not know (Next.js's 404 marker), or a
-        page that changed; ``names`` are the props with data the page has."""
+        """The page of a developer the service does not know (Next.js's 404 marker), the page
+        of a city the service shows nothing of the developer in (a redirect to ``country``),
+        or a page that changed; ``names`` are the props with data the page has."""
         lacks = "brak propsów " + ", ".join(repr(name) for name in absent)
-        if NOT_FOUND_DIGEST in error_digests(payload):
+        digests = error_digests(payload)
+        if NOT_FOUND_DIGEST in digests:
             return NotFoundError(
                 "Serwis nie zna żądanych danych (strona nie istnieje).",
                 detail=f"{path}: {lacks}, strona zgłasza {NOT_FOUND_DIGEST}",
+            )
+        # D21 (exception for T39): a city's page whose payload redirects to the same
+        # developer's page for the whole country reads as "not found"; every other redirect,
+        # in the payload or over HTTP (transport), stays a change of the service. Seen for a
+        # city the service does not know [P 2026-11-02,
+        # tests/fixtures/rsc/developer_unknown_city_20261102.rsc]; a known place where the
+        # developer has no offers is "not found" too [P 2026-11-02, live e2e
+        # test_developer_in_a_known_place_without_its_offers, `krakowiany`] (which marker it
+        # carried was not recorded). The use case asks whether the place exists.
+        if country is not None and any(
+            DeveloperPageDto._redirects_to(digest, country) for digest in digests
+        ):
+            return NotFoundError(
+                "Serwis nie ma tej strony (przekierowuje do strony dewelopera w całej Polsce).",
+                detail=f"{path}: {lacks}, strona przekierowuje do {country}",
             )
         data = ", ".join(names[:10]) or "brak"
         return UnexpectedResponseError(

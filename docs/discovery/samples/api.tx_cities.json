@@ -1,0 +1,54 @@
+{
+  "_request": "GET /api/map/tx-cities",
+  "_captured": "2026-11-01",
+  "response": {
+    "cities": [
+      {
+        "slug": "0261011jelenia-gora-miasto",
+        "name": "026101_1,jelenia Góra - Miasto",
+        "lat": 50.8994,
+        "lng": 15.7323,
+        "flats": 21,
+        "houses": 0,
+        "fSqm": null,
+        "fAmt": null,
+        "hSqm": null,
+        "hAmt": null,
+        "powiatId": 53,
+        "powiat": "powiat Jelenia Góra",
+        "ambiguous": false
+      },
+      {
+        "slug": "08-500-ryki",
+        "name": "08-500 Ryki",
+        "lat": 51.6241,
+        "lng": 21.9302,
+        "flats": 19,
+        "houses": 0,
+        "fSqm": null,
+        "fAmt": null,
+        "hSqm": null,
+        "hAmt": null,
+        "powiatId": 127,
+        "powiat": "powiat rycki",
+        "ambiguous": false
+      },
+      {
+        "slug": "16-070-choroszcz",
+        "name": "16-070 Choroszcz",
+        "lat": 53.1148,
+        "lng": 22.8563,
+        "flats": 0,
+        "houses": 5,
+        "fSqm": null,
+        "fAmt": null,
+        "hSqm": null,
+        "hAmt": 432500,
+        "powiatId": 246,
+        "powiat": "powiat białostocki",
+        "ambiguous": false
+      },
+      "... (16280 more, 16283 total)"
+    ]
+  }
+}

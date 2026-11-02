@@ -159,12 +159,15 @@ Dane od 2017 r.; miesiące obejmują tylko rynek wtórny.
 
 ### `deweloperuch stats cities [OPTIONS]`
 
-Pokaż ranking miejscowości albo powiatów według transakcji RCN.
+Pokaż ranking miejscowości albo powiatów według transakcji RCN albo miast według
+wskaźnika GUS lub NBP.
 
 - `--level <city|powiat>`: city: miejscowości (także małe); powiat: powiaty. [default: city]
-- `--sort <transactions_desc|price_per_m2_desc|price_per_m2_asc>`: Najwięcej transakcji albo po cenie za m² (malejąco, rosnąco). [default: transactions_desc]
+- `--sort <transactions_desc|price_per_m2_desc|price_per_m2_asc|value_desc|value_asc>`: Najwięcej transakcji (domyślnie), po cenie za m² (malejąco, rosnąco) albo, z --indicator, po wartości wskaźnika (value_desc domyślnie, value_asc).
 - `--limit <int>`: Ile pierwszych pozycji pokazać, 1–100. [default: 20]
 - `--min-transactions <int>`: Pomiń miejsca z mniejszą liczbą transakcji; domyślnie 20 przy sortowaniu po cenie, 0 po liczbie transakcji (0: wszystkie miejsca).
+- `--market <secondary|primary|all>`: Tylko --level powiat: secondary (rynek wtórny, domyślnie), primary (pierwotny) albo all (oba rynki w zestawieniu serwisu).
+- `--indicator <unemployment_rate|average_wage|dwellings_completed|dwellings_started|average_dwelling_area|natural_increase|nbp_price_per_m2>`: Ranking 66 miast na prawach powiatu według wskaźnika GUS albo NBP zamiast transakcji (bez --level powiat, --min-transactions i --market); average_wage to przeciętne miesięczne wynagrodzenie brutto, średnia za rok.
 - `--json`: Wypisz wynik jako JSON (model domenowy).
 
 ## `deweloperuch stop`

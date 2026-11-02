@@ -1,7 +1,12 @@
 """The golden cases of the MCP tool ``get_developer`` (tests/golden/mcp/<case>.json)."""
 
 from support.golden.mcp import DEVELOPER, Case, case
-from support.providers.routes.developer_profiles import developer_routes
+from support.golden.routes import lookup_failed
+from support.providers.routes.city_lookup import KNOWN_CITY
+from support.providers.routes.developer_profiles import (
+    developer_routes,
+    known_place_without_offers_route,
+)
 from support.providers.rsc import UNKNOWN_DEVELOPER
 
 CASES: dict[str, Case] = {
@@ -17,7 +22,13 @@ CASES: dict[str, Case] = {
         limit=None,
     ),
     "developer_unknown": case(
-        DEVELOPER, developer_routes, developer_slug=UNKNOWN_DEVELOPER, city="warszawa"
+        DEVELOPER,
+        (developer_routes, lookup_failed("warszawa")),
+        developer_slug=UNKNOWN_DEVELOPER,
+        city="warszawa",
+    ),
+    "developer_known_place_without_offers": case(
+        DEVELOPER, known_place_without_offers_route, developer_slug="atal", city=KNOWN_CITY
     ),
     "developer_unknown_whole_country": case(
         DEVELOPER, developer_routes, developer_slug=UNKNOWN_DEVELOPER

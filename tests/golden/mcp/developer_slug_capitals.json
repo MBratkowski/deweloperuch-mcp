@@ -17,7 +17,7 @@
   "log": [
     [
       "INFO",
-      "InvalidInputError: developer_slug: oczekiwano slug dewelopera, np. atal; podają go search_developers, search_offers i search_investments (developer_slug); podano 'ATAL'. Szczegóły: None"
+      "InvalidInputError: developer_slug: oczekiwano slug dewelopera, np. atal; podają go search_developers, search_offers i search_investments (developer_slug); podano 'ATAL'."
     ]
   ],
   "requests": []

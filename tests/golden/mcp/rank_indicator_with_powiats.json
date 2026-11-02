@@ -1,0 +1,25 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "indicator": "average_wage",
+        "level": "powiat"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "indicator działa tylko z level=city: wskaźniki GUS/NBP są tylko dla 66 miast na prawach powiatu, a dla powiatów są tylko transakcje (market). Pomiń level, aby dostać ranking miast według wskaźnika, albo pomiń indicator, aby dostać ranking powiatów według transakcji.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: indicator działa tylko z level=city: wskaźniki GUS/NBP są tylko dla 66 miast na prawach powiatu, a dla powiatów są tylko transakcje (market). Pomiń level, aby dostać ranking miast według wskaźnika, albo pomiń indicator, aby dostać ranking powiatów według transakcji."
+    ]
+  ],
+  "requests": []
+}

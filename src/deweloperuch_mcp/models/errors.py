@@ -110,6 +110,8 @@ class ValueName(StrEnum):
     RANKING_ORDER = "kolejność rankingu"
     RANKING_LIMIT = "liczba pozycji rankingu"
     MIN_TRANSACTIONS = "najmniejsza liczba transakcji"
+    RANKING_MARKET = "rynek rankingu powiatów"
+    INDICATOR = "wskaźnik rankingu miast"
     BUILDING = "budynek"
     UNITS_LIMIT = "liczba lokali w wyniku"
     TREND = "trend cen w okolicy"

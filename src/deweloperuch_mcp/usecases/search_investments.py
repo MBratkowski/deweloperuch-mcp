@@ -16,9 +16,10 @@ from deweloperuch_mcp.models.investment_summary import (
     InvestmentSummary,
 )
 from deweloperuch_mcp.models.values import CitySlug, DeveloperSlug
-from deweloperuch_mcp.usecases.ports import InvestmentDirectory, PageLinks
+from deweloperuch_mcp.usecases.ports import InvestmentDirectory, PageLinks, PlaceDirectory
 from deweloperuch_mcp.usecases.support.arguments import ParameterCheck
 from deweloperuch_mcp.usecases.support.failures import ReportedAs
+from deweloperuch_mcp.usecases.support.place_check import PlaceCheck
 
 NEEDS_CITY_OR_NAME = (
     "Podaj city (slug miasta z search_locations, np. sopot) albo name (fragment nazwy "
@@ -141,20 +142,25 @@ class SearchInvestmentsResult:
 class SearchInvestments:
     """The investments of a city (filtered, ordered and cut in the domain) or, without a
     city, the service's matches of a part of the name; the result says what it left
-    out (D4)."""
+    out (D4). A city the service does not know costs one more request, which tells a wrong
+    slug from a place without investments (``PlaceCheck``)."""
 
-    def __init__(self, directory: InvestmentDirectory, links: PageLinks) -> None:
+    def __init__(
+        self, directory: InvestmentDirectory, links: PageLinks, places: PlaceDirectory
+    ) -> None:
         self._directory = directory
         self._links = links
+        self._places = places
 
     def execute(self, request: SearchInvestmentsRequest) -> SearchInvestmentsResult:
         criteria = request.criteria
         if criteria.city is not None:
             city = criteria.city.value
-            with ReportedAs(
+            reported = ReportedAs(
                 f"Wyszukiwanie inwestycji w {city!r}",
                 not_found=f"Serwis nie zna miasta {city!r}. Podaj city_slug z search_locations.",
-            ):
+            )
+            with PlaceCheck(self._places, criteria.city, what="inwestycji"), reported:
                 investments = self._directory.in_city(criteria.city)
             search = criteria.select(investments)
         else:

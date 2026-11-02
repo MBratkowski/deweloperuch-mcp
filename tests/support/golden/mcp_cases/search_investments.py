@@ -10,7 +10,7 @@ from support.golden.mcp import (
     case,
     search_names_are,
 )
-from support.golden.routes import search_answer, search_city_is
+from support.golden.routes import lookup_failed, search_answer, search_city_is
 from support.providers.error_answers import unknown_entity
 from support.providers.routes.investment_search import investment_search_routes
 from support.providers.routes.investments import (
@@ -83,7 +83,9 @@ CASES: dict[str, Case] = {
         SEARCH, investment_search_routes, city="sopot", name="", developer_slug=" ", sort=""
     ),
     "investments_search_404": case(
-        SEARCH, search_answer(404, **unknown_entity({"error": INJECTED})), **SOPOT
+        SEARCH,
+        (search_answer(404, **unknown_entity({"error": INJECTED})), lookup_failed("sopot")),
+        **SOPOT,
     ),
     "investments_search_500": case(SEARCH, search_answer(500, text=INJECTED), **SOPOT),
     "investments_search_html": case(

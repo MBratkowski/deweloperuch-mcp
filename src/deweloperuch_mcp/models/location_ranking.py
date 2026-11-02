@@ -1,26 +1,29 @@
 """``LocationRanking``: cities and powiats ranked by their RCN transactions (D3, D13, D17).
 
-Plain Python. For every city (towns and villages included) and every powiat the service
-gives the number of its transactions and its price per m², area and price; the port
-``usecases.ports.TransactionRankingSource`` hands them over as ``LocationTransactions``. A
-ranking keeps the places with at least ``min_transactions`` (when it is not given: 20 for
-the orders by price, ``PRICE_ORDER_MIN_TRANSACTIONS``, and 0 for the order by
-transactions), orders them and cuts the list to ``limit``; the result says how many
-places there were and whether it is cut (D4)::
+Plain Python. For every city (towns and villages included) the service gives the number
+of its transactions and its price per m², area and price; for every powiat it gives the
+same on each market (secondary, primary, both) over one 12-month period. The port
+``usecases.ports.TransactionRankingSource`` hands them over as ``LocationTransactions``
+(the powiats in ``PowiatTransactions``). A ranking keeps the places with at least
+``min_transactions`` (when it is not given: 20 for the orders by price,
+``PRICE_ORDER_MIN_TRANSACTIONS``, and 0 for the order by transactions), orders them and
+cuts the list to ``limit``; the result says how many places there were and whether it is
+cut (D4)::
 
     criteria = RankingCriteria(
         order=RankingOrder.PRICE_PER_M2_DESC, min_transactions=MinTransactions(50)
     )
-    ranking = LocationRanking.of(criteria, source.locations(criteria.level))
+    ranking = LocationRanking.of(criteria, source.cities())
 
-What the figures mean is known only in part (docs/open-questions.md, T10): the service
-does not say which period they cover (it differs between the levels: a city counts far
-fewer transactions than its powiat) nor whether its averages are medians. The model
-names them after what they measure, without "average" or "median"; their changes over
-time are [H] and are not part of it.
+What the figures mean is known only in part: the service does not say whether its prices
+and areas are averages or medians (T10, T85), nor which period the figures of a city
+cover; a powiat's cover the 12 months it names [P 2026-11-01]. The model names them after
+what they measure, without "average" or "median"; their changes over time are [H] and are
+not part of it. The two orders by an indicator's value belong to
+``models.indicator_ranking``.
 """
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TypeVar
@@ -32,15 +35,15 @@ DEFAULT_RANKING_LIMIT = 20
 RANKING_LIMIT_MAX = 100
 """Most places one ranking shows."""
 TRANSACTIONS_MAX = 10_000_000
-"""Upper bound of ``min_transactions``, far above any place (powiat Warszawa: 351 314
-transactions [P 2026-10-09], sample ``api.powiat_stats``)."""
+"""Upper bound of ``min_transactions``, far above any place (Warszawa: 386 990 transactions
+over the whole register [P 2026-11-01], docs/discovery/endpoints.md, ``map/tx-cities``)."""
 # [W] tests/fixtures/api/city_tx_stats_20261015.json [P 2026-10-15]: of 2529 places 1628
 # have at most 2 transactions, 258 at least 20 and 108 at least 50, and ranked by the
 # price per m² every one of the 100 cheapest has at most 2: a price from a handful of
 # transactions is chance, not the price of a place
 # (tests/contract/api/dto/test_city_transactions_list_dto.py). 20 is the user's decision
-# of 2026-10-15; powiats rarely fall below it (one of 380: the fewest has 17
-# [P 2026-10-15]).
+# of 2026-10-15; it leaves out few powiats (31 of 364 on the secondary market, 43 of 310
+# on the primary [P 2026-11-02], tests/contract/api/dto/test_powiat_map_stats_dto.py).
 PRICE_ORDER_MIN_TRANSACTIONS = 20
 """The fewest transactions of a place ranked by its price when ``min_transactions`` is
 not given."""
@@ -66,7 +69,7 @@ class LocationTransactions:
     """The transactions of one city or powiat as the service sums them up.
 
     The prices and the area are the service's figures: averages or medians, it does not
-    say which (T10, [H]); the period they cover is not given either.
+    say which (T10, T85, [H]); the period of a city's figures is not given either.
     """
 
     name: str
@@ -80,6 +83,82 @@ class LocationTransactions:
     """The city's slug (level ``city``)."""
     powiat_id: int | None = None
     """The powiat's id in the service (level ``powiat``)."""
+
+
+class RankingMarket(StrEnum):
+    """The market of a powiat's transactions: secondary, primary or both as the service
+    counts them together (not the sum of the other two: [P 2026-11-01] equal in 80 of 303
+    powiats, T86). Cities have no market."""
+
+    SECONDARY = "secondary"
+    PRIMARY = "primary"
+    ALL = "all"
+
+    @classmethod
+    def parse(cls, value: object) -> "RankingMarket":
+        return _member(cls, ValueName.RANKING_MARKET, value)
+
+
+DEFAULT_RANKING_MARKET = RankingMarket.SECONDARY
+"""The market of a powiat ranking unless asked otherwise: the user's decision of
+2026-11-01 (the service shows it first in 343 of 380 powiats [P 2026-11-01], and the months
+of the transaction statistics are of the secondary market too)."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class TransactionPeriod:
+    """The months a powiat's figures cover: from the first day of ``start`` (``2025-11-01``)
+    to the end of the month ``end`` (``2026-10``)."""
+
+    start: str
+    end: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class PowiatTransactions:
+    """The transactions of every powiat on each market over one period.
+
+    ``powiats``: how many powiats the service lists; a powiat without figures for a market
+    is not among that market's places (``without``), never one of 0 transactions."""
+
+    period: TransactionPeriod
+    powiats: int
+    markets: Mapping[RankingMarket, tuple[LocationTransactions, ...]]
+
+    def on(self, market: RankingMarket) -> tuple[LocationTransactions, ...]:
+        """The powiats with figures for ``market``."""
+        return self.markets.get(market, ())
+
+    def without(self, market: RankingMarket) -> int:
+        """How many powiats have no figures for ``market``."""
+        return self.powiats - len(self.on(market))
+
+
+_POLISH_LETTERS = str.maketrans("ąćęłńóśźż", "acelnoszz")
+
+
+@dataclass(frozen=True)
+class PlaceNames:
+    """The names of powiats (by their id in the service) and cities (by their slug), with
+    what stands for a missing one: ``powiat {id}`` and the slug itself.
+
+    A slug is looked up without regard to case and Polish letters: the service writes one
+    city's slug in two cases (``tarnobrzeg`` and ``Tarnobrzeg`` [P 2026-11-01])."""
+
+    powiats: Mapping[int, str]
+    cities: Mapping[str, str]
+    """By slug in lowercase ASCII (``fold``)."""
+
+    def powiat(self, powiat_id: int) -> str:
+        return self.powiats.get(powiat_id) or f"powiat {powiat_id}"
+
+    def city(self, city_slug: str) -> str:
+        return self.cities.get(self.fold(city_slug)) or city_slug
+
+    @staticmethod
+    def fold(slug: str) -> str:
+        """``" ŁÓDŹ "`` -> ``lodz``: trimmed, lowercase, Polish letters as ASCII."""
+        return slug.strip().lower().translate(_POLISH_LETTERS)
 
 
 # --- what is asked for -----------------------------------------------------------------------
@@ -97,15 +176,24 @@ class RankingLevel(StrEnum):
 
 
 class RankingOrder(StrEnum):
-    """The order of a ranking; ties go to more transactions, then to the name."""
+    """The order of a ranking. By transactions or price, ties go to more transactions, then
+    to the name; by an indicator's value (``by_value``, ``models.indicator_ranking``), to
+    the name."""
 
     TRANSACTIONS_DESC = "transactions_desc"
     PRICE_PER_M2_DESC = "price_per_m2_desc"
     PRICE_PER_M2_ASC = "price_per_m2_asc"
+    VALUE_DESC = "value_desc"
+    VALUE_ASC = "value_asc"
 
     @classmethod
     def parse(cls, value: object) -> "RankingOrder":
         return _member(cls, ValueName.RANKING_ORDER, value)
+
+    @property
+    def by_value(self) -> bool:
+        """An order of an indicator's value, not of transactions."""
+        return self in (RankingOrder.VALUE_DESC, RankingOrder.VALUE_ASC)
 
     @property
     def default_min_transactions(self) -> int:
@@ -162,6 +250,19 @@ class RankingCriteria:
     limit: RankingLimit = field(default_factory=RankingLimit)
     min_transactions: MinTransactions | None = None
     """The threshold asked for; ``None``: not given."""
+    market: RankingMarket | None = None
+    """The market asked for (powiats only); ``None``: not given."""
+
+    def __post_init__(self) -> None:
+        if self.order.by_value:
+            raise ValueError(f"{self.order}: kolejność rankingu wskaźnika (indicator)")
+        if self.market is not None and self.level is not RankingLevel.POWIAT:
+            raise ValueError(f"market {self.market}: tylko ranking powiatów ma rynki")
+
+    @property
+    def powiat_market(self) -> RankingMarket:
+        """The market of a powiat ranking: ``market`` when given, else the default."""
+        return self.market or DEFAULT_RANKING_MARKET
 
     @property
     def threshold(self) -> MinTransactions:

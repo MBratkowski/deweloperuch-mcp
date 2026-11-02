@@ -10,17 +10,18 @@
   "results": [
     {
       "is_error": true,
-      "text": "Serwis nie zna miasta 'nieistniejace-miasto'. Podaj city_slug miasta z search_locations.",
+      "text": "Nie znaleziono miejscowości o city_slug 'nieistniejace-miasto'. Jeśli slug nie pochodzi z search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla niej tych danych: powiedz to użytkownikowi i nie ponawiaj.",
       "structured_content": null
     }
   ],
   "log": [
     [
       "INFO",
-      "NotFoundError: Serwis nie zna miasta 'nieistniejace-miasto'. Podaj city_slug miasta z search_locations. Szczegóły: /ceny-ofertowe/nieistniejace-miasto/mieszkania: brak propsów 'sales', 'serverPaginationData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
+      "NotFoundError: Nie znaleziono miejscowości o city_slug 'nieistniejace-miasto'. Jeśli slug nie pochodzi z search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla niej tych danych: powiedz to użytkownikowi i nie ponawiaj. Szczegóły: /ceny-ofertowe/nieistniejace-miasto/mieszkania: brak propsów 'sales', 'serverPaginationData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/nieistniejace-miasto/mieszkania?perPage=10&_rsc= [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/nieistniejace-miasto/mieszkania?perPage=10&_rsc= [rsc: 1] [accept: */*]",
+    "GET https://deweloperuch.pl/api/city-lookup?slug=nieistniejace-miasto&source=transactions [accept: application/json]"
   ]
 }

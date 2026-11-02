@@ -5,6 +5,7 @@ import httpx
 from support.builders.offers import UNKNOWN_DISTRICT, offers_page
 from support.golden.cli import FILTERS, INJECTED_BODY, NEW_FILTERS, OFFERS, Case, case, offers_fail
 from support.golden.routes import offers_answer, offers_with
+from support.providers.routes.districts import districts_route
 from support.providers.routes.offers import (
     district_route,
     offers_route,
@@ -146,7 +147,7 @@ CASES: dict[str, Case] = {
         "warszawa",
         "--district",
         UNKNOWN_DISTRICT,
-        service=(unknown_district_route, offers_route),
+        service=(unknown_district_route, districts_route, offers_route),
     ),
     "offers_search_district_blank": case(
         *OFFERS, "warszawa", "--district", " ", service=offers_route

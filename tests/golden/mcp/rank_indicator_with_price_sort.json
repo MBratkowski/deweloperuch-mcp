@@ -1,0 +1,25 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "indicator": "average_wage",
+        "sort": "price_per_m2_desc"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Z indicator sort przyjmuje value_desc (najwyższa wartość, domyślnie) albo value_asc (najniższa); pomiń sort albo podaj jedną z nich.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "InvalidInputError: Z indicator sort przyjmuje value_desc (najwyższa wartość, domyślnie) albo value_asc (najniższa); pomiń sort albo podaj jedną z nich."
+    ]
+  ],
+  "requests": []
+}

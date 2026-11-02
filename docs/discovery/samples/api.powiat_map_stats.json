@@ -1,0 +1,289 @@
+{
+  "_request": "GET /api/statystyki/powiat-map-stats",
+  "_captured": "2026-11-01",
+  "response": {
+    "v": 6,
+    "all": true,
+    "periodStart": "2025-11-01",
+    "periodEndMonth": "2026-10",
+    "quarterStart": "2026-07-01",
+    "own": true,
+    "windowEnd": "2026-10-01",
+    "rows": [
+      {
+        "id": 1,
+        "def": "oba",
+        "wtorny": {
+          "n": 21,
+          "m2": 6829,
+          "price": 390000,
+          "size": 55.9,
+          "primary": 58
+        },
+        "pierwotny": {
+          "n": 29,
+          "m2": 8362,
+          "price": 455000,
+          "size": 54.4,
+          "primary": 58
+        },
+        "oba": {
+          "n": 67,
+          "m2": 7990,
+          "price": 399000,
+          "size": 53.1,
+          "primary": 58
+        },
+        "q": {
+          "own": {
+            "wtorny": null,
+            "pierwotny": 1,
+            "oba": 1
+          },
+          "yoy": {
+            "wtorny": null,
+            "pierwotny": null,
+            "oba": 13.6
+          },
+          "wtorny": {
+            "n": [
+              3,
+              3,
+              6,
+              "... (10 more, 13 total)"
+            ],
+            "m2": [
+              6829,
+              6829,
+              7038,
+              "... (10 more, 13 total)"
+            ],
+            "hs": 164,
+            "hm": 549755806975
+          },
+          "pierwotny": {
+            "n": [
+              9,
+              15,
+              2,
+              "... (10 more, 13 total)"
+            ],
+            "m2": [
+              9070,
+              8469,
+              6288,
+              "... (10 more, 13 total)"
+            ],
+            "hs": 204,
+            "hm": 34359732479
+          },
+          "wszystko": {
+            "n": [
+              14,
+              25,
+              13,
+              "... (10 more, 13 total)"
+            ],
+            "m2": [
+              8604,
+              8324,
+              7169,
+              "... (10 more, 13 total)"
+            ],
+            "hs": 516,
+            "hm": 549755813887
+          }
+        },
+        "w": [
+          4,
+          21,
+          8298,
+          "... (3 more, 6 total)"
+        ]
+      },
+      {
+        "id": 2,
+        "def": "wtorny",
+        "wtorny": {
+          "n": 5,
+          "m2": 7246,
+          "price": 400000,
+          "size": 57.2,
+          "primary": 92.2
+        },
+        "pierwotny": {
+          "n": 59,
+          "m2": 6263,
+          "price": 284000,
+          "size": 44.9,
+          "primary": 93.7
+        },
+        "oba": {
+          "n": 77,
+          "m2": 6259,
+          "price": 284000,
+          "size": 44.9,
+          "primary": 92.2
+        },
+        "q": {
+          "own": {
+            "wtorny": null,
+            "pierwotny": null,
+            "oba": null
+          },
+          "yoy": {
+            "wtorny": null,
+            "pierwotny": null,
+            "oba": null
+          },
+          "wtorny": {
+            "n": [
+              2,
+              1,
+              1,
+              "... (10 more, 13 total)"
+            ],
+            "m2": [
+              7454,
+              5598,
+              10035,
+              "... (10 more, 13 total)"
+            ],
+            "hs": 59,
+            "hm": 134213495
+          },
+          "pierwotny": {
+            "n": [
+              1,
+              4,
+              48,
+              "... (10 more, 13 total)"
+            ],
+            "m2": [
+              6321,
+              6318,
+              6263,
+              "... (10 more, 13 total)"
+            ],
+            "hs": 194,
+            "hm": 127926127
+          },
+          "wszystko": {
+            "n": [
+              3,
+              5,
+              53,
+              "... (10 more, 13 total)"
+            ],
+            "m2": [
+              6321,
+              6316,
+              6263,
+              "... (10 more, 13 total)"
+            ],
+            "hs": 357,
+            "hm": 962072674175
+          }
+        },
+        "w": [
+          8,
+          50,
+          6241,
+          "... (3 more, 6 total)"
+        ]
+      },
+      {
+        "id": 3,
+        "def": "wtorny",
+        "wtorny": {
+          "n": 1067,
+          "m2": 12164,
+          "price": 675000,
+          "size": 56.6,
+          "primary": 73.5
+        },
+        "pierwotny": {
+          "n": 3335,
+          "m2": 9900,
+          "price": 635049,
+          "size": 62.7,
+          "primary": 75.6
+        },
+        "oba": {
+          "n": 4306,
+          "m2": 10585,
+          "price": 659000,
+          "size": 61.8,
+          "primary": 74.1
+        },
+        "q": {
+          "own": {
+            "wtorny": 1,
+            "pierwotny": 1,
+            "oba": 1
+          },
+          "yoy": {
+            "wtorny": 5.3,
+            "pierwotny": 42,
+            "oba": 36.5
+          },
+          "wtorny": {
+            "n": [
+              238,
+              308,
+              263,
+              "... (10 more, 13 total)"
+            ],
+            "m2": [
+              12674,
+              12507,
+              11967,
+              "... (10 more, 13 total)"
+            ],
+            "hs": 5447,
+            "hm": 50331647
+          },
+          "pierwotny": {
+            "n": [
+              229,
+              585,
+              948,
+              "... (10 more, 13 total)"
+            ],
+            "m2": [
+              10337,
+              11073,
+              9504,
+              "... (10 more, 13 total)"
+            ],
+            "hs": 18175,
+            "hm": 671088639
+          },
+          "wszystko": {
+            "n": [
+              468,
+              897,
+              1211,
+              "... (10 more, 13 total)"
+            ],
+            "m2": [
+              11841,
+              11426,
+              9755,
+              "... (10 more, 13 total)"
+            ],
+            "hs": 23664,
+            "hm": 671088639
+          }
+        },
+        "w": [
+          3,
+          3335,
+          9900,
+          "... (3 more, 6 total)"
+        ]
+      },
+      "... (377 more, 380 total)"
+    ]
+  }
+}

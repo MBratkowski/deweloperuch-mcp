@@ -1,4 +1,5 @@
-"""``RankLocationsTool``: cities or powiats ranked by their RCN transactions."""
+"""``RankLocationsTool``: cities or powiats ranked by their RCN transactions, or cities by
+an official indicator."""
 
 from typing import Annotated, Any
 
@@ -10,9 +11,18 @@ from deweloperuch_mcp.consumers.mcp.presenters.rank_locations_mcp_presenter impo
     RankLocationsMcpPresenter,
 )
 from deweloperuch_mcp.consumers.mcp.support.calls import SessionContext, run, session_of
-from deweloperuch_mcp.consumers.mcp.support.inputs import OptionalWholeNumber, whole_or
+from deweloperuch_mcp.consumers.mcp.support.inputs import (
+    OptionalChoice,
+    OptionalWholeNumber,
+    whole_or,
+)
 from deweloperuch_mcp.consumers.mcp.support.tool_base import ToolBase
-from deweloperuch_mcp.consumers.shared.ranking_views import RankingLevelChoice, RankingSortChoice
+from deweloperuch_mcp.consumers.shared.ranking_views import (
+    IndicatorChoice,
+    RankingLevelChoice,
+    RankingMarketChoice,
+    RankingSortChoice,
+)
 from deweloperuch_mcp.models.location_ranking import (
     DEFAULT_RANKING_LIMIT,
     RANKING_LIMIT_MAX,
@@ -38,14 +48,18 @@ def _choice_or(default: str) -> BeforeValidator:
 
 
 class RankLocationsTool(ToolBase):
-    # [P] api.city_tx_stats and api.powiat_stats (2026-10-09): Warszawa has 3606 transactions
-    # as a city and 351314 as a powiat (the same area: a city with powiat rights), while its
-    # months have about 1.0-1.3k (api.monthly_tx). [W] the powiat counts span many years and
-    # the city counts about a quarter
-    # (tests/contract/api/dto/test_powiat_transactions_list_dto.py): hence "wiele lat" and
-    # "tylko do uporządkowania"; the period itself stays unknown (T10).
-    # [H] T10: whether avg_* are averages or medians (said once here, not in the fields), and
-    # the period and base of *_change: no changes over time at all.
+    # [P 2026-11-01] statystyki/powiat-map-stats: every powiat's figures cover the 12 months
+    # of periodStart..periodEndMonth, so a powiat ranking names its period; whether its
+    # prices are medians or means is open (T85), as for the cities (T10), whose period the
+    # service does not give: said once here, not in the fields. Counts of cities and
+    # powiats come from different windows: "nie porównuj". `all` is the service's own
+    # figure for both markets, not the sum of the other two (equal in 80 of 303 powiats,
+    # T86): the description never calls it a sum.
+    # Indicators [P 2026-11-02, tests/contract/api/dto/test_gov_map_stats_dto.py]: each
+    # value equals the series of get_government_statistics for its period (unemployment of
+    # the month, wages and natural increase of the year, the NBP secondary transaction price
+    # of the quarter) or the sum of its 12 months (dwellings); the area matches no series,
+    # so it is "podana przez serwis".
     # powiat_id: no tool takes it and search_locations has no powiats (its kinds are city,
     # district, street [P]), so the description says it is only informative.
     # [W] the default threshold of the price orders (20, PRICE_ORDER_MIN_TRANSACTIONS in
@@ -53,24 +67,23 @@ class RankLocationsTool(ToolBase):
     name = "rank_locations"
     title = "Ranking miast i powiatów"
     description = """\
-Ranking miejscowości (level=city) albo powiatów (level=powiat) w Polsce według \
-transakcji z Rejestru Cen Nieruchomości (RCN): liczba transakcji i cena transakcyjna za \
-m². Dla porównania wielu miast: to narzędzie; dla trendu jednego miasta w czasie: \
-get_transaction_statistics. To ceny transakcyjne, nie ofertowe; oferty deweloperów daje \
-search_offers.
+Porównanie wielu miejsc w jednym okresie; nie zwraca szeregu czasowego. Dwa tryby: (1) bez \
+indicator: ranking miejscowości (level=city) albo powiatów (level=powiat) wg transakcji z \
+RCN (liczba, cena za m²); (2) z indicator: ranking 66 miast na prawach powiatu wg \
+wskaźnika GUS lub NBP. Trend jednego miasta w czasie: get_transaction_statistics (RCN) \
+albo get_government_statistics (GUS, NBP). Bez indicator to ceny transakcyjne z RCN, nie \
+ofertowe; nbp_price_per_m2 to oficjalna cena NBP, nie RCN.
 
-Zwraca min_transactions (zastosowany próg), total (miejsca z co najmniej tyloma \
-transakcjami), returned, truncated, hint i items (name, city_slug albo powiat_id, \
-transaction_count, price_per_m2, area_m2, price); dla city także ranking_url (strona \
-rankingu na deweloperuch.pl: podaj ją użytkownikowi jako link). powiat_id jest \
-informacyjny: żadne narzędzie go nie przyjmuje.
+Zwraca total, returned, truncated, hint i items. Transakcje: min_transactions (zastosowany \
+próg), items (name, city_slug albo powiat_id, transaction_count, price_per_m2, area_m2, \
+price); dla city ranking_url (link dla użytkownika); dla powiat market i okres 12 miesięcy \
+period_start–period_end. Wskaźnik: indicator, unit, period, items (name, city_slug, value, \
+stats_url: link dla użytkownika).
 
-Ograniczenia: serwis nie podaje okresu ani tego, czy ceny i metraż to średnie, czy \
-mediany: przedstawiaj je jako wartości podane przez serwis. Liczby transakcji powiatów \
-obejmują wiele lat: służą tylko do uporządkowania, nie są bieżącym wolumenem; nie \
-porównuj ich z liczbami miejscowości. Sortowanie po cenie domyślnie pomija miejsca \
-poniżej 20 transakcji (cena bywa przypadkowa); min_transactions=0 pokazuje wszystkie, \
-np. 50 daje stabilniejsze ceny."""
+Ograniczenia: serwis nie mówi, czy ceny i metraż to średnie, czy mediany. Okresu \
+miejscowości serwis nie podaje; nie porównuj liczb transakcji miejscowości i powiatów. \
+Sortowanie po cenie domyślnie pomija miejsca poniżej 20 transakcji (cena bywa \
+przypadkowa); min_transactions=0 pokazuje wszystkie."""
 
     async def __call__(
         self,
@@ -86,22 +99,24 @@ np. 50 daje stabilniejsze ceny."""
                 title="Poziom",
                 description=(
                     "city: miejscowości (miasta, także małe miasteczka i wsie), domyślnie; "
-                    "powiat: powiaty (bez ranking_url i bez odpowiednika w search_locations)."
+                    "powiat: powiaty, tylko transakcje (market); powiaty nie mają city_slug "
+                    "ani ranking_url i nie ma ich w search_locations. Z indicator tylko city."
                 ),
             ),
         ] = "city",
         sort: Annotated[
-            RankingSortChoice,
-            _choice_or("transactions_desc"),
+            RankingSortChoice | None,
+            OptionalChoice,
             Field(
                 title="Kolejność",
                 description=(
-                    "transactions_desc: najwięcej transakcji (domyślnie); price_per_m2_desc: "
-                    "najwyższa cena za m²; price_per_m2_asc: najniższa cena za m². Miejsca "
-                    "bez ceny są na końcu."
+                    "transactions_desc: najwięcej transakcji (domyślnie bez indicator); "
+                    "price_per_m2_desc, price_per_m2_asc: najwyższa, najniższa cena za m² "
+                    "(miejsca bez ceny na końcu); value_desc (domyślnie z indicator), "
+                    "value_asc: najwyższa, najniższa wartość wskaźnika, tylko z indicator."
                 ),
             ),
-        ] = "transactions_desc",
+        ] = None,
         limit: Annotated[
             Limit,
             whole_or(DEFAULT_RANKING_LIMIT),
@@ -122,7 +137,42 @@ np. 50 daje stabilniejsze ceny."""
                 description=(
                     "Brak = próg domyślny: 20 przy sortowaniu po cenie, 0 przy "
                     "transactions_desc. 0 = wszystkie miejsca. Pomija miejsca z mniejszą "
-                    "liczbą transakcji; np. 50 daje stabilniejsze ceny."
+                    "liczbą transakcji; np. 50 daje stabilniejsze ceny. Nie działa z "
+                    "indicator."
+                ),
+            ),
+        ] = None,
+        market: Annotated[
+            RankingMarketChoice | None,
+            OptionalChoice,
+            Field(
+                title="Rynek",
+                description=(
+                    "Tylko level=powiat. secondary: rynek wtórny (domyślnie); primary: "
+                    "pierwotny; all: oba rynki w zestawieniu serwisu (jego liczba transakcji "
+                    "nie zawsze równa się secondary + primary). Powiaty bez danych dla rynku "
+                    "są pominięte (hint)."
+                ),
+            ),
+        ] = None,
+        indicator: Annotated[
+            IndicatorChoice | None,
+            OptionalChoice,
+            Field(
+                title="Wskaźnik",
+                description=(
+                    "Ranking 66 miast na prawach powiatu według wskaźnika zamiast transakcji "
+                    "(bez level=powiat, min_transactions i market): unemployment_rate: stopa "
+                    "bezrobocia rejestrowanego (%) w miesiącu; average_wage: przeciętne "
+                    "miesięczne wynagrodzenie brutto (PLN), średnia za rok period (jak "
+                    "dataset=wages w get_government_statistics); dwellings_completed, "
+                    "dwellings_started: mieszkania oddane, rozpoczęte w 12 miesiącach do "
+                    "miesiąca period; average_dwelling_area: powierzchnia mieszkania (m²) "
+                    "podana przez serwis za okres period; nie porównuj jej z average_area z "
+                    "get_government_statistics (inna definicja); natural_increase: przyrost "
+                    "naturalny (osoby) w roku; nbp_price_per_m2: cena transakcyjna rynku "
+                    "wtórnego wg NBP (PLN/m²) w kwartale, tylko 17 miast. Miasta bez wartości "
+                    "są pominięte (hint)."
                 ),
             ),
         ] = None,
@@ -131,7 +181,12 @@ np. 50 daje stabilniejsze ceny."""
 
         def rank() -> LocationRankingResult:
             request = RankLocationsRequest.parse(
-                level=level, sort=sort, limit=limit, min_transactions=min_transactions
+                level=level,
+                sort=sort,
+                limit=limit,
+                min_transactions=min_transactions,
+                market=market,
+                indicator=indicator,
             )
             return RankLocationsMcpPresenter().present(session.rank_locations.execute(request))
 

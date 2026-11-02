@@ -1,7 +1,7 @@
 """The golden cases of ``deweloperuch investments search`` (tests/golden/cli/<case>.json)."""
 
 from support.golden.cli import INJECTED_BODY, SEARCH, Case, case
-from support.golden.routes import search_answer, search_city_is
+from support.golden.routes import lookup_failed, search_answer, search_city_is
 from support.providers.error_answers import unknown_entity
 from support.providers.routes.investment_search import investment_search_routes
 
@@ -47,7 +47,12 @@ CASES: dict[str, Case] = {
     "investments_search_sort_unknown": case(*SEARCH, "sopot", "--sort", "cheap"),
     "investments_search_limit_0": case(*SEARCH, "sopot", "--limit", "0"),
     "investments_search_404": case(
-        *SEARCH, "sopot", service=search_answer(404, **unknown_entity({"error": INJECTED_BODY}))
+        *SEARCH,
+        "sopot",
+        service=(
+            search_answer(404, **unknown_entity({"error": INJECTED_BODY})),
+            lookup_failed("sopot"),
+        ),
     ),
     "investments_search_500": case(*SEARCH, "sopot", service=search_answer(500, text="x")),
     "investments_search_403": case(*SEARCH, "sopot", service=search_answer(403)),

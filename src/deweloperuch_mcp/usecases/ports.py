@@ -22,7 +22,9 @@ from deweloperuch_mcp.models.building import (
 )
 from deweloperuch_mcp.models.developer_match import DeveloperMatches, DeveloperName, MatchCount
 from deweloperuch_mcp.models.developer_profile import DeveloperProfile
+from deweloperuch_mcp.models.district import District
 from deweloperuch_mcp.models.government_statistics import Dataset, LocationStatistics
+from deweloperuch_mcp.models.indicator_ranking import Indicator, IndicatorValues
 from deweloperuch_mcp.models.investment import Investment
 from deweloperuch_mcp.models.investment_summary import (
     InvestmentMatches,
@@ -31,9 +33,10 @@ from deweloperuch_mcp.models.investment_summary import (
 )
 from deweloperuch_mcp.models.investment_summary import InvestmentsLimit as SearchLimit
 from deweloperuch_mcp.models.location import LocationMatches
-from deweloperuch_mcp.models.location_ranking import LocationTransactions, RankingLevel
+from deweloperuch_mcp.models.location_ranking import LocationTransactions, PowiatTransactions
 from deweloperuch_mcp.models.market_statistics import CityOffers
 from deweloperuch_mcp.models.offer import InvestmentRef, OfferSearchCriteria, OfferSearchPage
+from deweloperuch_mcp.models.place import Place
 from deweloperuch_mcp.models.price_history import PriceEvent
 from deweloperuch_mcp.models.transaction_series import (
     Granularity,
@@ -48,6 +51,7 @@ from deweloperuch_mcp.models.values import (
     LocationQuery,
     LocationSlug,
     OfferId,
+    Slug,
 )
 
 
@@ -73,6 +77,15 @@ class OfferCatalog(Protocol):
 
     def price_events(self, offer_id: OfferId) -> tuple[PriceEvent, ...]:
         """Every price event of one offer, oldest first."""
+        ...
+
+
+class DistrictDirectory(Protocol):
+    """The districts in which the service lists offers."""
+
+    def districts(self, city: CitySlug) -> tuple[District, ...]:
+        """The districts of ``city``, in the service's order; none when it lists none
+        for the city."""
         ...
 
 
@@ -234,8 +247,21 @@ class TransactionStatisticsLinks(Protocol):
 class TransactionRankingSource(Protocol):
     """The transactions of every city or powiat, as the service sums them up."""
 
-    def locations(self, level: RankingLevel) -> tuple[LocationTransactions, ...]:
-        """Every place of ``level`` the service ranks, in any order."""
+    def cities(self) -> tuple[LocationTransactions, ...]:
+        """Every city (towns and villages included) the service ranks, in any order."""
+        ...
+
+    def powiats(self) -> PowiatTransactions:
+        """Every powiat on each market the service has figures for, over one period."""
+        ...
+
+
+class CityIndicatorSource(Protocol):
+    """The official indicators (GUS, NBP) of the cities with powiat rights."""
+
+    def indicator(self, indicator: Indicator) -> IndicatorValues:
+        """Every city's latest value of ``indicator`` (``None`` where the service has
+        none), with the period of the values."""
         ...
 
 
@@ -245,6 +271,10 @@ class RankingLinks(Protocol):
 
     def city_ranking(self) -> str | None:
         """The service's ranking of cities."""
+        ...
+
+    def government_statistics(self, location: LocationSlug, section: str | None) -> str | None:
+        """A city's page of government statistics, at ``section`` when it has one."""
         ...
 
 
@@ -277,4 +307,13 @@ class ValuationSource(Protocol):
         """The service's estimate for ``subject`` with its comparable transactions; a
         valuation without an estimate (``estimated_value`` ``None``) when the service
         gives none."""
+        ...
+
+
+class PlaceDirectory(Protocol):
+    """Places (cities, towns, villages) by their slug, as the service's widest dictionary
+    knows them; asked only after a "not found", to say what it was about."""
+
+    def lookup(self, slug: Slug) -> Place | None:
+        """The place whose slug is ``slug``; ``None`` when the service knows no such place."""
         ...

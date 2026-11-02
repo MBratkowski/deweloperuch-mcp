@@ -51,7 +51,7 @@ Use the same `uvx --from deweloperuch-mcp deweloperuch` prefix for subsequent co
 | [`valuation estimate --lat --lng --area`](commands/valuation-estimate.md) | Estimates an apartment's value at a point from nearby RCN transactions. |
 | [`stats market CITY`](commands/stats-market.md) | Shows offer-market statistics of one city as of a day: distributions and the largest developers. |
 | [`stats transactions CITY`](commands/stats-transactions.md) | Shows RCN transaction prices of a city by month (secondary market) or quarter, since 2017. |
-| [`stats cities`](commands/stats-cities.md) | Shows a ranking of places or powiats by RCN transactions (powiats: a known limitation, see the page). |
+| [`stats cities`](commands/stats-cities.md) | Shows a ranking of places or powiats by RCN transactions, or of the 66 cities with powiat rights by a GUS or NBP indicator. |
 | [`stats government LOCATION DATASET`](commands/stats-government.md) | Shows GUS and NBP statistics (Eurostat for the demography of `polska`) of `polska`, an aggregate or a city as a table of periods (`--periods`, default 12, max 1000). |
 | [`stop status [--json]`](commands/stop-status.md) | Shows the STOP lock shared by all processes; offline, immediately. |
 | [`stop clear`](commands/stop-clear.md) | Clears the STOP lock. Only after checking the cause. |

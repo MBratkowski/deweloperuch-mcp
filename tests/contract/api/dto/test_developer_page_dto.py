@@ -24,7 +24,7 @@ from deweloperuch_mcp.api.dto.developer_page_dto import (
     DeveloperPageDto,
 )
 from deweloperuch_mcp.errors import NotFoundError
-from deweloperuch_mcp.flight import NOT_FOUND_DIGEST, component_props
+from deweloperuch_mcp.flight import NOT_FOUND_DIGEST, component_props, error_digests
 from deweloperuch_mcp.models.developer_profile import (
     DeveloperCity,
     DeveloperInvestment,
@@ -38,8 +38,10 @@ from support.providers.rsc import (
     DEVELOPER_CERES_WARSZAWA_20261031,
     DEVELOPER_DOM_DEVELOPMENT_WARSZAWA_20261031,
     DEVELOPER_POLSKA_20261031,
+    DEVELOPER_UNKNOWN_CITY_20261102,
     DEVELOPER_UNKNOWN_POLSKA_20261031,
     DEVELOPER_WARSZAWA_20261031,
+    UNKNOWN_CITY,
     UNKNOWN_DEVELOPER,
     raw,
 )
@@ -329,6 +331,23 @@ def test_an_unknown_developer_in_the_whole_country_is_not_found() -> None:
         page_of(DEVELOPER_UNKNOWN_POLSKA_20261031, "polska", UNKNOWN_DEVELOPER)
 
     assert caught.value.detail is not None and NOT_FOUND_DIGEST in caught.value.detail
+
+
+def test_developer_page_of_an_unknown_city_is_not_found() -> None:
+    """T39 [P 2026-11-02]: ATAL in a city the service does not know. The page has no
+    ``hero`` and no 404 marker; its one error row redirects to ATAL's page for the whole
+    country. Its ``notFound`` prop is no marker: every page has one (the known
+    developer's page too, the not-found boundary of the layout)."""
+    payload = raw(DEVELOPER_UNKNOWN_CITY_20261102)
+    country = "/ceny-ofertowe/polska/deweloperzy/atal"
+    for page_payload in (payload, raw(DEVELOPER_WARSZAWA_20261031)):
+        assert any(name == "notFound" for name, _ in component_props(page_payload))
+    assert error_digests(payload) == [f"NEXT_REDIRECT;replace;{country};308;"]
+
+    with pytest.raises(NotFoundError):
+        DeveloperPageDto.from_payload(
+            payload, path=f"/ceny-ofertowe/{UNKNOWN_CITY}/deweloperzy/atal", country=country
+        )
 
 
 def test_the_sample_of_the_cities_chart_parses() -> None:

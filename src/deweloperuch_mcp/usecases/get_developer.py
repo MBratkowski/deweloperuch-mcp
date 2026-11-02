@@ -1,17 +1,29 @@
 """Use case ``GetDeveloper``: a developer's profile with its investments and cities, in a
 city or the whole country."""
 
+from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass
 from typing import Self
 
 from deweloperuch_mcp.models.developer_profile import DEFAULT_INVESTMENTS_LIMIT, DeveloperListing
 from deweloperuch_mcp.models.values import WHOLE_COUNTRY, CitySlug, DeveloperSlug, InvestmentsLimit
-from deweloperuch_mcp.usecases.ports import DeveloperDirectory, PageLinks
+from deweloperuch_mcp.usecases.ports import DeveloperDirectory, PageLinks, PlaceDirectory
 from deweloperuch_mcp.usecases.support.arguments import ParameterCheck
 from deweloperuch_mcp.usecases.support.failures import ReportedAs
+from deweloperuch_mcp.usecases.support.place_check import PlaceCheck
 
 NO_OFFERS_IN_THE_CITY = " Albo deweloper nie ma w tym mieście aktywnych ofert: spróbuj city=polska."
 """The end of the "not found" message of a developer in a city (``GetDeveloper``)."""
+
+NOT_IN_THE_PLACE = (
+    "Sprawdź developer_slug (search_developers) albo spróbuj city=polska (cała Polska)."
+)
+"""What to do about a developer the service shows nothing of in a place that exists: the
+slug may be wrong, or the developer has no offers there (``GetDeveloper``)."""
+
+CHECK_THE_DEVELOPER = "Potem sprawdź developer_slug (search_developers)."
+"""The end of "no place found" for a developer: once the city is right, the developer's
+slug may still be wrong (``GetDeveloper``)."""
 
 CITIES_OF_INVESTMENTS_ONLY = (
     "Serwis nie podał listy miast dewelopera: cities to tylko miasta inwestycji w city "
@@ -78,16 +90,24 @@ class GetDeveloperResult:
 
 class GetDeveloper:
     """One page of the service: the developer's investments in the city (or the whole
-    country), the investments with the most active offers first, at most ``limit``."""
+    country), the investments with the most active offers first, at most ``limit``. In a
+    city, a "not found" costs one more request, which tells a city the service does not
+    know from a place where it shows nothing of the developer (``PlaceCheck``)."""
 
-    def __init__(self, directory: DeveloperDirectory, links: PageLinks) -> None:
+    def __init__(
+        self, directory: DeveloperDirectory, links: PageLinks, places: PlaceDirectory
+    ) -> None:
         self._directory = directory
         self._links = links
+        self._places = places
 
     def execute(self, request: GetDeveloperRequest) -> GetDeveloperResult:
         slug, city = request.developer, request.city
-        with ReportedAs(
-            f"Deweloper {slug.value!r}{self._where(city)}", not_found=self._unknown(request)
+        with (
+            self._place(city),
+            ReportedAs(
+                f"Deweloper {slug.value!r}{self._where(city)}", not_found=self._unknown(request)
+            ),
         ):
             profile = self._directory.developer(slug, city)
         listing = profile.listing(request.limit)
@@ -97,14 +117,27 @@ class GetDeveloper:
             investment_urls=tuple(self._links.investment(item.ref) for item in listing.investments),
         )
 
+    def _place(self, city: CitySlug) -> AbstractContextManager[None]:
+        """A city's place (``PlaceCheck``); the whole country is no place to look up."""
+        if city.whole_country:
+            return nullcontext()
+        return PlaceCheck(
+            self._places,
+            city,
+            what="aktywnych ofert tego dewelopera",
+            then=NOT_IN_THE_PLACE,
+            after_unknown=CHECK_THE_DEVELOPER,
+        )
+
     @staticmethod
     def _where(city: CitySlug) -> str:
         return "" if city.whole_country else f" w {city.value!r}"
 
     @classmethod
     def _unknown(cls, request: GetDeveloperRequest) -> str:
-        """What a "not found" means. In a city it may be a known developer without offers
-        there (T39: the service may answer so, [H], not requested)."""
+        """What a "not found" means when the lookup of the place cannot tell, or when there
+        is no place to look up (the whole country). In a city it may be a known developer
+        without offers there (T39)."""
         message = (
             f"Nie znaleziono dewelopera {request.developer.value!r}{cls._where(request.city)}. "
             "Slug dewelopera podaje search_developers (po nazwie) albo pole developer_slug w "

@@ -8,6 +8,7 @@ from deweloperuch_mcp.consumers.cli.support.common import ExitCode
 from support.builders.investments import DEVELOPER_PAGE, SMOLNA_PAGE
 from support.builders.offers import WHOLE_COUNTRY_MESSAGE, offers_page
 from support.providers.cli import Cli, ok
+from support.providers.routes.city_lookup import UNKNOWN_PLACE_MESSAGE
 from support.providers.routes.investments import investment_routes
 from support.providers.routes.offers import offers_route, unknown_city_route
 from support.providers.rsc import UNKNOWN_CITY
@@ -118,7 +119,7 @@ def test_offers_search_of_an_unknown_city_ends_with_not_found(
     assert result.exit_code == 7  # ExitCode.NOT_FOUND, public API
     assert result.stdout == ""
     assert result.stderr.splitlines() == [
-        f"Błąd: Serwis nie zna miasta {UNKNOWN_CITY!r}. Podaj city_slug miasta z search_locations.",
+        f"Błąd: {UNKNOWN_PLACE_MESSAGE}",
         f"Szczegóły: /ceny-ofertowe/{UNKNOWN_CITY}/mieszkania: brak propsów 'sales', "
         "'serverPaginationData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404",
     ]

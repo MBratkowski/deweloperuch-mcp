@@ -43,7 +43,9 @@ A structured result and the same compact JSON in the content; `null` fields are 
 |---|---|
 | `city=polska` | `city: statystyki rynku są tylko dla jednego miasta; podaj city_slug miasta z search_locations (np. warszawa), a nie polska; podano 'polska'.` |
 | `city` not a city slug (e.g. `Kraków`) | `city: oczekiwano slug jednego miasta z search_locations: małe litery, bez polskich znaków (np. warszawa, sopot; nie polska); podano 'Kraków'.` No request is sent. |
-| Unknown city (the service answers a JSON 404) | `Serwis nie zna miasta 'nieistniejace-miasto' albo nie ma w nim ofert. Podaj city_slug z search_locations (miejscowości z offer_count=0 nie mają statystyk; statystyki rynku są tylko dla jednego miasta).` |
+| No such place (the service answers a JSON 404, and `city-lookup` finds no place) | `Nie znaleziono miejscowości o city_slug 'nieistniejace-miasto'. Jeśli slug nie pochodzi z search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla niej tych danych: powiedz to użytkownikowi i nie ponawiaj. Statystyki rynku są tylko dla jednego miasta (nie dla polska ani agregatów).` (`tests/golden/mcp/market_unknown_city.json`) |
+| The city exists, the service has no market statistics for it | `Miejscowość 'Kraków' istnieje, ale serwis nie ma dla niej statystyk rynku. Nie ponawiaj; powiedz to użytkownikowi.` |
+| The lookup cannot tell (it failed) | The earlier message stays: `Serwis nie zna miasta 'nieistniejace-miasto' albo nie ma w nim ofert. Podaj city_slug z search_locations (miejscowości z offer_count=0 nie mają statystyk; statystyki rynku są tylko dla jednego miasta).` |
 | `area_min` > `area_max` (likewise for price) | `area_min (60) jest większe niż area_max (40); zamień je miejscami.` |
 | `top_developers` outside 1-30 | `Błędny argument narzędzia get_market_statistics: top_developers musi być liczbą całkowitą z zakresu 1–30, podano 31. Popraw i ponów; nic nie zostało wysłane.` |
 | Nothing matches the filters | Not an error: `offers=0` and a `hint`: `Brak aktywnych ofert spełniających kryteria w 'sopot'. Sprawdź slug miasta (search_locations) i poluzuj filtry (cena, metraż).` |

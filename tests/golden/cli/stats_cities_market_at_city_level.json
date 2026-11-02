@@ -1,0 +1,17 @@
+{
+  "args": [
+    "stats",
+    "cities",
+    "--market",
+    "primary"
+  ],
+  "exit_code": 2,
+  "stdout": [
+    ""
+  ],
+  "stderr": [
+    "Błąd: market działa tylko z level=powiat: ranking miejscowości nie dzieli transakcji na rynki; pomiń market albo podaj level=powiat.",
+    ""
+  ],
+  "requests": []
+}

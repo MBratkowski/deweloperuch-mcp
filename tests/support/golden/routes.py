@@ -12,6 +12,7 @@ from support.builders.investment_search import city_with_investments
 from support.builders.rankings import ranking_with_places
 from support.providers.routes.buildings import BUILDING, building_routes
 from support.providers.routes.buildings import TREND as BUILDING_TREND
+from support.providers.routes.city_lookup import failed_lookup_route
 from support.providers.routes.developer_search import developer_search_route
 from support.providers.routes.government_statistics import stats_path
 from support.providers.routes.investment_search import CITY_INVESTMENTS, investment_search_routes
@@ -65,7 +66,7 @@ def investment_is(investment: Any) -> Router:
 
 def many_cities(router: respx.MockRouter) -> None:
     """As many cities as the service ranks (2448 in the sample): its rows and copies."""
-    ranking_routes(router, cities=ranking_with_places("api.city_tx_stats", 2448))
+    ranking_routes(router, cities=ranking_with_places(2448))
 
 
 def stats_answer(location: str, status: int, **kw: Any) -> Router:
@@ -107,3 +108,9 @@ def search_city_is(count: int) -> Router:
 def developers_with(count: int, *, total: int, more: bool) -> Router:
     found = developers_found(count, total=total, more=more)
     return lambda router: developer_search_route(router, found)
+
+
+def lookup_failed(slug: str) -> Router:
+    """The lookup of the place ``slug`` fails (the first "not found" stands): the only way
+    a golden gets past the lookup of a city with no captured answer (``city_lookup``)."""
+    return lambda router: failed_lookup_route(router, slug)

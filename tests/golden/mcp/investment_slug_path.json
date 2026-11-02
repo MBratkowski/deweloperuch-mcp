@@ -17,7 +17,7 @@
   "log": [
     [
       "INFO",
-      "InvalidInputError: investment_slug: oczekiwano slug inwestycji, np. smolna; podaje go search_offers (investment_slug); podano 'smolna/../x'. Szczegóły: None"
+      "InvalidInputError: investment_slug: oczekiwano slug inwestycji, np. smolna; podaje go search_offers (investment_slug); podano 'smolna/../x'."
     ]
   ],
   "requests": []

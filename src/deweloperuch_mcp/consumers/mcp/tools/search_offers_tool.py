@@ -106,9 +106,9 @@ jednej inwestycji daje get_investment, ceny całego miasta get_market_statistics
             Field(
                 title="Dzielnica",
                 description=(
-                    "Nazwa dzielnicy dokładnie tak, jak podaje ją search_locations (kind=district, "
-                    "pole name), np. Mokotów, Praga-Południe; razem z city_slug miasta tej "
-                    "dzielnicy."
+                    "Nazwa dzielnicy, np. Mokotów albo Praga-Południe (wielkość liter, polskie "
+                    "znaki, spacje i myślniki nie mają znaczenia); razem z city_slug jej miasta. "
+                    "Lista dzielnic: search_locations (kind=district)."
                 ),
             ),
         ] = None,

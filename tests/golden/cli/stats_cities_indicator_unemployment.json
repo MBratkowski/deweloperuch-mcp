@@ -1,0 +1,22 @@
+{
+  "args": [
+    "stats",
+    "cities",
+    "--indicator",
+    "unemployment_rate"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Ranking miast wg wskaźnika: stopa bezrobocia rejestrowanego (2026-08), od najwyższej wartości: pokazano 3 z 3.",
+    "1. Białystok [bialystok] · 6 %",
+    "2. Bydgoszcz [bydgoszcz] · 2,8 %",
+    "3. Warszawa [warszawa] · 1,6 %",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/statystyki/gov-map-stats [accept: application/json]"
+  ]
+}

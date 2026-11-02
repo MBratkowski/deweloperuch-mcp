@@ -15,7 +15,7 @@
   "log": [
     [
       "INFO",
-      "InvalidInputError: Podaj city (slug miasta z search_locations, np. sopot) albo name (fragment nazwy inwestycji, np. Kolibki); można oba. Szczegóły: None"
+      "InvalidInputError: Podaj city (slug miasta z search_locations, np. sopot) albo name (fragment nazwy inwestycji, np. Kolibki); można oba."
     ]
   ],
   "requests": []

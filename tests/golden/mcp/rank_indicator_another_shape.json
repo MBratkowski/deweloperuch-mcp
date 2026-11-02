@@ -1,0 +1,26 @@
+{
+  "calls": [
+    {
+      "tool": "rank_locations",
+      "arguments": {
+        "indicator": "average_wage"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Ranking miast według wskaźnika: Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "UnexpectedResponseError: Ranking miast według wskaźnika: Dane z serwisu nie pasują do kontraktu klienta (inny format). Serwis mógł się zmienić po aktualizacji. Nie ponawiaj tego wywołania: zgłoś to użytkownikowi. Szczegóły: /api/statystyki/gov-map-stats: asOf: Field required; rows: Field required"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/statystyki/gov-map-stats [accept: application/json]"
+  ]
+}

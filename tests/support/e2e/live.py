@@ -57,9 +57,10 @@ BIN = Path(sys.executable).parent  # the scripts of the environment running the 
 # Assembled in code: the repo does not carry ready-to-paste service addresses.
 HOST = "deweloperuch" + ".pl"
 
-MAX_REQUESTS = 140
-"""Live requests one full run may send: the plan is 100, the worst case 137
-(tests/e2e/README.md), about two and a half minutes at 1 per second."""
+MAX_REQUESTS = 170
+"""Live requests one full run may send: the plan is 114, the worst case 157
+(tests/e2e/README.md), about three minutes at 1 per second. Raised from 140 on
+2026-11-02 (user's decision) for the integration routes of 0.2.0."""
 
 REQUEST_LINE = "HTTP Request:"
 """How httpx logs each request it sends (INFO)."""

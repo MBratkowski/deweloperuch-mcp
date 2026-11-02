@@ -13,6 +13,11 @@ from deweloperuch_mcp.errors import (
     NotFoundError,
     UnexpectedResponseError,
 )
+from support.builders.districts import (
+    no_districts_message,
+    unlisted_district_message,
+    with_service_slug,
+)
 from support.builders.offers import (
     UNKNOWN_CITY_MESSAGE,
     UNKNOWN_DISTRICT,
@@ -22,6 +27,7 @@ from support.builders.offers import (
 )
 from support.providers import operations
 from support.providers.error_answers import removed_route
+from support.providers.routes.districts import districts_route
 from support.providers.routes.government_statistics import stats_routes
 from support.providers.routes.offers import offers_route
 from support.providers.rsc import (
@@ -288,31 +294,127 @@ def test_search_offers_of_an_unknown_city_says_so(
     assert "NEXT_HTTP_ERROR_FALLBACK;404" in caught.value.detail
 
 
-def test_search_offers_of_an_unknown_district_says_so(
+def test_search_offers_of_an_unknown_district_lists_the_real_ones(
     session: bootstrap.Session, service: respx.MockRouter
 ) -> None:
     """The district's list of a district the city does not have: 200 with the 404 marker
-    [P 2026-10-31]. The message sends the model to the districts of search_locations."""
+    [P 2026-10-31]. The city's districts are read once (the real answer of 2026-11-02) and
+    the message names the first 10."""
     route = service.get(path="/ceny-ofertowe/warszawa/nieistniejaca-dzielnica/mieszkania").respond(
         200, content=raw(OFFERS_UNKNOWN_DISTRICT_20261031), headers=RSC
     )
+    districts = districts_route(service)
 
     with pytest.raises(NotFoundError) as caught:
         operations.search_offers(session, "warszawa", district=UNKNOWN_DISTRICT)
 
-    assert route.call_count == 1
-    assert str(caught.value) == unknown_district_message()
+    assert (route.call_count, districts.call_count) == (1, 1)
+    assert str(caught.value) == unlisted_district_message(UNKNOWN_DISTRICT)
     assert SERVICE_CHANGED not in str(caught.value)
 
 
-def test_search_offers_of_a_district_without_a_slug_says_so_without_a_request(
+def test_search_offers_of_a_district_without_a_slug_lists_the_real_ones(
     session: bootstrap.Session, service: respx.MockRouter
 ) -> None:
+    """A name without a Latin letter or a digit has no list, so none is asked for."""
+    districts = districts_route(service)
+
     with pytest.raises(NotFoundError) as caught:
         operations.search_offers(session, "warszawa", district="Ωμέγα")
 
-    assert str(caught.value) == unknown_district_message("Ωμέγα")
-    assert service.calls.call_count == 0
+    assert str(caught.value) == unlisted_district_message("Ωμέγα")
+    assert service.calls.call_count == districts.call_count == 1
+
+
+def test_search_offers_finds_a_district_written_otherwise_in_the_real_directory(
+    session: bootstrap.Session, service: respx.MockRouter
+) -> None:
+    """Real answers only: „Moko-tów” makes ``moko-tow``, whose list is the real page of an
+    unknown district (the 404 marker); the real directory of Warszawa has Mokotów, so its
+    real list is asked once, by the service's slug, and is the result."""
+    first = service.get(path="/ceny-ofertowe/warszawa/moko-tow/mieszkania").respond(
+        200, content=raw(OFFERS_UNKNOWN_DISTRICT_20261031), headers=RSC
+    )
+    districts = districts_route(service)
+    retried = service.get(path="/ceny-ofertowe/warszawa/mokotow/mieszkania").respond(
+        200, content=raw(OFFERS_WARSZAWA_MOKOTOW_20261031), headers=RSC
+    )
+
+    result = operations.search_offers(session, "warszawa", district="Moko-tów")
+
+    assert (first.call_count, districts.call_count, retried.call_count) == (1, 1, 1)
+    assert service.calls.call_count == 3
+    assert result.total == 959
+    assert result.list_url is not None and "/warszawa/mokotow/mieszkania?" in result.list_url
+
+
+def test_search_offers_keeps_its_message_when_the_directory_does_not_know_the_city(
+    session: bootstrap.Session, service: respx.MockRouter
+) -> None:
+    """[W] the directory's JSON 404 (as a live route answers an unknown entity): the first
+    message stands."""
+    service.get(path="/ceny-ofertowe/warszawa/nieistniejaca-dzielnica/mieszkania").respond(
+        200, content=raw(OFFERS_UNKNOWN_DISTRICT_20261031), headers=RSC
+    )
+    service.get(path="/api/city-districts").respond(404, json={"error": "City not found"})
+
+    with pytest.raises(NotFoundError) as caught:
+        operations.search_offers(session, "warszawa", district=UNKNOWN_DISTRICT)
+
+    assert str(caught.value) == unknown_district_message()
+
+
+def test_search_offers_says_when_the_directory_lists_no_district(
+    session: bootstrap.Session, service: respx.MockRouter
+) -> None:
+    """[W] an empty list (no districts with offers, or an unknown city)."""
+    service.get(path="/ceny-ofertowe/warszawa/nieistniejaca-dzielnica/mieszkania").respond(
+        200, content=raw(OFFERS_UNKNOWN_DISTRICT_20261031), headers=RSC
+    )
+    districts_route(service, {"districts": []})
+
+    with pytest.raises(NotFoundError) as caught:
+        operations.search_offers(session, "warszawa", district=UNKNOWN_DISTRICT)
+
+    assert str(caught.value) == no_districts_message(UNKNOWN_DISTRICT, "warszawa")
+
+
+def test_search_offers_asks_again_with_the_services_slug(
+    session: bootstrap.Session, service: respx.MockRouter
+) -> None:
+    """A district the service addresses by another slug (the real answer with one slug
+    changed): the client's slug is unknown, the service's one is asked once and its page
+    is the result, with the link of that list."""
+    service.get(path="/ceny-ofertowe/warszawa/mokotow/mieszkania").respond(
+        200, content=raw(OFFERS_UNKNOWN_DISTRICT_20261031), headers=RSC
+    )
+    districts = districts_route(service, with_service_slug("Mokotów", "mokotow-dolny"))
+    retried = service.get(path="/ceny-ofertowe/warszawa/mokotow-dolny/mieszkania").respond(
+        200, content=raw(OFFERS_WARSZAWA_MOKOTOW_20261031), headers=RSC
+    )
+
+    result = operations.search_offers(session, "warszawa", district="Mokotów")
+
+    assert (districts.call_count, retried.call_count) == (1, 1)
+    assert result.total == 959
+    assert result.list_url is not None and "/warszawa/mokotow-dolny/mieszkania?" in result.list_url
+
+
+def test_search_offers_past_the_last_page_of_a_listed_district_is_not_asked_again(
+    session: bootstrap.Session, service: respx.MockRouter
+) -> None:
+    """Mokotów under its own slug in the real answer: the page is what is missing, so the
+    list is not asked again and the message names both readings."""
+    route = service.get(path="/ceny-ofertowe/warszawa/mokotow/mieszkania").respond(
+        200, content=raw(OFFERS_UNKNOWN_DISTRICT_20261031), headers=RSC
+    )
+    districts = districts_route(service)
+
+    with pytest.raises(NotFoundError) as caught:
+        operations.search_offers(session, "warszawa", district="Mokotów", page=20)
+
+    assert (route.call_count, districts.call_count) == (1, 1)
+    assert str(caught.value).startswith("Serwis nie ma strony 20 tej listy albo nie zna dzielnicy")
 
 
 def test_search_offers_on_the_real_page(

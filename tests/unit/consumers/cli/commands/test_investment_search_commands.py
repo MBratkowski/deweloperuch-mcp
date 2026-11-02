@@ -20,6 +20,7 @@ from support.providers.error_answers import (
     removed_route,
     unknown_entity,
 )
+from support.providers.routes.city_lookup import failed_lookup_route
 from support.providers.routes.investment_search import CITY_INVESTMENTS, investment_search_routes
 from support.providers.samples import body
 from support.providers.service import PAGES
@@ -154,6 +155,7 @@ def test_cli_exit_codes(
     code: int,
     message: str,
 ) -> None:
+    failed_lookup_route(service, "sopot")  # a failed lookup: the first words stand
     route = service.get(path=CITY_INVESTMENTS)
     if answer is not None:
         route.mock(return_value=answer)

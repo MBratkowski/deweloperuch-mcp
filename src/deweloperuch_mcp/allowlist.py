@@ -11,6 +11,8 @@ this file. tests/recon_scripts/test_probe_allowlist.py keeps both in sync.
   as RSC. The query string is not restricted.
 - ``DUMP_PATHS``: documented read channels (endpoints, pages) that return dumps (D5).
   recon may read them (within its body limit); the package's client never requests them.
+- ``LONG_CACHE_PATHS``: the dictionary and index routes of ``API_PATHS`` that the package's
+  transport caches for their freshness, at most a day, instead of 300 s (D19).
 
 Placeholders: ``{name}`` is one path segment or the end of one
 (``raport-mieszkania-{slug}``); ``{a|b}`` is one of the listed literals.
@@ -54,6 +56,8 @@ API_PATHS = (
     "/api/statystyki/raw-transactions",
     "/api/map/transactions/visible/{investRcnSlug}",
     "/api/sale-events-rcn/batch",
+    "/api/map/tx-cities",
+    "/api/statystyki/powiat-map-stats",
     # 4. Statystyki
     "/api/monthly-transaction-stats",
     "/api/statystyki/powiat-price-trend",
@@ -61,6 +65,7 @@ API_PATHS = (
     "/api/avg-price-trend/building/{investRcnId}",
     "/api/city-transaction-stats",
     "/api/announcement-stats",
+    "/api/statystyki/gov-map-stats",
     # 5. Wycena
     "/api/standalone-valuation",
 )
@@ -78,6 +83,20 @@ DUMP_PATHS = (
     "/statystyki/ceny-transakcyjne/{mieszkania|domy}/{city}",
     # D5: its 2.0 successor, every transaction of a city or powiat (never requested).
     "/api/statystyki/raw-transactions",
+)
+
+LONG_CACHE_PATHS = (
+    # D19: dictionary and index routes, cached for their s-maxage (else max-age) minus Age,
+    # at most a day; every other route keeps the 300 s of D2.
+    "/api/cities",
+    "/api/city-lookup",
+    "/api/city-districts",
+    "/api/investments",
+    "/api/developers",
+    "/api/map/tx-cities",
+    "/api/avg-price-trend/city/{citySlug}",
+    "/api/statystyki/powiat-map-stats",
+    "/api/statystyki/gov-map-stats",
 )
 
 PAGE_ROUTES = (
@@ -129,6 +148,7 @@ _API = tuple((template, compile_template(template)) for template in API_PATHS)
 _EXCLUDED = tuple((template, compile_template(template)) for template in EXCLUDED_API_PATHS)
 _PAGES = tuple((template, compile_template(template)) for template in PAGE_ROUTES)
 _DUMPS = tuple((template, compile_template(template)) for template in DUMP_PATHS)
+_LONG_CACHE = tuple((template, compile_template(template)) for template in LONG_CACHE_PATHS)
 
 
 def _first_match(path: str, patterns: tuple[tuple[str, re.Pattern[str]], ...]) -> str | None:
@@ -153,3 +173,8 @@ def match_page(path: str) -> str | None:
 def match_dump(path: str) -> str | None:
     """The ``DUMP_PATHS`` entry that ``path`` (without query) matches, if any."""
     return _first_match(path, _DUMPS)
+
+
+def match_long_cache(path: str) -> bool:
+    """Whether ``path`` (without query) is one of ``LONG_CACHE_PATHS`` (D19)."""
+    return _first_match(path, _LONG_CACHE) is not None

@@ -1,0 +1,27 @@
+{
+  "calls": [
+    {
+      "tool": "search_offers",
+      "arguments": {
+        "city": "krakow"
+      }
+    }
+  ],
+  "results": [
+    {
+      "is_error": true,
+      "text": "Miejscowość 'Kraków' istnieje, ale serwis nie ma dla niej ofert. Nie ponawiaj; powiedz to użytkownikowi.",
+      "structured_content": null
+    }
+  ],
+  "log": [
+    [
+      "INFO",
+      "NotFoundError: Miejscowość 'Kraków' istnieje, ale serwis nie ma dla niej ofert. Nie ponawiaj; powiedz to użytkownikowi. Szczegóły: /ceny-ofertowe/krakow/mieszkania: brak propsów 'sales', 'serverPaginationData', strona zgłasza NEXT_HTTP_ERROR_FALLBACK;404"
+    ]
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/ceny-ofertowe/krakow/mieszkania?perPage=10&_rsc= [rsc: 1] [accept: */*]",
+    "GET https://deweloperuch.pl/api/city-lookup?slug=krakow&source=transactions [accept: application/json]"
+  ]
+}

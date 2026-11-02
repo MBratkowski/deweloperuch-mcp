@@ -11,9 +11,14 @@ from deweloperuch_mcp.models.market_statistics import (
 )
 from deweloperuch_mcp.models.offer import OfferSearchCriteria
 from deweloperuch_mcp.models.values import AreaRange, DeveloperCount, PriceRange
-from deweloperuch_mcp.usecases.ports import CityOffersSource, PageLinks
+from deweloperuch_mcp.usecases.ports import CityOffersSource, PageLinks, PlaceDirectory
 from deweloperuch_mcp.usecases.support.arguments import ParameterCheck
 from deweloperuch_mcp.usecases.support.failures import ReportedAs
+from deweloperuch_mcp.usecases.support.place_check import PlaceCheck
+
+ONE_CITY = "Statystyki rynku są tylko dla jednego miasta (nie dla polska ani agregatów)."
+"""The end of "no place found" for a market: an aggregate (``7-miast``) is no city of the
+transactions dictionary, and it reaches the service (only ``polska`` is refused first)."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -69,16 +74,22 @@ class GetMarketStatisticsResult:
 
 class GetMarketStatistics:
     """Every active offer of the city in one request; the domain sums them up and names
-    the largest developers. Single offers stay here (D15, D20)."""
+    the largest developers. Single offers stay here (D15, D20). A city the service does
+    not know costs one more request, which tells a wrong slug from a place without offers
+    (``PlaceCheck``)."""
 
-    def __init__(self, source: CityOffersSource, links: PageLinks) -> None:
+    def __init__(self, source: CityOffersSource, links: PageLinks, places: PlaceDirectory) -> None:
         self._source = source
         self._links = links
+        self._places = places
 
     def execute(self, request: GetMarketStatisticsRequest) -> GetMarketStatisticsResult:
         criteria = request.criteria
         city = criteria.city.value
-        with ReportedAs(f"Statystyki rynku w {city!r}", not_found=self._unknown_city(city)):
+        with (
+            PlaceCheck(self._places, criteria.city, what="statystyk rynku", after_unknown=ONE_CITY),
+            ReportedAs(f"Statystyki rynku w {city!r}", not_found=self._unknown_city(city)),
+        ):
             offers = self._source.city_offers(criteria.city)
         statistics = offers.statistics(criteria)
         same_offers = OfferSearchCriteria(

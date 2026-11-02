@@ -17,7 +17,7 @@
   "log": [
     [
       "INFO",
-      "InvalidInputError: city=polska nie działa przy wyszukiwaniu inwestycji: podaj slug jednego miasta (search_locations) albo szukaj w całym kraju po nazwie (name, bez city). Szczegóły: None"
+      "InvalidInputError: city=polska nie działa przy wyszukiwaniu inwestycji: podaj slug jednego miasta (search_locations) albo szukaj w całym kraju po nazwie (name, bez city)."
     ]
   ],
   "requests": []

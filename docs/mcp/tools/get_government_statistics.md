@@ -1,11 +1,11 @@
 # `get_government_statistics`
-> Zwraca oficjalne statystyki GUS, NBP i Eurostatu (demografia Polski) jako szeregi czasowe dla Polski, agregatu miast albo miasta na prawach powiatu: mieszkania oddane i rozpoczęte, średnią powierzchnię mieszkań deweloperskich, ceny m² wg NBP, bezrobocie, wynagrodzenia, demografię i ludność (zestawy: parametr dataset). Użyj jako kontekstu rynku; ofert i cen konkretnych mieszkań tu nie ma (search_offers), a ceny z rejestru RCN daje get_transaction_statistics.
+> Zwraca oficjalne statystyki GUS, NBP i Eurostatu (demografia Polski) jako szeregi czasowe dla Polski, agregatu miast albo miasta na prawach powiatu: mieszkania oddane i rozpoczęte, średnią powierzchnię mieszkań deweloperskich, ceny m² wg NBP, bezrobocie, wynagrodzenia, demografię i ludność (parametr dataset). Ofert mieszkań tu nie ma (search_offers), ceny z rejestru RCN daje get_transaction_statistics, a porównanie wielu miast w jednym okresie rank_locations z indicator.
 >
 > Zwraca periods (od najstarszego) i series (series_id, label, unit, values wyrównane z periods; null = brak danych) oraz frequency, source, total, returned, truncated, available_from, note i stats_url (sekcja strony na deweloperuch.pl: podaj ją użytkownikowi jako link).
 >
-> Ograniczenia: domyślnie ostatnie 12 okresów; truncated=true znaczy, że są starsze (zwiększ periods, najwyżej 120). nbp_prices: tylko 3 agregaty i część dużych miast (np. warszawa, krakow), nie polska. Nie każdy zestaw jest dostępny dla każdej lokalizacji (błąd wskaże, co podać); dane GUS i NBP są publikowane z opóźnieniem, ostatni okres bywa sprzed kilku tygodni, miesięcy, a dla demografii Polski nawet roku. Przeczytaj note: ostatni okres bywa niepełny.
+> Ograniczenia: domyślnie ostatnie 12 okresów; truncated=true: są starsze (zwiększ periods, najwyżej 120). nbp_prices: tylko 3 agregaty i część dużych miast (np. warszawa, krakow), nie polska. Nie każdy zestaw jest dostępny dla każdej lokalizacji (błąd wskaże, co podać); dane GUS i NBP są publikowane z opóźnieniem: ostatni okres bywa sprzed kilku tygodni lub miesięcy, dla demografii Polski nawet roku. Przeczytaj note: ostatni okres bywa niepełny.
 
-Title: „Statystyki GUS, NBP i Eurostatu”. Annotations: `readOnlyHint=true`, `openWorldHint=true`. Official GUS, NBP and Eurostat statistics as time series: market context, not offers. Shared rules: [MCP overview](../README.md).
+Title: „Statystyki GUS, NBP i Eurostatu”. Annotations: `readOnlyHint=true`, `openWorldHint=true`. Official GUS, NBP and Eurostat statistics as time series: market context, not offers. To compare many cities in one period (unemployment, wages, dwellings, NBP prices), use [`rank_locations`](rank_locations.md) with `indicator`: its values equal the series of this tool for the same period. Shared rules: [MCP overview](../README.md).
 
 ## Parameters
 | Name | Type | Required | Default | Description |

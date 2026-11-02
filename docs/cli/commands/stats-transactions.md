@@ -27,7 +27,7 @@ See the [exit code table](../README.md#exit-codes). Most common:
 | 3 | STOP. |
 | 4 | Service error (5xx, network). |
 | 6 | The service moved or removed the page (`Błąd: Ceny transakcyjne dla 'warszawa': Narzędzie nie może pobrać tych danych, …`), or a month holds transactions outside the secondary market (`Błąd: Ceny transakcyjne dla 'warszawa': Miesięczne dane serwisu obejmują też transakcje spoza rynku wtórnego, …`; `--granularity quarter` still works). |
-| 7 | The service has no transaction prices for the city (`Błąd: Serwis nie ma cen transakcyjnych mieszkań dla miasta 'nieistniejace-miasto'. Sprawdź city_slug w search_locations (np. warszawa, krakow); … Jeśli city_slug pochodzi z search_locations, serwis nie ma dla niego statystyk: powiedz to użytkownikowi.`, with a `Szczegóły:` line: the target, the status and the media type). |
+| 7 | Not found (months and quarters). After the service's „unknown” one `city-lookup` request tells the cases apart: no such place (`Błąd: Nie znaleziono miejscowości o city_slug 'nieistniejace-miasto'. Jeśli slug nie pochodzi z search_locations, weź go stamtąd; jeśli pochodzi, serwis nie ma dla niej tych danych: powiedz to użytkownikowi i nie ponawiaj.`), or a known city without transaction statistics (`Błąd: Miejscowość 'Kraków' istnieje, ale serwis nie ma dla niej statystyk transakcji. Nie ponawiaj; powiedz to użytkownikowi.`). If the lookup fails, the earlier `Błąd: Serwis nie ma cen transakcyjnych mieszkań dla miasta 'nieistniejace-miasto'. Sprawdź city_slug w search_locations (np. warszawa, krakow); … powiedz to użytkownikowi.` stays. With a `Szczegóły:` line: the target, the status and the media type. |
 
 ## Examples
 ```

@@ -13,6 +13,7 @@ from support.fakes.catalogs import (
 )
 from support.fakes.clocks import CLOCK
 from support.fakes.developer_search import FakeDeveloperLinks, FakeDeveloperSearch
+from support.fakes.districts import FakeDistrictDirectory
 from support.fakes.stop import FakeStopControl
 
 
@@ -48,3 +49,9 @@ def test_the_developer_search_fakes_are_the_ports() -> None:
     links: ports.DeveloperLinks = FakeDeveloperLinks()
 
     assert isinstance(directory, FakeDeveloperSearch) and isinstance(links, FakeDeveloperLinks)
+
+
+def test_the_district_fake_is_the_port() -> None:
+    directory: ports.DistrictDirectory = FakeDistrictDirectory()
+
+    assert isinstance(directory, FakeDistrictDirectory)

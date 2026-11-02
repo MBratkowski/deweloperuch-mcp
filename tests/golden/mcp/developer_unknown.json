@@ -22,6 +22,7 @@
     ]
   ],
   "requests": [
-    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/nieistniejacy-deweloper?_rsc= [rsc: 1] [accept: */*]"
+    "GET https://deweloperuch.pl/ceny-ofertowe/warszawa/deweloperzy/nieistniejacy-deweloper?_rsc= [rsc: 1] [accept: */*]",
+    "GET https://deweloperuch.pl/api/city-lookup?slug=warszawa&source=transactions [accept: application/json]"
   ]
 }

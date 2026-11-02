@@ -71,6 +71,8 @@ PARAMETERS: Mapping[ValueName, str] = {
     ValueName.RANKING_ORDER: "sort",
     ValueName.RANKING_LIMIT: "limit",
     ValueName.MIN_TRANSACTIONS: "min_transactions",
+    ValueName.RANKING_MARKET: "market",
+    ValueName.INDICATOR: "indicator",
     ValueName.BUILDING: "building_slug",
     ValueName.UNITS_LIMIT: "limit",
     ValueName.TREND: "include_trend",

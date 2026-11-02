@@ -1,0 +1,27 @@
+{
+  "args": [
+    "stats",
+    "cities",
+    "--level",
+    "powiat",
+    "--market",
+    "primary",
+    "--sort",
+    "price_per_m2_asc"
+  ],
+  "exit_code": 0,
+  "stdout": [
+    "Ranking powiatów od najniższej ceny za m² (rynek pierwotny, 2025-11–2026-10): pokazano 3 z 3 (co najmniej 20 transakcji).",
+    "1. powiat łosicki [id 2] · transakcji: 59 · 6 263 PLN/m² · 44,9 m² · 284 000 PLN",
+    "2. powiat ropczycko-sędziszowski [id 1] · transakcji: 29 · 8 362 PLN/m² · 54,4 m² · 455 000 PLN",
+    "3. powiat piaseczyński [id 3] · transakcji: 3 335 · 9 900 PLN/m² · 62,7 m² · 635 049 PLN",
+    "Serwis nie podaje, czy ceny i metraż to średnie, czy mediany.",
+    ""
+  ],
+  "stderr": [
+    ""
+  ],
+  "requests": [
+    "GET https://deweloperuch.pl/api/statystyki/powiat-map-stats [accept: application/json]"
+  ]
+}

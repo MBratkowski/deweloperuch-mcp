@@ -10,9 +10,14 @@ from deweloperuch_mcp.models.transaction_series import (
     TransactionCity,
     TransactionStatistics,
 )
-from deweloperuch_mcp.usecases.ports import TransactionStatisticsLinks, TransactionStatisticsSource
+from deweloperuch_mcp.usecases.ports import (
+    PlaceDirectory,
+    TransactionStatisticsLinks,
+    TransactionStatisticsSource,
+)
 from deweloperuch_mcp.usecases.support.arguments import ParameterCheck
 from deweloperuch_mcp.usecases.support.failures import ReportedAs
+from deweloperuch_mcp.usecases.support.place_check import PlaceCheck
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -105,20 +110,29 @@ class GetTransactionStatisticsResult:
 
 
 class GetTransactionStatistics:
-    """One request per city and granularity; the domain cuts the result (D4)."""
+    """One request per city and granularity; the domain cuts the result (D4). A city the
+    service does not know costs one more request, which tells a wrong slug from a place
+    without these statistics (``PlaceCheck``); a series without periods does not (the
+    service answered with data)."""
 
     def __init__(
-        self, source: TransactionStatisticsSource, links: TransactionStatisticsLinks
+        self,
+        source: TransactionStatisticsSource,
+        links: TransactionStatisticsLinks,
+        places: PlaceDirectory,
     ) -> None:
         self._source = source
         self._links = links
+        self._places = places
 
     def execute(self, request: GetTransactionStatisticsRequest) -> GetTransactionStatisticsResult:
         city = request.city
-        with ReportedAs(
+        reported = ReportedAs(
             f"Ceny transakcyjne dla {city.value!r}", not_found=self._unknown_city(city)
-        ):
+        )
+        with PlaceCheck(self._places, city, what="statystyk transakcji"), reported:
             series = self._source.transaction_series(city, request.granularity)
+        with reported:
             statistics = series.latest(request.periods)
         return GetTransactionStatisticsResult(
             statistics=statistics, stats_url=self._links.transaction_statistics(city)

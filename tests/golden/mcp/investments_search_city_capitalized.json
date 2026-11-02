@@ -17,7 +17,7 @@
   "log": [
     [
       "INFO",
-      "InvalidInputError: city: oczekiwano slug jednego miasta (np. warszawa, sopot; nie polska); slug podaje search_locations; podano 'Sopot'. Szczegóły: None"
+      "InvalidInputError: city: oczekiwano slug jednego miasta (np. warszawa, sopot; nie polska); slug podaje search_locations; podano 'Sopot'."
     ]
   ],
   "requests": []

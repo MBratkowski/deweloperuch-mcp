@@ -14,13 +14,15 @@ Through that service it reaches:
     the CC0 licence in their public repository;
   - statistics of the Central Statistical Office of Poland (GUS, Glowny Urzad
     Statystyczny) and of the National Bank of Poland (NBP, Narodowy Bank
-    Polski). When you republish such figures, name GUS or NBP as the source.
+    Polski), and the demography of Poland from Eurostat (the statistical
+    office of the European Union). When you republish such figures, name
+    GUS, NBP or Eurostat as the source.
 
 Test data
 ---------
 The directories docs/discovery/samples/ and tests/fixtures/ contain trimmed
-responses obtained from deweloperuch.pl (and, through it, from RCN, GUS and
-NBP). They are included only so that the tests can run offline against real
+responses obtained from deweloperuch.pl (and, through it, from RCN, GUS,
+NBP and Eurostat). They are included only so that the tests can run offline against real
 response shapes. They are not covered by the MIT licence and remain subject to
 the terms of their respective owners. Personal data was removed from them.
 
@@ -33,6 +35,6 @@ including assets/icons/ and the icons inside the Claude Desktop extension.
 
 Trademarks
 ----------
-deweloperuch.pl, GUS, NBP and all other names are the property of their
+deweloperuch.pl, GUS, NBP, Eurostat and all other names are the property of their
 respective owners. This project is unofficial and is not affiliated with,
 endorsed by or sponsored by any of them.

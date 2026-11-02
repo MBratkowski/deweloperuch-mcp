@@ -1,0 +1,8 @@
+{
+  "_request": "GET /api/city-lookup?slug=ignatki-osiedle&source=transactions",
+  "_captured": "2026-11-01",
+  "response": {
+    "city": "Ignatki-osiedle",
+    "city_slug": "ignatki-osiedle"
+  }
+}

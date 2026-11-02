@@ -24,6 +24,9 @@ pytestmark = pytest.mark.usefixtures("unix_sockets_for_the_event_loop")
 CAVEAT = "Serwis nie podaje okresu ani tego, czy ceny i metraż to średnie, czy mediany."
 
 
+POWIAT_CAVEAT = "Serwis nie podaje, czy ceny i metraż to średnie, czy mediany."
+
+
 def test_stats_cities_as_text(limiter: RequestLimiter, service: respx.MockRouter) -> None:
     ranking_routes(service)
 
@@ -40,9 +43,11 @@ def test_stats_cities_as_text(limiter: RequestLimiter, service: respx.MockRouter
     ]
 
 
-def test_stats_cities_of_powiats_from_the_cheapest(
+def test_stats_cities_of_powiats_on_the_primary_market_from_the_cheapest(
     limiter: RequestLimiter, service: respx.MockRouter
 ) -> None:
+    """The three powiats of the sample ``api.powiat_map_stats``, named from the packaged
+    table; the period and the market in the head."""
     ranking_routes(service)
 
     result = run_cli(
@@ -51,22 +56,66 @@ def test_stats_cities_of_powiats_from_the_cheapest(
         "cities",
         "--level",
         "powiat",
+        "--market",
+        "primary",
         "--sort",
         "price_per_m2_asc",
         "--limit",
         "2",
-        "--min-transactions",
-        "200000",
     )
 
     assert result.exit_code == ExitCode.OK, result.output
     assert result.stdout.splitlines() == [
-        "Ranking powiatów od najniższej ceny za m²: pokazano 2 z 2 (co najmniej 200 000 "
-        "transakcji).",
-        "1. powiat Kraków [id 14] · transakcji: 225 694 · 14 899 PLN/m² · 47,7 m² · 695 000 PLN",
-        "2. powiat Warszawa [id 302] · transakcji: 351 314 · 16 367 PLN/m² · 48,6 m² · 780 000 PLN",
-        CAVEAT,
+        "Ranking powiatów od najniższej ceny za m² (rynek pierwotny, 2025-11–2026-10): "
+        "pokazano 2 z 3 (co najmniej 20 transakcji).",
+        "Wskazówka: Pokazano pierwsze 2 z 3 powiatów; kolejne pokaże większy limit (najwyżej 100).",
+        "1. powiat łosicki [id 2] · transakcji: 59 · 6 263 PLN/m² · 44,9 m² · 284 000 PLN",
+        "2. powiat ropczycko-sędziszowski [id 1] · transakcji: 29 · 8 362 PLN/m² · 54,4 m² · "
+        "455 000 PLN",
+        POWIAT_CAVEAT,
     ]
+
+
+def test_stats_cities_by_an_indicator(limiter: RequestLimiter, service: respx.MockRouter) -> None:
+    ranking_routes(service)
+
+    result = run_cli(
+        limiter,
+        "stats",
+        "cities",
+        "--indicator",
+        "unemployment_rate",
+        "--sort",
+        "value_asc",
+        "--limit",
+        "2",
+    )
+
+    assert result.exit_code == ExitCode.OK, result.output
+    assert result.stdout.splitlines() == [
+        "Ranking miast wg wskaźnika: stopa bezrobocia rejestrowanego (2026-08), od najniższej "
+        "wartości: pokazano 2 z 3.",
+        "Wskazówka: Pokazano pierwsze 2 z 3 miast; kolejne pokaże większy limit (najwyżej 100).",
+        "1. Warszawa [warszawa] · 1,6 %",
+        "2. Bydgoszcz [bydgoszcz] · 2,8 %",
+    ]
+
+
+def test_stats_cities_by_an_indicator_as_json_links_each_city(
+    limiter: RequestLimiter, service: respx.MockRouter
+) -> None:
+    ranking_routes(service)
+
+    result = run_cli(limiter, "stats", "cities", "--indicator", "nbp_price_per_m2", "--json")
+
+    assert result.exit_code == ExitCode.OK, result.output
+    found = json.loads(result.stdout)
+    assert (found["indicator"], found["unit"], found["period"]) == (
+        "nbp_price_per_m2",
+        "PLN/m²",
+        "2026-Q2",
+    )
+    assert found["items"][0]["stats_url"].endswith("/statystyki/warszawa/dane-rzadowe#nbp")
 
 
 LEFT_OUT = (
@@ -153,6 +202,12 @@ def test_stats_cities_as_json_is_the_view(
         "level": "city",
         "sort": "transactions_desc",
         "min_transactions": 0,
+        "market": None,
+        "period_start": None,
+        "period_end": None,
+        "indicator": None,
+        "unit": None,
+        "period": None,
         "total": 3,
         "returned": 1,
         "truncated": True,
@@ -168,6 +223,8 @@ def test_stats_cities_as_json_is_the_view(
                 "price_per_m2": 16413.0,
                 "area_m2": 48.8,
                 "price": 780000.0,
+                "value": None,
+                "stats_url": None,
             }
         ],
     }
@@ -176,7 +233,7 @@ def test_stats_cities_as_json_is_the_view(
 def test_names_from_the_service_are_escaped(
     limiter: RequestLimiter, service: respx.MockRouter
 ) -> None:
-    rows = ranking_with_places("api.city_tx_stats", 1)
+    rows = ranking_with_places(1)
     rows[0]["city"] = "Warszawa\x1b[2J"
     ranking_routes(service, cities=rows)
 
@@ -200,9 +257,19 @@ def test_names_from_the_service_are_escaped(
             "Błąd: min_transactions musi być liczbą całkowitą z zakresu 0–10000000 "
             "(najmniejsza liczba transakcji miejsca w rankingu), podano -1.",
         ),
+        (
+            ("--market", "primary"),
+            "Błąd: market działa tylko z level=powiat: ranking miejscowości nie dzieli "
+            "transakcji na rynki; pomiń market albo podaj level=powiat.",
+        ),
+        (
+            ("--indicator", "average_wage", "--min-transactions", "20"),
+            "Błąd: min_transactions nie działa z indicator: ranking wskaźnika nie liczy "
+            "transakcji; pomiń min_transactions.",
+        ),
     ],
 )
-def test_wrong_numbers_are_refused_before_a_request(
+def test_wrong_numbers_and_combinations_are_refused_before_a_request(
     limiter: RequestLimiter, service: respx.MockRouter, args: tuple[str, ...], message: str
 ) -> None:
     ranking_routes(service)
@@ -214,7 +281,10 @@ def test_wrong_numbers_are_refused_before_a_request(
     assert service.calls.call_count == 0
 
 
-@pytest.mark.parametrize("args", [("--level", "gmina"), ("--sort", "price_desc")])
+@pytest.mark.parametrize(
+    "args",
+    [("--level", "gmina"), ("--sort", "price_desc"), ("--market", "wtorny"), ("--indicator", "x")],
+)
 def test_unknown_choices_are_usage_errors(
     limiter: RequestLimiter, service: respx.MockRouter, args: tuple[str, ...]
 ) -> None:

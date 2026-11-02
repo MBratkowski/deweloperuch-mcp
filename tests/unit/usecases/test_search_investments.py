@@ -32,12 +32,17 @@ from deweloperuch_mcp.usecases.search_investments import (
 )
 from support.builders.investment_search import SOPOT
 from support.fakes.investment_search import FakeInvestmentDirectory, summary
+from support.fakes.places import VILLAGE, FakePlaces, unknown_place_message
 from support.providers.service import PAGES
 
 
-def search(directory: FakeInvestmentDirectory, **given: Any) -> InvestmentSearchView:
+def search(
+    directory: FakeInvestmentDirectory, places: FakePlaces | None = None, **given: Any
+) -> InvestmentSearchView:
+    """``places`` cannot tell by default (every lookup fails): the use case's own words."""
     request = SearchInvestmentsRequest.parse(**given)
-    found = SearchInvestments(directory, ServicePageLinks()).execute(request)
+    unknown = FakePlaces(failure=ServiceError("503")) if places is None else places
+    found = SearchInvestments(directory, ServicePageLinks(), unknown).execute(request)
     return InvestmentSearchView.from_result(found)
 
 
@@ -154,6 +159,41 @@ def test_a_failure_says_what_it_is_about(
 
     assert str(caught.value) == message
     assert getattr(caught.value, "detail", None) == "/api/x"  # for the log only (D12)
+
+
+def not_found_in(city: str, places: FakePlaces, **given: Any) -> NotFoundError:
+    unknown = NotFoundError("Serwis nie zna żądanych danych (HTTP 404).", detail="/api/x")
+    with pytest.raises(NotFoundError) as caught:
+        search(FakeInvestmentDirectory(error=unknown), places, city=city, **given)
+    assert caught.value.detail == "/api/x"
+    return caught.value
+
+
+def test_an_unknown_place_says_there_is_no_such_place() -> None:
+    places = FakePlaces()
+
+    found = not_found_in("atlantyda", places)
+
+    assert str(found) == (unknown_place_message("atlantyda"))
+    assert places.calls == ["atlantyda"]
+
+
+def test_a_known_place_without_investments_says_so() -> None:
+    found = not_found_in(VILLAGE.slug, FakePlaces.knowing(VILLAGE), name="Kolibki")
+
+    assert str(found) == (
+        "Miejscowość 'Ignatki-osiedle' istnieje, ale serwis nie ma dla niej inwestycji. "
+        "Nie ponawiaj; powiedz to użytkownikowi."
+    )
+
+
+def test_a_search_by_name_never_looks_up_a_place() -> None:
+    places = FakePlaces()
+
+    with pytest.raises(NotFoundError):
+        search(FakeInvestmentDirectory(error=NotFoundError("404")), places, name="Kolibki")
+
+    assert places.calls == []
 
 
 @pytest.mark.parametrize(

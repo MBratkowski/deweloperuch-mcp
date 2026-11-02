@@ -16,6 +16,7 @@ import respx
 
 from support.paths import API_FIXTURES
 from support.providers.error_answers import UNKNOWN_CITY_ERROR, removed_route, unknown_entity
+from support.providers.routes.city_lookup import city_lookup_routes
 from support.providers.rsc import UNKNOWN_CITY
 
 OFFER_SNAPSHOT_PATH = "/api/map/offer-snapshot/"
@@ -41,7 +42,9 @@ def snapshot(city: str) -> Any:
 
 def offer_snapshot_routes(router: respx.MockRouter) -> dict[str, respx.Route]:
     """The real snapshots of Sopot, Warszawa and Wrocław, byte for byte, with headers, and
-    ``UNKNOWN_CITY`` (the slug the recon asked for), which the service does not know."""
+    ``UNKNOWN_CITY`` (the slug the recon asked for), which the service does not know, with
+    the place lookup that follows it (``city_lookup_routes``)."""
+    city_lookup_routes(router)
     routes = {
         city: router.get(path=OFFER_SNAPSHOT_PATH + city).respond(
             200, content=path.read_bytes(), headers=OFFER_SNAPSHOT_HEADERS

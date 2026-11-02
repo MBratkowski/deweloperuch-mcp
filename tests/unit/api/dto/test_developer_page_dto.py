@@ -26,6 +26,7 @@ from deweloperuch_mcp.usecases.get_developer import GetDeveloperResult
 from support.providers.routes.developer_profiles import without_cities_chart
 from support.providers.rsc import (
     DEVELOPER_UNKNOWN_20261031,
+    DEVELOPER_UNKNOWN_CITY_20261102,
     DEVELOPER_WARSZAWA_20261031,
     raw,
     replace_prop,
@@ -215,6 +216,43 @@ def test_a_page_without_the_developer_nor_the_404_marker_is_a_changed_service() 
         parsed(payload)
 
     assert caught.value.detail is not None and "developerName" in caught.value.detail
+
+
+T39_PATH = "/ceny-ofertowe/nieistniejace-miasto/deweloperzy/atal"
+T39_COUNTRY = "/ceny-ofertowe/polska/deweloperzy/atal"
+
+
+def test_a_city_page_sent_on_to_the_developers_country_page_is_not_found() -> None:
+    """T39 [P 2026-11-02]: the page of a known developer in a city the service does not know
+    has no developer and no 404 marker, but a redirect to the developer's page for the
+    whole country in its error row; the ``notFound`` prop it has is on every page."""
+    payload = raw(DEVELOPER_UNKNOWN_CITY_20261102)
+
+    with pytest.raises(NotFoundError) as caught:
+        DeveloperPageDto.from_payload(payload, path=T39_PATH, country=T39_COUNTRY)
+
+    assert caught.value.detail == (
+        f"{T39_PATH}: brak propsów 'developerSlug', 'developerName', 'investments', strona "
+        f"przekierowuje do {T39_COUNTRY}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("target", "country"),
+    [
+        pytest.param("/ceny-ofertowe/polska/deweloperzy/dom-development", T39_COUNTRY, id="other"),
+        pytest.param("/ceny-ofertowe/polska/deweloperzy/atal/x", T39_COUNTRY, id="longer"),
+        pytest.param("/ceny-ofertowe/polska/deweloperzy/atal", None, id="country-page-itself"),
+    ],
+)
+def test_a_redirect_anywhere_else_is_a_changed_service(target: str, country: str | None) -> None:
+    """Only a redirect to the developer's own page for the whole country says something
+    about the city (D21: any other redirect is a change of the service). The page for the
+    whole country has no such page to send on to (``country`` ``None``)."""
+    payload = raw(DEVELOPER_UNKNOWN_CITY_20261102).replace(T39_COUNTRY.encode(), target.encode())
+
+    with pytest.raises(UnexpectedResponseError, match=SERVICE_CHANGED):
+        DeveloperPageDto.from_payload(payload, path=T39_PATH, country=country)
 
 
 def test_a_page_whose_developer_props_were_renamed_is_a_changed_service() -> None:

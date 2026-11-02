@@ -22,6 +22,7 @@ from support.golden.routes import (
 )
 from support.providers.clients import shared_limiter
 from support.providers.error_answers import unknown_entity
+from support.providers.routes.city_lookup import city_lookup_routes
 from support.providers.routes.investments import (
     INVESTMENT,
     SALE_EVENTS,
@@ -221,6 +222,8 @@ def run(args: tuple[str, ...]) -> Any:
 def check_case(name: str, golden: Case, service: respx.MockRouter) -> None:
     """Runs the case ``name`` and checks the exit code, the output and the requests
     against ``tests/golden/cli/<name>.json``."""
+    # A tool's "not found" about a city is followed by the place's lookup (PlaceCheck).
+    city_lookup_routes(service)
     for answer in golden.service:
         answer(service)
     if golden.before is not None:
