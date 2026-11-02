@@ -2,19 +2,19 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.MBratkowski/deweloperuch-mcp",
   "title": "deweloperuch.pl (unofficial)",
-  "description": "Unofficial read-only deweloperuch.pl data: new-build asking prices, RCN transactions, GUS and NBP",
+  "description": "Unofficial read-only deweloperuch.pl data: new-build prices, RCN transactions, GUS, NBP, Eurostat",
   "repository": {
     "url": "https://github.com/MBratkowski/deweloperuch-mcp",
     "source": "github"
   },
   "websiteUrl": "https://github.com/MBratkowski/deweloperuch-mcp/blob/main/docs/mcp/README.md",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "packages": [
     {
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "deweloperuch-mcp",
-      "version": "0.1.3",
+      "version": "0.2.0",
       "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
@@ -22,7 +22,7 @@
     },
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/MBratkowski/deweloperuch-mcp/releases/download/v0.1.3/deweloperuch-mcp-0.1.3.mcpb",
+      "identifier": "https://github.com/MBratkowski/deweloperuch-mcp/releases/download/v0.2.0/deweloperuch-mcp-0.2.0.mcpb",
       "fileSha256": "set by packaging/mcpb/build.py in dist/server.json; publish that copy from the GitHub Release",
       "transport": {
         "type": "stdio"

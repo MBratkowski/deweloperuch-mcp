@@ -54,6 +54,8 @@ API_PATHS = (
     "/api/statystyki/raw-transactions",
     "/api/map/transactions/visible/{investRcnSlug}",
     "/api/sale-events-rcn/batch",
+    "/api/map/tx-cities",
+    "/api/statystyki/powiat-map-stats",
     # 4. Statystyki
     "/api/monthly-transaction-stats",
     "/api/statystyki/powiat-price-trend",
@@ -61,6 +63,7 @@ API_PATHS = (
     "/api/avg-price-trend/building/{investRcnId}",
     "/api/city-transaction-stats",
     "/api/announcement-stats",
+    "/api/statystyki/gov-map-stats",
     # 5. Wycena
     "/api/standalone-valuation",
 )

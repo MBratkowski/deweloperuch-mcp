@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-01
+
 ### Added
 - `get_transaction_statistics` / `stats transactions`: incomplete newest periods are marked. Each such period has `incomplete: true` (MCP: only when true; CLI `--json`: a bool on every period; the text table marks it with ` *` and a legend line), and the result has `last_complete_period` (omitted when it cannot be judged). The hint names the incomplete periods and the last period with a usual count (its data may still change); for small series it says there are too few transactions to judge. The rule is the package's own [W]: the longest trailing run of periods (at most 12 months or 4 quarters) with fewer than half of the median count of the reference window before it; not judged when that median is below 10 transactions or with fewer than 3 reference periods (open question T46). The `note` text, the tool description, the server instructions and the prompt `porownaj_miasta` changed accordingly.
 - `estimate_property_value` / `valuation estimate`: `low_confidence` (`true` exactly when the estimate rests on fewer than 5 comparable transactions; present on every estimate, `false` included; omitted without one). The hint carries a caveat with the facts (number of transactions, radius, months), or a softer sentence when only the radius reached the service's ceiling of 1000 m. The CLI prints it as an `Uwaga: …` line and the valuation cautions as `Wskazówka: …`. The prompt `ocen_oferte` tells the model to pass the caveat on.
@@ -120,7 +122,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - One malformed GUS dataset no longer breaks the others on the statistics page.
 - MCP validation errors no longer contain a link to the validation library's documentation.
 
-[Unreleased]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/MBratkowski/deweloperuch-mcp/compare/v0.1.0...v0.1.1

@@ -138,10 +138,11 @@ def test_page_routes_are_all_documented() -> None:
         "/api/valuation-pdf",
         "/api",
         "/ceny-ofertowe/warszawa/mieszkania",
-        # 2.0 paths still in the tables of endpoints.md section 7, not headings
+        # a 2.0 path without its placeholder segment is not the documented one
         "/api/map/offer-snapshot",
-        "/api/statystyki/powiat-map-stats",
-        "/api/map/tx-cities",
+        # 2.0 paths still in the tables of endpoints.md section 7, not headings
+        "/api/city-search-counts",
+        "/api/statystyki/city-change-stats",
     ],
 )
 def test_api_rejects_undocumented_paths(path: str) -> None:

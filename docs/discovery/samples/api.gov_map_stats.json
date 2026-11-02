@@ -1,0 +1,54 @@
+{
+  "_request": "GET /api/statystyki/gov-map-stats",
+  "_captured": "2026-11-01",
+  "response": {
+    "asOf": {
+      "bezrobocie": "08.2026",
+      "wynagrodzenie": "2025",
+      "oddane": "08.2026",
+      "rozpoczete": "08.2026",
+      "powierzchnia": "08.2026",
+      "przyrost": "2025",
+      "nbpCena": "Q2 2026"
+    },
+    "rows": [
+      {
+        "slug": "warszawa",
+        "values": {
+          "bezrobocie": 1.6,
+          "wynagrodzenie": 11677.57,
+          "oddane": 19058,
+          "rozpoczete": 15150,
+          "powierzchnia": 56.78479780043533,
+          "przyrost": -2291,
+          "nbpCena": 16723
+        }
+      },
+      {
+        "slug": "bialystok",
+        "values": {
+          "bezrobocie": 6,
+          "wynagrodzenie": 9084.99,
+          "oddane": 1226,
+          "rozpoczete": 2292,
+          "powierzchnia": 59.42725598526704,
+          "przyrost": -424,
+          "nbpCena": 9403
+        }
+      },
+      {
+        "slug": "bydgoszcz",
+        "values": {
+          "bezrobocie": 2.8,
+          "wynagrodzenie": 9207.5,
+          "oddane": 1851,
+          "rozpoczete": 1571,
+          "powierzchnia": 49.88055395268321,
+          "przyrost": -1990,
+          "nbpCena": 8342
+        }
+      },
+      "... (63 more, 66 total)"
+    ]
+  }
+}

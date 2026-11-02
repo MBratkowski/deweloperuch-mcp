@@ -1,0 +1,24 @@
+{
+  "_request": "GET /api/city-districts?citySlug=warszawa",
+  "_captured": "2026-11-01",
+  "response": {
+    "districts": [
+      {
+        "name": "Białołęka",
+        "slug": "bialoleka",
+        "count": 2729
+      },
+      {
+        "name": "Praga-Północ",
+        "slug": "praga-polnoc",
+        "count": 990
+      },
+      {
+        "name": "Mokotów",
+        "slug": "mokotow",
+        "count": 959
+      },
+      "... (15 more, 18 total)"
+    ]
+  }
+}

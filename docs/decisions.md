@@ -161,10 +161,14 @@ Documentation is written in English. Product text (tool descriptions, messages, 
 - **U1 (resolved 2026-10-14):** the authors of deweloperuch.pl agreed to the project's use of the service, with no conditions; the client identifies itself with an honest project User-Agent (D2).
 - **Repository content before publication:** internal working material (development handoffs, agent memory, prompts) is removed from the published tree; samples are reviewed for personal data (RCN unit identifiers get pseudonymised) and for content outside the project's scope.
 
-## D19. Caching of the bulk statistics routes (proposed 2026-10-30)
+## D19. Caching of the bulk statistics routes (accepted 2026-11-01)
 
-**Context.** The 2.0 client of the service reads bulk statistics routes, `/api/map/tx-cities` and `/api/statystyki/powiat-map-stats` [P z kodu, T59]. The per-process cache of D2 (at most 300 s) would refetch them in every CLI run and after every MCP server restart.
-**Options.** (a) TTL from `s-maxage` for these routes in each process; (b) (a) plus a disk cache shared by processes; (c) a disk cache for every route. Not decided; needed before `rank_locations` reads these routes.
+**Context.** The 2.0 client of the service reads bulk statistics routes, `/api/map/tx-cities` and `/api/statystyki/powiat-map-stats` [P z kodu, T59]. The per-process cache of D2 (at most 300 s) would refetch them in every CLI run and after every MCP server restart. `tx-cities` is 3.3 MB and `powiat-map-stats` 311 KB [P 2026-11-01].
+**Options.** (a) TTL from `s-maxage` for these routes in each process; (b) (a) plus a disk cache shared by processes; (c) a disk cache for every route.
+**Decision (user, 2026-11-01): (a), widened, plus a packaged name table.**
+- Nine dictionary and index routes (`cities`, `city-lookup`, `city-districts`, `investments`, `developers`, `map/tx-cities`, `avg-price-trend/city/{citySlug}`, `statystyki/powiat-map-stats`, `statystyki/gov-map-stats`) are cached in the process for their freshness (`s-maxage`, otherwise `max-age`) minus `Age`, at most 24 h, so the client never refetches them sooner than the service's shared cache allows. Every other route keeps the D2 cap of 300 s.
+- The names of powiats and of the 66 cities with powiat rights come from a table in the package, generated from `map/tx-cities` by a maintenance script; the tools do not fetch the 3.3 MB index at run time. A powiat missing from the table is shown by its id.
+- No disk cache.
 
 ## D20. `offer-snapshot` replaces `city-sales` for offer-market statistics (accepted 2026-10-30)
 

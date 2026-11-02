@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "date": "2026-11-01",
+  "headline": "Nowy deweloperuch.pl, te same pytania.",
+  "changes": [
+    {
+      "type": "fixed",
+      "title": "Gotowe na deweloperuch.pl 2.0",
+      "description": "Oferty, deweloperzy i statystyki znów działają."
+    },
+    {
+      "type": "added",
+      "title": "Ostrzeżenia o niepełnych danych",
+      "description": "Niepełne miesiące RCN i wyceny z małej próby."
+    },
+    {
+      "type": "changed",
+      "title": "Trafniejsze dzielnice",
+      "description": "Oferty z listy samej dzielnicy."
+    }
+  ]
+}

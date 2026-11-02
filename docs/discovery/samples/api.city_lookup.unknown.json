@@ -1,0 +1,8 @@
+{
+  "_request": "GET /api/city-lookup?city=Nieistniejacemiasto&source=transactions",
+  "_captured": "2026-11-01",
+  "response": {
+    "city": null,
+    "city_slug": null
+  }
+}
